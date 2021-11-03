@@ -1,0 +1,1126 @@
+\chapter{Quantum Computing: Many-Body Methods}
+\label{chap:QuantumComputingMBM}
+Classical many-body methods in quantum mechanics often trade computational complexity for accuracy when solving for the ground state energy of a system. The recent advances in quantum computing have shown promise in approximating the ground state energy without such a large trade-off \cite{QC1}. Hence, we will look into a couple of promising methods in this section.
+Before we start learning about how quantum computing works, we will give a short introduction to the building blocks of classical computers. In classical computing, the basic unit of information is called a bit. The bit is represented by a binary digit, either a 1 or a 0. A collection of bits provides a binary string with information, and this information can be manipulated with what we call logic gates. Logic gates are operations on one or more bits and produce a single output, 1 or 0. A collection of such logic gates is called a circuit and an example of such a circuit could be outputting a 1 if all input bits are put to 1 and output 0 otherwise. The behaviour of all circuits on classical computers is deterministic in the sense that a given input binary string will always produce the same output. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.1]{figures/methods/BlockSphere.png}
+    \caption{The Block sphere. Figure was found in reference \cite{BlockSphere}}
+    \label{fig:BlockSphere}
+\end{figure}
+
+How quantum computing differs from classical computing can partly be illustrated by looking at the surface of the unit sphere in figure \ref{fig:BlockSphere}, which is commonly referred to as the Block sphere. Whereas a classical bit must either be in the $\ket{0}$ state at the surface on the north pole, or in the $\ket{1}$ state at the surface on the south pole; the quantum bit, namely a qubit, can be in a state located anywhere on the surface of the Block sphere. The qubit state $\ket{\psi}$ can be in what we know from quantum mechanics as a superposition, 
+$$ \ket{\psi} = c_0 \ket{0} + c_1 \ket{1},$$
+where a measurement of the qubit will collapse the state, resulting in the state $\ket{0}$ or $\ket{1}$ with probability $|c_0|^2$ or $|c_1|^2$ respectively. These coefficients are referred to as amplitudes and could be any complex number as long as the measurement probabilities are normalized, that is $|c_0|^2 + |c_1|^2 = 1$. The orientation on the $x,y$ plane of the surface is given by the complex phases. There are also other quantum mechanical properties than superposition that apply to the qubits, namely entanglement. Just like particles can become entangled, several qubits can become entangled, meaning that the measurement outcome of one qubit can directly affect another. How the properties of superposition and entanglement have the potential to be used for our advantage will be shown during this chapter. But first, we will begin by introducing the basis states we are dealing with in quantum computing.
+
+\section{Introduction to Quantum Computing}
+\label{sec:QCIntroduction}
+Our introduction to quantum computing is mostly based on the book \textit{Quantum Computation and Quantum Information} by Michael A. Nielsen & Isaac L. Chuang \cite{NielsenAndChuang}. It is an excellent read and we highly recommend it if new to quantum computing.
+\subsection{Basis}
+\label{subsec:QCBasis}
+
+In order to start understanding how to manipulate one or several qubits to our advantage, we need to specify the basis we are working in. This is important as the manipulation of a qubit can mathematically be represented by matrix-vector multiplications. As we have talked about earlier, the measurement of a qubit will result in either the $\ket{0}$ or the $\ket{1}$ state, and it is these states which form the computational basis for quantum computing. We can write them in vector form as
+\begin{equation}
+    \label{eq:QCChapComputationalBasisStates}
+    \ket{0} \equiv \begin{bmatrix} 1 \\ 0
+    \end{bmatrix}
+    \qquad \text{and} \qquad 
+    \ket{1} \equiv \begin{bmatrix} 0 \\ 1
+    \end{bmatrix},
+\end{equation}
+and it is important to note that any linear combination of these states is an allowed state of a qubit, as long as the unit norm is preserved. The preservation of unit norm serves as a clue as to what sort of operations we are allowed to perform on a qubit. Consider $U$ to be a unitary matrix, that is
+\begin{equation*}
+    \label{eq:QCChapUnitaryMatrix}
+    U^\dagger U = UU^\dagger = I,
+\end{equation*}
+where $I$ is the identity matrix. Now consider an arbitrary qubit state $\ket{\psi}$ with unit norm, that is $\bra{\psi} \ket{\psi} = 1$.
+The action of $U$ on this state gives
+$$U \ket{\psi} = \ket{\phi}.$$
+The norm of the transformed state is then
+\begin{equation*}
+    \label{eq:QCCHapUnitaryPreserveNorm}
+    \bra{\phi} \ket{\phi} = \bra{\psi} \underbrace{U^\dagger U}_{= I}\ket{\psi} = \bra{\psi} \ket{ \psi} = 1.
+\end{equation*}
+Hence, any unitary transformation preserves the norm of the qubit state. This is no coincidence as the second postulate of quantum mechanics states that the evolution of a closed quantum system is described by a unitary transformation \cite{NielsenAndChuang}. Unitary transformations are the quantum equivalent of classical logic gates, and hence will often be referred to as gates throughout this thesis. 
+A system of multiple qubits are represented by tensor products. For example, for an $n$-qubit state we may write
+\begin{equation}
+    \label{eq:TensorProduct}
+    \ket{\psi_1}\ket{\psi_2}\cdots \ket{\psi_n} \equiv \ket{\psi_1 \psi_2 \cdots \psi_n} \equiv \ket{\psi_1} \otimes \ket{\psi_2} \otimes \cdots \otimes \ket{\psi_n}.
+\end{equation}
+We may also split the qubits into two or more sub-systems, which we will call registers, as this could be convenient when explaining the algorithms. An example is the state
+\begin{equation*}
+    \ket{p}\ket{q},
+\end{equation*}
+where $\ket{p}$ and $\ket{q}$ are $m$ and $n$-qubit states, respectively.
+We can represent manipulations on multi-qubit states by a tensor product of unitary operators;
+\begin{align}
+    \label{eq:QuantumGates}
+    (A \otimes B \otimes \cdots \otimes N ) \ket{\psi_1} \otimes \ket{\psi_2} \otimes \cdots \otimes \ket{\psi_n} &= A\ket{\psi_1} \otimes B\ket{\psi_2} \otimes \cdots \otimes N \ket{\psi_n}, \notag \\
+    &\text{or} \notag \\
+    A^1 B^2\cdots N^n \ket{\psi_1}\ket{\psi_2}\cdots \ket{\psi_n} &= A^1\ket{\psi_1}B^2\ket{\psi_2}\cdots N^n\ket{\psi_n},
+\end{align}
+where the superscript denotes which qubit the operator acts on.
+We will now go through some of the most common gates we deal with on a quantum computer. 
+
+\subsection{Quantum Gates}
+\label{subsec:QCQuantumGates}
+
+The first set of gates introduced are what we call single qubit gates. Single qubit gates, as you may have guessed from the name, are gates that only act on a single qubit. Since a qubit is represented by a two-dimensional vector, the single qubit gates can be represented by any two-by-two unitary matrix. Even though any such matrices transforms our qubit into a valid state, there are some notable gates that are important for many of the applications we will consider. First up we have
+\begin{equation*}
+    X = \sigma_x = \begin{bmatrix} 0 & 1 \\ 1 & 0
+    \end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{X}    & \qw  \\
+}
+\end{array}
+\end{equation*}
+\begin{equation*}
+     Y  = \sigma_y = \begin{bmatrix} 0 & -i \\ i & 0 
+    \end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{Y}    & \qw  \\
+}
+\end{array}
+\end{equation*}
+\begin{equation}
+    \label{eq:PauliMatrices}
+    Z = \sigma_z = \begin{bmatrix} 1 & 0 \\ 0 & -1
+    \end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{Z}    & \qw  \\
+}
+\end{array},
+\end{equation}
+which are referred to as the Pauli-$X$, Pauli-$Y$ and Pauli-$Z$ gates, or just $X$, $Y$ and $Z$ gates We have also included the circuit notation for the gates on the far right. We will go through more details on this in the next section.
+The $X$ gate, for example, flips the qubit. That is
+\begin{equation*}
+    \sigma_x \ket{0} = \begin{bmatrix}
+    0 & 1  \\
+    1 & 0
+\end{bmatrix} \begin{bmatrix}
+    1 \\
+    0
+\end{bmatrix} = \begin{bmatrix}
+    0 \\
+    1
+\end{bmatrix} = \ket{1}
+\qquad \sigma_x \ket{1} = \begin{bmatrix}
+    0 & 1  \\
+    1 & 0
+\end{bmatrix} \begin{bmatrix}
+    0 \\
+    1
+\end{bmatrix} = \begin{bmatrix}
+    1 \\
+    0
+\end{bmatrix} = \ket{0}.
+\end{equation*}
+We also have the Hadamard gate;
+\begin{equation}
+    \label{eq:HadamardGate}
+    H = \frac{1}{\sqrt{2}} \begin{bmatrix}
+    1 & 1  \\
+    1 & -1
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{H}    & \qw  \\
+}
+\end{array},
+\end{equation}
+which creates a superposition:
+\begin{align*}
+    H \ket{0} = \frac{1}{\sqrt{2}}\begin{bmatrix}
+    1 & 1  \\
+    1 & -1
+\end{bmatrix} \begin{bmatrix}
+    1 \\
+    0
+\end{bmatrix} = \frac{1}{\sqrt{2}}\begin{bmatrix}
+    1 \\
+    1
+\end{bmatrix} = \frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) \\
+H \ket{1} = \frac{1}{\sqrt{2}}\begin{bmatrix}
+    1 & 1  \\
+    1 & -1
+\end{bmatrix} \begin{bmatrix}
+    0 \\
+    1
+\end{bmatrix} =\frac{1}{\sqrt{2}} \begin{bmatrix}
+    1 \\
+    -1
+\end{bmatrix} = \frac{1}{\sqrt{2}}(\ket{0} - \ket{1}).
+\end{align*}
+We can also rotate the qubit an arbitrary angle $\theta$ about the $x$, $y$ or $z$ axis on the Block sphere (figure \ref{fig:BlockSphere}). The gates that allow us to do this are called rotation gates, and they are subfixed with the rotation axis:
+\begin{align}
+    \label{eq:RotationOps}
+     R_x(\theta) = e^{-i \theta \sigma_x /2} = \cos (\frac{\theta}{2})I - i \sin (\frac{\theta}{2})\sigma_x = \begin{bmatrix}
+    \cos \frac{\theta}{2} & -i \sin \frac{\theta}{2}  \\
+    -i \sin \frac{\theta}{2} & \cos \frac{\theta}{2}
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{R_x(\theta)}    & \qw  \\
+}
+\end{array} \notag \\
+    R_y(\theta) = e^{-i \theta \sigma_y /2} = \cos (\frac{\theta}{2})I - i \sin (\frac{\theta}{2})\sigma_y = \begin{bmatrix}
+    \cos \frac{\theta}{2} & -\sin \frac{\theta}{2}  \\
+     \sin \frac{\theta}{2} & \cos \frac{\theta}{2}
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{R_y(\theta)}    & \qw  \\
+}
+\end{array} \\
+    R_z(\theta) = e^{-i \theta \sigma_z /2} = \cos (\frac{\theta}{2})I - i \sin (\frac{\theta}{2})\sigma_z = \begin{bmatrix}
+    e^{-i\theta /2} & 0  \\
+    0 & e^{i \theta /2}
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{R_z(\theta)}    & \qw  \\
+}
+\end{array}. \notag
+\end{align}
+\bigskip
+We also have a gate that applies a phase of $-i$ to the $\ket{1}$ state. It is called the phase shift gate and is given by
+\begin{equation}
+    \label{eq:Sgate}
+    S \equiv \begin{bmatrix}
+    1 & 0 \\
+    0 & -i
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{S}    & \qw  \\
+}
+\end{array}.
+\end{equation}
+A gate that will become useful when we get into the quantum Fourier transform is the $R_k$ gate:
+\begin{equation}
+    \label{eq:Rkgate}
+    R_k = \begin{bmatrix}
+    1 & 0  \\
+    0 & e^{2\pi i / 2^k}
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{R_k}    & \qw  \\
+}
+\end{array}.
+\end{equation}
+The first two-qubit gate we will introduce is the CNOT gate. Its matrix representation is given by
+\begin{equation}
+    \label{eq:CNOTMatrix}
+    CNOT \equiv \begin{bmatrix}
+    1 & 0 & 0 & 0  \\
+    0 & 1 & 0 & 0 \\
+    0 & 0 & 0 & 1 \\
+    0 & 0 & 1 & 0
+\end{bmatrix} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{1}    & \qw  \\
+& \targ & \qw \\
+}
+\end{array}.
+\end{equation}
+Operating on two qubits $\ket{c}\ket{t}$, its task is to flip the target qubit $\ket{t}$ if the control qubit $\ket{c}$ is in the $\ket{1}$-state. If it is in the $\ket{0}$-state it should act as the identity operator.
+This kind of gate is called a controlled gate. In the case of the CNOT gate we perform a Pauli-$X$ gate (eq. (\ref{eq:PauliMatrices})) on the target qubit conditioned on the control qubit, but we can of course apply any of the other gates mentioned. Mathematically we will write down such a gate as
+$$
+X^c_t\ket{c}\ket{t},
+$$
+where the superfix denotes the control qubit, while the subfix denotes the target qubit.
+The final gate we will mention is the Swap-operation. Given the $n$-qubit state 
+$$\ket{\psi_1}\ket{\psi_2}\cdots \ket{\psi_i}\cdots \ket{\psi_j} \cdots \ket{\psi_n},$$
+the swap gate applied to qubit $i$ and $j$ simply produces the state
+\begin{equation}
+    \label{eq:SwapOperation}
+    \text{SWAP}_i^j \ket{\psi_1}\ket{\psi_2}\cdots \ket{\psi_i}\cdots \ket{\psi_j} \cdots \ket{\psi_n} = \ket{\psi_1}\ket{\psi_2}\cdots \ket{\psi_j}\cdots \ket{\psi_i} \cdots \ket{\psi_n}
+\end{equation}
+Hence, it puts the $j$'th qubit in the $i$'th qubit state and vise versa.
+$$ \text{SWAP} \equiv  \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \qswap    & \qw  \\
+& \qswap \qwx & \qw \\
+}
+\end{array}$$
+
+\subsection{Quantum Circuits}
+\label{subsec:QuantumCircuits}
+
+A convenient way to write a quantum algorithm is through quantum circuits. A quantum cirquit consists of wires, where each wire represents a qubit:
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \qw & \qw      & \qw      & \qw     & \qw  & \qw & \qw & \qw & \qw & \qw  \\
+& \qw      & \qw & \qw      & \qw     & \qw  & \qw & \qw & \qw &\qw & \qw  \\
+& \qw      & \qw      & \qw & \qw     & \qw  & \qw & \qw & \qw&\qw & \qw  \\
+& \qw      & \qw      & \qw      & \qw & \qw  & \qw & \qw & \qw&\qw & \qw \\
+& \qw    & \qw   & \qw    & \qw   & \qw & \qw &\qw &\qw &\qw & \qw \\
+}
+\end{array}$$
+These wires are not physical wires, but you can think of them as representing the passage of time. When reading a quantum circuit, the leftmost operations are performed first, so the circuits are read from left to right. All the qubits are usually initialized in the $\ket{0}$ state unless else is specified. To illustrate that an operation is performed on a qubit, we draw a gate on the wire corresponding to this qubit:
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{H}    & \qw  \\
+}
+\end{array}$$
+In the above circuit, we only have one qubit which is put in superposition by applying the Hadamard gate (eq. (\ref{eq:HadamardGate})). To illustrate conditional operations, like the CNOT gate (eq. (\ref{eq:CNOTMatrix})), we write the circuit as follows:
+
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{1}    & \qw  \\
+& \targ & \qw \\
+}
+\end{array} \equiv \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{1}    & \qw  \\
+& \gate{X} & \qw \\
+}
+\end{array}$$
+The black dot indicates that we put the condition on the first qubit being in the $\ket{1}$ state, while the plus sign surrounded by a circle indicates which qubit to apply the $X$ gate (eq. (\ref{eq:PauliMatrices})) on. We refer to the conditional qubit as the control-qubit, whereas we refer to the qubit for which to eventually perform the operation on as the target qubit. We can also indicate conditional operations with an arbitrary gate $A$ as follows:
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{1}    & \qw  \\
+& \gate{A} & \qw \\
+}
+\end{array}$$
+If we want to indicate that we perform a measurement on the bottom qubit in the circuit above, we can use a meter symbol on the wire corresponding to the qubit we measure:
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{1}    & \qw  \\
+& \gate{A} & \meter \\
+}
+\end{array}$$
+The measurement of a qubit will either result in a 1 or a 0.
+
+There are also multi-controlled qubit gates with more than one control qubit. For example, an operation conditional on three qubits can be written as
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{3}    & \qw  \\
+& \ctrlo{2} & \qw \\
+& \ctrl{1} & \qw \\
+& \gate{A} & \qw \\
+}
+\end{array}$$
+You might have noticed that we used a white dot on the second qubit in this scenario. The white dot indicates that we condition on the respective qubit being in the $\ket{0}$ state instead of the $\ket{1}$ state. This is equivalent to acting on the qubit with an $X$ gate (eq. (\ref{eq:PauliMatrices})) before and after the multi-controlled operation, as the $X$ gate flips a qubit from the $\ket{0}$ state to the $\ket{1}$ state and vise versa:
+$$
+\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{3}    & \qw  \\
+& \ctrlo{2} & \qw \\
+& \ctrl{1} & \qw \\
+& \gate{A} & \qw \\
+}
+\end{array}
+$$
+$$
+\equiv
+$$
+$$
+\Qcircuit @C=2em @R=1em {
+&\qw & \ctrl{3}    & \qw & \qw  \\
+& \gate{X} & \ctrl{2} & \gate{X}& \qw \\
+& \qw & \ctrl{1} & \qw& \qw \\
+& \qw & \gate{A} & \qw & \qw\\
+} 
+$$
+It is relatively easy to read such circuits once the basics are down. However, before diving into the advanced circuits it is a good idea to go through a basic one.
+
+\subsubsection{Coin toss example}
+\label{subsubsec:CoinTossExample}
+
+Say you want to calculate the probability of flipping heads on a coin four times in a row. As we know, each throw has a $50\%$ probability of producing a heads. To get a qubit to mimic a coin toss, we could put it in a superposition with equal probability of measuring the $\ket{0}$ and $\ket{1}$ state. We then refer to the $\ket{1}$ state as a heads and the $\ket{0}$ state as a tails. That is
+$$\ket{\psi} = \frac{1}{\sqrt{2}}\ket{0} + \frac{1}{\sqrt{2}}\ket{1}. $$
+As we can see, the probability of measuring the $\ket{0}$ state is given by
+$$|\bra{0} \ket{\psi}|^2 = |\frac{1}{\sqrt{2}}\bra{0}\ket{0}|^2 = \frac{1}{2} ,$$
+and likewise for the $\ket{1}$ state:
+$$|\bra{1} \ket{\psi}|^2 = \frac{1}{2}.$$
+As we learned earlier, the Hadamard gate (eq. (\ref{eq:HadamardGate})) produces such a state. The circuit for producing a single coin flip is then
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{H}    & \meter  \\
+}
+\end{array}$$
+We could actually use this circuit for our purpose by repeatedly running it four times and counting how many times we get the $\ket{1}$ state in all four runs. However, for educational purposes we will include some more bells and whistles here. Let us instead use a single qubit for each coin toss in our experiment, and also a qubit to save the desired result:
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+c_1& & \qw & \qw      & \qw      & \qw     & \qw  & \qw & \qw & \qw & \qw & \qw  \\
+c_2& & \qw      & \qw & \qw      & \qw     & \qw  & \qw & \qw & \qw &\qw & \qw  \\
+c_3& & \qw      & \qw      & \qw & \qw     & \qw  & \qw & \qw & \qw&\qw & \qw  \\
+c_4& & \qw      & \qw      & \qw      & \qw & \qw  & \qw & \qw & \qw&\qw & \qw \\
+a& & \qw    & \qw   & \qw    & \qw   & \qw & \qw &\qw &\qw &\qw & \qw \\
+}
+\end{array}$$
+The qubits denoted with a $c_i$ are the simulation qubits, that is, they are used to simulate the four coin tosses. The qubit denoted with an $a$ will be referred to as the ancilla qubit, which is a common name for qubits used to for example encode simulation results. Remember, all the qubits are initialized in the $\ket{0}$ state since nothing else is specified.
+We start by putting all the simulation qubits in superpositions with the Hadamard gate (eq. (\ref{eq:HadamardGate})):
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+c_1& & \gate{H} & \qw      & \qw      & \qw     & \qw  & \qw & \qw & \qw & \qw & \qw  \\
+c_2& & \gate{H}      & \qw & \qw      & \qw     & \qw  & \qw & \qw & \qw &\qw & \qw  \\
+c_3& & \gate{H}      & \qw      & \qw & \qw     & \qw  & \qw & \qw & \qw&\qw & \qw  \\
+c_4& & \gate{H}      & \qw      & \qw      & \qw & \qw  & \qw & \qw & \qw&\qw & \qw \\
+a& & \qw    & \qw   & \qw    & \qw   & \qw & \qw &\qw &\qw &\qw & \qw \\
+}
+\end{array}$$
+The simulation qubits are now representing a separate coin toss. To get more familiar with the notations, one mathematical way to write this circuit is
+$$
+H^1 H^2 H^3 H^4  \ket{0} \ket{0} \ket{0} \ket{0} \ket{a = 0}
+$$
+$$
+=\frac{1}{\sqrt{2}}(\ket{0} + \ket{1})\frac{1}{\sqrt{2}}(\ket{0} + \ket{1})\frac{1}{\sqrt{2}}(\ket{0} + \ket{1})\frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) \ket{a = 0}
+$$
+$$
+= \frac{1}{4}\sum_{i=0}^{2^4-1} \ket{i} \ket{a=0},
+$$
+where the sum runs over all 16 four bit binary strings (0000, 0001, 0010, etc..).
+In order to extract the probability of measuring four heads, we could use a multi controlled gate along with measurements:
+$$\begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+c_1& & \gate{H} & \ctrl{4}      & \qw      & \qw     & \qw  & \qw & \qw & \qw & \qw & \qw  \\
+c_2& & \gate{H}      & \ctrl{3} & \qw      & \qw     & \qw  & \qw & \qw & \qw &\qw & \qw  \\
+c_3& & \gate{H}      & \ctrl{2}      & \qw & \qw     & \qw  & \qw & \qw & \qw&\qw & \qw  \\
+c_4& & \gate{H}      & \ctrl{1}      & \qw      & \qw & \qw  & \qw & \qw & \qw&\qw & \qw \\
+a& & \qw    & \targ   & \qw    & \qw   & \qw & \qw &\qw &\qw &\qw & \meter \\
+}
+\end{array}$$
+We can see that the ancilla qubit is now flipped to the $\ket{1}$ state if, and only if, all the simulation qubits are in the $\ket{1}$ state, because of the multi-controlled $X$ gate. This property is called entanglement, that is, the state of the ancilla cannot be described independently of the $\ket{c_1}\ket{c_2}\ket{c_3}\ket{c_4}$ state. The wanted probability is now extracted by repeatedly running this circuit and calculating $|\bra{1}\ket{a}|^2$, or in other words: Count the number of times $\ket{a}$ is in the $\ket{1}$ state and divide by the total number of experiments. Even though this circuit is simple, it captures most of what is needed to understand more advanced circuits. 
+
+\subsubsection{Circuit depth}
+\label{subsubsec:CircuitDepth}
+
+For Noisy Intermediate-Scale Quantum Technology (NISQ), the ability to achieve sensible results relies on the execution time of the circuit for the problem at hand \cite{circuitdepth}. Circuit depth is an important quantity that is describing the number of time steps (time complexity) required to perform the circuit \cite{circuitdepth}.
+As current quantum devices are not able to maintain a stable state for a long time \cite{decoherence}, achieving a short circuit depth is important if one expects to be able to run a quantum algorithm successfully. We will not go into specific details on how to calculate this quantity as it is rather simple to get the depth of a circuit when utilizing Qiskit \cite{qiskit}, the Python package we will use to write quantum algorithms. It is nevertheless important to keep the rough explanation of this quantity in mind as we will later talk about methods of reducing it.
+
+\section{Quantum Phase Estimation}
+\label{sec:QPE}
+The first we will use to approximate the eigenvalues of the pairing Hamiltonian (eq. (\ref{eq:SimplifiedPairingHamiltonian})) is called the quantum phase estimation (QPE) algorithm. An important sub-routine of this algorithm is called the quantum Fourier transform. 
+\subsection{Quantum Fourier Transform}
+\label{subsec:QFT}
+
+The quantum Fourier transform (QFT) is a linear transformation on qubits, which is used quite frequently in quantum algorithms. The QFT performed on an orthonormal basis yields the following state \cite{NielsenAndChuang}
+\begin{equation}
+    \label{eq:QFT}
+    \ket{j} \rightarrow \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1}e^{2\pi i jk/ N}\ket{k}.
+\end{equation}
+How this transformation can become useful in different algorithms may not be apparent at first glance, but bear with me. We will quickly see its usefulness in the next section. In order to see how we can implement this transformation on a quantum computer, we first rewrite eq. (\ref{eq:QFT}) in a more convenient form. First we write the $n$-qubit state $\ket{j}$ using the binary representation
+\begin{align}
+    \label{eq:binaryRep}
+    j &= j_1 j_2 \cdots j_n \notag \\
+    j &= j_1 2^{n-1} + j_2 2^{n-2} + \cdots + j_n 2^0.
+\end{align}
+It is also useful to denote 
+\begin{equation}
+    \label{eq:binaryFracRep}
+    0.j_1j_2 \cdots j_n = j_1/2 + j_2 /2^2 + \cdots + j_n / 2^n,
+\end{equation}
+as the binary fraction $0.j$.
+Eq. (\ref{eq:QFT}) for an $n$-qubit state can be written as
+\begin{align*}
+    \frac{1}{2^{n/2}} \sum_{k=0}^{2^n - 1} e^{2\pi i jk / 2^n}\ket{k}.
+\end{align*}
+Utilizing the binary representation of k (eq. (\ref{eq:binaryRep})) gives us
+\begin{align*}
+    = \frac{1}{2^{n/2}} \sum_{k_1=0}^1 \cdots\sum_{k_n=0}^1 e^{2\pi ij (\sum_{l=1}^n k_l 2^{n-l})/2^n)}\ket{k_1\cdots k_n} \notag \\
+    = \frac{1}{2^{n/2}} \sum_{k_1=0}^1 \cdots\sum_{k_n=0}^1 e^{2\pi ij (\sum_{l=1}^n k_l 2^{-l})}\ket{k_1\cdots k_n} \notag \\
+    =\frac{1}{2^{n/2}} \sum_{k_1=0}^1 \cdots\sum_{k_n=0}^1 \bigotimes_{l=1}^n e^{2\pi i j k_l 2^{-l}}\ket{k_l} \notag \\
+    = \frac{1}{2^{n/2}} \bigotimes_{l=1}^n \sum_{k_l = 0}^1 e^{2\pi i j k_l 2^{-l}}\ket{k_l}. \notag \\
+\end{align*}
+Next, we insert $k_l = 0$ and $k_l = 1$
+\begin{align*}
+     = \frac{1}{2^{n/2}} \bigotimes_{l=1}^n [\ket{0} + e^{2\pi i j 2^{-l}}\ket{1} ]. \notag \\
+\end{align*}
+We then use the binary representation of j (eq. (\ref{eq:binaryRep}))
+\begin{align*}
+    =\frac{1}{2^{n/2}} \bigotimes_{l=1}^n [\ket{0} + e^{2\pi i \sum_{i=1}^n j_i 2^{n-l-i}}\ket{1} ]. \notag \\
+\end{align*}
+Observe that when $n-l-i \geq 0$, we will just be multiplying the $\ket{1}$ state with 1. Therefore, we have
+\begin{align}
+    \label{eq:productRepresenation}
+    = \frac{1}{2^{n/2}} \left( \ket{0} + e^{2\pi i 0.j_n}\ket{1} \right)\left(\ket{0} + e^{2\pi i 0.j_{n-1}j_n}\ket{1} \right)\cdots \left(\ket{0} + e^{2\pi i 0.j_1j_2\cdots j_n}\ket{1} \right),
+\end{align}
+which is the desired representation of the Fourier transform.
+Let us see how to get from an arbitrary state $\ket{j_1j_2\cdots j_n}$ to the product representation in eq. (\ref{eq:productRepresenation}). We will skip any global normalization factors.
+First we apply a Hadamard gate (eq. (\ref{eq:HadamardGate})) to the first qubit:
+$$H^1 \ket{j_1 j_2 \cdots j_n} = (\ket{0} + e^{2\pi i 0.j_1}\ket{1})\ket{j_2\cdots j_n}. $$
+Even though this is not the usual way to write a Hadamard transformed qubit, it is correct since $e^{2\pi i 0.j_1} = -1$ if $j_1$ = 1 and its 1 if $j_1 = 0$. For the next step, we need to apply a controlled $R_2$ gate to the first qubit, conditioned on the second qubit (see equation \ref{eq:Rkgate} for the $R_k$ gate, with $k = 2$). This action results in 
+$$(\ket{0} + e^{2\pi i 0.j_1 + 2\pi i j_2/2^2}\ket{1})\ket{j_2\cdots j_n} = (\ket{0} + e^{2\pi i 0.j_1j_2}\ket{1})\ket{j_2\cdots j_n}. $$
+Continuing with applying a controlled $R_k$ gate on the first qubit conditioned on qubit $l$ for $l=3,4,...,n$, we will end up with
+$$ (\ket{0} + e^{2\pi i 0.j_1\cdots j_n}\ket{1})\ket{j_2\cdots j_n}.$$
+We can now apply the Hadamard gate to the second qubit and utilize the controlled $R_k$ gate on the preceeding qubits in the same manner. Continuing this way until we reach the final qubit will put us in the desired state.
+The complete circuit is illustrated below:
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{figures/methods/QFTCircuit.png}
+    \caption{QFT circuit. Figure is taken from reference \cite{NielsenAndChuang}.}
+    \label{fig:QFTCircuit}
+\end{figure}
+The gate requirement of the circuit in figure \ref{fig:QFTCircuit} is given by \cite{NielsenAndChuang}
+\begin{equation}
+    \label{eq:QFTcomplexity}
+    \textbf{QFT Complexity: } \mathcal{O}(n^2),
+\end{equation}
+where $n$ is the number of qubits.
+\subsection{Phase Estimation Algorithm}
+\label{subsec:PhaseEstimation}
+
+Now that we have shown how to do a Quantum Fourier transform, the next question one may ask is how to make use of it. A central procedure in many quantum algorithms is known as quantum phase estimation (QPE). Suppose we have a unitary operator $U$. This operator has an eigenvector $\ket{u}$, with the corresponding eigenvalue $e^{2 \pi i \lambda }$, where $\lambda$ is unknown. That is
+\begin{equation}
+    \label{eq:PhaseEstimationEigenvec1}
+    U\ket{u} = e^{2\pi i \lambda} \ket{u}.
+\end{equation}
+The purpose of the QPE algorithm is to estimate $\lambda$. The first stage of the algorithm is shown in the figure below:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{figures/methods/PhaseEstimationCircuit.png}
+    \caption{Phase estimation circuit. Figure is taken from reference \cite{NielsenAndChuang}.}
+    \label{fig:QPECircuit}
+\end{figure}
+
+What we see in fig \ref{fig:QPECircuit} is that we have prepared two quantum registers. The first register has $t$ qubits, all initialised in the $\ket{0}$ state, and the second register is initialized as the eigenvector $\ket{u}$. We will refer to the register with $t$ qubits as the $t$-register, while we will refer to the second register as the $u$-register. All the qubits in the $t$-register are put in a superposition by applying the Hadamard gate (eq. (\ref{eq:HadamardGate})). We then apply the $U^{2^0}$ operator to the $u$-register, conditional on the bottom qubit in the $t$-register. This yields
+$$\ket{u}\frac{1}{2^{t/2}} (\ket{0} + \ket{1})\cdots(\ket{0} + \ket{1}) \left( \ket{0} + e^{2\pi i 2^0 \lambda}\ket{1} \right),$$
+which can be seen from eq. (\ref{eq:PhaseEstimationEigenvec1}).
+Applying the $U^{2^1}$ operator to the $u$-register conditional on the next qubit in the $t$-register gives
+$$\ket{u}\frac{1}{2^{t/2}}(\ket{0} + \ket{1})\cdots(\ket{0} + \ket{1})  \left( \ket{0} + e^{2\pi i 2^1 \lambda}\ket{1} \right)\left( \ket{0} + e^{2\pi i 2^0 \lambda}\ket{1} \right). $$
+Continuing as shown in the circuit gives us finally
+$$\ket{u}\frac{1}{2^{t/2}} \left( \ket{0} + e^{2\pi i 2^{t-1}  \lambda}\ket{1} \right)\cdots \left( \ket{0} + e^{2\pi i 2^2 \lambda}\ket{1} \right) \left( \ket{0} + e^{2\pi i 2^1 \lambda}\ket{1} \right)\left( \ket{0} + e^{2\pi i 2^0 \lambda}\ket{1} \right). $$
+Now suppose that we can write the phase exactly as the binary fraction $$0.\lambda_1 \lambda_2 \cdots \lambda_t = \lambda_1/2 +  \lambda_2/2^2  + \cdots + \lambda_t /2^t.$$
+The bottom qubit in the t-register can then be written as
+$$ \ket{0} + e^{2\pi i 2^0 \lambda}\ket{1} = \ket{0} + e^{2\pi i (\lambda_1/2 +  \lambda_2/2^2  + \cdots + \lambda_t /2^t)}\ket{1} $$
+$$= \ket{0} + e^{2\pi i 0.\lambda_1 \lambda_2 \cdots \lambda_t}\ket{1}. $$
+For the next to bottom qubit in the $t$-register, we can write
+
+$$ \ket{0} + e^{2\pi i 2^1 \lambda}\ket{1} = \ket{0} + e^{2\pi i 2(\lambda_1/2 +  \lambda_2/2^2  + \cdots + \lambda_t /2^t)}\ket{1} .$$
+Since $\lambda_1$ has to be either 1 or 0 we can write this as
+$$\ket{0} + e^{2\pi i 2(\lambda_1/2 +  \lambda_2/2^2  + \cdots + \lambda_t /2^t)}\ket{1} =\ket{0} + e^{2\pi i \lambda_1}e^{2\pi i (\lambda_2/2^1  + \cdots + \lambda_t /2^{t-1})}\ket{1} $$ 
+$$= \ket{0} + e^{2\pi i0.\lambda_2\lambda_3\cdots\lambda_t}\ket{1} .$$
+Doing this for all the qubits in the $t$-register gives us
+
+\begin{equation}
+    \label{eq:PhaseFirstStage}
+    \frac{1}{2^{t/2}}  \left(  \ket{0} + e^{2\pi i 0.\lambda_t}  \right) \cdots\left(  \ket{0} + e^{2\pi i 0.\lambda_2\cdots\lambda_t}  \right)\left(  \ket{0} + e^{2\pi i 0.\lambda_1\cdots\lambda_t}  \right).
+\end{equation}
+Comparing this state with the QFT state in equation (eq. (\ref{eq:productRepresenation})), we see that we have the QFT of the state $\ket{\lambda}$. By performing the inverse quantum Fourier transform on the state in eq. (\ref{eq:PhaseFirstStage}), we will end up with
+
+\begin{align}
+    \label{eq:QPEFinalStep}
+    (QFT)^{-1} \frac{1}{2^{t/2}}  \left(  \ket{0} + e^{2\pi i 0.\lambda_t}  \right) \cdots\left(  \ket{0} + e^{2\pi i 0.\lambda_2\cdots\lambda_t}  \right)\left(  \ket{0} + e^{2\pi i 0.\lambda_1\cdots\lambda_t}  \right)\ket{u} \notag \\ 
+    = \ket{\lambda_1\lambda_2\cdots\lambda_t}\ket{u}.
+\end{align}
+In other words, we get the exact phase encoded in the $t$-register.
+In reality though, we will not necessarily know the eigenvector $\ket{u}$. To deal with this, we can prepare the $u$-register in a state $\ket{\psi} = \sum_{i=1}^{n} c_i \ket{u_i}$ which is a linear combination of the eigenstates of $U$. Repeated applications of the phase estimation algorithm followed by measurements will then yield a specter of eigenvalues and eigenvectors. We also can not always express the phase exactly as a $t$-bit binary fraction. It can be shown that we will with high probability produce a pretty good estimation to $\lambda$ nevertheless \cite{NielsenAndChuang}.
+
+Since all operations on qubits are unitary, we can complex conjugate all the operations in the QFT circuit (fig. \ref{fig:QFTCircuit}) and apply them in the reverse order to yield the inverse Fourier transform. We can show this by considering some arbitrary unitary operations on a state $\ket{j}$:
+$$ABCD\cdots N \ket{j} = \ket{k}$$
+$$(ABCD\cdots N )^{\dagger} \ket{k} = (ABCD\cdots N )^{\dagger}ABCD\cdots N \ket{j}$$
+$$= N^\dagger \cdots D^\dagger C^\dagger B^\dagger A^\dagger ABCD\cdots N \ket{j} = \ket{j}.$$
+
+\bigskip
+\noindent
+To summarize, the QPE algorithm is performed by first applying the circuit in figure \ref{fig:QPECircuit} to the $u$ and $t$-register. We then apply the inverse QFT (section \ref{subsec:QFT}) on the $t$-register. The inverse QFT requires $\mathcal{O}(t^2)$ operations (eq. (\ref{eq:QFTcomplexity})), where $t$ is the number of qubits in the $t$-register. The complexity of the complete QPE algorithm is then dependent on the number of operations required to implement the controlled $U^{2^j}$ operations.
+
+Our plan is to use this method to approximate the eigenvalues of the pairing Hamiltonian (eq. (\ref{eq:SimplifiedPairingHamiltonian})). Before we do this, we will have to introduce two important formulas.
+
+\subsection{The Suzuki-Trotter transformation}
+\label{subsec:SuzukiTrotter}
+The Suzuki-Trotter approximation states that given some unitary operators $\hat{A}_1, \hat{A}_2, \hat{A}_3,\cdots$ that do not necessarily commute, we have for any real $t$
+\begin{equation}
+    \label{eq:SuzukiTrotterApprox}
+    e^{it(\hat{A}_1 + \hat{A}_2 + \hat{A}_3 + \cdots)} = \lim_{m\rightarrow \infty} (e^{i\frac{t}{m}\hat{A}_1}e^{i\frac{t}{m}\hat{A}_2}e^{i\frac{t}{m}\hat{A}_3}\cdots)^m.
+\end{equation}
+This can be shown by utilizing the Taylor expansion of $e^{it(\hat{A}_1 + \hat{A}_2 + \hat{A}_3 + \cdots)}$. We can also in the same manner show that \cite{NielsenAndChuang}
+\begin{equation}
+    \label{eq:SuzukiTrotterApproxWithFault}
+    e^{i\Delta t(\hat{A}_1 + \hat{A}_2 + \hat{A}_3 + \cdots)} =  e^{i\Delta t\hat{A}_1}e^{i\Delta t\hat{A}_2}e^{i\Delta t \hat{A}_3}\cdots + \mathcal{O}(\Delta t^2 ),
+\end{equation}
+hence we can approximate the action of $e^{it(\hat{A}_1 + \hat{A}_2 + \hat{A}_3 + \cdots)}$ to arbitrary precision by utilizing eq. (\ref{eq:SuzukiTrotterApproxWithFault}) repeatedly with small enough $\Delta t$.
+
+\subsection{The Jordan-Wigner transformation}
+\label{subsec:JordanWignerTransformation}
+The Jordan-Wigner transformation is a transformation that maps the Pauli gates (eq. (\ref{eq:PauliMatrices})) onto fermionic creation and annihilation operators \cite{Nielsen2005TheFC}. The creation and annihilation operators from the second quantization formalism (see section \ref{sec:SecondQuantization}) can then be represented on quantum computers, and we will be able to rewrite our second quantization Hamiltonian (eq. (\ref{eq:SimplifiedPairingHamiltonian})) in terms of quantum gates. Suppose that we represent a qubit in state $\ket{0}$ as a state occupied with a fermion and $\ket{1}$ as a state with no fermion. We then see that the operators
+\begin{align}
+    \label{eq:sigmaplussigmaminus}
+    \sigma_+ &= \frac{1}{2}(\sigma_x + i\sigma_y) = \begin{bmatrix}
+    0 & 1  \\
+    0 & 0
+\end{bmatrix} \notag \\
+    \sigma_- &= \frac{1}{2}(\sigma_x - i\sigma_y) = \begin{bmatrix}
+    0 & 0  \\
+    1 & 0
+\end{bmatrix},
+\end{align}
+have the following effect on the qubit basis states
+$$\sigma_+ \ket{1} = \ket{0} \qquad \sigma_- \ket{0} = \ket{1},$$
+and
+$$\sigma_+ \ket{0} = 0 \qquad \sigma_-\ket{1} = 0.$$
+Hence, $\sigma_+$ acts as a creation operator and $\sigma_-$ acts as an annihilation operator. However, since fermionic states are anti-symmetric, $a^\dagger_a a^\dagger_b \ket{c} = - a^\dagger_b a^\dagger_a \ket{c}$, we need our quantum gate representation of the creation/annihilation operators to preserve this property. This can be achieved by multiplying the $\sigma_z$ matrix (eq. (\ref{eq:PauliMatrices})) on all the occupied states leading up to the one we operate on. The complete creation and annihilation operators can then be represented as
+\begin{equation}
+    \label{eq:LadderOpsPauli}
+    a^\dagger_n \equiv \left(\prod_{k=1}^{n-1}\sigma_z^k \right)\sigma_+^n \qquad a_n \equiv \left(\prod_{k=1}^{n-1}\sigma_z^k \right) \sigma_-^n
+\end{equation}
+where the superscript tells us which qubit the operator acts on. For convenience, we chose that odd qubits are in a spin up state, while even qubits are in spin down state. For example for the following state
+\begin{align*}
+    \textit{Qubit state:} & \ket{0 \: \; \ 0 \: \; \ 1 \: \; \ 1 } \\
+    \textit{Spin state:} & + \; - \; + \; - \; \\
+    \textit{Spacial state:} & \ 1 \; \: \ 1 \ \; \: 2 \ \; \: 2 \; ,
+\end{align*}
+the first spacial basis state is occupied with a fermion pair with opposite spin, while the second spacial state is not occupied with any fermions.
+The equivalent of the reference state in eq. (\ref{eq:ReferenceState}) for our qubit-state is then
+\begin{equation}
+    \label{eq:qubitReferenceState}
+    \ket{\Psi_0} = \ket{0}^{\otimes^n}\ket{1}^{\otimes^k},
+\end{equation}
+where $n$ is the number of particles and $n+k$ is the number of spin-orbitals.
+
+\subsubsection{Jordan-Wigner transformation of Pairing Hamiltonian}
+\label{subsubsec:JordanWignerPairing}
+We can now write the second quantization pairing Hamiltonian (eq. (\ref{eq:SimplifiedPairingHamiltonian})) in terms of the Pauli matrices. A detailed derivation is provided in appendix B. Here we simply state the result: For the one body part of the Hamiltonian we have the terms
+\begin{equation}
+    \label{eq:Onebodyintermsofpauli}
+    \hat{H}_{0p} = \frac{1}{2}\delta(p - 1 - I[p\%2=0])(I^p + \sigma_z^p),
+\end{equation}
+where we sum over each qubit $p$ and $\%$ is the modulo operator. We have that $I[f(x) = y] = 1$ if $f(x) = y$ and zero otherwise. For the interaction term we have two possibilities. First for $p = q$ we have:
+\begin{align}
+    \label{eq:twobodypaulipisq}
+    \hat{V}_{p} = -\frac{1}{8}g\Big[ &I^{\otimes^{2p-2}} \otimes I  \otimes I \otimes I^{\otimes^{n - 2p}} \nonumber \\
+    +& I^{\otimes^{2p-2}} \otimes I  \otimes \sigma_z \otimes I^{\otimes^{n - 2p}} \\
+    +& I^{\otimes^{2p-2}} \otimes \sigma_z  \otimes I \otimes I^{\otimes^{n - 2p}} \nonumber \\
+    +& I^{\otimes^{2p-2}} \otimes \sigma_z  \otimes \sigma_z \otimes I^{\otimes^{n - 2p}}\Big],\nonumber 
+\end{align}
+and for $q - p \geq 1$ we get:
+\begin{align}
+    \label{eq:twobodypauliqgeqp}
+       \hat{V}_{pq} = -\frac{1}{16}g [& I^{\otimes^{2p -2}} \otimes \sigma_x \otimes \sigma_x \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_x \otimes \sigma_x \otimes I^{\otimes^{n-2q}} \nonumber \\
+        & -I^{\otimes^{2p -2}} \otimes \sigma_x \otimes \sigma_x \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_y \otimes \sigma_y \otimes I^{\otimes^{n-2q}} \nonumber \\
+        & + I^{\otimes^{2p -2}} \otimes \sigma_x \otimes \sigma_y \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_x \otimes \sigma_y \otimes I^{\otimes^{n-2q}} \nonumber \\
+        & + I^{\otimes^{2p -2}} \otimes \sigma_x \otimes \sigma_y \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_y \otimes \sigma_x \otimes I^{\otimes^{n-2q}}  \\
+        &+ I^{\otimes^{2p -2}} \otimes \sigma_y \otimes \sigma_x \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_x \otimes \sigma_y \otimes I^{\otimes^{n-2q}} \nonumber \\
+        & + I^{\otimes^{2p -2}} \otimes \sigma_y \otimes \sigma_x \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_y \otimes \sigma_x \otimes I^{\otimes^{n-2q}} \nonumber \\
+        & - I^{\otimes^{2p -2}} \otimes \sigma_y \otimes \sigma_y \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_x \otimes \sigma_x \otimes I^{\otimes^{n-2q}} \nonumber \\
+        &+ I^{\otimes^{2p -2}} \otimes \sigma_y \otimes \sigma_y \otimes I^{\otimes^{2(q - p - 1)}} \otimes \sigma_y \otimes \sigma_y \otimes I^{\otimes^{n-2q}}].\nonumber 
+\end{align}
+We have included a factor of two so the sum over $p$ and $q$ here can be restricted to $q > p$.
+The complete Jordan-Wigner transformed pairing Hamiltonian can then be written as
+\begin{equation}
+    \label{eq:JordanWignerHamiltonian}
+    \hat{H} = \sum_p \hat{H}_{0p} + \sum_{p} \hat{V}_p + \sum_{q > p} \hat{V}_{pq},
+\end{equation}
+where $\hat{H}_{0p}$, $\hat{V}_p$ and $\hat{V}_{pq}$ is given by eqs. (\ref{eq:Onebodyintermsofpauli}), (\ref{eq:twobodypaulipisq}) and (\ref{eq:twobodypauliqgeqp}), respectively.
+
+
+\subsection{Hamiltonian Simulation}
+\label{subsec:HamiltonianSimulation}
+We are now ready to find the eigenvalues of a fermionic Hamiltonian using the quantum phase estimation algorithm (section \ref{subsec:PhaseEstimation}). To see how this can be done, consider that a (time independent) quantum state evolves according to the time evolution operator
+\begin{equation}
+    \label{eq:TimeEvolution}
+    \ket{\psi (t)} = e^{-i\hat{H} t/\hbar}\ket{\psi (0)} = \hat{U} \ket{\psi (0)},
+\end{equation}
+where $\hat{H}$ is the Hamiltonian.
+We also know that an eigenstate $\psi_k$ of the $\hat{H}$ is also an eigenstate of the time evolution operator. Its eigenvalue is given by
+\begin{equation}
+    \label{eq:TimeEvoEigenval}
+    e^{-i\hat{H} t/\hbar}\ket{\psi_k} = e^{-i E_k t / \hbar }\ket{\psi_k},
+\end{equation}
+where $E_k$ is the $k$'th eigenvalue of $\hat{H}$.
+The QPE algorithm finds the phase $\lambda_k$ of a unitary operator with eigenvalue $e^{-i\lambda_k 2\pi}$, so if we can approximate the time evolution operator on a quantum computer, we can also approximate its eigenvalues with the QPE algorithm. 
+We have shown in section \ref{subsubsec:JordanWignerPairing} how to write our Hamiltonian in terms of the Pauli matrices:
+\begin{equation}
+    \label{eq:FullPauliHamiltonian}
+    \hat{H} = \sum_p \hat{H}_{0p} + \sum_{p} \hat{V}_p + \sum_{q > p} \hat{V}_{pq},
+\end{equation}
+where $\hat{H}_{0p}$, $\hat{V}_p$ and $\hat{V}_{pq}$ is given by eqs. (\ref{eq:Onebodyintermsofpauli}), (\ref{eq:twobodypaulipisq}) and (\ref{eq:twobodypauliqgeqp}), respectively.
+The corresponding time evolution operator is then given by
+\begin{equation}
+    \label{eq:TimeEvoPauli}
+    \hat{U}(t) = e^{-i(\sum_p \hat{H}_{0p} + \sum_{p} \hat{V}_p + \sum_{q > p} \hat{V}_{pq})t}.
+\end{equation}
+The Suzuki-Trotter approximation in eq. (\ref{eq:SuzukiTrotterApproxWithFault}) can now be utilized to approximate a small time-step with this operator:
+\begin{equation}
+    \label{eq:TimeEvoTrotterApprox}
+    \hat{U}(\Delta t) = \prod_p e^{-i\hat{H}_{0p}\Delta t}\prod_p e^{-i\hat{V}_p \Delta t} \prod_{q>p} e^{-i\hat{V}_{pq} \Delta t} + \mathcal{O}(\Delta t^2).
+\end{equation}
+We will now show how each of the separate exponential operators in eq. (\ref{eq:TimeEvoTrotterApprox}) can be implemented on a quantum computer. Consider that $e^{-i \sigma_z \otimes \sigma_z \otimes \sigma_z \otimes \sigma_z \Delta t}$ can be implemented with the following circuit \cite{NielsenAndChuang}
+\begin{equation}
+   \label{circuit:TimeEvolution}
+   e^{-i \sigma_z \otimes \sigma_z \otimes \sigma_z \otimes \sigma_z \Delta t} \equiv
+    \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \ctrl{4} & \qw      & \qw      & \qw     & \qw  & \qw & \qw & \qw & \ctrl{4} & \qw  \\
+& \qw      & \ctrl{3} & \qw      & \qw     & \qw  & \qw & \qw & \ctrl{3} &\qw & \qw  \\
+& \qw      & \qw      & \ctrl{2} & \qw     & \qw  & \qw & \ctrl{2} & \qw&\qw & \qw  \\
+& \qw      & \qw      & \qw      & \ctrl{1}& \qw  & \ctrl{1} & \qw & \qw&\qw & \qw \\
+\lstick{\ket{0}}& \targ    & \targ    & \targ    & \targ   & \gate{e^{-i\Delta t Z}} & \targ &\targ &\targ &\targ & \qw \\
+}
+\end{array},
+\end{equation}
+where the operator $e^{-i\Delta t Z}$ is given by the $R_z(\theta)$ gate (eq. (\ref{eq:RotationOps})). We can easily extend this circuit with more (less) control qubits to apply longer (shorter) strings of $\sigma_z$ gates.
+
+With the use of the following identities
+\begin{equation}
+    \label{eq:XintermsofZ}
+    \sigma_x = H\sigma_zH,
+\end{equation}
+and
+\begin{equation}
+    \label{eq:YintermsofZ}
+    \sigma_y = R_z(\pi/2)H\sigma_z H R_z(-\pi/2),
+\end{equation}
+we can use circuit (\ref{circuit:TimeEvolution}) to implement the time evolution of an arbitrary string of Pauli matrices. For example, for the tensor product $H = \sigma_x \otimes \sigma_y \otimes \sigma_x \otimes \sigma_y$, we have
+\begin{align}
+    \label{eq:TwobodyHamilExample}
+    &H \otimes R_z(\pi/2)H \otimes H \otimes R_z(\pi/2)H \notag \\
+    \times  & e^{-i\Delta t \sigma_z\otimes \sigma_z \otimes \sigma_z \otimes \sigma_z}  \notag \\
+    \times & H \otimes HR_z(-\pi/2) \otimes H \otimes HR_z(-\pi/2) \notag \\
+    = & U e^{-i\Delta t \sigma_z\otimes \sigma_z \otimes \sigma_z \otimes \sigma_z} U^\dagger \notag \\
+    =& U [cos(\Delta t)I - isin(\Delta t) \sigma_z\otimes \sigma_z \otimes \sigma_z \otimes \sigma_z]U^\dagger \notag \\
+    =& cos(\Delta t)I - isin(\Delta t) \sigma_x \otimes \sigma_y \otimes \sigma_x \otimes \sigma_y \notag \\
+    =& e^{-i\Delta t \sigma_x \otimes \sigma_y \otimes \sigma_x \otimes \sigma_y}, \notag
+\end{align}
+since $U U^\dagger = I$ and
+$$ U \times (\sigma_z\otimes \sigma_z \otimes \sigma_z \otimes \sigma_z) \times U^\dagger $$
+$$=(H \otimes R_z(\pi/2)H \otimes H \otimes R_z(\pi/2)H)$$
+$$\times (\sigma_z\otimes \sigma_z \otimes \sigma_z \otimes \sigma_z)$$ $$\times (H \otimes HR_z(-\pi/2) \otimes H \otimes HR_z(-\pi/2))$$
+$$= H\sigma_z H \otimes R_z(\pi/2)H\sigma_z H R_z(-\pi/2) \otimes H \sigma_z H \otimes R_z(\pi/2) H \sigma_z H R_z(-\pi/2)$$
+$$ = \sigma_x \otimes \sigma_y \otimes \sigma_x \otimes \sigma_y. $$
+
+Hence, if we have a Pauli operator $\sigma_a$, where $a \in {x,y,z}$ and $\sigma_a = U_a \sigma_z U_a^\dagger $, we can implement the time evolution $e^{-\Delta t h \sigma_a \otimes \sigma_b \otimes \sigma_c \otimes \sigma_d}$ with the following circuit
+\begin{equation}
+   \label{circuit:TimeEvolutionArbitraryPauli}
+    \begin{array}{c}
+\Qcircuit @C=1.5em @R=1em {
+& \gate{U_a} & \ctrl{4} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \ctrl{4} & \gate{U_a^\dagger} \\
+& \gate{U_b} & \qw  & \ctrl{3} & \qw & \qw & \qw & \qw & \qw & \ctrl{3} & \qw & \gate{U_b^\dagger} \\
+& \gate{U_c} & \qw & \qw & \ctrl{2} &\qw & \qw & \qw & \ctrl{2} & \qw & \qw &\gate{U_c^\dagger} \\
+& \gate{U_d} & \qw  & \qw & \qw & \ctrl{1} & \qw & \ctrl{1} & \qw & \qw & \qw & \gate{U_d^\dagger} \\
+& \qw & \targ & \targ & \targ &  \targ & \gate{R_z(2\Delta t h)} & \targ & \targ & \targ & \targ & \qw
+}
+\end{array},
+\end{equation}
+where $h$ is a real factor. We can see that this circuit is efficient since we at most require an amount of operations linear in the amount of qubits. Hence, we can simulate the time evolution of any Hamiltonian efficiently as long as the number of terms in the Hamiltonian is polynomial in the amount of qubits \cite{NielsenAndChuang}. We see from the Jordan-Wigner transformation of our pairing Hamiltonian (section \ref{subsec:JordanWignerTransformation}) that this is the case for our problem.
+
+
+\subsection{Getting the complete eigenvalue spectra}
+\label{subsubsec:EigenvalueSpectraQPE}
+
+The phase estimation algorithm is aimed at finding $\lambda_k$ for a unitary operator $\hat{U}$ with eigenvalue $e^{i2\pi \lambda_k}$, such that
+\begin{equation*}
+    \hat{U}\ket{\psi_k} = e^{i2\pi\lambda_k}\ket{\psi_k}.
+\end{equation*}
+In our case, the time evolution operator applied for a time $\tau$ has the eigenvalues $e^{-iE_k \tau}$, which means that the value we read from the phase estimation algorithm is 
+$$ i2\pi \lambda_k = - iE_k \tau $$
+$$ \implies \lambda_k = -\frac{iE_k\tau}{i2\pi} $$
+\begin{equation}
+    \label{eq:PhaseEstimationLambdaInTermsOfEigenvalue}
+    \implies \lambda_k = -E_k \tau /2\pi.
+\end{equation}
+An assumption with the phase estimation algorithm is that we can write the eigenvalue as a binary fraction. Since a binary fraction is a positive number, we need our eigenvalues to be negative for the phase estimation algorithm to work, according to the above equation for $\lambda_k$ (eq. (\ref{eq:PhaseEstimationLambdaInTermsOfEigenvalue})). We can force this by subtracting a large enough constant value $E_{max}$ from the Hamiltonian, since $$(\hat{H} - E_{max})\ket{\phi_k} = (E_k - E_{max})\ket{\phi_k}.$$
+This gives us
+$$\lambda_k = -(E_k - E_{max})\tau /2\pi $$
+$$\implies \lambda_k 2\pi / \tau = E_{max} - E_k $$
+\begin{equation}
+    \label{eq:PhaseEstimationMeasurementToEigenvalue}
+   \implies E_k = E_{max} - \lambda_k 2\pi/\tau.
+\end{equation}
+Further, since the phase estimation algorithm yields the following state for the $t$-register (eq. (\ref{eq:QPEFinalStep}))
+$$\ket{\lambda_1 \lambda_2 \cdots \lambda_{n_t}} =\ket{\lambda 2^{n_t}},$$
+where $n_t$ is the number of qubits in the $t$-register,
+we need to transform the measured binary number $\lambda_1 \lambda_2 \cdots \lambda_{n_t}$ to a binary fraction $0.\lambda_1 \lambda_2 \cdots \lambda_{n_t}$ before plugging it into the equation for $E_k$.
+
+We can also see that if we have $\lambda = \lambda^{'} + n > 1$ where $0 < \lambda^{'} < 1$ and $n$ is a positive integer, we get from the phase estimation algorithm 
+$$e^{i2\pi (\lambda^{'} + n)} = e^{i2\pi n}e^{i2\pi \lambda^{'}} =e^{i2\pi \lambda^{'}}, $$
+or written in binary form
+$$e^{i2\pi (\lambda^{'} + n)} = e^{i2\pi \lambda_1\cdots\lambda_k.\lambda_{k+1}\cdots\lambda_n} = e^{i 2\pi 0.\lambda_{k+1}\cdots \lambda_n}.$$
+In other words; for eigenvalues greater than one, we lose information.
+A restriction on $\lambda_k < 1$ in eq. (\ref{eq:PhaseEstimationLambdaInTermsOfEigenvalue}) gives
+$$-E_k \tau / 2\pi < 1 $$ 
+$$\implies -E_k \tau < 2\pi $$
+or
+$$-(E_k - E_{max}) \tau < 2\pi. $$
+Substituting $E_k$ with $E_{min}$ (the lowest eigenvalue of $\hat{H}$) gives an upper bound on $t$ in order to yield the whole eigenvalue spectrum
+\begin{equation}
+    \label{eq:PhaseEstimationtUpperBound}
+    t < \frac{2\pi}{E_{max} - E_{min}}.
+\end{equation}
+We also have to keep in mind the number of qubits to use in the $t$-register. If we use $k$ qubits we can represent $2^k$ binary fractions. A quantum state represented by $s$ simulation qubits potentially has $2^s$ eigenvalues. With a $t$-register of $k$ qubits, this means that we will have $\frac{2^k}{2^s} = 2^{k-s}$ points for each eigenvalue.
+Previous research has claimed that a surplus of around 5 qubits in the $t$-register are usually sufficient to yield the complete eigenvalue-spectra \cite{Ovrum2003QuantumCA}.
+
+\subsection{Summary of the quantum phase estimation algorithm}
+A summary of the QPE algorithm is explained below:
+\begin{itemize}
+    \item Subtract a constant $E_{max}$ from the problem Hamiltonian (see section \ref{subsubsec:EigenvalueSpectraQPE}). The constant should be larger than the largest eigenvalue of the Hamiltonian.
+    \item Prepare two registers. One register of $t$-qubits ($t$-register) and one register of $u$ qubits ($u$-register) (see QPE circuit in figure \ref{fig:QPECircuit}).
+    \item Put the $u$-register in a linear combinations of the eigenstates of the problem Hamiltonian $\hat{H}$. This can be done by applying a Hadamard gate (eq. (\ref{eq:HadamardGate})) to each of the qubits. This will yield a superposition of all the computational basis states.
+    \item Apply the QPE circuit (figure \ref{fig:QPECircuit}), where $U$ is given by the Suzuki-Trotter approximation (section \ref{subsec:SuzukiTrotter}) of the Hamiltonian time evoulution operator. The evolution time is bounded by eq. (\ref{eq:PhaseEstimationtUpperBound}).
+    \item Apply the inverse of the QFT ciruit (figure \ref{fig:QFTCircuit}) to the $t$-register.
+    \item Measure all qubits in the $t$-register to yield a binary fraction
+    \item Use eq. (\ref{eq:PhaseEstimationMeasurementToEigenvalue}) to obtain the measured eigenvalue from the binary fraction.
+    \item Repeat to obtain a spectra of eigenvalues.
+\end{itemize}
+
+
+\section{Variational Quantum Eigensolvers}
+\label{sec:VQE}
+
+The variational principle states that the expectation value of the Hamiltonian has to be larger than or equal to the ground state energy of the system. Mathematically this can be expressed as
+\begin{equation}
+    \label{eq:VariationalPrinciple}
+    \bra{\psi} H \ket{\psi} \geq E_0.
+\end{equation}
+We can understand this principle intuitively by considering that no single measurement of the energy can be lower than the ground state energy. Hence, the expectation value of the energy can neither. Variational methods make use of this principle by calculating the expectation value in equation  \ref{eq:VariationalPrinciple} for what we call a trial wavefunction $\ket{\psi_T(\boldsymbol{\theta)}}$:
+$$\bra{\psi_T(\boldsymbol{\theta})} H \ket{\psi_T(\boldsymbol{\theta})} = E(\boldsymbol{\theta}).$$
+The variational parameters $\boldsymbol{\theta} = [\theta_1, \theta_2, \cdots, \theta_p]$ are then varied to minimize $E(\boldsymbol{\theta})$, which hopefully makes a good approximation for $E_0$. For variational quantum eigensolvers (VQE), the trial wave function is given by a parametrized n-qubit state
+$$ U(\boldsymbol{\theta}) \ket{\psi_0} = \ket{\psi_T(\boldsymbol{\theta})}, $$
+where $U(\boldsymbol{\theta})$ is some parametrized multi-qubit gate and $\ket{\psi_0}$ is the initial state of the qubits.
+As long as the Hamiltonian can be rewritten as a sum of quantum gates $O_i$
+$$ H = \sum_{i=1}^m h_i O_i, $$
+we can find its expectation value by considering the expectation of each term
+\begin{equation}
+    \label{eq:VQEExpectationValueofHamiltonian}
+    \bra{\psi_T(\boldsymbol{\theta})} H \ket{\psi_T(\boldsymbol{\theta})} = \sum_{i=1}^m h_i \bra{\psi_T(\boldsymbol{\theta})} O_i \ket{\psi_T(\boldsymbol{\theta})}.
+\end{equation}
+How to perform these steps are best described by considering an example, namely the Max-Cut problem.
+
+\subsection{Max-Cut problem}
+\label{subsec:VQEMaxCut}
+The Max-Cut problem is one of the hardest combinatorial optimization problems to solve, yet its one of the easiest to conceptualize. The aim of this section is to explain a quantum variational eigensolver by solving the Max-Cut problem. The Max-Cut problem can be understood by considering this graph
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{figures/methods/maxcut.png}
+    \caption{Unsolved Max-Cut graph}
+    \label{fig:maxcutunsolved}
+\end{figure}
+The circles are called the nodes of the graph and the lines connecting two nodes are called edges. Now consider that you are allowed to color each node in either red or blue. The numbers next to the edges of the graph are called weights, and they state the number of points gained if the nodes the edge connects to are of different colors. Solving a Max-Cut problem corresponds to coloring the graph in such a way that you have the maximum amount of points.
+A solution to this Max-Cut problem is represented in the graph below
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{figures/methods/maxcutsolved.png}
+    \caption{Solved Max-Cut graph}
+    \label{fig:maxcutsolved}
+\end{figure}
+yielding a total of 13 points. We gain points from all the weights except of the one representing the connection from node A to E, as these are both of the same coloring. Given a graph with $n$ nodes, all its information can be expressed with an $n$ by $n$ matrix $W$. Its entries $w_{ij}$ correspond to the points given by the edge connecting node $i$ and node $j$.
+To give an example, the matrix for the graph given in figs. \ref{fig:maxcutunsolved} and \ref{fig:maxcutsolved} is
+
+\[ W =
+\begin{blockarray}{cccccc}
+A & B & C & D & E \\
+\begin{block}{(ccccc)c}
+  0 & 3 & 0 & 0 & 1 & A \\
+  3 & 0 & 2 & 0 & 3 & B \\
+  0 & 2 & 0 & 2 & 0 & C \\
+  0 & 0 & 2 & 0 & 3 & D \\
+  1 & 3 & 0 & 3 & 0 & E
+\end{block}
+\end{blockarray}.
+ \]
+We can express a profit-function for the Max-Cut problem with the help of the matrix elements in any Max-Cut matrix $W$, by representing the color of node $i$ with a binary number $x_i \in \{0,1\}$ \cite{MaxCutAndEulerRotationHardwareEfficient}:
+\begin{equation}
+    \label{eq:MaxCutCostFunction}
+    C(\boldsymbol{x};W) = \sum_{i,j} w_{ij}x_i(1 - x_j).
+\end{equation}
+The coloring $\boldsymbol{x}$ which yields this functions highest value is the solution to the Max-Cut problem. We now want to map the function $C(\boldsymbol{x})$ into a Hamiltonian in such a way that it can be evaluated on a quantum computer. This can be done by first expressing the coloring of a given $n$-noded graph with an $n$-qubit state $\ket{q_1}\ket{q_2}\cdots \ket{q_n}$, where $q_i$ corresponds to the coloring $x_i$. We then do the following mapping in the profit-function (eq. (\ref{eq:MaxCutCostFunction})) \cite{MaxCutAndEulerRotationHardwareEfficient}
+\begin{equation}
+    \label{eq:BinaryXtoPauli}
+    x_i \rightarrow \frac{1 - \sigma_z^i}{2},
+\end{equation}
+where $\sigma_z$ is the Pauli-$Z$ gate (eq. (\ref{eq:PauliMatrices})).
+We can see that this will successfully evaluate $C(\boldsymbol{x})$ since 
+$$\frac{1 - \sigma_z^i}{2} \ket{0} = 0 \qquad \text{and} \qquad \frac{1 - \sigma_z^i}{2}\ket{1} = \ket{1}. $$
+Inserting eq. (\ref{eq:BinaryXtoPauli}) into the cost function in eq. (\ref{eq:MaxCutCostFunction}) gives
+$$ \sum_{i,j} w_{ij}x_i(1 - x_j) \rightarrow \sum_{i,j}w_{ij}\frac{1 - \sigma_z^i}{2}(1 - \frac{1 - \sigma_z^j}{2}) $$
+$$=   \sum_{i,j}w_{ij}[\frac{1 - \sigma_z^i}{2} - \frac{1 - \sigma_z^i}{2}\frac{1 - \sigma_z^j}{2}]$$
+$$= \sum_{i,j}w_{ij}\left( \frac{1 - \sigma_z^i}{2} - \frac{1}{4}[1 - \sigma_z^i - \sigma_z^j + \sigma_z^i\sigma_z^j]\right). $$
+Since the terms without any Pauli matrices are constant when varying the quantum state, we can omit these terms from the above equation. Also, when dealing with terms with only a single qubit gate, we are free to exchange the variable $i$ with $j$ without altering the resulting equation. This removes all single-qubit gates. We are then free to multiply the equation with a factor of two to restrict the sum to $i < j$. When realizing that global factors do not contribute to the location of the minima in parameter space, we are left with \cite{MaxCutAndEulerRotationHardwareEfficient}
+\begin{equation}
+    \label{eq:maxcuthamiltonian}
+    H = \sum_{i<j}w_{ij}\sigma_z^i \sigma_z^j.
+\end{equation}
+Now that we have the Hamiltonian for our Max-Cut problem, we need to explain how we exaluate the expectation values in eq. (\ref{eq:VQEExpectationValueofHamiltonian}).
+
+
+\subsection{VQE Expectation Values}
+\label{subsec:VQEExpecVals}
+
+As stated earlier, the expectation value of our Hamiltonian is the sum of the expectation value of each term (see eq. (\ref{eq:VQEExpectationValueofHamiltonian})). We have set up an Hamiltonian for our problem, so how do we evaluate the expectation values then? Let us first consider how to handle Pauli-$Z$ expectation values, as the Max-Cut Hamiltonian (eq. (\ref{eq:maxcuthamiltonian})) is containing only Pauli-$Z$ gates. The first eigenstate of the Pauli-$Z$ matrix is $\ket{0}$ with an eigenvalue of 1 and the second is $\ket{1}$ with an eigenvalue of -1. We know from quantum mechanics that if we act upon a qubit with the Pauli-$Z$ gate and perform a measurement, it will collapse to one of its eigenstates. Therefore, if we measure the state $\sigma_z^i \sigma_z^j \ket{\psi_T( \boldsymbol{\theta})}$, we can retrieve the resulting eigenvalue by considering the state of qubit $i$ and $j$:
+\begin{table}[H]
+\centering
+\label{tab:paulizEigenvaluesEigenstates}
+\begin{tabular}{ll}
+\quad $\ket{q_i} \ket{q_j} $             & Eigenvalue            \\
+\quad $\ket{0} \ket{0} $ & $1 \cdot 1 = 1$       \\
+\quad $\ket{1} \ket{1} $ & $(-1) \cdot (-1) = 1$ \\
+\quad $\ket{0} \ket{1} $ & $1 \cdot (-1) = -1 $  \\
+\quad $\ket{1} \ket{0}$  & $(-1) \cdot 1 = -1 $ 
+\end{tabular}
+\end{table}
+The expectation value $\bra{\psi} \sigma_z^i \sigma_z^j \ket{\psi} $ is then approximated by repeatedly measuring $\sigma_z^i \sigma_z^j \ket{\psi}$ and averaging the obtained eigenvalues. The final step is to multiply the expectation value with the corresponding matrix element $w_{ij}$ (eq. (\ref{eq:maxcuthamiltonian})). This is done separately with each term in eq. (\ref{eq:maxcuthamiltonian}) to finally yield
+$$ \bra{\psi_T(\boldsymbol{\theta})} H \ket{\psi_T(\boldsymbol{\theta})} = \sum_{i < j} w_{ij} \bra{\psi_T(\boldsymbol{\theta})} \sigma_z^i \sigma_z^j \ket{\psi_T(\boldsymbol{\theta})}.$$
+The following circuit is to be run for all $i$ and $j$ subject to $i < j$ to obtain the above expectation values
+\begin{equation}
+   \label{circuit:MaxCutExpectationValueZ}
+    \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+&& \qw & \qw & \qw & \qw \\
+&& \vdots& \vdots & \vdots & \vdots \\
+\ket{i}& & \gate{Z} & \qw & \qw & \meter \\
+&& \vdots& \vdots & \vdots & \vdots \\
+\ket{j} && \gate{Z} & \qw & \qw & \meter \\
+&& \vdots& \vdots & \vdots & \vdots
+}
+\end{array}
+\end{equation}
+
+\bigskip
+
+Here $\ket{i}$ denotes the $i$'th qubit.
+From this example, we have learned that the circuit for finding the expectation for a Pauli-$Z$ matrix is
+\begin{equation}
+   \label{circuit:paulizExpectationValue}
+    \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{Z} &  \meter 
+}
+\end{array}
+\end{equation}
+We will sometimes run into other matrices than the Pauli-$Z$ matrix, namely the Pauli-$X$ and Pauli-$Y$ matrices (eq. (\ref{eq:PauliMatrices})). To calculate the expectation values when these operators come into play, we have to introduce some tricks. Let us first consider the eigenvalues and eigenstates of the Pauli-$X$ matrix. They are given by
+\begin{align}
+    \label{eq:PauliXEigenvaluesAndEigenstates}
+    X\frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) = \frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) \notag \\
+    X\frac{1}{\sqrt{2}}(\ket{0} - \ket{1}) = - \frac{1}{\sqrt{2}}(\ket{0} - \ket{1}),
+\end{align}
+where we see that the top state and bottom state has an eigenvalue of 1 and -1 respectively. Let us see what happens if we apply a Hadamard gate (eq. (\ref{eq:HadamardGate})) to the first eigenstate:
+$$H\frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) = \ket{0}. $$
+Likewise with the second eigenstate:
+$$H\frac{1}{\sqrt{2}}(\ket{0} - \ket{1}) = \ket{1}. $$
+Hence, the same gate applied to each of these states transforms them into their own computational basis state. This means that we can obtain the corresponding eigenvalue by running this circuit
+\begin{equation}
+   \label{circuit:ExpectationValuePauliX}
+    \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{X} & \gate{H} & \meter 
+}
+\end{array},
+\end{equation}
+and conclude that we have obtained an eigenvalue of 1 when we measure the qubit in the $\ket{0}$ state and an eigenvalue of -1 when we measure the qubit in the $\ket{1}$ state. For the Pauli-$Y$ matrix, we have the following eigenvalues and eigenstates
+\begin{align}
+    \label{eq:PauliYEigenvaluesAndEigenstates}
+    Y\frac{1}{2}(\ket{0} + i\ket{1}) = \frac{1}{2}(\ket{0} + i\ket{1}) \notag \\
+    Y\frac{1}{2}(\ket{0} - i\ket{1}) = -\frac{1}{2}(\ket{0} - i\ket{1}),
+\end{align}
+where the first eigenstate and the second eigenstate has an eigenvalue of 1 and -1, respectively. 
+As we did with the Pauli-$X$ matrix, we can revert each of the eigenstates back to the computational basis with a unitary transformation. Consider
+$$HS\frac{1}{2}(\ket{0} + i\ket{1}) = H\frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) = \ket{0},$$
+and
+$$ HS\frac{1}{2}(\ket{0} - i\ket{1}) = H\frac{1}{\sqrt{2}}(\ket{0} - \ket{1}) = \ket{1},$$
+where $S$ is the phase shift gate, see eq. (\ref{eq:Sgate}).
+Hence, we can find the eigenvalues with this circuit
+\begin{equation}
+   \label{circuit:ExpectationValuePauliX}
+    \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+& \gate{Y} &\gate{S} &  \gate{H} & \meter 
+}
+\end{array},
+\end{equation}
+and follow the same conclusions as we did for the Pauli-$X$ gate.
+
+\subsection{Variational ansatz / Trial state}
+\label{subsec:VariaAnsatz}
+
+Before running the circuits to obtain the expectation values, we need to have set up a parametrized variational state. The variational state $\ket{\psi_T(\boldsymbol{\theta})}$, also called the wavefunction ansatz, is usually set up with a combination of some unitary transformation which causes sufficient entanglement $U_{ent}$ between the qubits and some sort of rotation $U_a(\boldsymbol{\theta})$ on the qubits depending on the angles $\boldsymbol{\theta} = [\theta_1, \theta_2, \cdots , \theta_p]$. We will consider a couple of ansatzes in this thesis. The simplest one consists of only $R_y(\theta)$ gates (eq. (\ref{eq:RotationOps})) and CNOT gates (eq. (\ref{eq:CNOTMatrix})). The circuit to initialize this ansatz is shown below
+\begin{equation}
+    \label{circuit:VQERyAnsatz}
+    \ket{\psi_T (\boldsymbol{\theta})} = \begin{array}{c}
+\Qcircuit @C=2em @R=1em {
+ & \gate{R_y(\theta_1)} & \ctrl{1}      & \qw      & \qw     &   \cdots \\
+& \gate{R_y(\theta_2)}     & \targ & \ctrl{1}      & \qw     & \cdots  \\
+& \gate{R_y(\theta_3)}     & \qw      & \targ & \ctrl{1}     & \cdots  \\
+& \gate{R_y(\theta_4)}& \qw    & \qw   & \targ    & \cdots \\
+&  &  & \vdots &  & & \\
+}
+\end{array},
+\end{equation}
+
+\bigskip
+
+where the same pattern of applying $R_y(\theta)$- gates and CNOT gates to neighbooring qubits continues til we reach the final qubit.\newline
+Since an arbitrary single-qubit Euler rotation can be expressed in terms of a combination of $R_z$ and $R_x$ gates, the second ansatz will be prepared with some entanglement gate $U_{ent}$ interleaved between such arbitrary rotations. This type of trial state for $n$ qubits can be written as \cite{MaxCutAndEulerRotationHardwareEfficient}
+\begin{align}
+    \label{eq:EulerRotationTrialState}
+    \ket{\psi_T(\boldsymbol{\theta}} &= \left[\prod_{q=1}^n U^{[q,d]}(\boldsymbol{\theta}^{[q,d]} ) \right] \times U_{ent} \times \left[\prod_{q=1}^n U^{[q,d-1]}(\boldsymbol{\theta}^{[q,d-1]}) \right] \times U_{ent} \notag \\
+    & \times \cdots \times U_{ent} \times \left[\prod_{q=1}^n U^{[q,1]}(\boldsymbol{\theta}^{[q,1]}) \right] \ket{000\cdots 0},
+\end{align}
+where $n$ is the number of qubits, $d$ is the number of successive applications of $U_{ent}\left[\prod_{q=1}^n U^{[q,k]}(\boldsymbol{\theta}^{[q,k]}) \right]$, and
+\begin{equation}
+\label{eq:EulerRotation}
+    U^{[k,l]}(\boldsymbol{\theta}^{[k,l]} ) = R_z(\theta^{[k,l]}_1) R_x(\theta^{[k,l]}_2)R_z(\theta^{[k,l]}_3).
+\end{equation}
+We restrict ourselves to the following entanglement gate in this thesis:
+\begin{equation}
+    \label{circuit:Uentvqe}
+    U_{ent} \equiv \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \ctrl{1} & \qw & \qw & \qw & \qw & \qw& \qw& \qw\\
+& \targ & \ctrl{1} & \qw  &\qw & \qw& \qw& \qw& \qw \\
+& \qw & \targ{1} & \qw \qw[1] & \control & \qw& \qw& \qw & \qw \\
+& \vdots& \vdots & \vdots & \vdots & \vdots & \vdots & \vdots  \\
+& \qw & \qw & \qw & \qw & \qw & \targ & \ctrl{1}& \qw \\
+& \qw& \qw& \qw& \qw& \qw & \qw & \targ  & \qw 
+}
+\end{array}
+\end{equation}
+We can see that the number of parameters required to optimize over is $3nd$.
+The circuit for the Euler rotation ansatz is shown below
+\begin{equation}
+    \label{circuit:VQEEulerRotationAnsatz}
+    \ket{\psi_T (\boldsymbol{\theta})} = \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \gate{U^{[1,1]}(\boldsymbol{\theta}^{[1,1]})} & \multigate{3}{U_{ent}} & \gate{U^{[1,2]}(\boldsymbol{\theta}^{[1,2]})} & \multigate{3}{U_{ent}} & \cdots & & \gate{U^{[1,d]}(\boldsymbol{\theta}^{[1,d]})} \\
+& \gate{U^{[2,1]}(\boldsymbol{\theta}^{[2,1]})} & \ghost{{U_{ent}}} & \gate{U^{[2,2]}(\boldsymbol{\theta}^{[2,2]})} & \ghost{{U_{ent}}} & \cdots & & \gate{U^{[2,d]}(\boldsymbol{\theta}^{[2,d]})}\\
+& \vdots & \nghost{U_{ent}} & \vdots & \nghost{U_{ent}} & \cdots &  \\
+& \gate{U^{[n,1]}(\boldsymbol{\theta}^{[n,1]})} & \ghost{{U_{ent}}} & \gate{U^{[n,2]}(\boldsymbol{\theta}^{[n,2]})} & \ghost{{U_{ent}}} & \cdots & &\gate{U^{[n,d]}(\boldsymbol{\theta}^{[n,d]})}
+}
+\end{array}
+\end{equation}
+
+
+Even though these ansatzes are fit to solve the Max-Cut graph, there is a problem with using these for the pairing Hamiltonian: The ansatzes do not preserve the particle number. For any number of spin-orbitals, we will possibly end up in the lowest energy configuration the ansatz is flexible enough to produce. However, the ansatz is indifferent whether this is a one-particle or fifty-particle state. For the pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})), it is cruicial that we can specify the specific configuration we wish to solve for. Hence, we will now introduce a particle-number conserving ansatz, the Unitary Coupled Cluster Ansatz.
+
+\subsection{Unitary Coupled Cluster ansatz}
+\label{subsec:UCCAnsatz}
+
+As we learned in section \ref{sec:CCD} the coupled cluster ansatz is given by 
+$$\ket{\psi_{CC}}  = e^{\hat{T}} \ket{c} ,$$
+with the cluster operator $\hat{T}$ given by eq. (\ref{eq:ClusterOperator}) and $\ket{c}$ being our reference state (see eq. (\ref{eq:ReferenceState})). This type of ansatz is not implementable on a quantum computer since $e^{\hat{T}}$ is not a unitary operator. Unitary coupled cluster instead suggest that we write our ansatz as
+\begin{equation}
+    \label{eq:UnitaryCoupledClusterAnsatz}
+    \ket{\psi_{UCC}} = e^{\hat{T} - \hat{T}^\dagger}\ket{\psi_0},
+\end{equation}
+where $\hat{T}$ is the usual coupled cluster operator in eq. (\ref{eq:ClusterOperator}) and the state $\ket{\psi_0}$ is the reference state in eq. (\ref{eq:qubitReferenceState}).
+One can show that $e^{\hat{T} - \hat{T}^\dagger}$ is unitary \cite{UCCDArticle}.
+For this thesis, we will restrict ourselves to the unitary coupled cluster doubles (UCCD) method and hence we will deal with the cluster operator
+\begin{align}
+    \label{eq:UnitaryOp}
+    \hat{T}_{UCCD} = \hat{T} - \hat{T}^\dagger &=  \notag \\
+     &\sum_{ijab} t_{ij}^{ab}(a^\dagger_a a^\dagger_b a_j a_i - a^\dagger_i a^\dagger_j a_b a_a),
+\end{align}
+where we vary the trial wavefunction over the real cluster amplitudes $t_{ij}^{ab}$. Note that our ansatz is dependent on the number of particles in our system as we sum over $i$ and $j$. Hence, we can specify the specific configuration we wish to solve for, unlike the previously discussed ansatzes. 
+Rewriting eq. (\ref{eq:UnitaryOp}) in terms of Pauli gates by utilizing the Jordan-Wigner transformation (see section \ref{subsec:JordanWignerTransformation}) gives \cite{UCCDArticle}
+\begin{align}
+    \label{eq:UCCDoublesGates}
+    t_{ij}^{ab}(a^\dagger_a a^\dagger_b a_j a_i - a^\dagger_i a^\dagger_j a_b a_a) &= \frac{it_{ij}^{ab}}{8} \bigotimes_{k=i+1}^{j-1}\sigma_z^k \bigotimes_{l=a+1}^{b-1}\sigma_z^l \notag \\
+    &(\sigma_x^i \sigma_x^j \sigma_y^a \sigma_x^b + \sigma_y^i \sigma_x^j \sigma_y^a \sigma_y^b \notag \\
+    +&\sigma_x^i\sigma_y^j \sigma_y^a \sigma_y^b + \sigma_x^i \sigma_x^j \sigma_x^a \sigma_y^b \notag \\
+    -& \sigma_y^i \sigma_x^j \sigma_x^a \sigma_x^b - \sigma_x^i \sigma_y^j \sigma_x^a \sigma_x^b \notag \\
+    -&\sigma_y^i \sigma_y^j \sigma_y^a \sigma_x^b - \sigma_y^i \sigma_y^j \sigma_x^a \sigma_y^b ),
+\end{align}
+where we can assume that $i < j < a < b$. The subscript denotes which qubit we act upon with the Pauli gates.
+The preparation of this trial wavefunction is done on a quantum computing by first utilizing the Suzuki-Trotter approximation (see section \ref{subsec:SuzukiTrotter}) on the operator in eq. (\ref{eq:UCCDoublesGates}). Denoting 
+$$\hat{Z}_{ij}^{ab} =i\frac{t_{ij}^{ab}}{8p}(\bigotimes_{k=i+1}^{j-1}\sigma_z^k)(\bigotimes_{l=a+1}^{b-1}\sigma_l^z),$$ 
+the Suzuki-Trotter approximation gives
+\begin{align}
+    \label{eq:UCCTrotterApprox}
+    \ket{\psi(\boldsymbol{t})} &\approx  \bigg( \prod_{ijab} e^{\hat{Z}_{ij}^{ab}\sigma_x^i \sigma_x^j \sigma_y^a \sigma_x^b }
+    e^{\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_x^j \sigma_y^a \sigma_y^b }
+    e^{\hat{Z}_{ij}^{ab}\sigma_x^i\sigma_y^j \sigma_y^a \sigma_y^b }
+    e^{\hat{Z}_{ij}^{ab}\sigma_x^i \sigma_x^j \sigma_x^a \sigma_y^b } \notag \\
+    &e^{-\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_x^j \sigma_x^a \sigma_x^b }
+    e^{-\hat{Z}_{ij}^{ab}\sigma_x^i \sigma_y^j \sigma_x^a \sigma_x^b }
+    e^{-\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_y^j \sigma_y^a \sigma_x^b }
+    e^{-\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_y^j \sigma_x^a \sigma_y^b }
+    \bigg)^p \ket{c},
+\end{align}
+where $p$ decides the step size in the Suzuki-Trotter approximation and will be restricted to $p=1$ in this thesis. The operator in eq. (\ref{eq:UCCTrotterApprox}) can be implemented with Hamiltonian simulation (see section \ref{subsec:HamiltonianSimulation}) by utilizing circuit (\ref{circuit:TimeEvolutionArbitraryPauli}).
+Since we are dealing with the pairing Hamiltonian (eq. (\ref{eq:SimplifiedPairingHamiltonian})) in this thesis, we can reduce the number of terms in our ansatz by not allowing to break particle pairs. The Taylor expansion of the UCCD operator gives us
+\begin{align}
+    e^{\sum_{ijab} t_{ij}^{ab}(a^\dagger_a a^\dagger_b a_j a_i - a^\dagger_i a^\dagger_j a_b a_a)} &= I + \sum_{ijab} t_{ij}^{ab}(a^\dagger_a a^\dagger_b a_j a_i - a^\dagger_i a^\dagger_j a_b a_a) \notag \\
+    & + [\sum_{ijab} t_{ij}^{ab}(a^\dagger_a a^\dagger_b a_j a_i - a^\dagger_i a^\dagger_j a_b a_a)]^2/2! \notag \\
+    &+ \cdots.
+\end{align}
+We can immediately see that the first sum over $i,j,a,b$ will break pairs if we do not introduce a restriction on the sum. This can be explained by the fact that any non zero $t_{ij}^{ab}$ will include the following term
+$$
+t_{ij}^{ab}(a^\dagger_a a^\dagger_b a_j a_i - a^\dagger_i a^\dagger_j a_b a_a)\ket{c},
+$$
+which will break pairs if $j \neq i+1$ and $b \neq a+1$. 
+Hence we make the restriction $j = i+1$ and $b = a+1$.
+
+\subsection{Simple ansatz for one pair and four spin-orbitals}
+\label{subsec:SimplePairingAnsatz}
+For one pair and four spin-orbitals, one can set up a simple ansatz for the pairing model (eq. (\ref{eq:SimplifiedPairingHamiltonian})) with the following circuit
+\begin{equation}
+    \label{circuit:SimplePairingCircuit}
+    \ket{\psi_T (\boldsymbol{\theta})} = \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \gate{R_y(\theta)} &\ctrl{1} & \qw& \qw& \qw& \qw \\
+& \qw & \targ & \gate{X} & \ctrl{1} & \ctrl{2} & \gate{X}  \\
+& \qw & \qw & \qw & \targ & \qw & \qw \\
+& \qw& \qw& \qw& \qw & \targ & \qw \\
+}
+\end{array},
+\end{equation}
+where all qubits are initialized in the $\ket{0}$ state.
+Too see that this ansatz conserves the particle number, we can write it out mathematically.
+First is the application of the $R_y(\theta)$ gate (see eq. (\ref{eq:RotationOps})). This gives us the state
+$$
+(\cos{\frac{\theta}{2}}\ket{0} - i\sin{\frac{\theta}{2}}\ket{1}) \ket{000}.
+$$
+The CNOT (see eq. (\ref{eq:CNOTMatrix})) entangles the second qubit with the first, giving us
+$$\cos{\frac{\theta}{2}}\ket{0000} - i\sin{\frac{\theta}{2}}\ket{1100}. $$
+The subsequent gates flip both of the bottom qubits if the second qubit is in the $\ket{0}$ state. This results in the state
+$$\cos{\frac{\theta}{2}}\ket{0011} - i\sin{\frac{\theta}{2}}\ket{1100}, $$
+which we can see is a parametrized linear combination of the two allowed states.
+
+\subsection{Summary of the variational quantum eigensolver algorithm}
+We can summarize the variational quantum eigensolver algorithm as follows
+\begin{itemize}
+    \item Apply a parametrized unitary operator (ansatz) $U(\boldsymbol{\theta})$ to an $n$-qubit state. This yields the state $\ket{\psi(\boldsymbol{\theta})} = U(\boldsymbol{\theta})\ket{\psi}$. Examples of ansatzes are given in sections \ref{subsec:UCCAnsatz}, \ref{subsec:VariaAnsatz} and \ref{subsec:SimplePairingAnsatz}.
+    \item Calculate the energy expectation value (eq. (\ref{eq:VQEExpectationValueofHamiltonian})) for a Jordan-Wigner transformed (section \ref{subsec:JordanWignerTransformation}) Hamiltonian. This is done by evaluating the expectation value of each separate term of the Hamiltonian, as described in section \ref{subsec:VQEExpecVals}.
+    \item Vary the parameters $\boldsymbol{\theta}$ and do the same procedure till the energy expectation value is minimized.
+\end{itemize}
+
+\section{Quantum Adiabatic Time Evolution}
+\label{sec:QATE}
+
+The adiabatic theorem states that if we start out in the ground state $\Psi_0$ of a Hamiltonian $\hat{H}_0$ and gradually change the Hamiltonian of the system to $\hat{H}_1$, we will eventually end up in the ground state $\Psi_1$ of $\hat{H}_1$ given that the gradual change is small enough \cite{AdiabaticTimeEvolution}. This provides the concept for adiabatic quantum computing, an alternative to the standard circuit model of quantum computing. Here we will, however, see how this theorem could be implemented on the standard circuit model to find the ground state energy of a fermionic Hamiltonian. We call this method the quantum adiabatic time evolution (QATE) algorithm. We start out with a mathematical formulation of the change from $\hat{H}_0$ to $\hat{H}_1$. This can be written as a new time dependent Hamiltonian
+\begin{equation}
+    \label{eq:AdiabaticHamiltonian}
+    \hat{H}(t) = (1-\frac{t}{T})\hat{H}_0 + \frac{t}{T}\hat{H}_1,
+\end{equation}
+with $t \in [0,T]$. Since we are now dealing with a time-dependent Hamiltonian, the time evolution operator is now given by the time-ordered exponential \cite{TimeOrderedExponential}
+\begin{equation}
+    \label{eq:QATETimeOrderedExponential}
+    U(t) = e^{-i\int_0^t H(t) dt }.
+\end{equation}
+We can approximate the integral by utilizing numerical integration. Breaking the time interval into $n$ time steps and utilizing the midpoint rule \cite{midpointrule} gives
+\begin{align}
+    \label{eq:RectangularIntegration}
+    \int_0^t H(t) dt &\approx \sum_{k=0}^{n}H(k\Delta t)\Delta t \notag \\
+    &= \sum_{k=0}^{n} \left[(1-\frac{k\Delta t}{T})\hat{H}_0 + \frac{k\Delta t}{T}\hat{H}_1 \right] \Delta t,
+\end{align}
+with $\Delta t = \frac{T}{n}$.
+The approximation to the time-ordered exponential operator is then given by
+\begin{equation}
+    \label{eq:TimeOrderedExponentialNumericalIntegration}
+    U(t) = e^{-i\sum_{k=0}^{n} \left[(1-\frac{k\Delta t}{T})\hat{H}_0 + \frac{k\Delta t}{T}\hat{H}_1 \right] \Delta t}.
+\end{equation}
+Provided we utilize small time steps, we can use the Suzuki-Trotter approximation (section \ref{subsec:SuzukiTrotter}) to yield the following operator
+\begin{equation}
+    \label{eq:QATETrotterApproximation}
+    U(t) \approx \prod_{k=0}^{n}e^{-i\left[(1-\frac{k\Delta t}{T})\hat{H}_0 + \frac{k\Delta t}{T}\hat{H}_1 \right] \Delta t},
+\end{equation}
+which is effectively applied with the time evolution circuit (\ref{circuit:TimeEvolutionArbitraryPauli}).
+
+When later using QATE to solve for the ground state energy of the pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})), we will put the initial Hamiltonian to
+\begin{equation}
+    \label{eq:QATEInitialHamiltonian}
+    \hat{H}_0 = \frac{1}{5}[\sum_{i=1}^{n_f} \sigma_z - \sum_{i=n_f+1}^{n_s}\sigma_z],
+\end{equation}
+where $n_f$ is the number of particles we wish to solve for and $n_s$ is the number of spin-orbitals. This Hamiltonian is chosen because of its simplicity, only adding terms linear in the amount of qubits. It also conserves the particle number. The ground state of this Hamiltonian, which also will be our initial state for the QATE algorithm is
+\begin{equation}
+    \label{eq:QATEInitialState}
+    \ket{\psi_0} = \ket{111\cdots\ 1 000\cdots 0},
+\end{equation}
+that is, the $n_f$ last qubits are put to zero, while the rest are put to one.
+
+\section{Validating the results}
+When dealing with the VQE and the QATE algorithm, a natural question to ask is how we know that we have reached an eigenstate $\ket{\psi_k}$ of our Hamiltonian $\hat{H}$. When measuring the energy expectation value of our system, we know from quantum mechanics that the variance of the energy estimate should be zero when the measured state is an eigenstate of our Hamiltonian. The variance can evaluated the following way
+\begin{equation}
+    \label{eq:EnergyVariance}
+    \sigma^2_E = \bra{\psi}\hat{H}^2\ket{\psi} - \bra{\psi} \hat{H} \ket{\psi}^2.
+\end{equation}
+For the VQE algorhtm, we could minimize the energy and finally evaluate eq. (\ref{eq:EnergyVariance}) to make sure it is below some threshold. For the QATE algorithm, we could measure the variance at each time step and stop the algorithm if the variance is below some threshold. Even though the variance tells us if we have reached an eigenstate or not, we can not be certain that we have not reached one of the excited states rather than the ground state.
+

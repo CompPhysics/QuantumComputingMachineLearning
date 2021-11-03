@@ -1,0 +1,744 @@
+\chapter{Methods}
+\label{chap:Methods}
+In this chapter, we will go through the implementation of the algorithms described in this thesis. All the algorithms are made to be general-purpose. We hope that one is able to utilize any of the mentioned many-body methods for an arbitrary Jordan-Wigner transformed Hamiltonian (see section \ref{subsec:JordanWignerTransformation}), and also generate and train an arbitrary PQC neural network (see section \ref{sec:GeneralLayer}) after reading through this section.
+We will start by giving an introduction to Qiskit \cite{qiskit}, the Python-package utilized to write our code for quantum computers. Then we will go through each of the quantum algorithms explained in this thesis.
+
+All the text referring to some Python object or to some part of the provided code will be written in \textbf{bold}.
+
+The mentioned scripts and functionality can be found on our GitHub page \url{https://github.com/stiandb/Thesis}.\newline
+Doc-strings are written for all the functions and classes to explain all their inputs and outputs.
+
+\textit{NB. Qiskit version 0.11.1 was utilized and the functionality may or may not have changed}
+
+
+\section{Qiskit}
+\label{sec:MethodsQiskit}
+
+Qiskit \cite{qiskit} is a convenient python package made by IBM and can used to write code for quantum computers. This package allows one to either run the code on a simulation of a quantum computer on your own machine, or to actually run the code on a real quantum computer over the cloud. Installing Qiskit can be done via pip with the following command:
+\begin{verbatim}
+    pip install qiskit
+\end{verbatim}
+and the package is imported to a python program with
+\begin{lstlisting}[language=Python,numbers=none]
+import qiskit as qk
+\end{lstlisting}
+
+
+\subsection{Circuits and Registers}
+\label{sec:CircuitsAndRegisters}
+The utilization of Qiskit starts with setting up registers of bits and a circuit. Consider the following code
+\begin{lstlisting}[language=Python,numbers=left]
+qubit_register_1 = qk.QuantumRegister(4)
+qubit_register_2 = qk.QuantumRegister(2)
+classical_register = qk.ClassicalRegister(2)
+circuit = qk.QuantumCircuit(qubit_register_1,qubit_register_2,classical_register)
+\end{lstlisting}
+In the first and second line, we set up a four and two-qubit register, respectively. When we measure one or more of the qubits, we want to save the information to a classical register, which is what we initialize in line 3. The number of bits in the classical register should correspond to the number of qubits we measure at the end of the circuit. These three registers are put into a circuit in line 4. We could have included more or less quantum registers as arguments, as long as the classical register is the final one.
+
+\subsection{Gates}
+\label{subsec:QiskitGates}
+After we have set up a circuit, we are ready to apply gates to the qubits. The gates are methods of the QuantumCircuit object and a full list of them can be found in the Qiskit documentation: \url{https://qiskit.org/documentation/stubs/qiskit.circuit.QuantumCircuit.html}.
+As an example, lets apply the $R_y(\frac{1}{2})$ gate (eq. (\ref{eq:RotationOps})) to the second qubit in the \textbf{qubit\_register\_1} register. Then we perform a CNOT (eq. (\ref{eq:CNOTMatrix})) to the first qubit in the \textbf{qubit\_register\_2} register, conditional on the second qubit in the \textbf{qubit\_register\_1} register:
+
+\begin{lstlisting}[language=Python,numbers=none]
+circuit.ry(1/2,qubit_register_1[1])
+circuit.cx(qubit_register_1[1],qubit_register_2[0])
+\end{lstlisting}
+
+To perform a measurement on a qubit register, we need to apply the measurement gate:
+
+\begin{lstlisting}[language=Python,numbers=none]
+circuit.measure(qubit_register_2,classical_register)
+\end{lstlisting}
+Here we utilize the measurement gate on \textbf{qubit\_register\_2} and specify that we want the results saved to the classical register.
+
+\subsection{Execute circuit}
+The execution of a circuit and the retrieval of the results are done the following way:
+\begin{lstlisting}[language=Python,numbers=left]
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'), shots=1000)
+result = job.result().get_counts(circuit)
+print(result)
+\end{lstlisting}
+
+\begin{verbatim}
+{'00': 945, '01': 55}
+\end{verbatim}
+Other than feeding \textbf{circuit} into the Qiskit execute function in the first line, we also have to type in some more agruments. The \textbf{backend} argument specifies where to run the experiment. In our case we use \textbf{qk.Aer.get\_backend('qasm\_simulator')}, that is, a simulation of a quantum computer on our own hardware. By changing the \textbf{backend} argument, one could run the experiment on for example a real quantum computer. The \textbf{shots} argument specifies how many times one wishes to run and measure the circuit, in this case 1000.
+In the second line we retrieve the results as a dictionary. The keys of this dictionary are strings showing the state of each of the qubits. The strings are in the opposite order of the indexes in the measured qubit-register, which is why the second element of the string (rather than the first) is the only qubit we measure in the $\ket{1}$ state. The values of the dictionary tells us how many times we measure said state. To get more familiar with Qiskit, let us go through an example problem.
+
+\subsection{Coin Toss Example}
+\label{subsec:QiskitCoinTossExample}
+
+We will now go through how to set up the circuit for the coin tossing example in section \ref{subsubsec:CoinTossExample} step by step. First, we initialize the circuit in the following way:
+\begin{lstlisting}[language=Python,numbers=none]
+simulation_register = qk.QuantumRegister(4)
+ancilla_register = qk.QuantumRegister(1)
+classical_register = qk.ClassicalRegister(1)
+circuit = qk.QuantumCircuit(simulation_register,ancilla_register,classical_register)
+\end{lstlisting}
+The first line creates the register of qubits representing our four coin tosses. The second line creates a second quantum register of one qubit, which is our ancilla. Since we only wish to measure one qubit (the ancilla), we make a classical register with one bit in the third line.
+In the final line, we put these registers together to define a circuit. Now we are ready to apply the qubit operations. The first step is to apply Hadamard gates (eq. (\ref{eq:HadamardGate})) to the four simulation qubits:
+\begin{lstlisting}[language=Python,numbers=none]
+for i in range(4):
+    circuit.h(simulation_register[i])
+\end{lstlisting}
+The next step is to apply a multi-controlled $X$-gate (eq. (\ref{eq:PauliMatrices})) to the ancilla qubit, conditional on the coin toss qubits. With Qiskit, this is done with a multi-controlled $R_x$ gate, with a rotation angle of $\pi$, as one can see from eq. (\ref{eq:RotationOps}) that $R_x(\pi) = -iX$:
+\begin{lstlisting}[language=Python,numbers=none]
+circuit.mcrx(np.pi,[simulation_register[i] for i in range(4)],ancilla_register[0])
+\end{lstlisting}
+The first argument specifies the rotation angle, $\pi$. The second argument should contain a list of all the control-qubits, which in our case is all the simulation qubits. The third and final argument is the target qubit, which in our case is the one ancilla qubit.
+Now that the circuit is ready, we need to perform measurements of the ancilla qubit:
+\begin{lstlisting}[language=Python,numbers=left]
+circuit.measure(ancilla_register,classical_register)
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'), shots=10000000)
+result = job.result().get_counts(circuit)
+print(result)
+\end{lstlisting}
+\begin{verbatim}
+{'0': 9374491, '1': 625509}
+\end{verbatim}
+We see that we measured the ancilla in the $\ket{0}$ state 9374491 times and in the $\ket{1}$ state 625509 times. The approximated probability of getting a heads four times in a row is then 
+$$\frac{625509}{10000000} = 0.0625509 \approx \frac{1}{16} = 0.0625,$$
+which is close to the analytical solution of $\frac{1}{16}$.
+
+\subsection{Simulating real devices}
+\label{subsec:QiskitNoiseModels}
+Qiskit has the ability to simulate models of IBM's real quantum computers, allowing one to get an indication for how an algorithm will fare on a real device. The task of simulating a real quantum computer consists of three main components which will be discussed now.
+
+\subsubsection{Noise Model}
+\label{subsubsec:NoiseModel}
+The noise model is the first component which consists of several factors that will affect the circuit execution. These factors are
+\begin{itemize}
+  \item \textbf{Decoherence}: The error associated with the interactions from the environment on the quantum system.
+  \item \textbf{Gate error}: The error associated with the application of gates on qubits
+  \item \textbf{Gate length}: The error associated with the length of the applied gate.
+  \item \textbf{Readout Error}: The error associated with the measurement of qubits.
+\end{itemize}
+
+
+\subsubsection{Basis Gates}
+\label{subsubsec:BasisGates}
+Different devices have their own set of basis gates that are applicable to the qubits. These gates can in turn be put together to generate any unitary operation. As no gates outside this set can be utilized, we need to obtain the gates specific for the computer we wish to simulate.
+
+\subsubsection{Coupling Map}
+\label{subsubsec:CouplingMap}
+In current multi-qubit quantum computers we rarely have a connection between all the qubit, so we cannot entangle every single qubit. This means that performing multi-qubit gates like for example the CNOT (eq. (\ref{eq:CNOTMatrix})), may require swapping the locations of the qubits with the SWAP gate (eq. (\ref{eq:SwapOperation})). A coupling map is a graph showing which qubits are connected and can be retrieved just like the noise model and basis gate set.
+
+\subsubsection{Performing the Simulation}
+\label{subsubsec:NoisySimulation}
+In order to run a simulation of a real device, we need to retrieve the corresponding noise model, basis gates and coupling map. In the settings.py script, found in the GitHub linked in the introduction to this chapter, we have these ready for the IBMQ London 5 qubit computer, IBMQ X2 5 bit computer and the IBMQ Melbourne 16 qubit computer:
+
+\begin{lstlisting}[language=Python,numbers=none]
+import qiskit as qk
+from settings import ibmq_london_noise_model as noise_model
+from settings import ibmq_london_basis_gates as basis_gates
+from settings import ibmq_london_coupling_map as coupling_map
+\end{lstlisting}
+
+Given that one has generated a Qiskit circuit ready for execution, one can perform the noisy simulation the following way:
+
+\begin{lstlisting}[language=Python,numbers=none]
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'),shots=1000,noise_model=noise_model,basis_gates=basis_gates,coupling_map=coupling_map)
+\end{lstlisting}
+Hence we only need to input the noise model, basis gates and coupling map to the Qiskit execute function.
+
+None of the circuits in this thesis are made with a specific hardware in mind. In order to make these executable on a real device, one would have to make a basis change and also make sure the multi-qubit gates are compatible with the coupling map. Fortunately, Qiskit has a function that can do this automatically, while also optimizing the circuit to reduce the number of gates and circuit depth. We will now explain how to set this up.
+
+\subsection{Transpiler}
+\label{subsec:QiskitTranspiler}
+The Transpiler allows one to make a circuit executable with a given gate basis and coupling map, while also optimizing the circuit depth. Given that we have a circuit ready for execution, we can transpile it the following way:
+\begin{lstlisting}[language=Python,numbers=none]
+backend=qk.Aer.get_backend('qasm_simulator')
+circuit = qk.compiler.transpile(circuit,backend=backend,backend_properties=backend.properties(),optimization_level=0,basis_gates=basis_gates,coupling_map=coupling_map)
+\end{lstlisting}
+We utilize the \textbf{Qiskit.compiler.transpile} function and feed in the basis gates and coupling map in the arguments. The parameter called \textbf{optimization\_level} specifies how heavy optimization you wish to use, with 0 being no optimization and 3 being the heaviest.
+
+\subsection{Quantum Error Correction}
+\label{subsec:QiskitErrorReduction}
+Even with heavy optimization with the transpiler, one may not be able to achieve good results with the current noisy devices. Quantum error correction aims to protect quantum states from unwanted interactions such as environmental noise \cite{ErrorCorrection}. All the python methods in this thesis that are measuring a circuit has an argument in the initialization called \textbf{error\_mitigator}, which can be set to perform error reduction after measurements. We have also put Qiskit's own error reduction algorithm into a class \textbf{ErrorMitigation}, which can be initialized and used as the \textbf{error\_mitigator} argument. See the example below:
+\begin{lstlisting}[language=Python,numbers=none]
+import qiskit as qk
+from utils import ErrorMitigation
+from example import example_method
+
+results = example_method(1,1,noise_model=noise_model,basis_gates=basis_gates,coupling_map=coupling_map,error_mitigator=ErrorMitigation() )
+
+\end{lstlisting}
+Having the error reduction method as an input may allow for testing of other error correction schemes down the line. 
+
+
+\section{Hamiltonian Simulation and Quantum Phase Estimation}
+\label{sec:MethodsQPE}
+We will now go through how to set up and utilize the quantum phase estimation (QPE) algorithm to find the eigenvalues of a Hamiltonian, as explained in section \ref{sec:QPE}. The quantum Fourier transformation (QFT) introduced in section \ref{subsec:QFT} is part of this algorithm. Hence, it is natural to start explaining how to utilize the QFT functionality.
+
+\subsection{Quantum Fourier Transformation}
+\label{subsec:MethodsQFT}
+The QFT algorithm is part of the utilities in the utils.py script (found in the GitHub link in the chapter introduction), since it is commonly utilized as a subroutine in quantum circuits. To do a QFT, we simply import the functionality, set up the circuit and registers with Qiskit, and then call on the \textbf{QFT} function:
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import QFT
+import qiskit as qk
+
+qft_register = qk.QuantumRegister(4)
+classical_register = qk.QuantumRegister(4)
+circuit = qk.QuantumCircuit(qft_register,classical_register)
+registers = [qft_register,classical_register]
+
+circuit,registers = QFT(circuit=circuit,registers=registers,inverse=False)
+\end{lstlisting}
+The registers are put in a list in line 7 and the \textbf{QFT} function will perform the transformation on the register that is the first element in this list.
+In line 9, we call on the \textbf{QFT} function. The argument called \textbf{inverse} can be set to \textbf{True} to instead perform the inverse Fourier transform.
+
+\subsection{QPE function}
+\label{subsec:MethodsQPEFunction}
+A function, \textbf{QPE}, is also included in the utils.py script as it also may be utilized as a sub routine in algorithms. The QPE circuit in fig. \ref{fig:QPECircuit} can be run by utilizing this function. See the script below:
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import QPE, ControlledTimeEvolutionOperator
+import qiskit as qk 
+
+hamiltonian_list = [[0.25,[0,'z']],[0.25,[1,'z']],[-0.5]]
+U = ControlledTimeEvolutionOperator(hamiltonian_list,dt=0.001,T=1)
+
+t_register = qk.QuantumRegister(4)
+u_register = qk.QuantumRegister(2)
+ancilla_register = qk.QuantumRegister(1)
+classical_register = qk.QuantumRegister(4)
+circuit = qk.QuantumCircuit(t_register,u_register,ancilla_register,classical_register)
+registers = [t_register, u_register, ancilla_register, classical_register]
+
+circuit,registers = QPE(circuit=circuit,registers=registers,U=U)
+\end{lstlisting}
+We will explain what is done in lines 4 and 5 in the next section. What is important to know is what to input in the function call in line 14. The \textbf{circuit} argument should be the Qiskit QuantumCircuit instance. The \textbf{registers} argument is a list with the $t$-register and $u$-register (see section \ref{sec:QPE}) as its first and second element, respectively. The argument \textbf{U} should be a callable class or function \textbf{U(circuit,registers,control,power)} that applies a controlled $U^{power}$ operation (see QPE circuit in figure \ref{fig:QPECircuit}). The $U^{power}$ operation should be done conditional on \textbf{registers[0][control]}, and be applied to the relevant qubits in \textbf{registers[1]}. The function \textbf{U} should return \textbf{circuit} as well as the \textbf{registers} list. 
+
+
+\subsection{Time Evolution Operator}
+\label{subsec:MethodsTimeEvolutionOperator}
+In order to calculate the eigenvalue of a Hamiltoinan with QPE (section \ref{sec:QPE}) and QATE (section \ref{sec:QATE}), we need a class that can apply the time evolution operator (circuit (\ref{circuit:TimeEvolutionArbitraryPauli})) for any Hamiltonian written with in the Jordan-Wigner transformation (section \ref{subsec:JordanWignerTransformation}). In this thesis, all the many-body algorithms assume we have written the Hamiltonian in a specific format. The separate terms of the Hamiltonian should be contained in a list consisting of the relevant Pauli-matrices (eq. (\ref{eq:PauliMatrices})) and which qubits they act on. An example of such a list is this one:\newline [[3,[0,'x']],[-2,[5,'y'],[3,'z']],[2]].\newline
+The length of this list is the amount of Hamiltonian terms, we are here dealing with a Hamiltonian with three terms. The first element of each nested list is the factor, while the consecutive elements are nested lists with the qubit in question as the first element and the gate to apply to this qubit as the second element. A nested list containing only a float represents just an application of the identity operator with a factor. The list provided in the above example represents the following Hamiltonian
+$$ \hat{H} = 3\sigma_x^1 - 2\sigma_y^6\sigma_z^4 + 2I^{\otimes^n}, $$
+where $\sigma^n_a$ is application of $\sigma_a$ on the $n$'th qubit (see eq. (\ref{eq:PauliMatrices}) for the Pauli-matrices).
+The time evolution circuit (circuit (\ref{circuit:TimeEvolutionArbitraryPauli})) is run for our example Hamiltonian with this script
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import TimeEvolutionOperator
+import qiskit as qk 
+
+hamiltonian_list = [[3,[0,'x']],[-2,[5,'y'],[3,'z']],[2]]
+U = TimeEvolutionOperator(hamiltonian_list,dt=0.001,T=1)
+
+evo_register = qk.QuantumRegister(6)
+classical_register = qk.QuantumRegister(4)
+circuit = qk.QuantumCircuit(evo_register,ancilla_register,classical_register)
+registers = [evo_register,classical_register]
+
+circuit,registers = U(circuit=circuit,registers=registers)
+\end{lstlisting}
+We initialize the time evolution operator in line 5 by inputting the \textbf{hamiltonian\_list}, the time step \textbf{dt} and the evolution time \textbf{T}. We make a call to the function and return the \textbf{circuit} and \textbf{registers} in line 12.
+We can also perform the time evolution operation conditional on a control qubit. This is done by defining a control register and utilizing the ControlledTimeEvolutionOperator class:
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import ControlledTimeEvolutionOperator
+import qiskit as qk 
+
+hamiltonian_list = [[3,[0,'x']],[-2,[5,'y'],[3,'z']],[2]]
+U = ControlledTimeEvolutionOperator(hamiltonian_list,dt=0.001,T=1)
+
+control_register = qk.QuantumRegister(2)
+evo_register = qk.QuantumRegister(6)
+classical_register = qk.QuantumRegister(4)
+circuit = qk.QuantumCircuit(control_register,evo_register,ancilla_register,classical_register)
+registers = [control_register,evo_register,classical_register]
+
+circuit,registers = U(circuit=circuit,registers=registers,control=1,power=2**6)
+\end{lstlisting}
+We specify in line 13 that we condition on the second control qubit (\textbf{control = 1}) and we also put the whole operator to a power of $2^6$ with the \textbf{power} argument. Recall from section \ref{sec:QPE} that this is exactly the kind of operator we need to perform a Hamiltonian simulation and find the eigenvalues with the QPE algorithm.
+
+
+\subsection{Hamiltonian Simulation}
+\label{subsec:MethodsHamiltonianSimulation}
+With the previously discussed methods, a class \textbf{HamiltonianSimulation} has been made which accepts an arbitrary Hamiltonian in the mentioned format and utilizes the QPE algorithm to calculate its eigenvalues. Below is an example:
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import *
+from matplotlib.pylab import *
+from HamiltonianSimulation import *
+np.random.seed(10202)
+
+u_qubits = 2
+t_qubits = 8
+
+hamiltonian_list = [[0.25,[0,'x']],[0.25,[1,'x']],[-0.5]]
+def initial_state(circuit,registers):
+	return(circuit,registers)
+E_max = 2
+hamiltonian_list[-1][0] -= E_max
+
+dt = 0.005
+t = 100*dt
+
+solver = HamiltonianSimulation(u_qubits,t_qubits,hamiltonian_list,initial_state)
+x,y = solver.measure_eigenvalues(dt,t,E_max,seed_simulator=42)
+
+plt.plot(x,y)
+plt.xlabel('Energy')
+plt.ylabel('Times Measured')
+plt.title('QPE Example on two-qubit Hamiltonian')
+plt.show()
+\end{lstlisting}
+We want to solve for a two-qubit Hamiltonian utilizing eight qubits for the $t$-register, hence we put \textbf{u\_qubits = 2} and \textbf{t\_qubits = 8} in line 6 and 7 (see section \ref{sec:QPE} for explanation of the $t$-register and $u$-register). 
+The Hamiltonian we wish to solve for is specified in line 9. We can write it mathematically as
+$$\hat{H} = \frac{1}{4} \sigma_x^1 + \frac{1}{4} \sigma_x^2 - \frac{1}{2}I^1 I^2.$$
+Its eigenvectors $\ket{v}$ and eigenvalues $v$ are given by
+\begin{align*}
+    \ket{v_1} = \frac{1}{2}(\ket{0} + \ket{1})(\ket{0} + \ket{1}) \qquad v_1 = 0, \\
+     \ket{v_2} = \frac{1}{2}(\ket{0} + \ket{1})(\ket{0} - \ket{1}) \qquad v_2 = -\frac{1}{2}, \\
+     \ket{v_3} = \frac{1}{2}(\ket{0} - \ket{1})(\ket{0} + \ket{1}) \qquad v_1 = -\frac{1}{2},  \\
+     \ket{v_4} = \frac{1}{2}(\ket{0} - \ket{1})(\ket{0} - \ket{1}) \qquad v_1 = -1.
+\end{align*}
+We need to decide what initial state to put our qubits in, which is why we define a function called \textbf{initial\_state} in line 10. This function basically does nothing, since we might as well start in the $\ket{00}$ state.
+Recall from section \ref{subsubsec:EigenvalueSpectraQPE} that we want to subtract a value equal to or above the largest eigenvalue of $\hat{H}$ in order to get the whole eigenvalue spectra. This is what is done in line 12 and 13. We initialize the solver in line 18, and calculate the eigenvalue spectra in line 19. Here we input the timestep \textbf{dt}, evolution time \textbf{t} and the maximum energy \textbf{E\_max}.
+We get the following plot:
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/methods/QPEExample.png}
+    \caption{The eigenvalue spectra of an example Hamiltonian found with QPE.}
+    \label{fig:QPEExample}
+\end{figure}
+We can see that the peaks coincide with the actual eigenvalues.
+
+\bigskip 
+
+When we have gotten eigenvalue spectra, we can approximate the $j$'th eigenvalue with the mean of the $j$'th peak. The equation we will use for this is
+\begin{equation}
+    \label{eq:QPEMeanPeak}
+     E[\lambda^{(j)}] = \frac{\sum_i \lambda^{(j)}_i N^{(j)}_i}{\sum_i N^{(j)}_i}, 
+\end{equation}
+where $\lambda^{(j)}_i$ is the $i$'th measurement in the $j$'th peak. The number of times $\lambda^{(j)}_i$ is measured are given by $N^{(j)}_i$.
+We can likewise calculate the variance with
+\begin{equation}
+    \label{eq:QPEVarPeak}
+    \frac{1}{\sum_i N^{(j)}_i} \sum_i (E[\lambda^{(j)}] - \lambda^{(j)}_i)^2,
+\end{equation}
+which can be used for uncertainty estimates.
+
+
+
+\section{Variational Quantum Eigensolvers}
+\label{sec:MethodsVQE}
+Next we want to illustrate how to use the variational quantum eigensolver (VQE) explained in section \ref{sec:VQE}.
+We have made a class \textbf{VQE} which accepts an arbitrary Hamiltonian in the format discussed earlier as well as an arbitrary ansatz, and gives an upper bound for the ground state energy using Scipy's \cite{ScipyOptimizeMinimize} classical optimization algorithms . To showcase how this class is utilized, we will use it to solve the Max-Cut problem introduced in section \ref{subsec:VQEMaxCut}. The code to do this is given below
+
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import *
+from VQE import *
+import numpy as np
+np.random.seed(43)
+seed_simulator=42
+
+W = np.array([[0,3,0,0,1],[3,0,2,0,3],[0,2,0,2,0],[0,0,2,0,3],[1,3,0,3,0]])
+
+hamiltonian_list = max_cut_hamiltonian(W)
+
+n_qubits = 5
+solver = VQE(hamiltonian_list,y_rotation_ansatz,n_qubits,seed_simulator=seed_simulator)
+
+theta = np.random.randn(n_qubits)
+theta = solver.classical_optimization(theta,method='Powell')
+
+ansatz_register = qk.QuantumRegister(n_qubits)
+classical_register = qk.ClassicalRegister(n_qubits)
+circuit= qk.QuantumCircuit(ansatz_register,classical_register)
+registers = [ansatz_register,classical_register]
+
+circuit,registers = y_rotation_ansatz(theta,circuit,registers)
+
+circuit.measure(registers[0],registers[1])
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'), shots=1000)
+result = job.result()
+result = result.get_counts(circuit)
+print(result)
+\end{lstlisting}
+In line 7, we set up the Max-Cut matrix for the problem given in figure \ref{fig:maxcutunsolved}. In line 9, we use the function \textbf{max\_cut\_hamiltonian}, which creates the Hamiltonian list for an arbitrary Max-Cut matrix. As we wish to solve for a 5 by 5 matrix, we utilize five qubits. The solver is set up in line 12 by inputting the Hamiltonian list, the ansatz and the number of qubits. In this case we use \textbf{y\_rotation\_ansatz}, which is the ansatz given by circuit (\ref{circuit:VQERyAnsatz}). We then initialize a random set of parameters in line 14 and run the solver in line 15. In order to check our solution, we apply the ansatz to a circuit with our learned parameters and measure the results:
+\begin{verbatim}
+{'10101': 128, '01010': 872}
+\end{verbatim}
+We can see from figure \ref{fig:maxcutsolved} that the solution is found.
+
+\section{Quantum Adiabatic Time Evolution}
+\label{sec:MethodsQATE}
+Next we explain how to utilize the quantum adiabatic time evolution (QATE) algorithm explained in section \ref{sec:QATE}. We have made a class \textbf{QATE} which can slowly evolve the Hamiltonian from an initial Hamiltonian $\hat{H}_0$ to the Hamiltonian we wish to solve for, $\hat{H}_1$. For the following example, we start in the initial state of the following four-qubit Hamiltonian
+$$\hat{H}_0 = \frac{1}{5} \sigma_z^1 + \frac{1}{5} \sigma_z^2 - \frac{1}{5} \sigma_z^3 - \frac{1}{5} \sigma_z^4. $$
+The ground state for this Hamiltonian is
+$$ \ket{1100}. $$
+We wish to utilize the QATE algorithm to evolve into the ground state of 
+$$\hat{H}_1 = \frac{1}{4} \sigma_x^1 + \frac{1}{4} \sigma_x^2 - \frac{1}{2}I^1 I^2,$$
+for which we know from section \ref{subsec:MethodsHamiltonianSimulation} has a ground state energy of $-1$. The code to set up this problem is
+\begin{lstlisting}[language=Python]
+from QATE import *
+
+n_spin_orbitals=4
+factor = 0.2
+H_0 = [[factor,[0,'z']],[factor,[1,'z']],[-factor,[2,'z']],[-factor,[3,'z']]]
+H_1 = [[0.25,[0,'x']],[0.25,[1,'x']],[-0.5]]
+
+def initial_state(circuit,registers):
+	for i in range(int(len(registers[0])/2)):
+		circuit.x(registers[0][i])
+	return(circuit,registers)
+
+
+
+dt = 0.5
+t=22
+solver = QATE(n_spin_orbitals,H_0,H_1,initial_state,dt,t,seed_simulator=42)
+print(solver.calculate_energy())
+\end{lstlisting}
+
+\begin{verbatim}
+-0.9915
+\end{verbatim}
+The initial Hamiltonian, $\hat{H}_0$, is set up in line 5 while the Hamiltonian we wish to solve for, $\hat{H}_1$, is set up in line 6. We define a function in line 8 which produces the ground state of $\hat{H}_0$. In line 15 we decide the step size \textbf{dt} in the time-ordered exponential, and we define the evolution time \textbf{t} in line 16. In line 17, we initialize the \textbf{QATE} class and we calculate the energy of the resulting state in line 18. We see that the found energy is close to the actual ground state energy.
+
+\section{Quantum Machine Learning}
+\label{sec:MethodsML}
+One goal of this thesis was to make an intuitive deep learning framework for quantum computers inspired by Pytorch and Tensorflow. This means that one should easily be able to utilize and combine the layers discussed in this thesis to construct and train a deep neural network. The first step was to make an amplitude encoder like the one discussed in section \ref{sec:AmplitudeEncoding}, which accepts an arbitrary vector $\boldsymbol{x}$ and encodes its values into the amplitudes of a quantum state. The \textbf{AmplitudeEncoder} class is contained in the utils.py script (see GitHub link in introduction) and we will now showcase how to utilize this functionality.
+
+
+\subsection{Amplitude Encoder}
+\label{subsec:MethodsAmplitudeEncoder}
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import AmplitudeEncoder
+import numpy as np
+import qiskit as qk
+
+np.random.seed(42)
+x = np.random.randn(4)
+
+amplitude_register = qk.QuantumRegister(2)
+classical_register = qk.ClassicalRegister(2)
+circuit = qk.QuantumCircuit(amplitude_register,classical_register)
+registers = [amplitude_register,classical_register]
+
+encoder = AmplitudeEncoder()
+circuit,registers = encoder(x,circuit,registers,inverse=False)
+
+shots = 1000000
+circuit.measure(registers[0],registers[-1])
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'),seed_simulator=42, shots=shots)
+result = job.result().get_counts(circuit)
+for key,value in result.items():
+	print('Qubit State:', key[::-1],'.Square root of probability:', np.sqrt(value/shots))
+	
+print('Normalized amplitude encoded vector: ')
+print(np.abs(x)/np.sqrt(np.sum(x**2)))
+\end{lstlisting}
+We first generate a numpy array with random numbers of size 4, called \textbf{x}, in line 6. The registers and circuits for the problem are set up in lines 8 through 11. 
+The \textbf{AmplitudeEncoder} is initialized in line 13.
+We simply feed in the \textbf{circuit}, the \textbf{registers} and the numpy array \textbf{x} into the encoder in line 14. The \textbf{inverse} variable can be set to \textbf{True} if one rather wants to apply the inverse of the amplitude encoding operation. From line 16 and throughout, we print out the qubit state and the square root of the estimated probability of measuring the respective state. Finally we print the absolute value of the normalized array \textbf{x} for comparison. This yields the following output
+
+\begin{verbatim}
+Qubit State: 11 .Square root of probability: 0.8787121257840932
+Qubit State: 00 .Square root of probability: 0.28677168618955395
+Qubit State: 10 .Square root of probability: 0.3732050374793995
+Qubit State: 01 .Square root of probability: 0.07965550828411053
+Normalized amplitude encoded vector:  
+[ 0.28654116 0.07976099  0.37363426  0.87859535]
+\end{verbatim}
+We can see that the amplitude encoding was successful as the square root of the probability of state $\ket{00}$ closely matches the first element of \textbf{x}, the square root of the probability of state $\ket{01}$ closely matches the second element of \textbf{x}, etc. As we are only able to apply a finite number of measurements on the circuit, we do not get the exact probabilities.
+
+\subsection{Inner Product}
+\label{subsec:MethodsInnerProduct}
+
+The neural network layers in section \ref{sec:DNNQuantum} and \ref{sec:RNNQuantum} rely on calculating the squared inner product between a vector $\boldsymbol{x}$ and a vector $\boldsymbol{w}$, by utilizing circuit (\ref{circuit:InnerProductCircuit}). We have implemented a function called \textbf{squared\_inner\_product} in the utils.py script to do this task. Below is a showcase of how to utilize its functionality
+
+\begin{lstlisting}[language=Python,numbers=left]
+from utils import AmplitudeEncoder
+from utils import squared_inner_product
+import numpy as np
+import qiskit as qk
+
+np.random.seed(42)
+x = np.random.randn(4)
+w = np.random.randn(4)
+
+
+amplitude_register = qk.QuantumRegister(2)
+classical_register = qk.ClassicalRegister(1)
+circuit = qk.QuantumCircuit(amplitude_register,classical_register)
+registers = [amplitude_register,classical_register]
+
+
+sq_inner_product = squared_inner_product(x,w,circuit,registers,seed_simulator=42,shots=1000000)
+x = x/np.sqrt(np.sum(x**2))
+w = w/np.sqrt(np.sum(w**2))
+print('Squared inner product calculated classically:', np.sum(x*w)**2)
+print('Squared inner product calculated by quantum circuit:',sq_inner_product)
+\end{lstlisting}
+The two random vectors $\boldsymbol{x}$ and $\boldsymbol{w}$ are initialized in lines 7 and 8, respectively. The Qiskit circuits and registers are initialized in lines 11 through 14. We only use one classical qubit (line 12) as the squared inner product circuit only relies on measuring one qubit. We feed the vector $x$, $w$ as well as the \textbf{circuit} and \textbf{registers} into the \textbf{squared\_inner\_product} function in line 17, which should then return their squared inner product. Finally we compare the classical calculation with the quantum one. This yields the following output
+\begin{verbatim}
+Squared inner product calculated classically: 0.4630815670795022
+Squared inner product calculated by quantum circuit: 0.463201
+\end{verbatim}
+We can see that the quantum circuit gives a close approximation to the classical calculation. As we only measure the circuits a finite number of times, we do not get an exact match.
+
+\subsection{Neural Network}
+\label{subsec:MethodsLayers}
+All the dense and recurrent neural network layers discussed in this thesis can be written in the general form described in sections \ref{sec:GeneralLayer} and \ref{sec:GeneralRecurrentLayer}, respectively. Hence, we have made the classes \textbf{GeneralLinear} and \textbf{GeneralRecurrent} which can be utilized to construct an arbitrary layer consisting of the operators $U_{enc}$, $U_a$ and $U_{ent}$. See section \ref{sec:GeneralLayer} for an explanation of these. We will now show how these classes are used to realize a neural network layer. The dense layer can be initialized via a call to the \textbf{GeneralLinear} class:
+\begin{lstlisting}[language=Python,numbers=left]
+from layers import GeneralLinear
+GeneralLinear(n_qubits=n_qubits, n_outputs=n_outputs,n_weights_ent=n_weights_ent,n_weights_a=n_weights_a,bias=bias,U_enc=U_enc,U_a=U_a,U_ent=U_ent,n_parallel=n_parallel)
+\end{lstlisting}
+We have to specify each of the arguments. Since all the arguments are dependent on the encoder \textbf{U\_enc}, ansats \textbf{U\_a} and entangler \textbf{U\_ent}, we will first discuss how these are set up.
+
+\subsubsection{Encoders and Ansatzes}
+
+As the initialization of the layers relies on inputting an encoder \textbf{U\_enc} and an ansatz \textbf{U\_a}, we will now discuss how these are set up. See section \ref{sec:EncodersAndAnsatzes} for an explanation of what these are used for. The requirement for the encoders and ansatzes is that they are some callable object, let us call it \textbf{U}, which is utilized the following way:
+\begin{lstlisting}[language=Python,numbers=left]
+circuit,registers = U(theta,circuit,registers)
+\end{lstlisting}
+The argument \textbf{theta} should be a one-dimensional numpy array of parameters, \textbf{circuit} should be a qiskit QuantumCircuit instance, and \textbf{registers} should be a list containing an instance of a qiskit QuantumRegister as its first element. The \textbf{circuit} with the applied operation should be returned along with the \textbf{registers} list. We can for example create an entangler/ansatz which only applies an $R_y$-rotation (eq. (\ref{eq:RotationOps})) to each qubit:
+\begin{lstlisting}[language=Python,numbers=left]
+def U_a_or_enc(theta,circuit,registers):
+    for i in range(len(registers[0])):
+        circuit.ry(theta[i],registers[0][i])
+    return(circuit,registers)
+\end{lstlisting}
+This function is now ready to be implemented as \textbf{U\_enc} or \textbf{U\_a} to the initialization of the \textbf{GeneralLinear} class.
+
+\subsubsection{Entanglers}
+The set up of the entangler \textbf{U\_ent} is not so different from the encoders and ansatzes. The purpose of the entangler is discussed in section \ref{sec:Entanglers}. 
+We require some callable object, let us call it \textbf{U}, which is utilized the following way
+\begin{lstlisting}[language=Python,numbers=left]
+circuit,registers = U(theta,ancilla,circuit,registers)
+\end{lstlisting}
+The first argument, \textbf{theta}, is a one-dimensional numpy array with the eventual parameters for the entangler. Recall that the entangler is responsible for entangling the encoder-register with an ancilla register. The second argument, \textbf{ancilla}, is the index of the ancilla we wish to entangle.
+The third argument, \textbf{circuit}, should be a Qiskit QuantumCircuit instance. Finally, \textbf{registers} should be a list containing the encoder-register as its first element and also the ancilla-register as its second element. As an example, we will now show how to define a variation of the entangler shown in circuit (\ref{circuit:RotationEntangler}):
+\begin{lstlisting}[language=Python,numbers=left]
+def U_ent(theta,ancilla,circuit,registers):
+    circuit.ry(theta[-1],registers[1][ancilla])
+    for i in range(len(registers[0])):
+        circuit.cry(theta[i],registers[0][i],registers[1][ancilla])
+    return(circuit,registers)
+\end{lstlisting}
+This entangler is now ready to be utilized as input to the \textbf{GeneralLinear} class initialization.
+
+\subsubsection{Setting up a single layer}
+\label{subsubsec:MEthodsSettingUpLayer}
+Now that we have defined an encoder, ansatz and entangler, we have what we need to initialize and feed our data into a neural network. The code is given below
+\begin{lstlisting}[language=Python,numbers=left]
+from layers import GeneralLinear
+import numpy as np
+np.random.seed(42)
+
+def U_a_or_enc(theta,circuit,registers):
+    for i in range(len(registers[0])):
+        circuit.ry(theta[i],registers[0][i])
+    return(circuit,registers)
+    
+def U_ent(theta,ancilla,circuit,registers):
+    circuit.ry(theta[-1],registers[1][ancilla])
+    for i in range(len(registers[0])):
+        circuit.cry(theta[i],registers[0][i],registers[1][ancilla])
+    return(circuit,registers)
+
+n = 4
+p = 2
+x = np.random.randn(n,p)
+dense_layer = GeneralLinear(n_qubits=2,n_outputs=3,n_weights_a=2,n_weights_ent=3,U_enc=U_a_or_enc,U_a = U_a_or_enc, U_ent=U_ent,n_parallel= 3,seed_simulator=42)
+
+print('Total number of weights: ',dense_layer.w_size)
+y = dense_layer(x)
+print('Output from layer: ')
+print(y)
+\end{lstlisting}
+\begin{verbatim}
+Total number of weights:  11
+Output from layer: 
+[[0.103 0.816 0.973]
+ [0.04  0.713 0.805]
+ [0.017 0.632 0.616]
+ [0.051 0.743 0.906]]
+\end{verbatim}
+In line 18, we generate a data set containing four samples and two predictors of normally distributed random numbers. Our dense layer is initialized in line 19. Let us explain the arguments provided in the initialization. We want to utilize two qubits for our layer. We specify this with the \textbf{n\_qubits} argument. We want three nodes outputted, hence \textbf{n\_outputs = 3}. The argument \textbf{n\_weights\_a} specifies how many parameters are required for our ansatz, per activation. The ansatz applies a single rotation to each qubit. For two qubits we specify \textbf{n\_weights\_a = 2}. The number of weights required per activation for the entangler is specified with the \textbf{n\_weights\_ent} argument. The entangler is first applying a single rotation to the ancilla followed by two controlled rotations (one per qubit in the encoder-register). There are three parameters involved in this, hence we set \textbf{n\_weights\_ent = 3}. As we discussed in section \ref{sec:QuantumNeuralNetoworkParalellCalculation}, the entangler we utilize allows for parallel calculation of nodes. We decided that we wanted to calculate all three outputs in parallel, hence we set \textbf{n\_parallel = 3}.
+All layer instances has an attribute called \textbf{w\_size} which is an integer specifying the total number of weights in the network. We print this in line 21. We can see from the output that this layer has 11 weights.
+
+
+
+\subsubsection{Setting up a Multi-Layered Neural Network}
+\label{subsubsec:MethodsDeepNeuralNetwork}
+We will now show how to set up a multi-layered neural network. We will utilize the GeneralRecurrent class as well as the GeneralLinear class to show that we can handle time-series data. Assume we have two samples with eight time steps and four predictors in our input. We want to feed this through a recurrent layer and then use the final hidden vector $\boldsymbol{h}^{t}$, consisting of three nodes, as inputs to a dense output layer with four nodes. This can be done the following way
+\begin{lstlisting}[language=Python,numbers=left]
+from layers import GeneralLinear, GeneralRecurrent
+from utils import AmplitudeEncoder
+from dl_utils import EntanglementRotation
+import numpy as np
+np.random.seed(42)
+seed_simulator = 42
+
+x = np.random.randn(2,8,4) #Generate random data (2 samples, 8 time steps, 4 predictors)
+h_0 = np.ones(3) #Generate initial hidden vector (3 nodes)
+
+recurrent_layer = GeneralRecurrent(n_qubits=3,n_hidden=3,n_weights_ent=0,n_weights_a=7,bias=True,U_enc=AmplitudeEncoder(),U_a=AmplitudeEncoder(inverse=True),U_ent=EntanglementRotation(zero_condition=True),seed_simulator=seed_simulator)
+output_layer = GeneralLinear(n_qubits=2,n_outputs=4,n_weights_ent=0,n_weights_a=4,bias=True,U_enc=AmplitudeEncoder(),U_a=AmplitudeEncoder(inverse=True),U_ent=EntanglementRotation(zero_condition=True),seed_simulator=seed_simulator+1)
+
+output = recurrent_layer(x,h_0)[:,-1,:] #Choose the final hidden vector from recurrent layer
+output = output_layer(output) 			#Feed this into dense output layer
+
+print('Output:')
+print(output)
+\end{lstlisting}
+\begin{verbatim}
+Output:
+[[0.057 0.307 0.432 0.084]
+ [0.008 0.586 0.635 0.006]]
+\end{verbatim}
+In line 2, we import the \textbf{AmplitudeEncoder} class as we wish to utilize this as our encoder and ansatz for both layers. In line 3, we import a class called \textbf{EntanglementRotation}, which performs the entangler shown in circuit (\ref{circuit:MultiControlledEntangler}). Our neural network is then consisting of the classical layers explained in sections \ref{sec:DNNQuantum} and \ref{sec:RNNQuantum}.
+In line 8 and 9 we generate the input time series data and initial hidden vector, respectively. In line 11, we initialize the recurrent layer. As explained in section \ref{sec:RNNQuantum}, our recurrent layers requires the concatenation of the input vector and the hidden vector. Since our input has four predictors and our hidden vector has three nodes, we need 3 qubits to encode these. Hence, we set \textbf{n\_qubits = 3}. We also need to specify the dimension of the hidden vector with the argument \textbf{n\_hidden}. The rest of the initialization of the network should be familiar from the example in section \ref{subsubsec:MEthodsSettingUpLayer}, except that we have specified \textbf{bias = True}. This will add a bias to the weight and a constant to the input vector as explained in section \ref{sec:DNNQuantum}.
+In line 14, we feed our input and initial hidden vector through the recurrent layer. We get out the hidden vector at each time step, so we pick the final hidden vector through indexing. We then feed this final hidden vector through the dense output layer in line 15. Finally we print out the output.
+For those that are familiar with Pytorch, this way of putting together a neural network and combining different kinds of layers is not unlike what one would do utilizing this package. We have in fact included all the entanglers, ansatzes and entanglers discussed in sections \ref{sec:EncodersAndAnsatzes} and \ref{sec:Entanglers}, and they can all be used freely to create a custom neural network with an arbitrary amount of layers.
+
+
+\subsubsection{Learning from a data set}
+As finding quantum circuits for training the architectures discussed in chapter \ref{chap:QuantumComputingML} have not been a focus in this thesis, we utilize classical numerical methods provided by Scipy \cite{ScipyOptimizeMinimize} to train the networks. A Python class called \textbf{QDNN} has been made, which can train an arbitrary dense neural network this way. This class is found in the QDNN.py script on our GitHub. We will showcase its functionality by learning a classifier on the Iris data set \cite{IrisData}, which is a classification task with four predictors and three classes. First we start out with importing the relevant functionality and setting up the data set:
+\begin{lstlisting}[language=Python,numbers=left]
+import numpy as np 
+import pandas as pd 
+from matplotlib.pylab import *
+from QDNN import *
+from layers import *
+from loss import *
+from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.model_selection import train_test_split
+np.random.seed(22)
+seed_simulator = 47
+
+iris = load_iris()
+X = iris['data']
+y = iris['target']
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3)
+print('train dataset shape', X_train.shape)
+print('test dataset shape', X_test.shape)
+\end{lstlisting}
+\begin{verbatim}
+train dataset shape (105, 4)
+test dataset shape (45, 4)
+\end{verbatim}
+The next step is to initialize the neural network:
+\begin{lstlisting}[language=Python,numbers=left]
+l1 = X_train.shape[1]
+l2 = 8
+
+layer1 = GeneralLinear(2,l2,n_weights_a=2,n_weights_ent=3,U_enc=AmplitudeEncoder(),U_a = YRotationAnsatz(linear_entangler),U_ent=YRotation(bias=True),seed_simulator=seed_simulator,n_parallel=l2)
+layer2 = GeneralLinear(8,3,n_weights_a=l2,n_weights_ent=l2+1,U_enc=YRotationAnsatz(linear_entangler),U_a=YRotationAnsatz(linear_entangler),U_ent=YRotation(bias=True),seed_simulator=42)
+
+layers = [layer1,layer2]
+loss_fn = cross_entropy()
+
+model = QDNN(layers,loss_fn,classification=True)
+\end{lstlisting}
+We can see from line 10 that the dense neural network initialization requires a list of layers. These are specified in lines 4, 5 and 7. We also need to input a loss function that returns the loss when the predicted values and the target values are passed as arguments.
+As we are dealing with a classification problem, we pass \textbf{classification=True} as well.
+After this is done, we can simply fit the model and predict on the test set:
+\begin{lstlisting}[language=Python,numbers=left]
+model.fit(X=X_train,y=y_train)
+y_pred = model.forward(X_test)
+y_pred = np.argmax(y_pred,axis=1)
+
+print('Confusion Matrix:')
+print(confusion_matrix(y_test,y_pred))
+\end{lstlisting}
+In line 1, we call the \textbf{.fit} function which utilizes a classical optimization scheme to train the network. We pass the training data, \textbf{X\_train} and \textbf{y\_train} as arguments. In line 2 and 3, we output the prediction on a separate test set.
+The predictions on the test set resulted in the following confusion matrix:
+\begin{table}[H]
+\centering
+\caption{Quantum Neural Network trained on Iris data set. Confusion matrix for separate test set.}
+\begin{tabular}{c|c|c|c|}
+& $\hat{y}$ &    &     \\ \hline
+$y$ & 13        & 0  & 0    \\ \hline
+& 0         & 16 & 0    \\ \hline
+& 0         & 10 & 6 \\ \hline
+\end{tabular}
+\label{tab:IrisTestConfMat}
+\end{table}
+
+\subsection{Learning Unitary Operators}
+In section \ref{subsec:LearningWithUnitaryOperators}, we discussed using machine learning to approximate a unitary operator with another parametrized unitary operator. The AutoEncoder.py script in our GitHub contains a class meant to be utilized for this task, namely the \textbf{AutoEncoder} class. To show how this class works, let us try to utilize it to approximate a random unitary operator with the Euler rotation ansatz given by circuit (\ref{circuit:VQEEulerRotationAnsatz}). First, let us generate a random circuit and see what the resulting state looks like:
+\begin{lstlisting}[language=Python,numbers=left]
+from AutoEncoder import *
+from utils import *
+from qiskit.circuit.random import random_circuit
+import qiskit as qk
+
+
+n_qubits = 3
+depth = 30
+rand_circuit = random_circuit(n_qubits,depth,seed=1)
+q_reg = qk.QuantumRegister(3,'q')
+c_reg = qk.ClassicalRegister(3)
+circuit = qk.QuantumCircuit(q_reg,c_reg)
+
+circuit = circuit.combine(rand_circuit.copy())
+circuit.measure(q_reg,c_reg)
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'),seed_simulator=42,shots=1000)
+job = job.result()
+result = job.get_counts(circuit)
+for key,value in result.items():
+    print('State: ', key[::-1], 'Measurements: ', value)
+\end{lstlisting}
+\begin{verbatim}
+State:  000 Measurements:  144
+State:  111 Measurements:  25
+State:  010 Measurements:  402
+State:  101 Measurements:  67
+State:  110 Measurements:  26
+State:  001 Measurements:  106
+State:  100 Measurements:  105
+State:  011 Measurements:  125
+\end{verbatim}
+In line 9, we generate a random 3 qubit circuit with circuit depth of 30.
+Next, let us use the \textbf{AutoEncoder} class to approximate this circuit
+\begin{lstlisting}[language=Python,numbers=left]
+U_1 = EulerRotationAnsatz(linear_entangler)
+def U_2(theta,circuit,registers):
+	circuit += rand_circuit.copy().inverse()
+	return(circuit,registers)
+
+optimizer = AutoEncoder(U_1,U_2,n_qubits = 3, n_weights=3*3*3,shots=10000,seed_simulator=42)
+w = optimizer.fit()
+\end{lstlisting}
+\begin{verbatim}
+Optimization terminated successfully.
+Current function value: -0.999500
+Iterations: 10
+Function evaluations: 6245
+\end{verbatim}
+We initialize the ansatz in line 1, and create a function that applies the random circuit in line 2 to 4. We utilized these functions as the first two arguments in the \textbf{AutoEncoder} initialization in line 6. We also have to specify the number of qubits, which we do by setting \textbf{n\_qubits = 3}. The number of parameters we utilize for the ansatz are specified by putting \textbf{n\_weights = 9} as we want $d=3$ in the ansatz (see circuit (\ref{circuit:VQEEulerRotationAnsatz}) for explanation of the parameter $d$). In the final line, we utilize the \textbf{fit} function of the \textbf{AutoEncoder} class to learn the parameters with a classical optimization scheme. 
+We see that we achieve a function value of -0.9995, which means that the squared inner product between the state produced by the ansatz and the state produced by the random circuit is 0.9995.
+Next, let us print the depth of the ansatz and aslo measure the state produced by it
+\begin{lstlisting}[language=Python,numbers=left]
+circuit = qk.QuantumCircuit(q_reg,c_reg)
+registers = [q_reg,c_reg]
+circuit,registers = U_1(w,circuit,registers)
+print('Depth of Ansatz: ',circuit.depth())
+
+circuit.measure(q_reg,c_reg)
+job = qk.execute(circuit, backend = qk.Aer.get_backend('qasm_simulator'),seed_simulator=42,shots=1000)
+job = job.result()
+result = job.get_counts(circuit)
+for key,value in result.items():
+    print('State: ', key[::-1], 'Measurements: ', value)
+\end{lstlisting}
+\begin{verbatim}
+Depth of Ansatz:  15
+State:  000 Measurements:  151
+State:  111 Measurements:  23
+State:  010 Measurements:  393
+State:  101 Measurements:  67
+State:  110 Measurements:  27
+State:  001 Measurements:  105
+State:  100 Measurements:  107
+State:  011 Measurements:  127
+\end{verbatim}
+We can see that we have produced a pretty close state while utilizing a circuit with half the circuit depth.
+
+\bigskip
+
+The recursive circuit optimization scheme proposed in section \ref{subsec:RecursiveCircuitOptimization} can be performed by recursively utilizing the \textbf{AutoEncoder} class for each of the $k$ circuits in circuit (\ref{circuit:RecursiveLearning}).
+

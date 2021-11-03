@@ -1,0 +1,510 @@
+\chapter{Results}
+\label{chap:Results}
+In this chapter we will present the results from applying the various methods discussed in the previous chapters. How these algorithms were set up to solve for a specific problem will be explained, along with some short comments on the corresponding results. An in-depth discussion of the utilized method will then be provided at the end of each section.\newline
+We will first take a look at how the quantum computing many-body methods described in chapter \ref{chap:QuantumComputingMBM} fare on a simple Hamiltonian. We will compare these results with the ones given by standard many-body methods, such as the full configuration interaction (FCI) theory (section \ref{sec:CI}) and the coupled cluster doubles (CCD) theory (section \ref{sec:CCD}). For all the quantum computing algorithms, we applied the Jordan-Wigner transformation (section \ref{subsec:JordanWignerTransformation}) on our Hamiltonian to rewrite it in terms of the Pauli-gates in order to represent it on a quantum computer.\newline 
+After having gone through the results for the many-body methods, we will apply the various quantum machine learning algorithms described in chapter \ref{chap:QuantumComputingML} on a couple of selected tasks.
+
+
+\section{Quantum Phase Estimation}
+\label{sec:ResultsQPE}
+
+We wanted to see if we could find the eigenvalues of the Jordan-Wigner transformed pairing Hamiltonian in eq. (\ref{eq:FullPauliHamiltonian}), utilizing the quantum phase estimation (QPE) algorithm described in section \ref{sec:QPE}. We restricted ourselves to solve for a system of four spin-orbitals. Recall that when the QPE algorithm is used to solve for eigenvalues, we are only able to obtain the negative ones. We explained this in section \ref{subsubsec:EigenvalueSpectraQPE}, and showed that we could force only negative eigenvalues by subtracting a constant $E_{max}$ from our Hamiltonian, larger than or equal to its largest eigenvalue. The actual eigenvalues could then be found by utilizing $E_{max}$ in eq. (\ref{eq:PhaseEstimationMeasurementToEigenvalue}). In reality, one has to do some educated guess on the maximum eigenvalue of the Hamiltonian, perhaps by approximating it with some other computationally effective method. In our case, we knew the eigenvalues for the problem beforehand and subtracted $E_{max} = 2$. The QPE algorithm also requires us to utilize the Suzuki-Trotter transformation (section \ref{subsec:SuzukiTrotter}) to approximate the time evolution operator for our Hamiltonian. This is in part done by dividing the evolution time $t$ into small time steps $\Delta t$. The approximation error in the Suzuki-Trotter approximation (see eq. (\ref{eq:SuzukiTrotterApproxWithFault})) decreases with the size of the time steps. Hence, we chose $\Delta t = 0.005$. In addition, the total evolution time $t$ was shown to have an upper bound for the QPE algorithm to yield all the eigenvalues of our Hamiltonian. This upper bound was given by eq. (\ref{eq:PhaseEstimationtUpperBound}) and we chose $t=100$ with this in mind.\newline
+We will first represent the result from an ideal simulation of a quantum computer and benchmark them against the eigenvalues found with full configuration interaction (FCI) theory (section \ref{sec:CI}). Then we will run a simulation with the noise model from one of IBM's current quantum devices.
+
+\subsection{Ideal Simulation}
+\label{subsec:ResQPEIdeal}
+First we wanted to see if we could find the correct eigenvalues when running an ideal simulation of a quantum computer. Recall from the QPE circuit in figure \ref{fig:QPECircuit} that the QPE algorithm require us to prepare two quantum registers. The $t$-register will end up with the eigenvalues encoded as a binary fraction (eq. (\ref{eq:QPEFinalStep})). The $u$-register will be acted on by the time evolution operator for our Hamiltonian. Since we solve for a system of four spin-orbitals, the $u$-register will contain four $u$-qubits. Since the $t$-register will hold the eigenvalues as binary fractions, the amount of $t$-qubits will decide the binary fractions we are able to represent. See the discussion at the end of section \ref{subsubsec:EigenvalueSpectraQPE}. Hence, we varied the amount of qubits in the $t$-register to see how it affected the obtained eigenvalues. The results can be seen in figure \ref{fig:IdealQPE}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/idealqpeall.png}
+    \caption{QPE on pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})) with $\delta =1$, interaction strength $g = 1$ and four spin-orbitals. We plot the amount of times we measure an energy against the energy measurement, for varying number of qubits in the $t$-register. The FCI energies for four spin-orbitals are marked on the $x$-axis.}
+    \label{fig:IdealQPE}
+\end{figure}
+We see that as we increase the number of $t$-qubits, peaks are starting to form by the eigenvalues given by FCI. We can approximate the QPE eigenvalues by calculating the mean of each peak with eq. (\ref{eq:QPEMeanPeak}). We can also get uncertainty estimates for each eigenvalue by calculating the variance of each peak with eq. (\ref{eq:QPEVarPeak}).
+The results for eight $t$-qubits can be can be seen in table \ref{tab:FCIenergiesQPE} below:
+\begin{table}[H]
+\centering
+\caption{Eight t-qubit QPE and FCI energy for Pairing model (eq. (\ref{eq:JordanWignerHamiltonian})). Calculated for four basis states with one and two pairs. $\delta = 1$, $g = 1$. We also provide two standard deviations for the QPE estimate.}
+\begin{tabular}{|c|c|c|} \hline
+Number of pairs & FCI Eigenvalue(s) & Quantum Eigenvalue(s)   \\ \hline
+0 & $0$ & $0.0 \pm 0.2$ \\ \hline
+1               & $-0.61803399, \qquad 1.61803399$ & $-0.6 \pm 0.1, \qquad 1.61 \pm 0.06$ \\ \hline
+2               & $\qquad 1.00000000$ & $1.0 \pm  0.2$  \\ \hline       
+\end{tabular}
+\label{tab:FCIenergiesQPE}
+\end{table}
+We see that the eigenvalues obtained with QPE are close to the FCI eigenvalues.
+
+\subsection{Noisy Simulation}
+\label{subsec:ResQPENoisy}
+Next we wanted to see how the QPE algorithm performed when running a simulation with the noise model from one of IBM's real quantum devices. We chose the IBM Melbourne 16 qubit quantum computer for this. The simulation is run with four and eight $t$-qubits. The results can be seen in figure \ref{fig:noisyQPE}.
+
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include first image
+  \includegraphics[page=1,width=1.1\textwidth]{figures/noisy4t.png}  
+  \caption{QPE with four $t$-qubits. We plot the amount of times we measure an energy against the energy measurement. The FCI energies for four spin-orbitals are marked on the $x$-axis.}
+  \label{fig:NoisyQPE4tqubits}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include second image
+  \includegraphics[page=2,width=1.1\textwidth]{figures/results/NoisyPairing.png}  
+  \caption{QPE with eight $t$-qubits. We plot the amount of times we measure an energy against the energy measurement.}
+  \label{fig:NoisyQPE8tqubits}
+\end{subfigure}
+\caption{QPE algorithm on pairing Hamiltonian with noise model from the IBM Melbourne Quantum Computer.}
+\label{fig:noisyQPE}
+\end{figure}
+We are not able to reproduce the results from the ideal simulation in figure \ref{fig:IdealQPE}.
+
+\subsection{Discussion}
+\label{subsec:QPEDiscussion}
+
+The results from the ideal simulation, figure \ref{fig:IdealQPE} and table \ref{tab:FCIenergiesQPE}, show that we are able to get sensible estimates for the eigenvalues of the pairing Hamiltonian, provided we utilize enough qubits in the $t$-register. The figure illustrates that the increase of $t$-qubits results in narrower peaks about the FCI eigenvalues. Hence, we expect that further increasing the number of qubits in the $t$-register could provide more accurate eigenvalue-estimates than the ones shown in table \ref{tab:FCIenergiesQPE}. Figure \ref{fig:NoisyQPE4tqubits} shows the QPE algorithm applied on the same system, but the simulation of the quantum computer includes the noise model from the IBM Q Melbourne 16 qubit device. With only four $t$-qubits, we already see that we are not able to reproduce the results from the ideal simulation in figure \ref{fig:IdealQPE}. We explained in section \ref{sec:QPE} that the QPE algorithm requires the application of several steps with the Suzuki-Trotter approximation, in order to simulate the time evolution of our Hamiltonian. We may explain the inability of the algorithm to perform in noisy conditions with the circuit depth achieved as a result of these steps. We mentioned in section \ref{subsubsec:CircuitDepth} that the circuit depth roughly translates to the execution time of a quantum circuit. On noisy intermediate-scale quantum (NISQ) devices, we are not able to maintain a stable quantum-state a sufficient enough time for the QPE algorithm, and each step of the Suzuki-Trotter approximation is essentially doubling the number of gates required in our quantum circuit (see eq. (\ref{eq:SuzukiTrotterApprox})). In addition to this, we need to apply the time evolution operator an additional time for every $t$-qubit we add (see the QPE circuit in figure \ref{fig:QPECircuit}). We hence expect the simulation of larger systems (which are requiring more $t$-qubits) to be even more affected by noise. Figure \ref{fig:NoisyQPE8tqubits} supports this expectation by showing the results from a simulation with the same noise model, but utilizing eight $t$-qubits instead of four. We see even less resemblance to the ideal simulation.
+
+\section{Variational Quantum Eigensolver}
+\label{sec:ResultsVQE}
+The quantum phase estimation (QPE) algorithm gave reasonable results when running an ideal simulation of a quantum computer, but we were not able to reproduce these results when the simulation included the noise model of a real device. The variational quantum eigensolver (VQE) algorithm (section \ref{sec:VQE}) may be able to do better on noisy devices. Since we are evaluating each single term of the Hamiltonian with separate circuits (see eq. (\ref{eq:VQEExpectationValueofHamiltonian})), the circuit depth (time complexity) of our algorithm is mostly dependent on the variational ansatz (see section \ref{subsec:VariaAnsatz}). In this section, we will solve for the Jordan-Wigner transformed pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})) utilizing the VQE algorithm. We will do this for two particles and four spin-orbitals, as well as for four particles and eight spin-orbitals. For the former system, we will compare the results between an ideal simulation, a simulation including the noise model of the IBM Q London five qubit device, as well as an execution on the actual device. For the eight spin-orbital system, we will only consider the ideal simulation.
+
+\subsection{Ideal Simulation}
+\label{subsubsec:ResVQEPairingIdeal}
+We will start with the ideal simulation for two particles and four spin-orbitals. The variational ansatz will be put to the simple ansatz with one variational parameter, explained in section \ref{subsec:SimplePairingAnsatz} and shown in circuit (\ref{circuit:SimplePairingCircuit}). We wanted to see if the result had some dependence on the pairing interaction strength $g$. Hence, we estimated the ground state energy by varying $g$ and keeping constant $\delta = 1$. We compared our estimates with the eigenvalues obtain using full configuration interaction (FCI) theory (section \ref{sec:CI}). The results can be seen in figure \ref{fig:idealVQE}.
+
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include first image
+  \includegraphics[page=1,width=1.1\textwidth]{figures/results/vqe/ideal_2_4_1_g.png}  
+  \caption{The ground state energy approximation is plotted a function of the interaction strength $g$ and compared with the results from FCI.  We also plot the absolute error $|E_{FCI} - E_{VQE}|$ against $g$.}
+  \label{fig:IdealPairing2fermi4spin1deltag}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include second image
+  \includegraphics[page=2,width=1.1\textwidth]{figures/results/vqe/amplitudeIdealPairing.png}  
+  \caption{The probability of each term in the ground state given by VQE, against the interaction strength $g$.}
+  \label{fig:amplitudeagainstgidealpairingvqe}
+\end{subfigure}
+\caption{Ideal VQE on pairing Hamiltonian with two particles and four spin orbitals. The simple ansatz with one rotation parameter in circuit (\ref{circuit:SimplePairingCircuit}) is utilized.}
+\label{fig:idealVQE}
+\end{figure}
+We see that there is no obvious dependence between the energy approximation and $g$. 
+
+\bigskip 
+
+For the four-particle, eight spin-orbital system, we utilized the unitary coupled cluster doubles (UCCD) ansatz in section \ref{subsec:UCCAnsatz}. We expected the energy estimate from the coupled cluster doubles (CCD) method (section \ref{sec:CCD}) to deviate from the FCI energy for this system, so we compare our VQE results with both CCD and FCI. The results for varying interaction strength $g$ can be seen in figure \ref{fig:IdealPairing4fermi8orbs}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/vqe/ideal_4_8_1_g.png}
+    \caption{Ideal VQE on Pairing Hamiltonian with four particles and eight spin-orbitals. We utilized the UCCD ansatz explained in section \ref{subsec:UCCAnsatz}. We compare the results with CCD and FCI for the same system. We plot the ground state energy against the interaction strength $g$. We also plot the absolute difference between the FCI energy and the energy approximation from UCCD and CCD.}
+    \label{fig:IdealPairing4fermi8orbs}
+\end{figure}
+We see that the absolute difference between the FCI energy and the UCCD/CCD energy increases with increasing interaction strength $g$. There is less deviation for UCCD than for CCD.
+
+\subsection{Noisy Simulation}
+\label{subsubsec:ResVQEPairingNoisy}
+We will try to reproduce the results for two particles and four spin-orbitals in figure \ref{fig:IdealPairing2fermi4spin1deltag}, but this time with the noise model from the IBM Q London 5 qubit computer. Both the UCCD ansatz (section \ref{subsec:UCCAnsatz}) and the simple ansatz (circuit (\ref{circuit:SimplePairingCircuit})) will be compared, and we will also provide the results with and without error correction (section \ref{subsec:QiskitErrorReduction}). The results can be seen in figure \ref{fig:NoisyVQE}.
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include first image
+  \includegraphics[page=1,width=1.1\textwidth]{figures/results/vqe/noisy_uccd_2_4_1_g.png}  
+  \caption{VQE with the UCCD ansatz. We plot the ground state energy against the interaction strength $g$. We also plot the absolute\newline difference between the FCI energy and the UCCD energy.}
+  \label{fig:NoisyPairingUCCD2fermi4spin1deltag}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include second image
+  \includegraphics[page=2,width=1.1\textwidth]{figures/results/vqe/noisy_simple_2_4_1_g.png}  
+  \caption{ VQE with the simple ansatz in circuit (\ref{circuit:SimplePairingCircuit}). We plot the ground state energy against the interaction strength $g$. We also plot the absolute difference between the FCI energy and the UCCD energy.}
+  \label{fig:NoisyPairingsimple2fermi4spin1deltag}
+\end{subfigure}
+\newline
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include third image
+  \includegraphics[page=3,width=1.1\textwidth]{figures/results/vqe/ansatzcomparisson.png}  
+  \caption{Absolute energy difference between VQE and FCI energy for both ansatzes, against the interaction strength $g$. With error correction. }
+  \label{fig:NoisyPairingAnsatzCompare2fermi4spin1deltag}
+\end{subfigure}
+\caption{VQE on pairing Hamiltonian with two particles and four spin-orbitals. We utilize the noise model of the IBMQ London 5 qubit computer. We provide the results with and without error correction.}
+\label{fig:NoisyVQE}
+\end{figure}
+We see that unlike the ideal simulation seen in figure \ref{fig:IdealPairing2fermi4spin1deltag}, the results are now dependent on the interaction strength $g$. The error correction mitigates some of the noise, which can be seen from figures \ref{fig:NoisyPairingsimple2fermi4spin1deltag} and \ref{fig:NoisyPairingUCCD2fermi4spin1deltag}. From figure \ref{fig:NoisyPairingAnsatzCompare2fermi4spin1deltag}, we see that the deviation from the FCI energy increases quicker for the UCCD ansatz than when we are just applying the simple ansatz.
+
+
+\subsection{Execution on IBM Q London five qubit device}
+Unlike what we saw with the QPE algorithm (figures \ref{fig:NoisyQPE4tqubits} and \ref{fig:NoisyQPE8tqubits}), the VQE method was able to provide upper bounds for the ground state energy of the pairing Hamiltonian when simulating with noise. However, we found that the results were dependent on the interaction strength $g$ (see figure \ref{fig:NoisyVQE}). We will now run the VQE algorithm on the IBM Q London five qubit device to see if the results agree with the simulation with noise. We solve for two particles and four spin-orbitals with the simple ansatz (circuit (\ref{circuit:SimplePairingCircuit})), varying interaction strength $g$ and we utilize error correction. Hence, we would expect the results to resemble those seen from the simulation with noise in figure \ref{fig:NoisyPairingsimple2fermi4spin1deltag}. The results can be seen in figure \ref{fig:VQEReal2fermi4spinorbs}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/vqe/real_vqe_simple_ansatz.png}
+    \caption{VQE algorithm on IBM Q London five qubit device for pairing Hamiltonian with two particles and four spin-orbitals. We plot the calculated ground state energy with FCI and VQE against the interaction strength $g$. We also plot as the absolute energy difference between FCI and VQE, against the interaction strength $g$. We utilized the simple ansatz provided by circuit (\ref{circuit:SimplePairingCircuit}).}
+    \label{fig:VQEReal2fermi4spinorbs}
+\end{figure}
+As we saw for the simulation with noise in figure \ref{fig:NoisyPairingsimple2fermi4spin1deltag}, the absolute difference between the FCI energy and the VQE energy increases with increasing interaction strength $g$.
+
+\subsection{Discussion}
+\label{sec:DiscussionVQE}
+Utilizing the VQE algorithm for the two particle, four spin-orbital system with an ideal simulation of a quantum computer showed that the method had promise when it comes to approximating the ground state energy of a Hamiltonian (see figure \ref{fig:IdealPairing2fermi4spin1deltag}). When running the simulation of a quantum computer with noise (figure \ref{fig:NoisyVQE}) and running our algorithm on the actual IBM Q London device (figure \ref{fig:VQEReal2fermi4spinorbs}), we learned that the noise caused our results to be dependent on the interaction strength $g$ of our system. This may be explained by looking at figure \ref{fig:amplitudeagainstgidealpairingvqe}, showing the linear combination of qubit states in the found ground state. As we increase the interaction strength $g$, the ground state for the system is approaching the entangled state $\frac{1}{\sqrt{2}}(\ket{0011} \pm \ket{1100})$. This may indicate that applying the VQE method on noisy intermediate-scale quantum (NISQ) devices is not robust when the ground state for the system in question is a highly entangled state, as we require sufficient entanglement between the qubits as well.\newline
+We also run the VQE method with the UCCD ansatz for four particles and eight spin-orbitals, with varying interaction strength $g$ (figure \ref{fig:IdealPairing4fermi8orbs}). As the CCD energy was expected to deviate from the FCI energy for this system, we wanted to compare our VQE results with CCD. The energy given by both methods deviated from the FCI energy as we increased the interaction strength, but interestingly there was less deviation with VQE than CCD. This may be an excellent motivation for studying quantum computing. 
+
+\section{Quantum Adiabatic Time Evolution}
+\label{sec:ResQATE}
+Recall that the quantum adiabatic time evolution (QATE) method requires us to start out in the ground state $\ket{\psi_0}$ of an initial Hamiltonian, $\hat{H}_0$, and gradually change this Hamiltonian to the problem Hamiltonian, $\hat{H}_1$. This results in a new, time dependent Hamiltonian (eq. (\ref{eq:AdiabaticHamiltonian})) which can be implemented on a quantum computer utilizing numerical integration (eq. (\ref{eq:TimeOrderedExponentialNumericalIntegration})), the Suzuki-Trotter approximation (eq. (\ref{eq:QATETrotterApproximation})) and finally ciruit \ref{circuit:TimeEvolutionArbitraryPauli}. In this section, we will see if this method can be used to approximate the ground state energy of the Jordan-Wigner transformed pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})) with two particles and four spin-orbitals. The initial Hamiltonian will be set to the Hamiltonian in eq. (\ref{eq:QATEInitialHamiltonian}), and our qubits will start in the corresponding ground state (eq. (\ref{eq:QATEInitialState})). First, we are going to test the method on a simulation of an ideal quantum computer, before running a simulation with the noise model of the IBM Q London five qubit device. In both cases, we will compare our results with the eigenvalue obtained with full configuration interaction (FCI) theory.
+
+\subsection{Ideal Simulation}
+\label{subsec:ResQATEIdeal}
+For the ideal simulation, we first solved for the pairing Hamiltonian with an interaction strength $g=1$. Then we increased the interaction strength to $g=5$ to see if this affected the convergence of the algorithm. The results can be seen in figure \ref{fig:idealQATE}.
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include first image
+  \includegraphics[page=1,width=1.1\textwidth]{figures/results/qate/qate_ideal_2_4_1_1_80_05.png}  
+  \caption{The interaction strength is put to $g=1$. We plot the energy of the system as against the step of the time-ordered exponential.}
+  \label{fig:qateideal24118005}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include second image
+  \includegraphics[page=2,width=1.1\textwidth]{figures/results/qate/qate_ideal_g5_dt02_55steps.png}  
+  \caption{The interaction strength is put to $g=5$. We plot the energy of the system as against the step of the time-ordered exponential.}
+  \label{fig:qateideal24155505}
+\end{subfigure}
+\caption{Ideal QATE simulation for pairing Hamiltonian with two particles and four spin-orbitals.}
+\label{fig:idealQATE}
+\end{figure}
+We see that the energy eventually starts oscillating around the eigenvalue given by FCI for both interaction strengths.
+
+\subsection{Noisy Simulation}
+\label{subsec:ResQATENoisy}
+To get an impression on how QATE fares when we include noise in the simulation, we utilized the noise model from the IBMQ London quantum computer and performed the same simulation as in figure \ref{fig:qateideal24155505}. The results can be seen in figure \ref{fig:NoisyQate}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/qate/NoisyQate.png}
+    \caption{QATE simulation of pairing Hamiltonian with one pair and four spin-orbitals. The simulation is run with noise model from the five qubit IBMQ London quantum computer. We plot the energy of the system as against the step of the time-ordered exponential.}
+    \label{fig:NoisyQate}
+\end{figure}
+We see that we are not able to reproduce the results from the ideal simulation.
+
+\subsection{Discussion}
+\label{sec:DiscussionQATE}
+In figure \ref{fig:idealQATE}, we see an ideal simulation of the QATE algorithm performed on the pairing Hamiltonian with one pair and four spin-orbitals for two different interaction strengths. In both cases, the energy converges towards the FCI eigenvalue before starting to oscillate. This oscillation raises the question of when to stop the algorithm. We could measure the energy at each time step. However, this requires us to execute the algorithm several times. Even though each step can be implemented efficiently, it is important to note that the efficiency of the algorithm is reliant on the total number of time steps required. If this number is exponential in the number of qubits, the algorithm is no longer efficient. It can be shown that the number of time steps are dependent on the minimum energy difference between the two lowest states of the interpolating Hamiltonian \cite{AdiabaticTimeEvolution}. This may be why we see a faster convergence when we increase the interaction strength (figure \ref{fig:qateideal24155505}). Evaluating the energy difference is beyond the scope of this thesis.\newline
+In figure \ref{fig:NoisyQate} we show the QATE algorithm on a simulation with the noise model from the IBMQ London quantum computer. We see that we are not able to reproduce the results from the ideal simulation. Similar to the argument for the quantum phase estimation (QPE) algorithm (see section \ref{subsec:QPEDiscussion}), this may be explained with the circuit depth given by continuous applications of the Suzuki-Trotter approximation (section \ref{subsec:SuzukiTrotter}).
+
+
+\newpage
+
+\section{Quantum Machine Learning}
+\label{sec:ResDeepLearning}
+In this section we will utilize the machine learning methods explained in chapter \ref{chap:QuantumComputingML} on some selected problems. In sections \ref{subsec:LearningWithUnitaryOperators} and \ref{subsec:RecursiveCircuitOptimization} we suggested ways to reduce a quantity called circuit depth (section \ref{subsubsec:CircuitDepth}) by minimizing a loss function with machine learning. The importance of reducing this quantity was explained by the fact that the circuit depth is often the bottleneck on noisy intermediate-scale quantum (NISQ) devices. The results in the previous sections of this chapter stresses the importance of circuits with short depth, as even computationally efficient methods such as the quantum phase estimation algorithm struggle when encountering noise (see figure \ref{fig:noisyQPE}). We will start by applying the method explained in section \ref{subsec:LearningWithUnitaryOperators}, which is based upon learning unitary operators by maximizing an inner product. 
+
+
+\subsection{Learning the Suzuki-Trotter Approximation}
+\label{subsec:LearningTheSuzukiTrotterApprox}
+Recall that circuit (\ref{circuit:TestSubsetAutoencoder}) can be utilized to calculate the squared inner product between a state produced by some parametrized unitary operator $U_a(\boldsymbol{\theta})\ket{0\cdots 0}$, and the state produced by some other operator $U_i\ket{0\cdots 0}$. We argued that if the squared inner product between these two states is equal to one, the operators are only differing by a global phase. Hence, the two states are physically indistinguishable. Remembering that the operator $U_a(\boldsymbol{\theta})$ is dependent on the parameters $\boldsymbol{\theta}$, we can vary these until the squared inner product calculated with circuit (\ref{circuit:TestSubsetAutoencoder}) is as close to one as possible.
+
+\bigskip
+
+We will first utilize this method to approximate a time step with the Suzuki-Trotter approximation (section \ref{subsec:SuzukiTrotter}). Recall that both the quantum phase estimation algorithm (section \ref{sec:QPE}) and the quantum adiabatic time evolution (QATE) algorithm (section \ref{sec:QATE}) relies on a Suzuki-Trotter approximation of the pairing Hamiltonian time evolution operator (eq.  (\ref{eq:TimeEvoTrotterApprox})). Hence, we will try to approximate this operator for two particles and four spin-orbitals while hopefully reducing its circuit depth. The operator $U_a(\boldsymbol{\theta})$ was chosen to be the Euler rotation ansatz given by circuit (\ref{circuit:VQEEulerRotationAnsatz}). The parameter $d$ is the number of successive applications of the ansatz, $U_a(\boldsymbol{\theta})$, to the quantum state, that is $U_a(\boldsymbol{\theta}_d)U_a(\boldsymbol{\theta}_{d-1})\cdots U_a(\boldsymbol{\theta}_1) \ket{0\cdots 0}$. Hence, we expect that the flexibility of the ansatz increases with $d$. We chose $d=3$ and we measured the squared inner product $10
+^3$ times. The results from the learning process can be seen in figure \ref{fig:ResLearningTimeEvoOp}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/LearningUnitaryOperator/timeevoautoencoding.png}
+    \caption{Approximating a time step of the Suzuki-Trotter approximation utilizing a parametrized ansatz. We plot the absolute value of the inner product between the state given by the Suzuki-Trotter approximation and the state given by the parametrized ansatz, against the iteration of the learning scheme.}
+    \label{fig:ResLearningTimeEvoOp}
+\end{figure}
+We see from figure \ref{fig:ResLearningTimeEvoOp} that we are eventually able to learn a parametrized operator that approximates the Suzuki-Trotter approximation, since the inner product approaches 1. The circuit depth of the two operators is shown in the table below, along with the approximated squared inner product between the states produced by said operators:
+\begin{table}[H]
+\centering
+\caption{Squared inner product between the states produced by the Euler Rotation ansatz in circuit (\ref{circuit:VQEEulerRotationAnsatz}) and a Suzuki-Trotter step of the pairing Hamiltonian time evolution operator. We also show the circuit depth of the two circuits.}
+\label{tab:LearnTimeEvoDepth}
+\begin{tabular}{|l|l|l|}
+\hline
+Time Evolution depth & Ansatz depth & Approximated squared inner product \\ \hline
+91                   & 16           & $1.000$     \\ \hline      
+\end{tabular}
+\end{table}
+
+\subsubsection{Discussion}
+We see from table \ref{tab:LearnTimeEvoDepth} that we were able to approximate the Suzuki-Trotter step while reducing the circuit depth of the operation from 91 to 16. Being able to achieve such a reduction in depth shows promise for this algorithm, especially considering that the Suzuki-Trotter approximation is utilized in all the quantum computing many-body methods discussed in this thesis. Even though we measured 1 for the squared inner product between the parametrized operator and the Suzuki-Trotter approximation, we have to keep in mind that this is only an approximation due to a finite number of measurements.
+
+
+\subsection{Learning the Amplitude Encoding of Random Variables}
+\label{subsec:LearningAmpEncRandVar}
+
+We suggested in section \ref{sec:GeneralLayer} that we could utilize hardware-efficient parametrized unitary operators instead of the amplitude encoding operation (section \ref{sec:AmplitudeEncoding}) as the building blocks for quantum neural network layers. We can test if this is a viable option by following the same procedure as we did when approximating a Suzuki-Trotter step in section \ref{subsec:LearningTheSuzukiTrotterApprox}. This time, we instead try to approximate the amplitude encoding of a random vector $\boldsymbol{x}$. Recall that the amplitude encoding $U_{\boldsymbol{x}}$ of a vector $\boldsymbol{x}$ encodes a $2
+^n$-dimensional vector into the $n$-qubit state
+$$
+U_{\boldsymbol{x}\ket{0\cdots 0}} = \sum_{i}x_i\ket{i},
+$$
+by applying $2^n$ rotation gates. That is, the number of gates is exponential in the number of qubits.
+We will try to approximate the action of $U_{\boldsymbol{x}}$ with the Euler rotation ansatz given by circuit (\ref{circuit:VQEEulerRotationAnsatz}). This is a hardware-efficient ansatz with a number of gates linear in the number of qubits. The approximation of the amplitude encoding is done by maximizing the squared inner product between the amplitude encoding and the ansatz, by varying the parameters of the ansatz. We measure the squared inner product between these with circuit (\ref{circuit:TestSubsetAutoencoder}).
+
+We compare the circuit depth of the amplitude encoding circuit with the depth of the Euler rotation ansatz in table \ref{tab:AnsatzVsAmplitudeEncoding}.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of the circuit depth of the amplitude encoder (circuit (\ref{circuit:AmplitudeEncoding})) to the depth of the Euler rotation ansatz (circuit (\ref{circuit:VQEEulerRotationAnsatz})). The parameter $d$ is the number of successive applications of the ansatz, $U_a(\boldsymbol{\theta})$, to the quantum state, that is $U_a(\boldsymbol{\theta}_d)U_a(\boldsymbol{\theta}_{d-1})\cdots U_a(\boldsymbol{\theta}_1) \ket{0\cdots 0}$.}
+\label{tab:AnsatzVsAmplitudeEncoding}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+Qubits & Encoding depth & Ansatz depth ($d=3$) & Ansatz depth ($d=4$) & Ansatz depth ($d=5$) \\ \hline
+3                & 28                       & 15                                & 20                                & 25                                \\ \hline
+4                & 330                      & 16                                & 21                                & 26                                \\ \hline
+5                & 1386                     & 17                                & 22                                & 27                                \\ \hline
+6                & 4394                     & 18                                & 23                                & 28    \\ \hline                            
+\end{tabular}
+\end{table}
+We see that the circuit depth of the amplitude encoder increases drastically when increasing the number of qubits, while the depth of the ansatz only increases by one per qubit.
+
+In figure \ref{fig:nnAnsatzComparisonEuler}, we see the inner product between the learned ansatz and the amplitude encoding of a random vector, as a function of the dimensions of the random vector. The parameter $d$ is the number of successive applications of the ansatz, $U_a(\boldsymbol{\theta})$, to the quantum state, that is $U_a(\boldsymbol{\theta}_d)U_a(\boldsymbol{\theta}_{d-1})\cdots U_a(\boldsymbol{\theta}_1) \ket{0\cdots 0}$. Hence, we expect that the flexibility of the ansatz increases with $d$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/NN/eulerlearnampenc.png}
+    \caption{The inner product between state produced by a learned ansatz and the amplitude encoding of a normally distributed random vector, against the dimensions of the random vector. The ansatz was given by circuit (\ref{circuit:UencVQERotationAnsatz}). The parameter $d$ is the number of successive applications of the ansatz.}
+    \label{fig:nnAnsatzComparisonEuler}
+\end{figure}
+We see from the green line that we were able to learn an ansatz that approximates the amplitude encoding, as the inner product is close to 1 for every dimension. Increasing the number of dimensions of the random vector requires increasing the flexibility of the ansatz, which we can see from the results for different $d$.
+
+\subsubsection{Discussion}
+The fact that we are able to learn the amplitude encoding operation with a hardware-efficient operator speaks well for the possibility to realize expressive and hardware-efficient neural network layers on quantum computers. In figure \ref{fig:nnAnsatzComparisonEuler} we see that the squared inner product is close to 1 between the amplitude encoding of 16 random numbers and the Euler rotation ansatz with $d = 3$. As the number of qubits required for this amplitude encoding is 4, we see from table \ref{tab:AnsatzVsAmplitudeEncoding} that we have approximated the amplitude encoding operation while reducing its circuit depth from 330 to 16.\newline 
+These results do not just serve as a motivation to further study hardware-efficient neural networks. They also suggest that one may be able to learn a hardware-efficient representation of a data set, which then could be used instead of the amplitude encoder at the start of some machine learning algorithm.
+
+\subsection{Recursive Circuit Optimization of Random Circuit}
+\label{subsec:RecurisveCircuitOptRandCirc}
+
+The issue with the method used in sections \ref{subsec:LearningTheSuzukiTrotterApprox} and \ref{subsec:LearningAmpEncRandVar} to approximate unitary operators, is that we have to apply the operator we wish to approximate to the qubit-state. Hence, if the circuit depth of the operator is too large, the method may fail. We will now represent our results for the recursive circuit optimization scheme (section \ref{subsec:RecursiveCircuitOptimization}), which is a method we proposed to get past this issue.
+
+A quantum circuit can be represented by some unitary operator $U$, which we can divide into $k$ parts
+$$U = U_k \cdots U_2 U_1.$$
+Recall that with the recursive circuit optimization scheme (see circuit (\ref{circuit:RecursiveLearning})), we first learn a parametrized unitary operator, $U_a(\boldsymbol{\theta}_1)$, that approximates $U_1$.
+The operator $U$ can then be written as
+$$U \approx U_k \cdots U_2U_a(\boldsymbol{\theta}_1).$$
+We then approximate $U_2U_a(\boldsymbol{\theta}_1)$ with the parametrized unitary operator $U_a(\boldsymbol{\theta}_2)$.
+This gives
+$$ U \approx U_k \cdots U_a(\boldsymbol{\theta}_2).$$
+After doing this for all $k$, we end up with
+$$U \approx U_a(\boldsymbol{\theta}_k).$$
+Hence, we have approximated the full circuit by only applying smaller parts.
+
+To test out this method, we generated a random three-qubit circuit with a depth of 200.
+The circuit was divided into $k=20$ parts, each with a circuit depth of 10. We utilized the Euler rotation ansatz in circuit (\ref{circuit:VQEEulerRotationAnsatz}) as our parametrized operator $U_a(\boldsymbol{\theta})$. Recall that the parameter $d$ is the number of successive applications of the ansatz, $U_a(\boldsymbol{\theta})$, to the quantum state. That is $U_a(\boldsymbol{\theta}_k) = U_a(\boldsymbol{\theta}
+^d_k)U_a(\boldsymbol{\theta}^{d-1}_k)\cdots U_a(\boldsymbol{\theta}^1_k) \ket{0\cdots 0}$. We chose $d=3$.
+
+At each step of the recursive algorithm, we calculated the squared inner product between the random circuit and the learned ansatz.
+As we expected some error to propagate due to a finite number of measurements in the recursive process, we ran the scheme for both $10^3$ and $10^4$ measurements. The results can be seen in figure \ref{fig:RecursiveCircuitOptimizationRandomCircuit}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/NN/recursivelearningrandomcircuit.png}
+    \caption{Recursive circuit optimization of random circuit. We plot the absolute value of the inner product between the random circuit state and the corresponding learned ansatz state, against the depth of the random circuit (bottom) and the step of the recursive algorithm (top). This is done for $10^3$ and $10^4$ measurements in the learning process.}
+    \label{fig:RecursiveCircuitOptimizationRandomCircuit}
+\end{figure}
+We see that the absolute value of the inner product between the random unitary operation and the learned ansatz decreases with the steps of the recursive scheme. We also note that the decrease is steeper with fewer measurements.
+In table \ref{tab:RecursiveOptimizationRandomCircuit}, we show the circuit depth of the random circuit, the optimization scheme and the learned ansatz.
+\begin{table}[H]
+\centering
+\caption{Learning a random circuit with recursive circuit optimization. We compare the circuit depth of the full random circuit, the circuit depth of the recursive optimization scheme and the circuit depth of the learned ansatz.}
+\label{tab:RecursiveOptimizationRandomCircuit}
+\begin{tabular}{|l|l|l|}
+\hline
+Random Circuit Depth & Recursive Optimization Circuit Depth & Ansatz Circuit Depth \\ \hline
+200                  & 39                           & 15  \\\hline
+\end{tabular}
+\end{table}
+We see that we have approximated a circuit of depth 200 by only running circuits of depth 39. The resulting approximation of the random circuit has a depth of 15. 
+
+\subsubsection{Discussion}
+From figure \ref{fig:RecursiveCircuitOptimizationRandomCircuit}, we see that the inner product between our parametrized unitary operator and the respective part of the random circuit decreases as a function of the step of the algorithm. We expect that this behaviour comes as a result of two reasons. Since we are varying the parameters of an operator for it to maximize a squared inner product, the first reason could be that the operator is not flexible enough for this task. We can account for this by using a more flexible operator if the measured squared inner product is below 1. The second reason could be that we are doing a finite number of measurements when we evaluate the squared inner product. Hence, even if the squared inner product is measured as 1, we are in reality not exactly reproducing the corresponding part of the random circuit. We will then see an error propagate as we further proceed with the recursive optimization. This can explain why we get a much better approximation when doing $10
+^4$ measurements instead of $10^3$.
+
+\subsection{Recursive Circuit Optimization of the Quantum Adiabatic Time Evolution Algorithm}
+
+Since the method was successful on a random circuit, we wanted to see if it could reduce the circuit depth of some of the many-body methods utilized in this thesis. Recall that the quantum adiabatic time evolution (QATE) algorithm (section \ref{sec:QATE}) requires us to utilize the Suzuki-Trotter approximation (section \ref{subsec:SuzukiTrotter}) to implement the time-ordered exponential. We wanted to recursively learn the Suzuki-Trotter approximation in eq. (\ref{eq:QATETrotterApproximation}), that is
+$$ U(t) \approx \prod_{k=0}^{n}e^{-i\left[(1-\frac{k\Delta t}{T})\hat{H}_0 + \frac{k\Delta t}{T}\hat{H}_1 \right] \Delta t},$$
+where $U_k$ in the recursive circuit optimization scheme (circuit (\ref{circuit:RecursiveLearning})) is the $k$'th term in the above product. We utilized the $R_y(\theta)$-rotation ansatz shown in circuit (\ref{circuit:VQERyAnsatz}) as the parametrized operator $U_a(\boldsymbol{\theta})$.
+
+The goal was to reproduce the results shown in figure \ref{fig:qateideal24155505}. We performed $10^3$ measurements in the learning process and the results are shown in figure \ref{fig:RecursiveCircuitOptimizationQATE}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/NN/recursivelearning.png}
+    \caption{Recursive circuit optimization of the QATE algorithm for pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})) with $\delta = 1$ and $g = 1$. We plot the energy as a function of the step in the recursive scheme.}
+    \label{fig:RecursiveCircuitOptimizationQATE}
+\end{figure}
+Even though this is not an exact reproduction of what is seen in figure \ref{fig:qateideal24155505}, we are still able to approximate the ground state energy.
+
+The circuit depth of the recursive scheme and the circuit depth of the corresponding QATE algorithm is shown in table \ref{tab:RecursiveCircuitOptimizationQATE}.
+\begin{table}[H]
+\centering 
+\caption{Depth of recursive Circuit optimization scheme versus depth of the QATE algorithm.}
+\label{tab:RecursiveCircuitOptimizationQATE}
+\begin{tabular}{|l|l|}
+ \hline
+QATE circuit depth & Recursive Optimization circuit depth \\ \hline
+5061               & 126 \\\hline                     
+\end{tabular}
+\end{table}
+We see that we have approximated the QATE algorithm while reducing the circuit depth from 5061 to 126.
+
+\subsubsection{Discussion}
+From figure \ref{fig:RecursiveCircuitOptimizationQATE} we see that the recursive optimization scheme was not able to exactly reproduce the results from the corresponding QATE algorithm in figure \ref{fig:qateideal24155505}. As we discussed when optimizing the random circuit (section \ref{subsec:RecurisveCircuitOptRandCirc}), we expected some error in the approximation due to a finite number of measurements and due to the flexibility of the parameterized operator. Hence, we expect that increasing the number of measurements could provide more satisfactory results. Even though we are not able to exactly reproduce the QATE algorithm, we are still able to approximate the ground state energy while reducing the circuit depth from 5061 to 126 (table \ref{tab:RecursiveCircuitOptimizationQATE}). This drastic decrease of circuit depth could potentially lead to the method being applicable on near-term devices.
+
+\subsection{Recursive Circuit Optimization of Unitary Coupled Cluster Doubles Ansatz}
+Finally, we wanted to see if we could utilize the recursive scheme to reduce the circuit depth of the variational quantum eigensolver (VQE) algorithm (section \ref{sec:VQE}). Recall that the unitary coupled cluster doubles (UCCD) ansatz requires us to apply the following Suzuki-Trotter approximation (eq. (\ref{eq:UCCTrotterApprox}))
+\begin{align*}
+    U(\boldsymbol{t}) &\approx  \bigg( \prod_{ijab} e^{\hat{Z}_{ij}^{ab}\sigma_x^i \sigma_x^j \sigma_y^a \sigma_x^b }
+    e^{\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_x^j \sigma_y^a \sigma_y^b }
+    e^{\hat{Z}_{ij}^{ab}\sigma_x^i\sigma_y^j \sigma_y^a \sigma_y^b }
+    e^{\hat{Z}_{ij}^{ab}\sigma_x^i \sigma_x^j \sigma_x^a \sigma_y^b } \notag \\
+    &e^{-\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_x^j \sigma_x^a \sigma_x^b }
+    e^{-\hat{Z}_{ij}^{ab}\sigma_x^i \sigma_y^j \sigma_x^a \sigma_x^b }
+    e^{-\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_y^j \sigma_y^a \sigma_x^b }
+    e^{-\hat{Z}_{ij}^{ab}\sigma_y^i \sigma_y^j \sigma_x^a \sigma_y^b }
+    \bigg).
+\end{align*}
+To reduce the circuit depth of the VQE algorithm, we divided the above ansatz into $k=2$ parts. Every time we would apply the ansatz to our state, we utilized the recursive circuit optimization scheme (circuit (\ref{circuit:RecursiveLearning})) to approximate it with the $R_y(\boldsymbol{\theta})$-rotation ansatz (circuit (\ref{circuit:VQERyAnsatz})). We solved for the Jordan-Wigner transformed pairing Hamiltonian (eq. (\ref{eq:JordanWignerHamiltonian})) with two particles and four spin-orbitals, varying the interaction strength $g$. Hence, we expect to reproduce the results seen in figure \ref{fig:IdealPairing2fermi4spin1deltag}. 
+
+The results can be seen in figure \ref{fig:recursiveVQE}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{figures/results/NN/recursiveVQE.png}
+    \caption{The VQE algorithm on the pairing Hamiltonian with two particles and four spin orbitals. We approximated the UCCD ansatz utilizing the recursive circuit optimization scheme with two steps and the $R_y$-rotation ansatz given by circuit (\ref{circuit:VQERyAnsatz}). We plot the ground state energy against the interaction strength $g$, together with the absolute difference between the FCI energy and the UCCD energy.}
+    \label{fig:recursiveVQE}
+\end{figure}
+We see that we are able to reproduce the results in figure \ref{fig:IdealPairing2fermi4spin1deltag} without sacrificing accuracy.
+
+In table \ref{tab:recursiveVQE}, we see the depth of running the recursive scheme vs. the depth of the VQE algorithm with the UCCD ansatz.
+\begin{table}[H]
+\centering
+\caption{Recursive optimization scheme of the VQE algorithm with the UCCD Ansatz. We see the depth of the UCCD ansatz and the depth of recursive optimization scheme.}
+\label{tab:recursiveVQE}
+\begin{tabular}{|l|l|}
+\hline
+UCCD depth & Recursive circuit depth  \\ \hline
+245        & 76                       \\ \hline           
+\end{tabular}
+\end{table}
+Hence, we have reduced the circuit depth of the VQE algorithm from 245 to 76.
+
+\subsubsection{Discussion}
+In figure \ref{fig:NoisyPairingAnsatzCompare2fermi4spin1deltag}, we saw the VQE algorithm simulated with the noise model of one of IBM's real quantum computers. When comparing the UCCD ansatz with a much simpler ansatz, the error in the energy estimate was larger for the former. Hence, reducing the circuit depth of the UCCD ansatz could be beneficial. The results in figure \ref{fig:recursiveVQE} show that we are able to do this, while achieving an accuracy comparable to what was seen with the VQE algorithm results. Table \ref{tab:recursiveVQE} shows that we reduced the circuit depth of the ansatz from 245 to 76.
+
+\bigskip 
+
+This concludes the results for the recursive optimization scheme. We will now move over to our results for the quantum neural networks.
+
+
+
+\subsection{Learning a Non-Linear Function with Quantum Neural Network}
+\label{subsec:Non-LinearNeuralNetwork}
+To test out the quantum neural network proposed in section \ref{sec:GeneralLayer}, we will try to learn the following non-linear function:
+$$f(x) = 3 \sin{x} - \frac{1}{2}x.$$
+We generated ten points to be utilized as training data. These points were evenly distributed in the interval
+$x \in [0,2\pi].$ We normalized $f(x)$ between 0 and 1 since the output from the neural network lies in this range.
+
+Recall from section \ref{sec:GeneralLayer} that our neural network layer (circuit (\ref{circuit:QuantumGeneralLayer})) consists of three main components. An encoder, $U_{enc}(\boldsymbol{x})$, which is utilized to encode some representation of the layer inputs $\boldsymbol{x}$ to a quantum state. An ansatz, $U_a(\boldsymbol{\theta}_a)$, with the purpose of parametrizing the encoded quantum state. And finally the entangler, $U_{ent}(\boldsymbol{\theta}_{ent})$, which should entangle the register acted upon by the encoder and ansatz, with an ancilla qubit.
+
+Table \ref{tab:NonLinearNeuralNetwork} shows the structure of the neural network utilized for this problem.
+
+\begin{table}[H]
+\centering
+\caption{Structure of the neural network used to approximate a non-linear function. The first row corresponds to the input layer, while the final row corresponds to the output layer.}
+\label{tab:NonLinearNeuralNetwork}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+Qubits & $U_{enc}$          & $U_{a}$            & $U_{ent}$ & Outputs \\ \hline
+1                & $R_y(\theta)$ (eq. (\ref{eq:RotationOps})) & $R_y(\theta)$  & circuit (\ref{circuit:RotationEntangler})   & 6                 \\ \hline
+3                & circuit (\ref{circuit:UencVQERotationAnsatz}) with $U^{[j,k]} = R_y(\theta)$            & circuit (\ref{circuit:UencVQERotationAnsatz}) with $U^{[j,k]} = R_y(\theta)$            & circuit (\ref{circuit:RotationEntangler})   & 6                 \\ \hline 
+3                & circuit (\ref{circuit:UencVQERotationAnsatz}) with $U^{[j,k]} = R_y(\theta)$           & circuit (\ref{circuit:UencVQERotationAnsatz}) with $U^{[j,k]} = R_y(\theta)$            & circuit (\ref{circuit:RotationEntangler})   & 1      \\ \hline           
+\end{tabular}
+\end{table}
+Going through the structure in table \ref{tab:NonLinearNeuralNetwork}, the neural network only consists of hardware-efficient encoders, ansatzes and entanglers. The amplitude encoder is not utilized. The importance of this is discussed in section \ref{sec:GeneralLayer}.
+
+
+
+For the training algorithm we utilized the mean squared error (eq. (\ref{eq:MSE})) as the loss function. To evaluate the trained network, we generated twenty points to make sure that the network could to some extent approximate the function when passed points not coinciding with the training data. These twenty points were also evenly distributed in the interval $x \in [0,2\pi]$. The results can be seen in figure \ref{fig:NNNonLinearFunction}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{figures/results/NN/nonlinearfunction.png}
+    \caption{Quantum Neural Network trained on the non-linear function $f(x) = 3 \sin{x} - \frac{1}{2}x$. We plot the actual function values and the values given by the neural network, against $x$.}
+    \label{fig:NNNonLinearFunction}
+\end{figure}
+We see that even for this hardware-efficient network, we are able to approximate a non-linear function.
+
+\subsubsection{Discussion}
+Figure \ref{fig:NNNonLinearFunction} shows a plot of the true function together with the approximation given by the neural network. We see that the quantum neural network is able to learn from a data set and also that it is able to learn non-linearity. Even though we are not perfectly replicating the function, we have to keep in mind that we only utilized a three-layered network, with at most three qubits in the intermediate layers (see table \ref{tab:NonLinearNeuralNetwork}). We expect that adding more layers and/or more qubits will increase the flexibility. Another important aspect is that the model did not rely on amplitude encoding (section \ref{sec:AmplitudeEncoding}), as we utilized the output from the layers as rotation angles for a hardware-efficient unitary encoder in the next layer (see section \ref{sec:IntermediateLayers}). In fact, all the components were chosen to be hardware-efficient and suitable for noisy intermediate-scale quantum devices. Hence, we have illustrated that one could realize hardware-efficient neural network layers on quantum computers that are able to learn non-linear functions.
+
+
+\subsection{Rayleigh Quotient Minimization}
+\label{subsec:ResRayleighMin}
+We wanted to utilize a neural network to approximate the lowest eigenvalue of the full configuraction (FCI) pairing Hamiltonian matrix (see section \ref{sec:CI}). We did this by minimizing the Rayleigh Quotient as described in section \ref{subsec:RayleighQMinimization}. The network we utilized had two layers given by circuit (\ref{circuit:QuantumGeneralLayer}). The structure can be seen in table \ref{tab:RayleighNeuralNetwork}.
+
+\begin{table}[H]
+\centering
+\caption{Structure of the neural network used to approximate the eigenvalues of the pairing Hamiltonian. The first row corresponds to the input layer, while the final row corresponds to the output layer. Identity means that we do not apply any operator. In the final layer, we return a number of outputs equal to the dimension of the eigenvector.}
+\label{tab:RayleighNeuralNetwork}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+Qubits & $U_{enc}$          & $U_{a}$            & $U_{ent}$ & Outputs \\ \hline
+2                & Hadamard gate on each qubit (eq. (\ref{eq:HadamardGate})) & Identity  & circuit (\ref{circuit:RotationEntangler})    & 2                 \\ \hline
+2                & circuit (\ref{circuit:UencVQERotationAnsatz}) with $U^{[j,k]} = R_y(\theta)$            & Identity          & circuit (\ref{circuit:RotationEntangler})   & Dimensions of eigenvector                 \\ \hline 
+\end{tabular}
+\end{table}
+
+\iffalse
+The first layer consisted of two qubits. $U_{enc}$ was simply put to a Hadamard gate applied to each qubit. $U_a$ was put to the identity operator, while $U_{ent}$ was put to the unitary given by circuit (\ref{circuit:RotationEntangler}) with $U_b(\theta) = R_y(\theta)$. Two nodes was produced by this layer. The second layer also consisted of two qubits. The encoder $U_{enc}$ was put to the $R_y$ ansatz given by circuit (\ref{circuit:VQERyAnsatz}), which utilized the two activations from the previous layer as inputs. $U_a$ was simply put to the identity matrix, while $U_{ent}
+^r$ was put to the same operation as for the first layer. The outputs from this layer was utilized as inputs to the Rayleigh Quotient loss function (see eq. (\ref{eq:RayleighLossFunction})).
+\fi
+
+We test out the neural network for both an ideal simulation of a quantum computer, and a simulation with the noise model from the IBM Q London 5 qubit device. We solved for both a two particle, four spin-orbital system, as well as a four particle, eight spin-orbital system. The results can be seen in figure \ref{fig:NNpairing}.
+
+
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include first image
+  \includegraphics[page=1,width=1.1\textwidth]{figures/results/NN/pairing_2_4_1_g.png}  
+  \caption{Two particles and four spin-orbitals. We plot the energy approximation against the interaction strength $g$.}
+  \label{fig:NNpairing241g}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  % include second image
+  \includegraphics[page=2,width=1.1\textwidth]{figures/results/NN/pairing481g.png}  
+  \caption{Four particles and eight spin-orbitals. We plot the energy approximation against the interaction strength $g$. }
+  \label{fig:NNpairing481g}
+\end{subfigure}
+\caption{Rayleigh Quotient minimization of pairing Hamiltonian. We plot the Rayleigh quotient against the interaction strength $g$. We include the results from both an ideal simulation and a simulation of the IBMQ London 5 qubit quantum computer.}
+\label{fig:NNpairing}
+\end{figure}
+We see that we are able to approximate the ground state energy for both systems when running the ideal simulation, as well as when running a simulation with the noise model from the IBM Q London 5 qubit device.
+
+
+\subsubsection{Discussion}
+In figure \ref{fig:NNpairing}, we see that we are able to approximate the eigenvalues of the FCI matrix by utilizing our proposed neural network architecture. We can also see that the results are not affected by running a simulation with the noise model of the IBM Q London 5 qubit computer. Even though this neural network architecture (table \ref{tab:RayleighNeuralNetwork}) is simpler than the architecture we used when approximating the non-linear function (table \ref{tab:NonLinearNeuralNetwork}), these results supports the idea that these neural networks could be utilized on near-term devices.
+
+\subsection{Final Discussion on the Neural Networks}
+
+\subsubsection{Hardware-efficiency}
+We know that except of the amplitude encoder, the encoders and ansatzes utilized in this thesis (section \ref{sec:EncodersAndAnsatzes}) are hardware-efficient and suitable for near-term quantum computers \cite{MaxCutAndEulerRotationHardwareEfficient}. We can therefore argue that the intermediate layers of our neural networks are hardware-efficient as well, as we have illustrated that we do not need to use the amplitude encoder for these. For the first layer however, we have to encode some representation of the input data. The most natural way to do this is through amplitude encoding. We have discussed that this may not be feasible on near-term devices (section \ref{sec:GeneralLayer}). One way to get past this is by utilizing a hybrid quantum-classical neural network. The input layer could be calculated classically, and the outputs from this layer are scaled and input to a hardware-efficient quantum layer (see section \ref{sec:IntermediateLayers}). Another possibility is to approximate the amplitude encoding of the data set with the Recursive Circuit Optimization scheme (section \ref{subsec:RecursiveCircuitOptimization}).
+
+\subsubsection{Exponential advantage in the number of parameters}
+A classical neural network layer of $p$ inputs and $k$ outputs requires $pk$ (eq. (\ref{eq:NumParamsAmplitudeEncoderLayer})) parameters to realize. The quantum layers would in the same scenario require $\mathcal{O}(k\log{p})$ parameters (eq. (\ref{eq:NumParamsEulerEncoderLayer})). Hence, there is an exponential advantage in terms of the number of parameters for the quantum neural network proposed in section \ref{sec:GeneralLayer}.\newline
+Many of the best performing classical neural networks require an enormous amount of memory due to the number of weights \cite{WeightPruning}. This memory requirement can often be the bottleneck for a model. The exponential advantage in the number of weights for the quantum neural networks may allow for deeper neural networks without an excessive memory requirement.
+
+\subsubsection{Expressiveness of the Quantum Neural Networks}
+A natural question that arises from the fact that we have exponentially fewer weights, is whether or not such neural networks will have the same expressive power as its counterpart. None of the work in this thesis gives a clear answer to this question, however one can consider the research that are being done on weight pruning. Weight pruning is the task of systematically removing parameters from a classical neural network with an acceptable decrease of accuracy. A survey of 81 recent papers on weight pruning concludes that it does indeed work, and in fact sometimes can lead to an increase of model accuracy\cite{WeightPruning}. This could be an indication that it is possible to realize useful layers with less parameters.\newline
+There are also several widely used methods to reduce the expressive power of neural networks \cite{Dropout}. The reason for this is that neural networks are often too expressive and will start fitting to the noise in a data set. Hence, parameter efficiency may not be a caveat when it comes to the proposed quantum neural networks.
+
+
+
+
+
+
+
+
+

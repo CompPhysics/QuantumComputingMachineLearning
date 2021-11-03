@@ -1,0 +1,655 @@
+\chapter{Quantum Computing: Machine Learning}
+\label{chap:QuantumComputingML}
+Quantum computers may open up a world of new machine learning algorithms, or possibly improve upon already known methods. We will specifically look at neural networks implemented on a quantum computer and see how they potentially could be used to solve for the ground state energy of a quantum mechanical system. We will also see how parametrized quantum circuits (PQC) can be utilized to approximate unitary operators.
+\section{Amplitude Encoding}
+\label{sec:AmplitudeEncoding}
+
+A crucial part of quantum machine learning algorithms is encoding a data set into our quantum state. There are several ways of doing this, but in this thesis we will only focus on storing our data set in the amplitudes of the quantum state. This is called amplitude encoding.
+
+Amplitude encoding is about encoding a data set into the amplitudes of a quantum state:
+\begin{equation}
+    \label{eq:AmplitudeEncodingTwoRegisters}
+    \ket{D} = \sum_{m=1}^M \sum_{i=1}^N x_i^m\ket{i}\ket{m},
+\end{equation}
+where $x_i^m$ denotes the $i$'th predictor of the $m$'th sample in our data set.
+Since $n$ qubits can be put in linear combinations of $2^n$ quantum states, we can store a data set of $2^n$ values on a quantum computer of $n$ qubits. Hence we can see that the representation in eq. (\ref{eq:AmplitudeEncodingTwoRegisters}) provides an exponential advantage in terms of memory over classical computers \cite{PQC}.
+
+Since the sum of the squared amplitudes of a quantum state needs to be equal to one in a quantum system, we assume that the data set is normalized, that is
+$$
+x_i^m \rightarrow \frac{x_i^m}{\sqrt{\sum_{m=1}^M\sum_{i=1}^N(x_i^m)^2}}.
+$$
+ 
+There are several different ways of achieving the state in eq. (\ref{eq:AmplitudeEncodingTwoRegisters}) and we will look at the one introduced by Möttönen \textit{et al.} \cite{AmplitudeEncoding}.
+Since we will only encode a single sample at a time in this thesis, we use just one register for the amplitude encoding rather than the two in eq. (\ref{eq:AmplitudeEncodingTwoRegisters}).
+Suppose that we start with the ideal state
+\begin{equation}
+    \label{eq:AmplitudeEncodingIdealState}
+    \ket{D} =  \sum_{i=1}^{M} x_i\ket{i},
+\end{equation}
+where $x_i$ is the $i$'th predictor of our data sample.
+If we find a way to revert this state back to the zero-state $\ket{0...0}$, the wanted state preparation can be done by inverting this operation. The reversion back to $\ket{0\cdots 0}$ can be done by applying rotations that focus on doing this for one qubit at a time.
+Suppose that we need $s$ qubits to encode our data. The idea is to first apply an $R_y(\theta)$ gate (eq. (\ref{eq:RotationOps})) on qubit $q_s$ controlled by all the previous qubits $q_1,...,q_{s-1}$. Consider the following two terms of the amplitude encoded state in eq. (\ref{eq:AmplitudeEncodingIdealState}):
+$$x_{q_1,q_2,...,q_{s-1},0}\ket{q_1,q_2,...,q_{s-1},0}, $$
+and
+$$x_{q_1,q_2,...,q_{s-1},1}\ket{q_1,q_2,...,q_{s-1},1}.$$
+Applying the gate
+$$
+R^{c_s}_{y|c_1=q_1,c_2=q_2,...,c_{s-1}=q_{s-1}}(\theta),
+$$
+which is an $R_y(\theta)$-rotation (eq. (\ref{eq:RotationOps})) on qubit $s$, conditional on qubit $i$ being in the $q_i$ state for all $i \in \{1,2,...,s-1\}$, gives us the following alteration 
+\begin{align}
+    \label{eq:AmplitudeEncodingRyOnstate}
+    R^{c_s}_{y|c_1=q_1,...,c_{s-1}=q_{s-1}}(\theta)[x_{q_1,q_2,...,q_{s-1},0}\ket{q_1,q_2,...,q_{s-1},0} \notag \\
+    + x_{q_1,q_2,...,q_{s-1},1}\ket{q_1,q_2,...,q_{s-1},1}] \notag \\
+    = [\cos(\theta /2) x_{q_1,q_2,...,q_{s-1},0} - \sin(\theta /2) x_{q_1,q_2,...,q_{s-1},1}] \ket{q_1,q_2,...,q_{s-1},0} \notag \\
+    + [\sin(\theta /2) x_{q_1,q_2,...,q_{s-1},0} + \cos(\theta /2) x_{q_1,q_2,...,q_{s-1},1}] \ket{q_1,q_2,...,q_{s-1},1}.
+\end{align}
+Now we want to find the $\theta$ that results in an amplitude of zero for the $\ket{q_1,q_2,...,q_{s-1},1}$ state. There are different solutions depending on the value of the two respective data set values, $x_{q_1,q_2,...,q_{s-1},0}$ and $x_{q_1,q_2,...,q_{s-1},1}$.
+
+First assume $x_{q_1,q_2,...,q_{s-1},0}, x_{q_1,q_2,...,q_{s-1},1} \neq 0$.
+If we want the amplitude of $ \ket{q_1,q_2,...,q_{s-1},1}$ to be zero, it translates to
+$$
+[\sin(\theta /2) x_{q_1,q_2,...,q_{s-1},0} + \cos(\theta /2) x_{q_1,q_2,...,q_{s-1},1}] = 0,
+$$
+which can be written as
+$$
+\frac{\sin(\theta / 2)}{\cos(\theta / 2)} = \tan(\theta /2) =  - \frac{x_{q_1,q_2,...,q_{s-1},1}}{x_{q_1,q_2,...,q_{s-1},0}}.
+$$
+Solving this for $\theta$ gives us
+\begin{equation}
+\label{eq:AmplitudeEncodingTheta}
+  \theta = -2 \arctan( \frac{x_{q_1,q_2,...,q_{s-1},1}}{x_{q_1,q_2,...,q_{s-1},0}}). 
+\end{equation}
+Plugging $\theta$ back into eq. (\ref{eq:AmplitudeEncodingRyOnstate}) shows that $\ket{q_1,q_2,...,q_{s-1},1}$ will now have an amplitude of $0$, and the amplitude of $\ket{q_1,q_2,...,q_{s-1},0}$ will be 
+\begin{equation}
+    \label{eq:AmplitudeEncodingAmplitudeOfQsZero}
+    x_{q_1,q_2,...,q_{s-1},0}\sqrt{\frac{x_{q_1,q_2,...,q_{s-1},1}^2}{x_{q_1,q_2,...,q_{s-1},0}^2} + 1}.
+\end{equation}
+
+Now if $x_{q_1,q_2,...,q_{s-1},0} = 0$ and $x_{q_1,q_2,...,q_{s-1},1} \neq 0$, the solution for $\theta$ in eq. (\ref{eq:AmplitudeEncodingRyOnstate}) is 
+\begin{equation}
+    \label{eq:AmplitudeEncodingTheta0neq0}
+    \theta = -\pi,
+\end{equation}
+and the $\ket{q_1,q_2,...,q_{s-1},0}$ state will now have the amplitude
+\begin{equation}
+    \label{eq:AmplitudeEncodingQsZero0neq0}
+    x_{q_1,q_2,...,q_{s-1},1}.
+\end{equation}
+
+For the two final cases, that is $x_{q_1,q_2,...,q_{s-1},0} = 0$, $x_{q_1,q_2,...,q_{s-1},1}=0$
+and the case $x_{q_1,q_2,...,q_{s-1},0}\neq0$, $x_{q_1,q_2,...,q_{s-1},1}= 0$, we simply do nothing.
+
+If we now do these rotations on $q_s$ for all relevant combinations of  $q_1,...,q_{s-1}$, we can neglect qubit $q_s$ as we know its value is deterministically 0. Then we do the same to $q_{s-1}$ for all relevant combinations of $q_1,...,q_{s-2}$, remembering that we got the new amplitudes given by eqs. (\ref{eq:AmplitudeEncodingAmplitudeOfQsZero}) and (\ref{eq:AmplitudeEncodingQsZero0neq0}). Following this procedure until the first qubit, for which we apply a non-controlled $R_y$ gate, will result in the zero-state. The circuit for this procedure looks like this
+
+\begin{equation}
+    \label{circuit:AmplitudeEncoding}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \ctrl{2} & \ctrlo{2} &  \hdots & & \ctrlo{2} & \ctrl{2} & \hdots && \gate{R_y(\theta_{2^{s-1} + 2^{s-2} + \cdots})}  \\
+& \ctrl{1} & \ctrl{1} & \hdots & & \ctrlo{1} & \ctrl{1} & \hdots && \qw & \qw \\
+& \control \qw & \control \qw & \hdots & & \controlo \qw & \control \qw & \hdots && \qw & \qw\\
+& \vdots &  \vdots & \hdots & & \vdots & \vdots & \vdots && \vdots\\
+& \ctrl{1} & \ctrl{1} & \hdots & & \ctrlo{1} & \gate{R_y(\theta_{2^{s-1} + 1})} & \hdots && \qw & \qw\\
+& \gate{R_y(\theta_1)} & \gate{R_y(\theta_2)} & \hdots & & \gate{R_y(\theta_{2^{s-1}})} & \qw & \hdots && \qw & \qw
+}
+\end{array}
+\end{equation}
+The inverse of this circuit is applied to go from the $\ket{00000\cdots}$ state to the desired state 
+$$\ket{D} =  \sum_{i=1}^{M} x_i\ket{i}.$$
+The inverse is easily implemented by applying the rotations in reverse order with rotation angle $-\theta$ instead of $\theta$.
+
+To summarize, we have described a method that can be utilized to encode some data set $\boldsymbol{x}$ of $2^M$ values into the amplitudes of an $M$-qubit quantum state, performing $\mathcal{O}(2^M)$ operations \cite{AmplitudeEncoding}. 
+We denoted this transformation by the unitary operator $U_{\boldsymbol{x}}$, with the following action on the $\ket{0\cdots 0}$ state
+$$
+U_{\boldsymbol{x}}\ket{00\cdots} = \ket{\boldsymbol{x}} =  \sum_{i=1}^{M} x_i\ket{i},
+$$
+where $x_i$ is the $i$'th element of vector $\boldsymbol{x}$. We deduced how to implement this operator by considering that its complex conjugate, $U_{\boldsymbol{x}}^\dagger$, should revert the amplitude encoded state back to the zero-state
+$$U_{\boldsymbol{x}}^{\dagger} \sum_{i=1}^{M} x_i\ket{i} = \ket{0 \cdots 0}.$$
+We illustrated that this reversion could be done with the application of controlled $R_y(\theta)$ gates, where the rotation angle $\theta$ could be derived in terms of the amplitudes $x_i$.
+
+
+
+\section{Inner product}
+\label{sec:InnerProduct}
+Several existing machine learning models rely on calculating the inner product between a vector of parameters $\boldsymbol{w}$, which are varied to fit the model to our data, and a vector $\boldsymbol{x}$ containing our features. By looking at the machine learning models introduced in chapter \ref{chap:SupervisedLearning}, all of them contain at least one dependence on the calculation of an inner product. Hence, we will in this section focus on how an inner product can be estimated on quantum computers. Suppose we have utilized amplitude encoding (see circuit (\ref{circuit:AmplitudeEncoding}), section \ref{sec:AmplitudeEncoding}) to encode a feature vector $\boldsymbol{x}$ consisting of $p$ features into our quantum state. This operation can be represented with a unitary operator $U_{\boldsymbol{x}}$, which acts the following way on the qubits
+$$U_{\boldsymbol{x}}\ket{0\cdots 0} = \sum_{i=0}^{p-1} x_i\ket{i} = \ket{{\boldsymbol{x}}}.$$
+Likewise for the parameter vector
+$$U_{\boldsymbol{w}}\ket{0\cdots 0} = \sum_{i=0}^{p-1} w_i\ket{i} = \ket{{\boldsymbol{w}}}.$$
+Following Francesco Tacchino \textit{et al.} \cite{InnerProductArtificialNeuron}, we can show that if we define
+\begin{equation}
+    \label{eq:InnerProductEqQuantum}
+    U^\dagger_{\boldsymbol{w}} U_{\boldsymbol{x}}\ket{0 \cdots 0} = \sum_{j=0}^{p-1} c_j \ket{j} = \ket{\phi_{{\boldsymbol{x}},{\boldsymbol{w}}}},
+\end{equation}
+we find that
+\begin{equation}
+    \label{eq:SquaredInnerProdu}
+    \bra{{\boldsymbol{w}}}\ket{{\boldsymbol{x}}} = \bra{0\cdots 0} U_{\boldsymbol{w}}^\dagger U_{\boldsymbol{x}} \ket{0\cdots 0} = \bra{0 \cdots 0} \sum_{j=0}^{p-1} c_j\ket{j} = \bra{0\cdots 0} c_0 \ket{0\cdots 0} = c_0.
+\end{equation}
+That is, the inner product $\boldsymbol{w} \cdot \boldsymbol{x}$ is contained in the amplitude $c_0$ of the $\ket{0\cdots 0 }$ term in eq. (\ref{eq:InnerProductEqQuantum}). If we introduce an ancilla qubit and flip it conditional on the qubits in the state $\ket{\phi_{{\boldsymbol{x}},{\boldsymbol{w}}}} = U^\dagger_{\boldsymbol{w}}U_{\boldsymbol{x}}\ket{0\cdots 0}$ being zero, we end up with
+$$\ket{\phi_{{\boldsymbol{x}},{\boldsymbol{w}}}} \ket{0} \rightarrow \sum_{j=1}^{p-1}c_j \ket{j}\ket{0} + c_0 \ket{0\cdots 0} \ket{1}. $$
+The probability of measuring the ancilla in the $\ket{1}$ state is then $|c_0|^2$ which is the squared inner product accoring to eq. (\ref{eq:SquaredInnerProdu}).
+The circuit to perform the explained procedure is therefore given by:
+\begin{equation}
+    \label{circuit:InnerProductCircuit}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{{U_1}} & \qw & \qw & \multigate{3}{{U_2^\dagger}} & \ctrlo{4} & \qw\\
+& \ghost{{U_1}} & \qw & \qw & \ghost{{U_2^\dagger}} & \ctrlo{3} & \qw \\
+& \nghost{{U_1}} & \vdots && \nghost{{U_2^\dagger}} & \ctrlo{2} & \qw \\
+& \ghost{{U_1}} & \qw &\qw & \ghost{{U_2^\dagger}} & \ctrlo{1} & \qw \\
+& \qw & \qw & \qw & \qw & \targ & \meter
+}
+\end{array}
+\end{equation}
+with $U_1 = U_{\boldsymbol{x}}$ and $U_2 = U_{\boldsymbol{w}}$.
+
+This circuit can be utilized to calculate the squared inner product between the state $U_1\ket{0\cdots 0}$ and the state $U_2 \ket{0\cdots 0}$ for arbitrary $U_1$ and $U_2$. This can be shown by following the same arguments as we did for $U_{\boldsymbol{x}}$ and $U_{\boldsymbol{w}}$ in this section, but for two arbitrary unitary operators.
+We will now go through how to set up a neural network by using this technique.
+
+\section{Dense Layer on a Quantum Computer}
+\label{sec:DNNQuantum}
+The dense layer we will explain in this section was first proposed by Francesco Tacchino \textit{et al.} \cite{InnerProductArtificialNeuron}.
+The activation of a neuron in a dense neural network layer is defined as (see section \ref{sec:SupLearDNN})
+\begin{equation}
+    \label{eq:DenseCalcQuantum}
+    a_i^l = f^l(z_i^l) = f^l(\sum_j w_{ji}^{l}a^{l-1}_j + b_i^l ),
+\end{equation}
+or
+$$\boldsymbol{a}^l = f^l([W^l]^T\boldsymbol{a}^{l-1} + \boldsymbol{b}^l), $$
+where $a_i^l$ is the activation of the $i$'th note in the $l$'th layer, $f^l(\cdot)$ is the non-linear activation function of the $l$'th layer, $w_{ji}^l$ are the model parameters in the $l$'th layer and $b_i^l$ is the $i$'th bias of the $l$'th layer. We see that the calculation of $f^l(z_i^l)$ is composed of the calculation of the inner product between the $i$'th column of $W
+^l$ and the activation $\boldsymbol{a}
+^{l-1}$, with the addition of a bias. Denote $\boldsymbol{w}^{[l,i]}_b$ as the vector containing the $i$'th column of $W^l$, but with the bias $b^l_i$ as its first element, that is
+\begin{equation}
+    \label{eq:WeightsWithBias}
+    \boldsymbol{w}^{[l,i]}_b = [b^l_i, w^{l}_{0i},w^{l}_{1i},\cdots,w^{l}_{[p-1]i}].
+\end{equation}
+Also denote $\boldsymbol{a}^{l-1}_b$ as a vector containing the activations of layer $l-1$, but with a $1$ added as the first element, that is
+\begin{equation}
+    \label{eq:ActivationWithBias}
+    \boldsymbol{a}^{l-1}_b = [1, a^{l-1}_0,a^{l-1}_1,\cdots,a^{l-1}_{p-1}].
+\end{equation}
+The inner product between these two vectors is then
+$$\boldsymbol{w}^{[l,i]}_b\cdot \boldsymbol{a}^{l-1}_b = [b^l_i, w^{l}_{0i},w^{l}_{1i},\cdots,w^{l}_{[p-1]i}]\cdot [1, a^{l-1}_0,a^{l-1}_1,\cdots,a^{l-1}_{p-1}] $$
+$$ = b_i^l + w^l_{0i}a_0^{l-1} + w^l_{1i}a_1^{l-1} + \cdots + w^l_{[p-1]i}a^{l-1}_{p-1}$$
+$$ = \sum_j w_{ji}^{l}a^{l-1}_j + b_i^l = z^l_i,$$
+hence we have calculated $z^l_i$ in eq. (\ref{eq:DenseCalcQuantum}) as an inner product between two vectors.
+In the previous section we dealt with calculating the squared inner product on a quantum computer, so if we utilize the following function 
+$$
+f^l(z) = z^2,
+$$
+as the activation function for our layers, we can utilize the squared inner product circuit (circuit  \ref{circuit:InnerProductCircuit}) to realize a neural network on a quantum computer. 
+The steps for implementing a dense neural network on a quantum computer are:
+\begin{enumerate}[Step 1:]
+\item Set up circuit (\ref{circuit:InnerProductCircuit}) with $U_1 = U_{\boldsymbol{a}^{l-1}_b}$ being the amplitude encoding (see section \ref{sec:AmplitudeEncoding}) of $\boldsymbol{a}_b^{l-1}$ in eq. (\ref{eq:ActivationWithBias}), and $U^\dagger_2 = U^\dagger_{\boldsymbol{w}^{[l,i]}_b}$ being the amplitude encoding of $\boldsymbol{w}^{[l,i]}_b$ in eq. (\ref{eq:WeightsWithBias}).
+\item The probability of the ancilla being in the $\ket{1}$ state corresponds to the activation $a^l_i$.
+\item Do this for every node $i$
+\item Do this for every layer $l$
+\end{enumerate}
+
+
+\section{Recurrent Layer on a Quantum Computer}
+\label{sec:RNNQuantum}
+Inspired by the method found by Francesco Tacchino \textit{et al.} \cite{InnerProductArtificialNeuron}, we can with the help of a few tricks propose a recurrent layer.
+
+The activation for a simple recurrent neural network can be represented mathematically as (see section \ref{sec:SupLearRNN})
+$$h^t_i = f(z^t_i) = f(\sum_{j} w^x_{ji}x^t_j + b^x_i + \sum_j w^h_{ji}h^{t-1}_j + b^h_i). $$
+Consider that we denote
+$$\boldsymbol{w}^{[x,i]} = [b^x_i, w^{x}_{0i},w^{x}_{1i},\cdots,w^{x}_{[p-1]i}] ,$$
+$$\boldsymbol{x}^{t}_b = [1, x^{t}_0,x^{t}_1,\cdots,x^{t}_{p-1}],$$
+$$\boldsymbol{w}^{[h,i]} = [b^h_i, w^{h}_{0i},w^{h}_{1i},\cdots,w^{h}_{[k-1]i}], $$
+and
+$$\boldsymbol{h}^{t-1}_b = [1, h^{t-1}_0,h^{t-1}_1,\cdots,h^{t-1}_{k-1}].$$
+If we concatenate $\boldsymbol{w}^{[x,i]}$ with $\boldsymbol{w}^{[h,i]}$
+\begin{equation}
+    \label{eq:RecurrentUi}
+    \boldsymbol{u}_i = [b^x_i, w^{x}_{0i},w^{x}_{1i},\cdots,w^{x}_{[p-1]i},b^h_i, w^{h}_{0i},w^{h}_{1i},\cdots,w^{h}_{[k-1]i}],
+\end{equation}
+and do the same with $\boldsymbol{x}^{t}_b$ and $\boldsymbol{h}^{t-1}_b$
+\begin{equation}
+    \label{eq:RecurrentYt}
+    \boldsymbol{y}^t = [1, x^{t}_0,x^{t}_1,\cdots,x^{t}_{p-1},1, h^{t-1}_0,h^{t-1}_1,\cdots,h^{t-1}_{k-1}],
+\end{equation}
+the inner product between these two vectors are
+$$\boldsymbol{u}_i \cdot \boldsymbol{y}^t = b_i^x + w^x_{0i}x_0^t + w^x_{1i}x_1^t + \cdots + w^x_{[p-1]i}x^t_{p-1} + b_i^h + w^h_{0i}h^{t-1}_0 + w^h_{1i}h^{t-1}_1 + \cdots + w^h_{[k-1]i}h^{t-1}_{k-1}  $$
+$$ = \sum_{j} w^x_{ji}x^t_j + b^x_i + \sum_j w^h_{ji}h^{t-1}_j + b^h_i = z_i^t. $$
+Hence $z_i^t$ can be calculated as an inner product between two vectors. Similar to what we explained in section \ref{sec:DNNQuantum}, we can utilize the squared inner product circuit (\ref{circuit:InnerProductCircuit}) to realize a recurrent layer with
+$$f(z) = z^2,$$ 
+as the activation function.
+The steps for implementing a recurrent neural network on a quantum computer goes as follows:
+\begin{enumerate}[Step 1:]
+\item Set up circuit (\ref{circuit:InnerProductCircuit}) with $U_1 = U_{ \boldsymbol{y}^t}$ being the amplitude encoding (see section \ref{sec:AmplitudeEncoding}) of $\boldsymbol{y}^t$ in eq. (\ref{eq:RecurrentYt}) and $U_2 = U^\dagger_{\boldsymbol{u}_i}$ being the amplitude encoding of $\boldsymbol{u}_i$ in eq. (\ref{eq:RecurrentUi}).
+\item The probability of the ancilla being in the $\ket{1}$ state corresponds to the activation $h^t_i$.
+\item Do this for every node $i$
+\item Do this for every time step $t$
+\end{enumerate}
+
+
+
+\section{PQC Dense Layer}
+\label{sec:GeneralLayer}
+Utilizing parametrized quantum circuits (PQC) as machine learning models is an interesting subject that is currently under a lot of research. Marcello Benedetti \textit{et al.} \cite{PQC} has the following to say in their article concerning utilizing parametrized (variational) circuits as machine learning models: 
+
+\textit{Similar to the universal approximation theorem in neural networks, there always exists a quantum circuit that can represent a target function within an arbitrary small error. The caveat is that such a circuit may be exponentially deep and therefore impractical. Lin et al. \cite{linetal} argue that since real datasets arise from physical systems, they exhibit symmetry and locality; this suggests that it is possible to use 'cheap' models, rather than exponentially costly ones, and still obtain a satisfactory result. With this in mind, the variational circuit aims to implement a function that can approximate the task at hand while remaining scalable in the number of parameters and depth.
+In practice, the circuit design follows a fixed structure of gates. Despite the dimension of the vector space growing exponentially with the number of qubits, the fixed structure reduces the model complexity, resulting in the number of free parameters to scale as a polynomial of the qubit count.}
+
+The dense layer and recurrent layer in sections \ref{sec:DNNQuantum} and \ref{sec:RNNQuantum}, respectively, are quantum copies of classical neural networks with the square function as an activation function. For an $n$-qubit layer, they rely on amplitude encoding $2^n$ inputs as well as $2^n$ free parameters; a task that is exponential in the number of qubits (see section \ref{sec:AmplitudeEncoding}). Even though we achieve an exponential advantage in terms of memory when having the data encoded in the amplitudes of the quantum state, the exponential number of operations required may be impractical, as explained by Marcello Benedetti \textit{et al.}
+
+Neural network layers with a number of free parameters and a number of operations that scale polynomially in the number of qubits are crucial for the implementation on noisy intermediate scale quantum (NISQ) devices. An exponential scaling results in circuit depths (see section \ref{subsubsec:CircuitDepth} for a brief explanation of this quantity) that are too deep to be practical. We can propose a dense neural network layer architecture that is not reliant on specifically utilizing amplitude encoding, but rather an arbitrary operator that may be hardware-efficient.
+We propose to calculate the $i$'th activation of the $l$'th layer in a neural network with the following circuit:
+\begin{equation}
+    \label{circuit:QuantumGeneralLayer}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{{U_{enc}(\boldsymbol{a}^{l-1}})} & \multigate{3}{{U^a(\boldsymbol{\theta}^{[l,i]}_a)}}  & \qw &  \qw & \multigate{4}{U^r_{ent}(\boldsymbol{\theta}^{[l,i]}_r)} & \qw\\
+& \ghost{U_{enc}(\boldsymbol{a}^{l-1})} & \ghost{U^a(\boldsymbol{\theta}^{[l,i]}_a)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[l,i]}_r)} & \qw \\
+& \nghost{U_{enc}(\boldsymbol{a}^{l-1})} &\nghost{U^a(\boldsymbol{\theta}^{[l,i]}_a)} & \vdots &   & \nghost{U^r_{ent}(\boldsymbol{\theta}^{[l,i]}_r)} & \qw \\
+& \ghost{U_{enc}(\boldsymbol{a}^{l-1})} & \ghost{U^a(\boldsymbol{\theta}^{[l,i]}_a)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[l,i]}_r)} & \qw \\
+& \qw & \qw & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[l,i]}_r)} & \meter
+}
+\end{array} \rightarrow a^l_i,
+\end{equation}
+The operator $U_{enc}$ is responsible for encoding some representation of the neural network inputs $\boldsymbol{a}^{l-1}$ into a quantum register. This operator will be referred to as our encoder and the qubit-register it is acting on will be called the encoder-register. An example of an encoder is the amplitude encoding shown in circuit (\ref{circuit:AmplitudeEncoding}), which has the following action on the encoder-register 
+$$
+U_{enc}(\boldsymbol{a}^{l-1})\ket{0\cdots 0} = \sum_{i}a_i^{l-1}\ket{i}.
+$$
+The operator $U^a$ will be referred to as the ansatz. The purpose of the ansatz is to rotate the encoded state $U_{enc}(\boldsymbol{a}^{l-1})\ket{0\cdots 0}$ into a state dependent on the neural network parameters, that is 
+$$\ket{\psi (\boldsymbol{\theta}^{[l,i]}_a,\boldsymbol{a}^{l-1})} = U^a(\boldsymbol{\theta}^{[l,i]}_a)U_{enc}(\boldsymbol{a}^{l-1})\ket{0\cdots 0}.$$ 
+The final operator, $U^r_{ent}$, we will refer to as the entangler and it is responsible for entangling the qubits in the encoder-register with an ancilla qubit:
+
+\begin{align*}
+    U^r_{ent}\ket{0}(\boldsymbol{\theta}^{[l,i]}_r)\ket{\psi (\boldsymbol{\theta}^{[l,i]}_a),\boldsymbol{a}^{l-1})} &= c_0(\boldsymbol{\theta}^{[l,i]}_a,\boldsymbol{\theta}^{[l,i]}_r ,\boldsymbol{a}^{l-1})\ket{\psi_0 (\boldsymbol{\theta}^{[l,i]}_a,\boldsymbol{a}^{l-1})}\ket{0} \\
+    &+ c_1(\boldsymbol{\theta}^{[l,i]}_a,\boldsymbol{\theta}^{[l,i]}_r ,\boldsymbol{a}^{l-1}) \ket{\psi_1 (\boldsymbol{\theta}^{[l,i]}_a,\boldsymbol{a}^{l-1})}\ket{1},
+\end{align*}
+
+
+where $c_0$ and $c_1$ are some parametrized complex number.
+The probability of measuring the ancilla in the $\ket{1}$ state
+\begin{equation}
+    \label{eq:PQCActivation}
+    a_i^l = |c_1(\boldsymbol{\theta}^{[l,i]}_a,\boldsymbol{\theta}^{[l,i]}_r ,\boldsymbol{a}^{l-1})|^2,
+\end{equation}
+is then used as the $i$'th activation in the $l$'th layer. The activation of the neural network layer is hence dependent on the inputs, as well as some model parameters.
+
+The calculation of all the $m$ activations in a layer is done by calculating eq. (\ref{eq:PQCActivation}) for $i\in\{1,2,\dots,m\}$ with circuit (\ref{circuit:QuantumGeneralLayer}). The next layer can then be evaluated by utilizing the calculated activations $\boldsymbol{a}^l$ as inputs to the encoder for the next layer, $U_{enc}(\boldsymbol{a}^l)$, and follow the same procedure.
+
+We will soon provide a description of some encoders, ansatzes and entanglers. First we will explain how layers without amplitude encoding can be realized, and also how to set up a recurrent neural network with circuit (\ref{circuit:QuantumGeneralLayer}).
+
+
+\subsection{Layers without amplitude encoding}
+\label{sec:IntermediateLayers}
+When not utilizing amplitude encoding as the encoder in circuit (\ref{circuit:QuantumGeneralLayer}), we need to find out how else to encode the inputs. By looking at the amplitude encoding circuit (cirucit \ref{circuit:AmplitudeEncoding}), we see that we are in reality just applying rotations to our qubits, which are conveniently calculated beforehand with the help of the relevant inputs (eqs. (\ref{eq:AmplitudeEncodingTheta}) and (\ref{eq:AmplitudeEncodingTheta0neq0})). With this in mind, we propose that we could utilize any parametrized unitary operator $U_{enc}(\boldsymbol{\theta})$ dependent on rotation angles $\boldsymbol{\theta}$ as our encoder. The inputs $\boldsymbol{\theta}$ to this encoder are the outputs from the previous layer $\boldsymbol{a}
+^{l-1}$, but scaled so they lie in the range $[0,2\pi]$.
+
+
+\section{PQC Recurrent Layer}
+\label{sec:GeneralRecurrentLayer}
+By concatenating the input vector and the hidden vector like we did in section \ref{sec:RNNQuantum}, we can also express a parametrized quantum circuit for a recurrent layer. Denote the concatenated vector with
+$$ \boldsymbol{y}^{t-1} = [x^{t}_0,x^{t}_1,\cdots,x^{t}_{p-1}, h^{t-1}_0,h^{t-1}_1,\cdots,h^{t-1}_{m-1}],$$ 
+where $p$ is the number of predictors in our data set and $m$ is the number of dimensions of the hidden vector.
+The recurrent layer is realized with the following circuit
+\begin{equation}
+    \label{circuit:QuantumGeneralRecurrentLayer}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{{U_{enc}(\boldsymbol{y}^{t-1}})} & \multigate{3}{{U^a(\boldsymbol{\theta}^{a}_i)}}  & \qw &  \qw & \multigate{4}{U^r_{ent}(\boldsymbol{\theta}^{ent}_i)} & \qw\\
+& \ghost{U_{enc}(\boldsymbol{y}^{t-1})} & \ghost{U^a(\boldsymbol{\theta}^{a}_i) } & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{ent}_i)} & \qw \\
+& \nghost{U_{enc}(\boldsymbol{y}^{t-1})} &\nghost{U^a(\boldsymbol{\theta}^a_i)} & \vdots &   & \nghost{U^r_{ent}(\boldsymbol{\theta}^{ent}_i)} & \qw \\
+& \ghost{U_{enc}(\boldsymbol{y}^{t-1})} & \ghost{U^a(\boldsymbol{\theta}^a_i)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{ent}_i)} & \qw \\
+& \qw & \qw & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{ent}_i)} & \meter
+}
+\end{array} \rightarrow h^t_i,
+\end{equation}
+For an explanation of the operators in this circuit, see section \ref{sec:GeneralLayer}. The probability of the ancilla (bottom) qubit being in the $\ket{1}$-state, denoted $|c_1(\boldsymbol{\theta}_{i}^a,\boldsymbol{\theta}_{i}^{ent} ,\boldsymbol{y}^{t-1})|^2$, is the $i$'th element of the hidden vector at time step $t$, that is
+\begin{equation}
+    \label{eq:PQChiddenActivation}
+    h_i^t = |c_1(\boldsymbol{\theta}_{i}^a,\boldsymbol{\theta}_{i}^{ent} ,\boldsymbol{y}^{t-1})|^2.
+\end{equation}
+Once this quantity is calculated for all $i\in \{1,2,\dots,m\}$, we can calculate the next time step $h^{t+1}_i$ by denoting
+$$
+\boldsymbol{y}^{t} = [x^{t+1}_0,x^{t+1}_1,\cdots,x^{t+1}_{p-1}, h^{t}_0,h^{t}_1,\cdots,h^{t}_{m-1}],
+$$
+and use this vector as the input to the encoder $U_{enc}$ for the next layer.
+
+
+\section{The encoders and ansatzes: $U_{enc}$ and $U_a$}
+\label{sec:EncodersAndAnsatzes}
+The PQC neural network layers in section \ref{sec:GeneralLayer} and \ref{sec:GeneralRecurrentLayer} rely on encoding the inputs with an operator $U_{enc}$ acting on the encoder-register, and then acting on the same register with an ansatz $U_a$. Here we will list the encoders and ansatzes utilized in this thesis. The first is the amplitude encoding circuit explained in section \ref{sec:AmplitudeEncoding}:
+\begin{equation}
+    \label{circuit:UencAmplitudeEncoding}
+    U^\dagger_{AE}(\boldsymbol{\theta}) \equiv 
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \ctrl{2} & \ctrlo{2} &  \hdots & & \ctrlo{2} & \ctrl{2} & \hdots && \gate{R_y(\theta_{2^{s-1} + 2^{s-2} + \cdots})}  \\
+& \ctrl{1} & \ctrl{1} & \hdots & & \ctrlo{1} & \ctrl{1} & \hdots && \qw & \qw \\
+& \control \qw & \control \qw & \hdots & & \controlo \qw & \control \qw & \hdots && \qw & \qw\\
+& \vdots &  \vdots & \hdots & & \vdots & \vdots & \vdots && \vdots\\
+& \ctrl{1} & \ctrl{1} & \hdots & & \ctrlo{1} & \gate{R_y(\theta_{2^{s-1} + 1})} & \hdots && \qw & \qw\\
+& \gate{R_y(\theta_1)} & \gate{R_y(\theta_2)} & \hdots & & \gate{R_y(\theta_{2^{s-1}})} & \qw & \hdots && \qw & \qw
+}
+\end{array}
+\end{equation}
+where the rotation angles are given by eqs. (\ref{eq:AmplitudeEncodingAmplitudeOfQsZero}) and (\ref{eq:AmplitudeEncodingQsZero0neq0}). The action of this circuit is to encode a vector $\boldsymbol{x}$ into the amplitudes of a quantum state
+$$
+U_{AE}\ket{0\cdots 0} = \sum_i^p x_p \ket{i}.
+$$
+When utilizing the amplitude encoder as an ansatz, the number of parameters required for a layer of $k$ nodes and $n$ qubits are
+\begin{equation}
+    \label{eq:NumParamsAmplitudeEncoderLayer}
+    \text{Number of parameters: } k2^n
+\end{equation}
+The caveats when utilizing this encoder is the exponential number of operations and free parameters, as we explained in section \ref{sec:GeneralLayer}.
+
+
+The other encoder/ansatz we will utilize is the Euler rotation explained in section \ref{subsec:VariaAnsatz}. It is given by the following circuit
+\begin{equation}
+    \label{circuit:UencVQERotationAnsatz}
+    U_{RA} \equiv \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \gate{U^{[1,1]}(\boldsymbol{\theta}^{[1,1]})} & \multigate{3}{U_{e}} & \gate{U^{[1,2]}(\boldsymbol{\theta}^{[1,2]})} & \multigate{3}{U_{e}} & \cdots & & \gate{U^{[1,d]}(\boldsymbol{\theta}^{[1,d]})} \\
+& \gate{U^{[2,1]}(\boldsymbol{\theta}^{[2,1]})} & \ghost{{U_{e}}} & \gate{U^{[2,2]}(\boldsymbol{\theta}^{[2,2]})} & \ghost{{U_{e}}} & \cdots & & \gate{U^{[2,d]}(\boldsymbol{\theta}^{[2,d]})}\\
+& \vdots & \nghost{U_{e}} & \vdots & \nghost{U_{e}} & \cdots &  \\
+& \gate{U^{[n,1]}(\boldsymbol{\theta}^{[n,1]})} & \ghost{{U_{e}}} & \gate{U^{[n,2]}(\boldsymbol{\theta}^{[n,2]})} & \ghost{{U_{e}}} & \cdots & &\gate{U^{[n,d]}(\boldsymbol{\theta}^{[n,d]})}
+}
+\end{array}
+\end{equation}
+where $n$ is the number of qubits and $d$ is the number of times we repeat the $U_e$ operator.
+The operator $U_e$ is responsible for entangling all the encoder qubits. In this thesis we will only choose $U_e$ as the following operator
+\begin{equation}
+    \label{circuit:UencUe}
+    U_{e} \equiv \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \ctrl{1} & \qw & \qw & \qw & \qw & \qw& \qw& \qw\\
+& \targ & \ctrl{1} & \qw  &\qw & \qw& \qw& \qw& \qw \\
+& \qw & \targ{1} & \qw \qw[1] & \control & \qw& \qw& \qw & \qw \\
+& \vdots& \vdots & \vdots & \vdots & \vdots & \vdots & \vdots  \\
+& \qw & \qw & \qw & \qw & \qw & \targ & \ctrl{1}& \qw \\
+& \qw& \qw& \qw& \qw& \qw & \qw & \targ  & \qw 
+}
+\end{array}
+\end{equation}
+and we put $U^{[j,k]}$ to either
+\begin{equation}
+    \label{eq:RyRotationUencUa}
+    U^{[j,k]}(\boldsymbol{\theta}^{[j,k]}) = R_y(\theta^{[j,k]}),
+\end{equation}
+or
+\begin{equation}
+    \label{eq:EulerRotationUencUa}
+    U^{[j,k]}(\boldsymbol{\theta}^{[j,k]} ) = R_z(\theta^{[j,k]}_1) R_x(\theta^{[j,k]}_2)R_z(\theta^{[j,k]}_3),
+\end{equation}
+where $R_x(\theta)$, $R_y(\theta)$ and $R_z(\theta)$ are given by eq. (\ref{eq:RotationOps}).
+Unlike the amplitude encoding circuit (\ref{circuit:UencAmplitudeEncoding}), this circuit is known to be both hardware-efficient and suitable for near-term quantum devices \cite{MaxCutAndEulerRotationHardwareEfficient}. We can also choose the parameter $d$ to be large to increase the flexibility of each layer, or it may be chosen small to act as a regularization to avoid our neural network fitting to eventual noise in the data set. 
+
+When utilizing circuit (\ref{circuit:UencVQERotationAnsatz}) as the ansatz, a layer with $k$ activations and $n$ qubits requires at most the following number of free parameters
+\begin{equation}
+    \label{eq:NumParamsEulerEncoderLayer}
+    \text{Number of parameters: } 3dkn,
+\end{equation}
+where $d$ is the number of times we apply $U_e$ in circuit (\ref{circuit:UencVQERotationAnsatz}). Hence, we see that we achieve an exponential advantage in the number of parameters over the amplitude encoding (see eq. (\ref{eq:NumParamsAmplitudeEncoderLayer})), as long as $d$ is not exponential in the number of qubits.
+
+\section{The entanglers $U_{ent}$}
+\label{sec:Entanglers}
+
+The neural network circuits in sections \ref{sec:GeneralLayer} and \ref{sec:GeneralRecurrentLayer} rely on some entangler $U_{ent}$ causing entanglement between the encoder register and an ancilla qubit. We will utilize two different entanglers in this thesis. The first one is
+\begin{equation}
+    \label{circuit:MultiControlledEntangler}
+    U_{ent}^{MC} \equiv
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+&\qw & \ctrlo{4} & \qw\\
+& \qw & \ctrlo{3} & \qw \\
+& \qw & \ctrlo{2} & \qw \\
+& \qw & \ctrlo{1} & \qw \\
+& \gate{U_b(\boldsymbol{\theta}^{b}_i)} & \targ & \qw
+}
+\end{array}
+\end{equation}
+where the bottom qubit is the ancilla, while the rest of the qubits are in the encoder-register. The operator $U_b(\boldsymbol{\theta}^{b}_i)$ is a single-qubit rotation responsible for adding the bias of the $i$'th node.
+Looking at the squared inner product circuit (\ref{circuit:InnerProductCircuit}) and the PQC neural network circuit (\ref{circuit:QuantumGeneralLayer}), we see that the utilization of the above circuit as the entangler, makes our activations dependent on the inner product between the state produced by the encoder $U_{enc}\ket{0\cdots 0}$ and the state produced by the ansatz $U^a\ket{0\cdots 0}$.
+
+The number of free parameters required for a layer of $k$ nodes and $n$ qubits with this entangler are
+\begin{equation}
+    \label{eq:MCNumParams}
+    \text{Number of parameters: } k.
+\end{equation}
+
+The second variation of $U_{ent}$ allows for the parallel calculation of nodes. It is given by the following circuit
+\begin{equation}
+    \label{circuit:RotationEntangler}
+     U_{RE} \equiv
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+&  \qw & \ctrl{4} & \qw & \qw & \qw & \qw & \qw\\
+& \qw & \qw & \ctrl{3} & \qw & \qw & \qw & \qw \\
+&  \vdots&  & & \vdots & & & \\
+& \qw & \qw & \qw &  \qw & \qw &\ctrl{1} & \qw \\
+& \gate{U_b(\boldsymbol{\theta}^{i}_b)} & \gate{U^r(\boldsymbol{\theta}^{[i,r]}_{1})} & \gate{U^r(\boldsymbol{\theta}^{[i,r]}_{2})} & \hdots && \gate{U^r(\boldsymbol{\theta}^{[i,r]}_{n})} & \qw 
+}
+\end{array}, 
+\end{equation}
+where $U^r(\boldsymbol{\theta}^{[i,r]}_{k})$ is some single-qubit rotation and $U_b(\boldsymbol{\theta}^{i}_b)$ is a single-qubit rotation adding bias to the activation. We can choose to skip all but the final conditional rotation if wanted. 
+We will later show that this entangler allows for parallel calculation of nodes.
+
+The number of free parameters required for a layer of $k$ nodes and $n$ qubits with this entangler are
+\begin{equation}
+    \label{eq:RENumParams}
+    \text{Number of parameters: } kn.
+\end{equation}
+
+For both of these entanglers, we will only utilize the $R_y(\theta)$ gate (eq. (\ref{eq:RotationOps})) for the single-qubit rotations.
+
+
+\section{Parallel calculation of nodes}
+\label{sec:QuantumNeuralNetoworkParalellCalculation}
+
+Suppose we utilize the general dense layer in circuit (\ref{circuit:QuantumGeneralLayer}), where $U_a$ is the identity operator for simplicity. Utilizing the $U_{RE}$ operator represented in circuit (\ref{circuit:RotationEntangler}) as the entangler, one could calculate several nodes in parallel. A single node is calculated with the following circuit
+\begin{equation}
+    \label{circuit:QERotationLayer}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{U_{enc}(\boldsymbol{a}^{l-1})} & \qw & \ctrl{4} & \qw & \qw & \qw & \qw & \qw\\
+& \ghost{U_{enc}( \boldsymbol{a}^{l-1})} & \qw & \qw & \ctrl{3} & \qw & \qw & \qw & \qw \\
+& \nghost{U_{enc}( \boldsymbol{a}^{l-1})} & \vdots \\
+& \ghost{U_{enc}( \boldsymbol{a}^{l-1})} & \qw & \qw & \qw & \vdots & &\ctrl{1} & \qw \\
+& \gate{U_b(\boldsymbol{\theta}^{[l,i]}_b)} & \qw & \gate{U(\boldsymbol{\theta}^{[l,i]}_1)} & \gate{U(\boldsymbol{\theta}^{[l,i]}_2)} & \hdots && \gate{U(\boldsymbol{\theta}^{[l,i]}_p)} & \meter
+}
+\end{array} \rightarrow a^l_i
+\end{equation}
+while the calculation of additional nodes is simply done by utilizing a second ancilla and a number of additional gates linear in the number of qubits:
+\begin{equation}
+    \label{circuit:ParallelLayer}
+     \begin{array}{c}
+\Qcircuit @C=0.5em @R=0.7em {
+& \multigate{3}{U_{enc}( \boldsymbol{a}^{l-1})} & \qw & \ctrl{4} & \qw & \qw & \qw & \qw & \qw & \ctrl{5} & \qw & \qw  & \qw & \qw & \qw\\
+& \ghost{U_{enc}( \boldsymbol{a}^{l-1})} & \qw & \qw & \ctrl{3} & \qw & \qw & \qw & \qw & \qw & \ctrl{4} & \qw & \qw & \qw & \qw \\
+& \nghost{U_{enc}( \boldsymbol{a}^{l-1})} & \vdots \\
+& \ghost{U_{enc}( \boldsymbol{a}^{l-1})} & \qw & \qw & \qw & \vdots & &\ctrl{1} & \qw & \qw & \qw & \qw & \qw & \ctrl{2} & \qw &  \\
+&\gate{U_b(\boldsymbol{\theta}^{[l,1]}_b)} & \qw & \gate{U(\boldsymbol{\theta}^{[l,1]}_1)} & \gate{U(\boldsymbol{\theta}^{[l,1]}_2)} & \hdots && \gate{U(\boldsymbol{\theta}^{[l,1]}_p)} & \qw & \qw & \qw & \qw & \qw & \qw & \meter \\
+& \gate{U_b(\boldsymbol{\theta}^{[l,2]}_b)} & \qw & \qw & \qw & \hdots && \qw & \qw & \gate{U(\boldsymbol{\theta}^{[l,2]}_1)} & \gate{U(\boldsymbol{\theta}^{[l,2]}_2)} & \hdots && \gate{U(\boldsymbol{\theta}^{[l,2]}_p)} & \meter 
+}
+\end{array} \rightarrow a^l_1, a^l_2
+\end{equation}
+This method is easily extended to calculate an arbitrary number of nodes simultaneously. We require one extra ancilla qubit per activation as well as a number of gates linear in the number of qubits.
+
+
+
+\iffalse
+\section{Learning with large data sets}
+\label{sec:LargeDataSets}
+For near-term devices, the fact that the amplitude encoding circuit is not linear in the number of qubits can prove a challenge. We now propose a way to deal with this, called a Subset Autoencoder.
+
+\subsection{Subset Autoencoder}
+\label{subsec:SubsetAutoencoder}
+
+Assume that you divide your data sample $\boldsymbol{x} = [x_1,x_2,\cdots, x_p]$ into $k$ sub sets
+$$\boldsymbol{x}^1 = [x_1,x_2,\cdots,x_{p/k}],$$
+$$\boldsymbol{x}^2 = [x_{p/k+1},x_{p/k+2},\cdots,x_{2p/k}],$$
+$$\vdots$$
+$$\boldsymbol{x}^k = [x_{(k-1)p/k+1},x_{(k-1)p/k+2},\cdots,x_{p}],$$
+where $k$ is chosen such that each sub set is sufficiently small for the amplitude encoding procedure.
+We input each of these $k$ vectors into its own layer in circuit (\ref{circuit:QuantumGeneralLayer}):
+
+\begin{equation*}
+    \label{circuit:ksubsetlayer1}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{{U_{enc}(\boldsymbol{x}^{1}})} & \multigate{3}{{U^a(\boldsymbol{\theta}^{[1,i]}_a)}}  & \qw &  \qw & \multigate{4}{U^r_{ent}(\boldsymbol{\theta}^{[1,i]}_r)} & \qw\\
+& \ghost{U_{enc}(\boldsymbol{x}^{1})} & \ghost{U^a(\boldsymbol{\theta}^{[1,i]}_a)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[1,i]}_r)} & \qw \\
+& \nghost{U_{enc}(\boldsymbol{x}^{1})} &\nghost{U^a(\boldsymbol{\theta}^{[1,i]}_a)} & \vdots &   & \nghost{U^r_{ent}(\boldsymbol{\theta}^{[1,i]}_r)} & \qw \\
+& \ghost{U_{enc}(\boldsymbol{x}^{1})} & \ghost{U^a(\boldsymbol{\theta}^{[1,i]}_a)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[1,i]}_r)} & \qw \\
+& \qw & \qw & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[1,i]}_r)} & \meter
+}
+\end{array} \rightarrow \frac{\theta_{enc}^{[1,i]}}{2\pi}
+\end{equation*}
+
+$$ \vdots $$
+
+\begin{equation}
+    \label{circuit:ksubsetlayer}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{{U_{enc}(\boldsymbol{x}^{k}})} & \multigate{3}{{U^a(\boldsymbol{\theta}^{[k,i]}_a)}}  & \qw &  \qw & \multigate{4}{U^r_{ent}(\boldsymbol{\theta}^{[k,i]}_r)} & \qw\\
+& \ghost{U_{enc}(\boldsymbol{x}^{k})} & \ghost{U^a(\boldsymbol{\theta}^{[k,i]}_a)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[k,i]}_r)} & \qw \\
+& \nghost{U_{enc}(\boldsymbol{x}^{k})} &\nghost{U^a(\boldsymbol{\theta}^{[k,i]}_a)} & \vdots &   & \nghost{U^r_{ent}(\boldsymbol{\theta}^{[k,i]}_r)} & \qw \\
+& \ghost{U_{enc}(\boldsymbol{x}^{k})} & \ghost{U^a(\boldsymbol{\theta}^{[k,i]}_a)} & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[k,i]}_r)} & \qw \\
+& \qw & \qw & \qw &  \qw & \ghost{U^r_{ent}(\boldsymbol{\theta}^{[k,i]}_r)} & \meter
+}
+\end{array} \rightarrow \frac{\theta_{enc}^{[k,i]}}{2\pi},
+\end{equation}
+where $U_{enc}(\boldsymbol{x}^j)$ is the amplitude encoding of $\boldsymbol{x}^j$. If each of the $k$ layers output $u$ parameters, we are left with a vector consisting of rotation angles
+$$\boldsymbol{\theta}_{enc} = [\theta_{enc}^{[1,1]},\cdots,\theta_{enc}^{[1,u]},\theta_{enc}^{[2,1]}, \cdots, \theta_{enc}^{[k,u]}].$$
+We then utilize these rotation angles as the input for an ansatz
+$U_{subenc}(\boldsymbol{\theta}_{enc}),$
+with the hopes that this gives a sufficient representation of our input, that is
+$$ U_{subenc}(\boldsymbol{\theta}_{enc})\ket{00\cdots 0 } \approx U_{\boldsymbol{x}} \ket{00\cdots 0 } = \ket{x}.$$
+$U_{subenc}(\boldsymbol{\theta}_{enc})$ is then used as $U_{enc}$ in the first layer of the neural network.
+One can also increase or decrease the amount of qubits $U_{subenc}(\boldsymbol{\theta}_{enc})$ acts upon to create a lower or higher dimensional representation of $\ket{x}$.
+\fi
+
+
+\section{Learning Unitary Operators}
+\label{subsec:LearningWithUnitaryOperators}
+Suppose you have a unitary operator $U_i$ and wish to approximate it with another, less complex operator. We may want to do this to reduce the circuit depth of $U_i$, as this quantity is often the bottleneck on near-term quantum devices. We explained this in section \ref{subsubsec:CircuitDepth}.
+
+We can try to approximate the action of $U_i$ by learning an ansatz $U_a(\boldsymbol{\theta})$. Recall from section \ref{sec:InnerProduct} that the squared inner product between the state $U_i\ket{0\cdots 0}$ and the state $U_a(\boldsymbol{\theta}) \ket{0 \cdots 0}$ can be calculated by utilizing the following circuit
+\begin{equation}
+    \label{circuit:TestSubsetAutoencoder}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{U_a(\boldsymbol{\theta})} & \qw & \qw & \multigate{3}{{U^\dagger_i}} & \ctrlo{4} & \qw\\
+& \ghost{U_a(\boldsymbol{\theta}))} & \qw & \qw & \ghost{{U^\dagger_i}} & \ctrlo{3} & \qw \\
+& \nghost{U_a(\boldsymbol{\theta})} & \vdots && \nghost{{U^\dagger_i}} & \ctrlo{2} & \qw \\
+& \ghost{U_a(\boldsymbol{\theta})} & \qw &\qw & \ghost{{U^\dagger_i}} & \ctrlo{1} & \qw \\
+& \qw & \qw & \qw & \qw & \targ & \meter
+}
+\end{array}
+\end{equation}
+where the squared inner product is equal to the probability of the bottom (ancilla) qubit being in the $\ket{1}$ state. Given two complex vectors $\boldsymbol{a}$ and $\boldsymbol{b}$, we have the following relation between their inner product and the angle $\alpha$ between these vectors \cite{Complexinnerproducts}
+\begin{equation}
+    \label{eq:innerproductangle}
+    \boldsymbol{a}\cdot \boldsymbol{b} = |\boldsymbol{a}| |\boldsymbol{b}| \cos \alpha.
+\end{equation}
+As our quantum states are of unit length, we can see that their inner product is simply equal to the cosine of the angle between them. If two vectors of unit length are parallel, that is, their squared inner product is equal to one, we can conclude that the vectors are equal except for some global phase. From quantum mechanics, we know that states differing by a global phase are physically indistinguishable \cite{GlobalPhase}. Hence, if we can vary the parameters of $U_a(\boldsymbol{\theta})$ until the squared inner product in circuit (\ref{circuit:TestSubsetAutoencoder}) is equal to one, we have
+$$U_a(\boldsymbol{\theta}) = cU_i,$$
+where $c$ is some complex global phase. The state given by applying $U_a(\boldsymbol{\theta})$ will then be physically indistinguishable from the state given by $U_i$.
+
+We can only approximate the probability of the ancilla being in the $\ket{1}$ state since we are doing finite measurements. Hence, one has to keep in mind that $U_a(\boldsymbol{\theta})$ will only be an approximation to the actual operator $U_i$.
+
+\section{Recursive Circuit Optimization}
+\label{subsec:RecursiveCircuitOptimization}
+If the operator $U$ we wish to approximate with circuit (\ref{circuit:TestSubsetAutoencoder}) is too complex to be run on current quantum computers, the method described in the previous section will not work. However, suppose we divide the operator into $k$ parts
+\begin{equation}
+    \label{circuit:kPartsUnitary}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{U_1} & \multigate{3}{U_2} & \cdots&& \qw & \multigate{3}{U_k}\\
+& \ghost{U_1} & \ghost{U_2} & \cdots && \qw & \ghost{U_k} \\
+& \nghost{U_1} & \nghost{U_2} & \vdots && & \nghost{U_k} \\
+& \ghost{U_1} & \ghost{U_2} & \cdots && \qw & \ghost{U_k}
+}
+\end{array}
+\end{equation}
+The idea is that if the depth of the above circuit, $U = U_k\cdots U_2 U_1$, is infeasible to run on current quantum hardware, but the execution of each separate of the $k$ parts can easily be done, we can utilize a recursive learning scheme.
+To do this, we first learn a parametrized unitary operator, $U_a^1(\boldsymbol{\theta}_1)$, that approximates $U_1$. This can be done with the method described in section \ref{subsec:LearningWithUnitaryOperators}.
+The operator $U$ can then be written as
+$$U \approx U_k \cdots U_2U_a^1(\boldsymbol{\theta}_1).$$
+We then approximate $U_2U_a^1(\boldsymbol{\theta}_1)$ with the parametrized unitary operator $U_a^2(\boldsymbol{\theta}_2)$.
+We then have
+$$ U \approx U_k \cdots U_a^2(\boldsymbol{\theta}_2).$$
+After doing this for all $k$, we end up with
+$$U \approx U_a^k(\boldsymbol{\theta}_k).$$
+Hence, we have approximated the full circuit by only applying smaller parts of it.
+The circuits for the optimization scheme are shown below:
+\begin{equation*}
+    \label{circuit:RecursiveLearningFirststep}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{U_a^1(\boldsymbol{\theta^1})} & \qw & \qw & \multigate{3}{{U^\dagger_1}} & \ctrlo{4} & \qw\\
+& \ghost{U_a^1(\boldsymbol{\theta^1}))} & \qw & \qw & \ghost{{U^\dagger_1}} & \ctrlo{3} & \qw \\
+& \nghost{U_a^1(\boldsymbol{\theta^1})} & \vdots && \nghost{{U^\dagger_1}} & \ctrlo{2} & \qw \\
+& \ghost{U_a^1(\boldsymbol{\theta^1})} & \qw &\qw & \ghost{{U^\dagger_1}} & \ctrlo{1} & \qw \\
+& \qw & \qw & \qw & \qw & \targ & \meter
+}
+\end{array}
+\end{equation*}
+\begin{equation*}
+    \label{circuit:RecursiveLearningsecondstep}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{U_a^2(\boldsymbol{\theta^2})} & \qw & \qw & \multigate{3}{{U^\dagger_2}} & \multigate{3}{[U_a^1(\boldsymbol{\theta^1}))]^{\dagger}} & \ctrlo{4} & \qw\\
+& \ghost{U_a^2(\boldsymbol{\theta^2}))} & \qw & \qw & \ghost{{U^\dagger_2}} & \ghost{[U_a^1(\boldsymbol{\theta^1}))]^{\dagger}} &  \ctrlo{3} & \qw \\
+& \nghost{U_a^2(\boldsymbol{\theta^2})} & \vdots && \nghost{{U^\dagger_2}} & \nghost{[U_a^1(\boldsymbol{\theta^1}))]^{\dagger}} & \ctrlo{2} & \qw \\
+& \ghost{U_a^2(\boldsymbol{\theta^2})} & \qw &\qw & \ghost{{U^\dagger_2}} & \ghost{[U_a^1(\boldsymbol{\theta^1}))]^{\dagger}} & \ctrlo{1} & \qw \\
+& \qw & \qw & \qw & \qw & \qw & \targ & \meter
+}
+\end{array}
+\end{equation*}
+$$\vdots $$
+\begin{equation}
+    \label{circuit:RecursiveLearning}
+     \begin{array}{c}
+\Qcircuit @C=1em @R=1em {
+& \multigate{3}{U_a^{k}(\boldsymbol{\theta^{k}})} & \qw & \qw & \multigate{3}{{U^\dagger_k}} & \multigate{3}{[U_a^{k-1}(\boldsymbol{\theta^{k-1}}))]^{\dagger}} & \ctrlo{4} & \qw\\
+& \ghost{U_a^{k}(\boldsymbol{\theta^{k}}))} & \qw & \qw & \ghost{{U^\dagger_k}} & \ghost{[U_a^{k-1}(\boldsymbol{\theta^{k-1}}))]^{\dagger}} &  \ctrlo{3} & \qw \\
+& \nghost{U_a^k(\boldsymbol{\theta^k})} & \vdots && \nghost{{U^\dagger_k}} & \nghost{[U_a^{k-1}(\boldsymbol{\theta^{k-1}}))]^{\dagger}} & \ctrlo{2} & \qw \\
+& \ghost{U_a^k(\boldsymbol{\theta^k})} & \qw &\qw & \ghost{{U^\dagger_k}} & \ghost{[U_a^{k-1}(\boldsymbol{\theta^{k-1}}))]^{\dagger}} & \ctrlo{1} & \qw \\
+& \qw & \qw & \qw & \qw & \qw & \targ & \meter
+}
+\end{array},
+\end{equation}
+where all $U_a^j(\theta^j)$ are learned by minimizing (maximizing) the probability of the ancilla being in the $\ket{0}$ ($\ket{1}$) state. Since every step of the recursive algorithm only yields an approximation to the operators (due to finite measurements of the squared inner product), we expect that some error will propagate as we perform the steps.
+
+\section{Eigenvalues with Neural Networks}
+\label{sec:QuantumEigenvalsNeurNet}
+
+Solving for the ground state energy of a time independent quantum system reduces to finding the smallest eigenvalue and eigenvector of a hermitian matrix. We will now look at one way to approximate the eigenvectors and eigenvalues by utilizing neural networks.
+
+\subsection{Rayleigh Quotient Minimization \cite{RayleighQuotient}}
+\label{subsec:RayleighQMinimization}
+The Rayleigh quotient is given by
+\begin{equation}
+    \label{eq:RayleighQuotient}
+    R(\boldsymbol{x}) = \frac{\boldsymbol{x}^TA\boldsymbol{x}}{\boldsymbol{x}^T\boldsymbol{x}},
+\end{equation}
+where $\boldsymbol{x} \in \mathcal{R}^n$ is a vector of unit length and $A \in \mathcal{R}^{n\times n}$ is the matrix we wish to solve the eigenvalues for. Let us write $\boldsymbol{x}$ as a linear combination of the $n$ orthogonal eigenvectors $\boldsymbol{v}_i$ belonging to $A$:
+$$\boldsymbol{x} = \sum_{i=1}^n c_i \boldsymbol{v}_i,  $$
+where $c_i$ is assumed to be some real constant.
+The Rayleigh quotient then becomes
+$$\frac{\sum_{i=1}^n c_i \boldsymbol{v}_i^TA \sum_{j=1}^n c_j \boldsymbol{v}_j}{\sum_{i=1}^n c_i \boldsymbol{v}_i^T\sum_{j=1}^n c_j \boldsymbol{v}_j} = \frac{\sum_{ij}^nc_ic_j \boldsymbol{v}_i^T A \boldsymbol{v}_j}{\sum_{ij}^n c_i c_j \boldsymbol{v}_i^T \boldsymbol{v}_j}. $$
+Since all the eigenvectors $\boldsymbol{v}_i$ are orthogonal, that is
+$$ \boldsymbol{v}_i^T \boldsymbol{v}_j = \delta_{ij},$$
+and because
+$$A\boldsymbol{v}_j = E_j \boldsymbol{v}_j,$$
+where $E_j$ is the $j$'th eigenvalue of $A$, we get
+$$\frac{\sum_{ij}^nc_ic_j \boldsymbol{v}_i^T A \boldsymbol{v}_j}{\sum_{ij}^n c_i c_j \boldsymbol{v}_i^T \boldsymbol{v}_j} = \frac{\sum_{i=1}^n c_i^2E_i}{\sum_{i=1}^n c_i^2 } = \sum_{i=1}^n c_i^2 E_i.$$
+If we assume that $E_1 < E_2 < E_3, \dots$, we see that the minima of the Rayleigh quotient is given by 
+$$\boldsymbol{x} = \boldsymbol{v}_1.$$
+The Rayleigh Quotient is then
+$$R(\boldsymbol{v}_1) = E_1.$$
+Hence, we have found the lowest eigenvalue of $A$.
+Consider a neural network (section \ref{subsec:Non-LinearNeuralNetwork}) with output $\boldsymbol{a}^L \in \mathcal{R}^n$. When this output is fed into the Rayleigh quotient, we know that the minima is the lowest eigenvalue of $A$. Hence, we can use the Rayleigh quotient as the loss function for the training of the model:
+\begin{equation}
+    \label{eq:RayleighLossFunction}
+    L(\boldsymbol{a}^L;A) = \frac{(\boldsymbol{a}^L)^T A \boldsymbol{a}^L}{(\boldsymbol{a}^L)^T \boldsymbol{a}^L}.
+\end{equation}

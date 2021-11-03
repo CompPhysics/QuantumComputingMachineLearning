@@ -1,0 +1,240 @@
+\chapter{Supervised Learning}
+\label{chap:SupervisedLearning}
+The world's technological advances have lead to an increasing amount of data being collected every second. The variables involved in a single data point in these data sets can range from just a couple to thousands, making analysis with visualization tools a cumbersome and difficult task. Machine learning is a field where one employs algorithms which can identify patterns and learn from data without much human interaction. Machine learning have also gained attraction in the field of many body quantum physics \cite{MachineLearningQuantumPhysics}, as some machine learning models may have the potential to solve problems that are infeasible with classical methods.
+We will focus on supervised learning in this thesis. To understand what the task of supervised learning is, suppose we have a data set containing $n$ measurements of $p$ features $x^{(i)}_1, x^{(i)}_2, ... , x^{(i)}_p$ as well as a measurement of the target variable $y^{(i)}$. The index $i$ denotes the $i$'th of the $n$ measurements. In short, we want to utilize the features to predict the target variable, and to do this, we need to generate a data set. Let us as an example say that you are interested in estimating the yearly income of an individual based on their age, years of experience and years of education. The target variable $y$ in this case will be the individuals yearly income and the features $x_1, x_2$ and $x_3$ will be their age, years of experience and years of education, respectively. In order to create our data set, we contact five random individuals and gather their yearly income, age, years of experience and years of education. The data set may look something like this
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+$y$ ($10^3$kr) & $x_1$ (years) & $x_2$ (years) & $x_3$ (years) \\ \hline
+350            & 19            & 0             & 0             \\ \hline
+650            & 30            & 3             & 5             \\ \hline
+500            & 25            & 0             & 5             \\ \hline
+470            & 25            & 1             & 5             \\ \hline
+420            & 23            & 1             & 3   \\ \hline         
+\end{tabular}
+\end{table}
+Keeping this example in mind, supervised learning is the task of predicting the yearly income of a new individual by training a model on the previously gathered data. One of the simplest machine learning methods to do so is called linear regression, which will be covered next.
+Keep in mind that even though we do not use linear regression, nor logistic regression (which will also be covered soon) as methods in this thesis, the procedures learned for these models are frequently used in neural networks.
+
+\section{Linear Regression}
+\label{sec:SupLearnLinReg}
+
+First of, linear regression assumes a linear relationship between our target variable $y$ and the features $x_1, ... , x_p$. Mathematically, this can be written as
+
+\begin{equation}
+\label{eq:LinearRegression1}
+y^{(i)} = \beta_0 + x_1^{(i)}\beta_1 + x_2^{(i)}\beta_2 + \cdots + x_p^{(i)}\beta_p + \epsilon^{(i)} = f(x^{(i)}) + \epsilon^{(i)}, 
+\end{equation}
+where $\beta_0$ is the intercept and $\beta_j$ is the increase of $y$ with a unit increase of $x_j$. We assume that there is some noise in context with the measurement, which is assumed to be normally distributed with the unknown variance $\sigma^2$. That is $\epsilon \sim N(0,\sigma^2)$.
+A common way to solve for parameters in a supervised learning problem is to minimize what is called a loss function. When defining a loss function, we can look for a function whose value decreases when the predicted value is close to the real target value. For linear regression, we use a loss function which is commonly referred to as the mean squared error (MSE)
+\begin{equation}
+    \label{eq:MSE}
+    MSE = \frac{1}{n}\sum_{i=1}^{n}(y^{(i)} - \hat{f}(x^{(i)}; \hat{\boldsymbol{\beta}}))^2,
+\end{equation}
+where 
+$$\hat{f}(x^{(i)}; \hat{\boldsymbol{\beta}}) = \hat{\beta}_0 + x_1^{(i)}\hat{\beta}_1 + x_2^{(i)}\hat{\beta}_2 + \cdots + x_p^{(i)}\hat{\beta}_p.$$
+Our goal now is to vary the parameters $\hat{\boldsymbol{\beta}}$ till the MSE is as close to zero as possible. For linear regression, we have an analytical solution for this. To calculate the minimum of the MSE, it is convienient to write the above equation in matrix notation. First of, we can write the sum $\beta_0 + x_1^{(i)}\beta_1 + x_2^{(i)}\beta_2 + \cdots + x_p^{(i)}\beta_p$ for all $i$ as a matrix-vector product. We define the matrix
+$$ X =
+\begin{bmatrix}
+    1       & x_{1}^{(1)} & x_{2}^{(1)} & \cdots & x_{p}^{(1)} \\
+    1       & x_{1}^{(2)} & x_{2}^{(2)} & \cdots & x_{p}^{(2)} \\
+    \vdots & \vdots & \vdots & \vdots & \vdots \\
+    1       & x_{1}^{(n)} & x_{2}^{(n)} & \dots & x_{p}^{(n)} 
+\end{bmatrix},
+$$
+which we will refer to as the design matrix.
+We also set 
+$$ \hat{\boldsymbol{\beta}} =
+\begin{bmatrix}
+    \beta_0 \\
+    \beta_1 \\
+    \hdots \\
+    \beta_p
+\end{bmatrix} \qquad \boldsymbol{y} =
+\begin{bmatrix}
+    y^{(1)} \\
+    y^{(2)} \\
+    \hdots \\
+    y^{(n)}
+\end{bmatrix}.
+$$
+The MSE can then be rewritten as
+\begin{equation*}
+    MSE = \frac{1}{n}(\boldsymbol{y} - X\hat{\boldsymbol{\beta}})^T(\boldsymbol{y} - X\hat{\boldsymbol{\beta}}).
+\end{equation*}
+The optimal parameters can then be found by differentiating the MSE with respect to $\hat{\boldsymbol{\beta}}$ and setting it to zero. The optimal parameters are given by \cite{handsonml}
+\begin{equation}
+    \label{eq:LinearRegressionBeta}
+    \hat{\boldsymbol{\beta}} = (X^TX)^{-1}X^T\boldsymbol{y}.
+\end{equation}
+
+\section{Logistic Regression}
+\label{sec:SupLearLogReg}
+
+Linear regression is suited for prediction of a continuous variable, but what if we want to predict a discrete variable? For example, we want to predict if an individual is making 500.000 kr or more based on their age, years of experience and years of education. The previous data set would now look like this;
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+$y$ (binary) & $x_1$ (years) & $x_2$ (years) & $x_3$ (years) \\ \hline
+0            & 19            & 0             & 0             \\ \hline
+1            & 30            & 3             & 5             \\ \hline
+1            & 25            & 0             & 5             \\ \hline
+0            & 25            & 1             & 5             \\ \hline
+0            & 23            & 1             & 3    \\ \hline       
+\end{tabular}
+\end{table}
+where $y=0$ means that the individual makes less than 500.000 kr and $y=1$ means that they make 500.000 kr or more. One could treat this as a linear regression problem and say that if the model predicts $\geq 0.5$, we have $y=1$, else we have $y=0$. However, the assumption that the relationship between the target and feature is linear as presented in equation \ref{eq:LinearRegression1} is simply not correct in this setting. We can instead try to predict the probability of making 500.000 kr or more given the features in question. To do this, we first need to find a function which maps each input to a value between 0 and 1. Consider the Sigmoid function
+\begin{equation}
+    \label{eq:Sigmoid}
+    \sigma (x) = \frac{1}{1 + e^{-x}}.
+\end{equation}
+As $x$ approaches positive infinity, the Sigmoid function outputs a value of 1, while it outputs a value of 0 when $x$ approaches negative infinity. To see how this helps us, consider using the linear combination 
+$$ \sum_{j=0}^p \beta_jx_j^{(i)} = \beta_0 + x_1^{(i)}\beta_1 + x_2^{(i)}\beta_2 + \cdots + x_p^{(i)}\beta_p, $$
+where $x_0^{(i)} = 1$, as inputs to the Sigmoid function. What we have now is a parametrized function of our features which gives an output between 1 and 0. We can treat this output as a probability. The probability of $y=1$ is given by
+\begin{equation}
+    \label{eq:LogRegProbyisone}
+     P(y^{(i)}=1|\boldsymbol{x}^{(i)};\boldsymbol{\beta}) = \frac{1}{1 + e^{-\sum_{j=0}\beta_j x^{(i)}_j}}.
+\end{equation}
+Since we are dealing with a binary problem and probabilities sum to one, we can write the probability of $y = 0$ as
+\begin{equation}
+    \label{eq:LogRegProbyiszero}
+    P(y^{(i)}=0|\boldsymbol{x}^{(i)};\boldsymbol{\beta}) = 1 - P(y^{(i)}=1|\boldsymbol{x}^{(i)};\boldsymbol{\beta}).
+\end{equation}
+Now that we have explained how a logistic regression model outputs probabilities, we need to go through how to train the model. Like with linear regression, we need a loss function whose value is at its lowest when all predicted points coincide with the target values. That is where maximum likelihood comes into play. Maximum likelihood is a function which tells us the likeliness of our chosen parameters ($\beta_j$) given our data ($y$ and $x$). The function outputs a large value when our predicted probability is close to one (zero) and the actual target value is one (zero). Maximum likelihood can be written as \cite{handsonml}
+\begin{align}
+    \label{eq:MaximumLikelihood}
+    L (\hat{\boldsymbol{\beta}}) &= \frac{1}{n}\prod_{i=1}^n P(y^{(i)} = 1|\boldsymbol{x}^{(i)}; \hat{\boldsymbol{\beta}})^{y^{(i)}}(1 - P(y^{(i)}=1|\boldsymbol{x}^{(i)};\hat{\boldsymbol{\beta}}))^{1-y^{(i)}} \notag \\
+    &= \frac{1}{n}\prod_{i=1}^n (\hat{y}^{(i)})^{y^{(i)}}(1 - \hat{y}^{(i)})^{1-y^{(i)}},
+\end{align}
+where $\hat{y}^{(i)}$ denotes the predicted probability of the $i$'th sample. To train the logistic regression model, we can maximize this function with respect to the model parameters $\boldsymbol{\hat{\beta}}$. However, one usually minimizes its negative logarithm for convenience
+\begin{equation}
+    \label{eq:NegativeLogLikelihood}
+    L_{NLL}(\hat{\boldsymbol{\beta}}) = -\log (L (\hat{\boldsymbol{\beta}})) = -\sum_{i=1}^n y^{(i)} \log (\hat{y}^{(i)}) + (1 - y^{(i)}) \log (1 - \hat{y}^{(i)}).
+\end{equation}
+This is known as the Negative Log Likelihood loss function (NLL) and its minima has no known analytical solution. To be able to still find a minima, we will now introduce a numerical method called Gradient descent.
+
+\section{Gradient Descent}
+\label{sec:SupLearGradDesc}
+
+Gradient descent is a well known minimization method which is widely used to train supervised models. When dealing with a function $f(\hat{\boldsymbol{\beta}})$, where $\hat{\boldsymbol{\beta}}$ is a vector of parameters, one can find the direction of the largest function increase by calculating the gradient $\nabla_{\hat{\boldsymbol{\beta}}}f$. Likewise, the gradient of $-f$ will point towards the direction of the largest function decrease. Hence, one can find the direction of a minima of a function by calculating $\nabla_{\hat{\boldsymbol{\beta}}}(-f) = -\nabla_{\hat{\boldsymbol{\beta}}}f$, and then update the parameters $\hat{\boldsymbol{\beta}}$ the following way
+\begin{equation}
+    \label{eq:GradientDescent}
+    \hat{\boldsymbol{\beta}}^{(j+1)} =  \hat{\boldsymbol{\beta}}^{(j)} - \lambda \nabla_{\hat{\boldsymbol{\beta}}^{(j)}}f.
+\end{equation}
+Since $-\nabla_{\hat{\boldsymbol{\beta}}}f$ is merely a direction, it does not give away how large of a step one would have to make in parameter space to reach a minima. The direction may also change when traversing parameter space. Hence, we introduce $\lambda$, which is often referred to as the learning rate. The learning rate decides how large of a step to take in the direction of the gradient, and is usually found trial and error. 
+
+The parameters of a machine learning model can likewise be updated by calculating the gradient of a loss function with respect to the model parameters. The gradient is then used in eq. (\ref{eq:GradientDescent}).
+
+\section{Dense Neural Network}
+\label{sec:SupLearDNN}
+
+Neural networks are machine learning models that are meant to mimic the way neurons in human brains communicate with each other by sending electric signals. A neuron is activated if the signals it receives exceed an activation threshold. This neuron will then yield an output that may or may not activate other neurons.
+
+One of the simplest neural networks consists of what are called dense layers. Hence, we will start by explaining how to set these up. If our input $X \in \mathcal{R}^{1\times p}$ is a matrix containing one data sample with $p$ features, the first step of our neural network is to calculate a weighted sum
+$$\boldsymbol{z}^1 = W^1X^T + \boldsymbol{b}^1,$$
+where
+$$ W^1 =
+\begin{bmatrix}
+    w^1_{11}       & w^1_{12} &  \cdots & w^1_{1p} \\
+    w^1_{21}       & w^1_{22} & \cdots & w^1_{2p} \\
+    \vdots & \vdots & \vdots & \vdots  \\
+    w^1_{m1}       & w^1_{m2} &  \cdots & w^1_{mp} 
+\end{bmatrix},
+$$
+and
+$$ \boldsymbol{b}^1 =
+\begin{bmatrix}
+    b^1_1       \\
+    b^1_2        \\
+    \vdots  \\
+    b^1_m
+\end{bmatrix}.
+$$
+The bias, $\boldsymbol{b}^1$, is introduced to make sure that neurons could activate when all the inputs are zero. We can see that the row-dimensionality of $W^1$ decides the dimensions of $\boldsymbol{z}^1$. Hence, $m$ rows gives $m$ outputs, called neurons, whose value is contained in $\boldsymbol{z}^1$. Since the neurons are simply a linear combination of the inputs, we are only able to represent linear relationships. Hence, we will use what is referred to as an activation function $f
+^1(x)$ to introduce non-linearity.
+The mathematical realization of an input layer for a neural network is then given by
+$$\boldsymbol{a}^1 = f^1(\boldsymbol{z}^1) = f^1(W^1X^T + \boldsymbol{b}^1),$$
+where the elements of $\boldsymbol{a}^1$ are referred to as activations.
+Stacking of layers are what gives neural networks expressive power. This can be done by following the same procedures as we just did, but using the previously calculated activations as inputs. Hence, the activations of layer $l$ are given by \cite{handsonml}
+\begin{equation}
+    \label{eq:DenseLayer}
+    \boldsymbol{a}^l = f^l(W^l \boldsymbol{a}^{l-1} + \boldsymbol{b}^l),
+\end{equation}
+or without matrix/vector notation
+\begin{equation}
+    \label{eq:DenseLayer}
+    a^l_i = f^l(\sum_{j}W^l_{ij}a_j^{l-1} + b^l_i).
+\end{equation}
+The dimensions of the rows of $W$ and the dimension of $\boldsymbol{b}$ are arbitrary and specifies how many nodes one wants in intermediate layers. However, for the final layer they are problem-specific, meaning that a problem with a one-dimensional target variable should only have one node in the final layer.
+
+\subsection{Backpropagation algorithm}
+\label{subsec:BackPropagation}
+
+The backpropagation algorithm \cite{backprop} is a common way to train the parameters of a neural network. Here we will go through how this algorithms works. Suppose we have defined a loss function, $L(\boldsymbol{a}^L,\boldsymbol{y})$, where $\boldsymbol{a}^L=f^L(W^L \boldsymbol{a}^{L-1} + \boldsymbol{b}^L)$ specifies the activation(s) in the final/output layer. Backpropagation utilizes the chain rule in order to find the gradient of our loss function with respect to the neural network parameters. We can then utilize gradient descent (section \ref{sec:SupLearGradDesc}) to update the parameters. Consider calculating the gradients with respect to the weights in the output layer
+$$ 
+\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial W^{L}_{ij}}.
+$$
+Utilizing the chain rule, we get
+$$ 
+\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial W^{L}_{ij}} = \frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_i}\frac{\partial a_i^L }{\partial W^{L}_{ij}} = \frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_i}\frac{\partial a^L_i}{\partial z^L_i}\frac{\partial z_i^L}{\partial W^L_{ij}}.
+$$
+Similarly for the bias:
+$$
+\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial b^L_i}  = \frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_i}\frac{\partial a^L_i}{\partial z^L_i}\frac{\partial z_i^L}{\partial b^L_{i}}.
+$$
+Going for the weights in the previous layer, we get
+$$ 
+\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial W^{L-1}_{ij}} = \sum_k\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_k}\frac{\partial a_k^L }{\partial W^{L-1}_{ij}} 
+$$
+$$
+= \sum_k \frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_k}\frac{\partial a^L_k}{\partial z^L_k}\frac{\partial z_k^L}{\partial a^{L-1}_{i}}\frac{\partial a^{L-1}_i}{\partial z^{L-1}_i}\frac{\partial z_i^{L-1}}{\partial W^{L-1}_{ij}},
+$$
+and 
+$$ 
+\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial b^{L-1}_{i}} = \sum_k\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_k}\frac{\partial a_k^L }{\partial b^{L-1}_{i}} 
+$$
+$$
+= \sum_k \frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^L_k}\frac{\partial a^L_k}{\partial z^L_k}\frac{\partial z_k^L}{\partial a^{L-1}_{i}}\frac{\partial a^{L-1}_i}{\partial z^{L-1}_i}\frac{\partial z_i^{L-1}}{\partial b^{L-1}_{i}}.
+$$
+By denoting  \cite{NeuralNetworkSystematicIntro}
+\begin{equation}
+    \label{eq:DeltaBackProp}
+    \delta^l_k = \frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^{l}_k} =  \sum_j\frac{\partial L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^{l+1}_j}\frac{\partial a^{l+1}_j}{\partial a^{l}_k} = \sum_j \delta_j^{l+1}\frac{\partial a^{l+1}_j}{\partial a^{l}_k} ,
+\end{equation}
+we see that the partial derivatives of weights in an arbitrary layer are given by
+\begin{equation}
+    \label{eq:WeightsBackprop}
+    \frac{L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial W^{l}_{ij}} = \delta^l_i\frac{\partial a^l_i}{\partial W^l_{ij}}.
+\end{equation}
+Similarly for the biases
+\begin{equation}
+    \label{eq:BiasBackprop}
+    \frac{L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial b^{l}_{i}} = \delta^l_i\frac{\partial a^l_i}{\partial b^l_{i}}.
+\end{equation}
+The backpropagation algorithm goes as follows:
+\begin{enumerate}[Step 1:]
+\item Calculate $\delta^L_k = \frac{L(\boldsymbol{a}^L,\boldsymbol{y})}{\partial a^{L}_{k}} $
+\item Use equation \ref{eq:DeltaBackProp} to recursively calculate $\delta^l_k$ for all $l$.
+\item Find the gradient with respect to all the weights and biases with equation \ref{eq:WeightsBackprop} and \ref{eq:BiasBackprop} respectively.
+\item Utilize gradient descent (section \ref{sec:SupLearGradDesc}) to update the weights.
+\end{enumerate}
+As we will not be using analytic gradient methods to update our quantum neural networks, we will not go into further detail on the partial derivatives as these are model specific.
+
+\section{Recurrent Neural Network Layer}
+\label{sec:SupLearRNN}
+
+The dense neural network is a good choice when dealing with data where each point in the data set can be treated individually. When this is not the case, as for example with time series data, we do not have any way to tell the network explicitly where in the time series each point in the data sample belongs. That is not to say that it can not be learnt by a dense neural network, but it may be wise to use an architecture that knows this explicitly so its expressive power can be used solely to learn other relationships between the predictors. A recurrent neural network layer is an excellent choice for time series data and a node in such a layer can be expressed mathematically as \cite{RNN}
+\begin{equation}
+    \label{eq:RecurrentLayer}
+    h^t_i = f(\sum_{j} w^x_{ji}x^t_j + b^x_i + \sum_j w^h_{ji}h^{t-1}_j + b^h_i).
+\end{equation}
+Here $f$ is the activation function, $w^x_{ji}$ are the weights to be multiplied with the input data $x_j^t$ and $w^h_{ji}$ are the weights to be multiplied with the hidden layer vector elements $h^{t-1}_j$. $b_i^x$ and $b_i^h$ are the input and hidden biases respectively. The input data consists of an arbitrary number of time steps $\boldsymbol{x}^1$,$\boldsymbol{x}^2$,$\boldsymbol{x}^3,\dots$ where $\boldsymbol{x}
+^t$ consists of an arbitrary number of predictors $x
+^t_1$,$x^t_2,\dots$. For example, the input vector $\boldsymbol{x}^t$ could be the fuel level, speed and rpm of a car at time step $t$. We initialize the hidden layer vector $\boldsymbol{h}^0 \in \mathcal{R}^k$ with for example random numbers. Feeding in our data to the layer in eq. (\ref{eq:RecurrentLayer}) gives us the hidden layer vector for the next time step:
+$$h^1_i = f(\sum_j w^x_{ji}x_j^1 + b_i^x + \sum_j w^h_{ij}h^0_j + b_i^h).$$
+With $\boldsymbol{h}^1$ calculated, we can again proceed to the next time step
+$$h^2_i = f(\sum_j w^x_{ji}x_j^2 + b_i^x + \sum_j w^h_{ij}h^1_j + b_i^h),$$
+and we continue this way til we have calculated $\boldsymbol{h}^T$ for the final time step $T$ in our input data.
+We have now obtained a set $\{\boldsymbol{h}^0,\boldsymbol{h}^1,\dots,\boldsymbol{h}^T\}$ that can be used to generate an output. How to do this is problem specific, but if for example our target variable is a two dimensional vector, one could feed the final hidden vector $\boldsymbol{h}^T$ as the input to a dense layer with two nodes.
