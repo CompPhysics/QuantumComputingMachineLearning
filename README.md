@@ -10,7 +10,7 @@
   - States in Hilbert Space 
   - Quantum Channels
   - Measurements
-Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/NotesNovember5.pdf
+  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/NotesNovember5.pdf
 ##  Week 45 Composite Systems and Entaglement
 - Composite Systems and Entanglement
   - States in Composite Systems
