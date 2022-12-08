@@ -1,7 +1,7 @@
-# Quantum Computing, Quantum Machine Learning and Quantum Information Theories
-### Location: Department of Physics, Center for Computing in Science Education, 4th floor, Eastern wing of Physics Building, University of Oslo, https://www.mn.uio.no/fysikk/english/
-### Time: Each Friday at 915-10am CET (The sessions will be recorded)
-### Zoom link: https://msu.zoom.us/j/91696378411?pwd=TEpuOVFLZDRPRVMvNThiZnMrcU1lQT09, Passcode: 724075
+# Quantum Computing and Quantum Machine Learning 
+
+### Time: Each Friday at 215pm-4pm CET (The sessions will be recorded)
+### 
 
 ## Week 44 Mathematical Tools 
 - Basics in Linear Algebra, The Hilbert Space, Operators on Hilbert Spaces 
