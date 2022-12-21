@@ -32,6 +32,21 @@
   - Joint Quantum Entropy
   - Conditional Quantum Entropy
   - Quantum Mutual Information
+  - VonNeumann entropy and entanglement
+
+## Week 7
+
+## Week 8
+
+## Week 9
+
+## Week 10
+
+## Week 11
+
+## Week 12 
+
+
 
 
 ## Recommended textbooks:
