@@ -11,7 +11,7 @@
   - Quantum Channels
   - Measurements
 
-##  Week 4 Composite Systems and Entaglement
+##  Week 4 Composite Systems and Entanglement
 - Composite Systems and Entanglement
   - States in Composite Systems
   - Entanglement 
