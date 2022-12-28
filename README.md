@@ -4,7 +4,7 @@
 
 
 ## Week 3 Mathematical Tools 
-- Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems 
+- Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
   - Definitions
   - Description of Quantum Systems 
   - States in Hilbert Space 
