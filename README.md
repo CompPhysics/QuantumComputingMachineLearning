@@ -1,59 +1,82 @@
 # Quantum Computing and Quantum Machine Learning 
 
-### Time: Each Tuesday at 1215pm-2pm CET (The sessions will be recorded)
-
-
-## Week 3 Mathematical Tools 
-- Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
-  - Definitions
-  - Description of Quantum Systems 
-  - States in Hilbert Space 
-  - Quantum Channels
-  - Measurements
-
-##  Week 4 Composite Systems and Entanglement
-- Composite Systems and Entanglement
-  - States in Composite Systems
-  - Entanglement 
-  - Quantum–Classical Ensemble 
-  - Distance Measures and other topics
-
-## Week 5  Entropies and Information
-- Classical Entropies
-  - Mathematical Properties
-  - Conditional Entropy
-  - Joint Entropy
-  - Mutual Information
-  - Relative Entropy
-
-## Week 6  Entropies and Information
-- Quantum Entropies
-  - Mathematical Properties of Quantum Entropy
-  - Joint Quantum Entropy
-  - Conditional Quantum Entropy
-  - Quantum Mutual Information
-  - VonNeumann entropy and entanglement
-
-## Week 7
-
-## Week 8
-
-## Week 9
-
-## Week 10
-
-## Week 11
-
-## Week 12 
-
-## Week 13
-
-## Week 14
-
-
-
-
-## Recommended textbooks:
+### Recommended textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherrer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
+
+
+### Time: Each Monday at 1215pm-2pm CET (The sessions will be recorded)
+-Permanent Zoom link for the whole semester:
+ - https://msu.zoom.us/j/6424997467?pwd=ZW5jSGtEeHJxM0dqd0draXlWY29FQT09
+ - Meeting ID: 642 499 7467
+ - Passcode: FYS5419
+
+
+
+## January 23-27, 2023. Overview of first week, Basic Notions of Quantum Mechanics3
+- Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
+  - Definitions
+  - Mathematical notation, Hilbert spaces and operators
+  - Description of Quantum Systems and one-qubit systems 
+  - States in Hilbert Space, pure and mixed states
+  - Operators and gates
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 2
+
+
+## January 30 - February 3, 2023. Composite Systems and Tensor Products
+  - Tensor products of Hilbert Spaces and definition of Computational Basis
+  - Simple Hamiltonians and other operators
+  - States and Observables for Composite systems
+  - Quantum operations
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 3
+
+## February 6-10, 2023. Density matrices, Entropy, Schmidt Decompositions and start discussion of Entanglement
+  - Density matrices and Entropy
+  - Schmidt decomposition and entanglement
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
+
+## February 13-17, 2023. Entanglement, Quantum Gates and Circuits for Elementary Calculations
+  - More on Entanglement
+  - More on quantum gates
+  - Quantum Circuits
+  - Preparation of Input and use of Auxiliary Registers
+  - Implementation of Functions and Quantum Parallelism
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 5  
+
+## February 20-24, 2023. Quantum Gates and Circuits for Elementary Calculations and Measurements
+  - Reading the Output Register
+  - Circuits for Elementary Arithmetic Operations
+  - Quantum Circuit for Exponentiation
+  - Quantum Fourier Transforms
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 5 and 6  
+
+## February 27-March 3, 2023. Quantum Fourier Transform and Hamiltonians
+  - Quantum Fourier Transforms
+  - Quantum Phase estimation algorithm
+  - Eigenstates of specific Hamiltonians
+
+##  March 6-10, 2023. Algorithms for solving quantum mechanical problems.
+  - Phase estimation algorithm
+  - VQE, Variational Quantum Eigensolver
+  - Selected Hamiltonians
+
+##  March 13-17, 2023. Solving quantum mechanical problems
+  - Analyzing the solution of eigenvalue problems using the Lipkin model
+
+## March 20-24, 2023. Second quantization and Hamiltonians for quantum computing
+  - Second quantization
+  - Jordan-Wigner transformation
+  - Suzuki-Trotter approximation
+
+## March 27-31, 2023. Suzuki-Trotter approximation
+  - Suzuki-Trotter approximation and quantum computing
+
+## April 17-21, 2023. TBA
+
+## April 24-28, 2023. TBA
+
+## May 8-12, 2023. TBA
+
+## May 15-19, 2023. Last session
+
