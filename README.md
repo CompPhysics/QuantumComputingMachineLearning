@@ -21,6 +21,7 @@
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
   - Operators and gates
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 2
 
 
@@ -29,11 +30,13 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Simple Hamiltonians and other operators
   - States and Observables for Composite systems
   - Quantum operations
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 3
 
 ## February 6-10, 2023. Density matrices, Entropy, Schmidt Decompositions and start discussion of Entanglement
   - Density matrices and Entropy
   - Schmidt decomposition and entanglement
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
 
 ## February 13-17, 2023. Entanglement, Quantum Gates and Circuits for Elementary Calculations
@@ -42,6 +45,7 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Quantum Circuits
   - Preparation of Input and use of Auxiliary Registers
   - Implementation of Functions and Quantum Parallelism
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 5  
 
 ## February 20-24, 2023. Quantum Gates and Circuits for Elementary Calculations and Measurements
@@ -49,34 +53,41 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Circuits for Elementary Arithmetic Operations
   - Quantum Circuit for Exponentiation
   - Quantum Fourier Transforms
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 5 and 6  
 
 ## February 27-March 3, 2023. Quantum Fourier Transform and Hamiltonians
   - Quantum Fourier Transforms
   - Quantum Phase estimation algorithm
   - Eigenstates of specific Hamiltonians
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  March 6-10, 2023. Algorithms for solving quantum mechanical problems.
   - Phase estimation algorithm
   - VQE, Variational Quantum Eigensolver
   - Selected Hamiltonians
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 ##  March 13-17, 2023. Solving quantum mechanical problems
   - Analyzing the solution of eigenvalue problems using the Lipkin model
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 ## March 20-24, 2023. Second quantization and Hamiltonians for quantum computing
   - Second quantization
   - Jordan-Wigner transformation
   - Suzuki-Trotter approximation
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 27-31, 2023. Suzuki-Trotter approximation
   - Suzuki-Trotter approximation and quantum computing
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 ## April 17-21, 2023. TBA
-
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 ## April 24-28, 2023. TBA
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
 
 ## May 8-12, 2023. TBA
-
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13
 ## May 15-19, 2023. Last session
-
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14
