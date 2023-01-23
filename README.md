@@ -24,6 +24,7 @@
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 2
 
+- Video of lecture at https://youtu.be/ktZSFYIoNVM
 
 ## January 30 - February 3, 2023. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
