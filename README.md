@@ -10,7 +10,7 @@
 -Permanent Zoom link for the whole semester:
  - https://msu.zoom.us/j/6424997467?pwd=ZW5jSGtEeHJxM0dqd0draXlWY29FQT09
  - Meeting ID: 642 499 7467
- - Passcode: FYS5419
+ - Passcode: FYS4411
 
 
 
