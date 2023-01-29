@@ -245,9 +245,25 @@ result is determined by the weight of the relevant basis state in
 the state vector. After the measurement, the system is in the state
 corresponding to the result of the measurement. The operators and gates discussed below are examples of operations we can perform on specific states.
 
+!split
+===== Possible measurement =====
 
+We can consider the state
+!bt
+\[
+\vert \psi\rangle = \alpha \vert 0 \rangle +\beta \vert 1 \rangle
+\]
+!et
 
+o A measurement can yield only one of the above states, either $\vert 0\rangle$ or $\vert 1\rangle$.
+o The probability of a measurement resulting in $\vert 0\rangle$ is $\alpha^*\alpha = \vert \alpha \vert^*$.
+o The probability of a measurement resulting in $\vert 1\rangle$ is $\beta^*\beta = \vert \beta \vert^*$.
+o And we note that the sum of the outcomes gives $$\alpha^*\alpha+\beta^*\beta=1$ since the two states are normalized.
 
+After the measurement, the state of the system is the state associated with the result of the measurement.
+
+We have already encountered the projection operators $P$ and $Q$. Let us now look at other types of operations we can make
+on qubit states.
 
 ===== Different operators and gates =====
 
@@ -340,10 +356,10 @@ Another famous operation is the phase matrix given by
 
 
 
-=== Representation of states ===
+=== Representation of states and Hamiltonians ===
 
 
-Before we proceed we need several definitions.  Throughout these
+Before we proceed we need several other definitions.  Throughout these
 lectures we will assume that the interacting part of the Hamiltonian
 can be approximated by a two-body interaction.  This means that our
 Hamiltonian can be written as the sum of a onebody part, which
@@ -356,14 +372,13 @@ interaction
 !bt
 \begin{equation}
     \hat{H} = \hat{H}_0 + \hat{H}_I 
-    = \sum_{i=1}^A \hat{h}_0(x_i) + \sum_{i < j}^A \hat{v}(r_{ij}),
-label{Hnuclei}
+    = \sum_{i=1}^N \hat{h}_0(x_i) + \sum_{i < j}^N \hat{v}(r_{ij}),
 \end{equation}
 !et
 with 
 !bt
 \begin{equation}
-  H_0=\sum_{i=1}^A \hat{h}_0(x_i).
+  H_0=\sum_{i=1}^N \hat{h}_0(x_i).
 label{hinuclei}
 \end{equation}
 !et
@@ -372,7 +387,7 @@ The onebody part $u_{\mathrm{ext}}(x_i)$ is normally approximated by a
 harmonic oscillator potential or the Coulomb interaction an electron
 feels from the nucleus. However, other potentials are fully possible,
 such as one derived from the self-consistent solution of the
-Hartree-Fock equations to be discussed here.
+Hartree-Fock equations.
 
 
 
@@ -419,7 +434,7 @@ are quantum numbers needed to describe remaining quantum numbers.
 
 
 
-Since we will deal with Fermions (identical and indistinguishable particles) we will 
+If we deal with Fermions (identical and indistinguishable particles) we will 
 form an ansatz for a given state in terms of so-called Slater determinants determined
 by a chosen basis of single-particle functions. 
 
@@ -500,8 +515,8 @@ In the Hartree-Fock method the trial function is the Slater
 determinant of Eq.~(ref{eq:HartreeFockDet}) which can be rewritten as 
 !bt
 \[
-  \Phi(x_1,x_2,\dots,x_A,\alpha,\beta,\dots,\nu) = \frac{1}{\sqrt{A!}}\sum_{P} (-)^P\hat{P}\psi_{\alpha}(x_1)
-    \psi_{\beta}(x_2)\dots\psi_{\nu}(x_A)=\sqrt{A!}\hat{A}\Phi_H,
+  \Phi(x_1,x_2,\dots,x_N,\alpha,\beta,\dots,\nu) = \frac{1}{\sqrt{A!}}\sum_{P} (-)^P\hat{P}\psi_{\alpha}(x_1)
+    \psi_{\beta}(x_2)\dots\psi_{\nu}(x_N)=\sqrt{N!}\hat{A}\Phi_H,
 \]
 !et
 where we have introduced the antisymmetrization operator $\hat{A}$ defined by the 
@@ -512,7 +527,7 @@ summation over all possible permutations of two particles.
 It is defined as
 !bt
 \begin{equation}
-  \hat{A} = \frac{1}{A!}\sum_{p} (-)^p\hat{P},
+  \hat{A} = \frac{1}{N!}\sum_{p} (-)^p\hat{P},
 label{antiSymmetryOperator}
 \end{equation}
 !et
@@ -566,7 +581,7 @@ replace $\hat{H}_0$ with the sum of one-body operators
 !bt
 \[
   \int \Phi^*\hat{H}_0\Phi  d\mathbf{\tau}
-  = \sum_{i=1}^A \sum_{p} (-)^p\int 
+  = \sum_{i=1}^N \sum_{p} (-)^p\int 
   \Phi_H^*\hat{h}_0\hat{P}\Phi_H d\mathbf{\tau}.
 \]
 !et
@@ -577,7 +592,7 @@ of the Hartree-functions $\Phi_H$ because the individual single-particle wave fu
 orthogonal. We obtain then
 !bt
 \[
-  \int \Phi^*\hat{H}_0\Phi  d\mathbf{\tau}= \sum_{i=1}^A \int \Phi_H^*\hat{h}_0\Phi_H  d\mathbf{\tau}.
+  \int \Phi^*\hat{H}_0\Phi  d\mathbf{\tau}= \sum_{i=1}^N \int \Phi_H^*\hat{h}_0\Phi_H  d\mathbf{\tau}.
 \]
 !et
 Orthogonality of the single-particle functions allows us to further simplify the integral, and we
@@ -586,7 +601,7 @@ sum of one-body Hamiltonians
 !bt
 \begin{equation}
   \int \Phi^*\hat{H}_0\Phi  d\mathbf{\tau}
-  = \sum_{\mu=1}^A \int \psi_{\mu}^*(x)\hat{h}_0\psi_{\mu}(x)dx
+  = \sum_{\mu=1}^N \int \psi_{\mu}^*(x)\hat{h}_0\psi_{\mu}(x)dx
   d\mathbf{r}.
   label{H1Expectation}
 \end{equation}
@@ -604,7 +619,7 @@ and rewrite Eq.~(ref{H1Expectation}) as
 !bt
 \begin{equation}
   \int \Phi^*\hat{H}_0\Phi  d\tau
-  = \sum_{\mu=1}^A \langle \mu | \hat{h}_0 | \mu \rangle.
+  = \sum_{\mu=1}^N \langle \mu | \hat{h}_0 | \mu \rangle.
   label{H1Expectation1}
 \end{equation}
 !et
@@ -616,14 +631,14 @@ similar manner. We have
 !bt
 \[
   \int \Phi^*\hat{H}_I\Phi d\mathbf{\tau} 
-  = A! \int \Phi_H^*\hat{A}\hat{H}_I\hat{A}\Phi_H d\mathbf{\tau},
+  = N! \int \Phi_H^*\hat{A}\hat{H}_I\hat{A}\Phi_H d\mathbf{\tau},
 \]
 !et
 which reduces to
 !bt
 \[
  \int \Phi^*\hat{H}_I\Phi d\mathbf{\tau} 
-  = \sum_{i\le j=1}^A \sum_{p} (-)^p\int 
+  = \sum_{i\le j=1}^N \sum_{p} (-)^p\int 
   \Phi_H^*\hat{v}(r_{ij})\hat{P}\Phi_H d\mathbf{\tau},
 \]
 !et
@@ -637,7 +652,7 @@ any two particles no longer vanish, and we get
 !bt
 \[
   \int \Phi^*\hat{H}_I\Phi d\mathbf{\tau} 
-  = \sum_{i < j=1}^A \int  
+  = \sum_{i < j=1}^N \int  
   \Phi_H^*\hat{v}(r_{ij})(1-P_{ij})\Phi_H d\mathbf{\tau}.
 \]
 !et
@@ -653,7 +668,7 @@ We obtain
 !bt
 \begin{align}
   \int \Phi^*\hat{H}_I\Phi d\mathbf{\tau} 
-  = \frac{1}{2}\sum_{\mu=1}^A\sum_{\nu=1}^A
+  = \frac{1}{2}\sum_{\mu=1}^N\sum_{\nu=1}^N
     &\left[ \int \psi_{\mu}^*(x_i)\psi_{\nu}^*(x_j)\hat{v}(r_{ij})\psi_{\mu}(x_i)\psi_{\nu}(x_j)
     dx_idx_j \right.\\
   &\left.
@@ -877,8 +892,8 @@ The energy functional is
 !bt
 \[
   E[\Phi] 
-  = \sum_{\mu=1}^A \langle \mu | h | \mu \rangle +
-  \frac{1}{2}\sum_{{\mu}=1}^A\sum_{{\nu}=1}^A \langle \mu\nu|\hat{v}|\mu\nu\rangle_{AS},
+  = \sum_{\mu=1}^N \langle \mu | h | \mu \rangle +
+  \frac{1}{2}\sum_{{\mu}=1}^N\sum_{{\nu}=1}^N \langle \mu\nu|\hat{v}|\mu\nu\rangle_{AS},
 \]
 !et 
 we found the expression for the energy functional in terms of the basis function $\phi_{\lambda}(\mathbf{r})$. We then  varied the above energy functional with respect to the basis functions $|\mu \rangle$. 
@@ -887,22 +902,19 @@ a chosen basis as defined in Eq.~(ref{eq:newbasis}). We can then rewrite the ene
 !bt
 \begin{equation}
   E[\Phi^{New}] 
-  = \sum_{i=1}^A \langle i | h | i \rangle +
-  \frac{1}{2}\sum_{ij=1}^A\langle ij|\hat{v}|ij\rangle_{AS}, label{FunctionalEPhi2}
+  = \sum_{i=1}^N \langle i | h | i \rangle +
+  \frac{1}{2}\sum_{ij=1}^N\langle ij|\hat{v}|ij\rangle_{AS}, label{FunctionalEPhi2}
 \end{equation}
 !et
 where $\Phi^{New}$ is the new Slater determinant defined by the new basis of Eq.~(ref{eq:newbasis}). 
-
-
-
 
 
 Using Eq.~(ref{eq:newbasis}) we can rewrite Eq.~(ref{FunctionalEPhi2}) as 
 !bt
 \begin{equation}
   E[\Psi] 
-  = \sum_{i=1}^A \sum_{\alpha\beta} C^*_{i\alpha}C_{i\beta}\langle \alpha | h | \beta \rangle +
-  \frac{1}{2}\sum_{ij=1}^A\sum_{{\alpha\beta\gamma\delta}} C^*_{i\alpha}C^*_{j\beta}C_{i\gamma}C_{j\delta}\langle \alpha\beta|\hat{v}|\gamma\delta\rangle_{AS}. label{FunctionalEPhi3}
+  = \sum_{i=1}^N \sum_{\alpha\beta} C^*_{i\alpha}C_{i\beta}\langle \alpha | h | \beta \rangle +
+  \frac{1}{2}\sum_{ij=1}^N\sum_{{\alpha\beta\gamma\delta}} C^*_{i\alpha}C^*_{j\beta}C_{i\gamma}C_{j\delta}\langle \alpha\beta|\hat{v}|\gamma\delta\rangle_{AS}. label{FunctionalEPhi3}
 \end{equation}
 !et
 
