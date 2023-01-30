@@ -33,6 +33,8 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Quantum operations
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
 _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 3
+- Video of lecture at https://youtu.be/ucXpNSISzOw
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesJanuary30.pdf
 
 ## February 6-10, 2023. Density matrices, Entropy, Schmidt Decompositions and start discussion of Entanglement
   - Density matrices and Entropy
