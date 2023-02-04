@@ -26,6 +26,7 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
 
 - Video of lecture at https://youtu.be/ktZSFYIoNVM
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesJanuary23.pdf
+
 ## January 30 - February 3, 2023. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
   - Simple Hamiltonians and other operators
