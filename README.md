@@ -37,11 +37,13 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
 - Video of lecture at https://youtu.be/ucXpNSISzOw
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesJanuary30.pdf
 
-## February 6-10, 2023. Density matrices, Entropy, Schmidt Decompositions and start discussion of Entanglement
-  - Density matrices and Entropy
-  - Schmidt decomposition and entanglement
+## February 6-10, 2023. Density matrices and Measurements
+  - Spectral decomposition and measurements
+  - Density matrices
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapters 2 and 3
+- Video of lecture at https://youtu.be/jVh_0KfSSNk
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary6.pdf
 
 ## February 13-17, 2023. Entanglement, Quantum Gates and Circuits for Elementary Calculations
   - More on Entanglement
