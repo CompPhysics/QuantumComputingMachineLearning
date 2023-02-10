@@ -81,6 +81,22 @@ div.toc p,a {
 end of tocinfo -->
 
 <body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "AMS"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
 <!-- ------------------- main content ---------------------- -->
 <center>
 <h1>February 6-10,2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</h1>
@@ -99,7 +115,7 @@ end of tocinfo -->
 </center>
 <br>
 <center>
-<h4>Feb 6, 2023</h4>
+<h4>Feb 9, 2023</h4>
 </center> <!-- date -->
 <br>
 <h2 id="spectral-decomposition-measurements-and-density-matrices">Spectral Decomposition, Measurements and Density matrices   </h2>
@@ -127,11 +143,114 @@ hermitian operators, how these are then used to define measurements
 and how we can define so-called density operators (matrices). These
 are all quantities which will become very useful when we discuss
 entanglement and in particular how to quantify it. In order to define
-these quantities we need to remind ourselves about some basic linear
+these quantities we need first to remind ourselves about some basic linear
 algebra properties of hermitian operators and matrices.
 </p>
 <h2 id="basic-properties-of-hermitian-operators">Basic properties of hermitian operators </h2>
+
+<p>The operators we typically encounter in quantum mechanical studies</p>
+<ol>
+<li> Hermitian (self-adjoint) meaning that for example the elements of a Hermitian matrix \( \boldsymbol{U} \) obey \( u_{ij}=u_{ji}^* \).</li>
+<li> Unitary \( \boldsymbol{U}\boldsymbol{U}^{\dagger}=\boldsymbol{U}^{\dagger}\boldsymbol{U}=\boldsymbol{I} \), where \( \boldsymbol{I} \) is the unit matrix</li>
+<li> The oparator \( \boldsymbol{U} \) and its self-adjoint commute (often labeled as normal operators), that is  \( {\boldsymbol{U},\boldsymbol{U}^{\dagger}]=0 \)</li>
+</ol>
+<p>Unitary operators in a Hilbert space preserve the norm and orthogonality. If \( \boldsymbol{U} \) is a unitary operator acting on a state \( \vert \psi_j\rangle \), the action of</p>
+
+$$
+\vert \phi_i\rangle=\boldsymbol{U}\vert \psi_j\rangle,
+$$
+
+<p>preserves both the norm and orthogonality, that is \( \langle \phi_i \vert \phi_j\rangle=\langle \psi_i \vert \psi_j\rangle=\delta_{ij} \), as discussed earlier.</p>
+
+<p>As example, consider the Pauli matrix \( \sigma_x \). We have already seen that this matrix is a unitary matrix. Consider then an orthogonal and normalized basis \( \vert 0\rangle^{\dagger} =\begin{bmatrix} 1 &amp; 0\end{bmatrix} \) and \( \vert 1\rangle^{\dagger} =\begin{bmatrix} 0 &amp; 1\end{bmatrix} \) and a state which is a linear superposition of these two basis states</p>
+
+$$
+\vert \psi_a\rangle=\alpha_0\vert 0\rangle +\alpha_1\vert 1\rangle.
+$$
+
+<p>A new state \( \vert \psi_b\rangle \) is given by</p>
+$$
+\vert \psi_b\rangle=\sigma_x\vert \psi_a\rangle=\alpha_0\vert 1\rangle +\alpha_1\vert 0\rangle.
+$$
 <h3 id="spectral-decomposition">Spectral Decomposition </h3>
+
+<p>An important techanicality which we will use in the discussion of
+density matrices, entanglement, quantum entropies and other properties
+is the so-called spectral decomposition of an operator.
+</p>
+
+<p>Let $\vert \psi\rangle be a vector in a Hilbert space of dimension \( n \) and a hermitian operator \( \boldsymbol{A} \) defined in this
+space. Assume \( \vert \psi\rangle \) is an eigenvector of \( \boldsymbol{A} \) with eigenvalue \( \lambda \), that is
+</p>
+
+$$
+\boldsymbol{A}\vert psi\rangle = \lambda\vert \psi\rangle = \lambda \boldsymbol{I}\vert \psi \rangle,
+$$
+
+<p>where we used \( \boldsymbol{I}\vert \psi \rangle = 1 \vert \psi \rangle \).
+Subtracting the right hand side from the left hand side gives
+</p>
+$$
+\left[\boldsymbol{A}-\lambda \boldsymbol{I}\right]\vert \psi \rangle=0,
+$$
+
+<p>which has a nontrivial solution only if the determinant
+\( \mathrm{det}(\boldsymbol{A}-\lambda\boldsymbol{I})=0 \).
+</p>
+
+<p>We define now an orthonormal basis \( \vert i \rangle =\{\vert 0
+\rangle, \vert 1\rangle, \dots, \vert n-1\rangle \) in the same Hilbert
+space. We will assume that this basis is an eigenbasis of \( \boldsymbol{A} \) with eigenvalues \( \lambda_i \)
+</p>
+
+<p>We expand a new vector using this eigenbasis of \( \boldsymbol{A} \)</p>
+$$
+\vert \psi_a \rangle = \sum_{i=0}^{n-1}\alpha_i\vert i\rangle,
+$$
+
+<p>with the normalization condition $\sum_{i=0}^{n-1}\vert \alpha_i\vert^2.
+Acting with \( \boldsymbol{A} \) on this new state results in
+</p>
+
+$$
+\boldsymbol{A}\vert \psi_a \rangle = \sum_{i=0}^{n-1}\alpha_i\boldsymbol{A}\vert i\rangle=\sum_{i=0}^{n-1}\alpha_i\lambda_i\vert i\rangle.
+$$
+
+<p>If we then use that the outer product of any state with itself defines a projection operator we have the projection operators</p>
+$$
+\boldsymbol{P}_{\psi_a} = \vert \psi_a\rangle\langle \psi_a\vert,
+$$
+
+<p>and</p>
+$$
+\boldsymbol{P}_{j} = \vert j\rangle\langle j\vert,
+$$
+
+<p>we have that </p>
+$$
+\boldsymbol{P}_{j}\vert \psi_a\rangle=\vert j\rangle\langle j\vert\sum_{i=0}^{n-1}\alpha_i\vert i\rangle=\sum_{i=0}^{n-1}\alpha_i\vert j\rangle\langle j\vert i\rangle,
+$$
+
+<p>which results in</p>
+$$
+\boldsymbol{P}_{j}\vert \psi_a\rangle=\alpha_j\vert j\rangle,
+$$
+
+<p>since \( \langle j\vert i\rangle \).
+With the last equation we can rewrite
+</p>
+$$
+\boldsymbol{A}\vert \psi_a \rangle = \sum_{i=0}^{n-1}\alpha_i\lambda_i\vert i\rangle=\sum_{i=0}^{n-1}\lambda_i\boldsymbol{P}_i\vert \psi_a\rangle,
+$$
+
+<p>from which we conclude that</p>
+$$
+\boldsymbol{A}=\sum_{i=0}^{n-1}\lambda_i\boldsymbol{P}_i.
+$$
+
+<p>This is the spectral decomposition of a hermitian and normal operator. It is true for any state and it is independent of the basis. The spectral decomposition can in turn be used to exhaustively specify a measurement, as we will see in the next section.</p>
+
+<p>Add example</p>
 <h2 id="measurements">Measurements </h2>
 <h2 id="density-matrices-operators">Density matrices/operators </h2>
 <!-- ------------------- end of main content --------------- -->
