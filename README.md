@@ -14,7 +14,7 @@
 
 
 
-## January 23-27, 2023. Overview of first week, Basic Notions of Quantum Mechanics3
+## January 23-27, 2023. Overview of first week, Basic Notions of Quantum Mechanics
 - Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
   - Definitions
   - Mathematical notation, Hilbert spaces and operators
