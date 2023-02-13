@@ -2,7 +2,7 @@
 
 ### Recommended textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
-- Wolfgang Scherrer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
+- Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
 
 
@@ -22,7 +22,7 @@
   - States in Hilbert Space, pure and mixed states
   - Operators and gates
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 2
+_Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
 - Video of lecture at https://youtu.be/ktZSFYIoNVM
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesJanuary23.pdf
@@ -33,7 +33,7 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - States and Observables for Composite systems
   - Quantum operations
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 3
+_Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 3
 - Video of lecture at https://youtu.be/ucXpNSISzOw
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesJanuary30.pdf
 
@@ -41,7 +41,7 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Spectral decomposition and measurements
   - Density matrices
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapters 2 and 3
+_Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapters 2 and 3
 - Video of lecture at https://youtu.be/jVh_0KfSSNk
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary6.pdf
 
@@ -50,7 +50,7 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Entanglement and Schmidt decomposition 
   - Entropies
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
+_Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 4
 
 ## February 20-24, 2023. Quantum Gates and Circuits for Elementary Calculations and Measurements
   - Reading the Output Register
@@ -58,7 +58,7 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
   - Quantum Circuit for Exponentiation
   - Quantum Fourier Transforms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 5 and 6  
+_Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 5 and 6  
 
 ## February 27-March 3, 2023. Quantum Fourier Transform and Hamiltonians
   - Quantum Fourier Transforms
