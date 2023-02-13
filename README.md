@@ -45,14 +45,12 @@ _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter
 - Video of lecture at https://youtu.be/jVh_0KfSSNk
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary6.pdf
 
-## February 13-17, 2023. Entanglement, Quantum Gates and Circuits for Elementary Calculations
-  - More on Entanglement
-  - More on quantum gates
-  - Quantum Circuits
-  - Preparation of Input and use of Auxiliary Registers
-  - Implementation of Functions and Quantum Parallelism
+## February 13-17, 2023. Entanglement and entropies
+  - More on density matrices and measurements
+  - Entanglement and Schmidt decomposition 
+  - Entropies
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 5  
+_Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
 
 ## February 20-24, 2023. Quantum Gates and Circuits for Elementary Calculations and Measurements
   - Reading the Output Register
