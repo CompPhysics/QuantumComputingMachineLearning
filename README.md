@@ -48,10 +48,16 @@ _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapters
 ## February 13-17, 2023. Entanglement and entropies
   - More on density matrices and measurements
   - Entanglement and Schmidt decomposition 
-  - Entropies
+  - Start discussion of Entropies
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-_Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 4
+- _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
+- Video of lecture at https://youtu.be/QVPQmeSAX8M
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary13.pdf
 
+
+
+
+https://youtu.be/QVPQmeSAX8M
 ## February 20-24, 2023. Quantum Gates and Circuits for Elementary Calculations and Measurements
   - Reading the Output Register
   - Circuits for Elementary Arithmetic Operations
