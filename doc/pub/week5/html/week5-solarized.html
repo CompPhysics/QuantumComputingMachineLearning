@@ -63,14 +63,47 @@ div.toc p,a {
 
 <!-- tocinfo
 {'highest level': 2,
- 'sections': [('Quantum Gates and Circuits for Elementary Calculations and '
-               'Measurements',
+ 'sections': [('Entanglement and Entropy and start simple Quantum Gates',
                2,
                None,
-               'quantum-gates-and-circuits-for-elementary-calculations-and-measurements')]}
+               'entanglement-and-entropy-and-start-simple-quantum-gates'),
+              ('First entanglement encounter',
+               2,
+               None,
+               'first-entanglement-encounter'),
+              ('Schmidt decomposition', 3, None, 'schmidt-decomposition'),
+              ('Two-qubit system and definition of density matrices',
+               3,
+               None,
+               'two-qubit-system-and-definition-of-density-matrices'),
+              ('Entropies and density matrices',
+               2,
+               None,
+               'entropies-and-density-matrices'),
+              ('Shannon information entropy',
+               3,
+               None,
+               'shannon-information-entropy'),
+              ('Von Neumann entropy', 3, None, 'von-neumann-entropy')]}
 end of tocinfo -->
 
 <body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "AMS"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
 <!-- ------------------- main content ---------------------- -->
 <center>
 <h1>February 20-24,2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</h1>
@@ -89,23 +122,275 @@ end of tocinfo -->
 </center>
 <br>
 <center>
-<h4>Jan 19, 2023</h4>
+<h4>Feb 17, 2023</h4>
 </center> <!-- date -->
 <br>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="quantum-gates-and-circuits-for-elementary-calculations-and-measurements">Quantum Gates and Circuits for Elementary Calculations and Measurements </h2>
+<h2 id="entanglement-and-entropy-and-start-simple-quantum-gates">Entanglement and Entropy and start simple Quantum Gates </h2>
 
 <div class="alert alert-block alert-block alert-text-normal">
 <b></b>
 <p>
 <ol>
- <li> Reading the Output Register</li>
- <li> Circuits for Elementary Arithmetic Operations</li>
- <li> Quantum Circuit for Exponentiation</li>
- <li> Quantum Fourier Transforms</li>
+<li> Schmidt decomposition and entanglement</li>
+<li> Entropy and density matrices</li>
+<li> Circuits for Elementary Arithmetic Operations</li>
 </ol>
-<p><b>Reading recommendation</b>: Scherrer, Mathematics of Quantum Computations, chapter 5 and 6  </p>
+<p><b>Reading recommendation</b>: Scherer, Mathematics of Quantum Computations, chapter 5 and 6  </p>
+</div>
+
+
+<ul>
+<li> <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary13.pdf" target="_blank">See also whiteboard notes</a></li>
+<li> <a href="https://youtu.be/QVPQmeSAX8M" target="_blank">Video of lecture</a></li>
+</ul>
+<p>In order to study entanglement and why it is so important for quantum
+computing, we need to introduce some basic measures and useful
+quantities.  For these endeavors, we  will use our two-qubit system from
+the second lecture in order to introduce, through examples, density
+matrices and entropy. These two quantities, together with
+technicalities like the Schmidt decomposition define important quantities in analyzing quantum computing examples.
+</p>
+
+<p>The Schmidt decomposition is again a
+linear decompostions which allows us to express a vector in terms of
+tensor product of two inner product spaces. In quantum information
+theory and quantum computing it is widely used as away to define and
+describe entanglement.
+</p>
+<h2 id="first-entanglement-encounter">First entanglement encounter </h2>
+
+<a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary13.pdf" target="_blank">See whiteboard notes</a>
+<h3 id="schmidt-decomposition">Schmidt decomposition </h3>
+<h3 id="two-qubit-system-and-definition-of-density-matrices">Two-qubit system and definition of density matrices  </h3>
+
+<p>This system can be thought of as composed of two subsystems
+\( A \) and \( B \). Each subsystem has computational basis states
+</p>
+
+$$
+\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
+$$
+
+<p>The subsystems could represent single particles or composite many-particle systems of a given symmetry.
+This leads to the many-body computational basis states
+</p>
+
+$$
+\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
+$$
+
+<p>and</p>
+$$
+\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
+$$
+
+<p>and</p>
+$$
+\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
+$$
+
+<p>and finally</p>
+$$
+\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+$$
+
+<p>These computational basis states define also the eigenstates of the non-interacting  Hamiltonian</p>
+$$
+H_0\vert 00 \rangle = \epsilon_{00}\vert 00 \rangle,
+$$
+
+$$
+H_0\vert 10 \rangle = \epsilon_{10}\vert 10 \rangle,
+$$
+
+$$
+H_0\vert 01 \rangle = \epsilon_{01}\vert 01 \rangle,
+$$
+
+<p>and</p>
+$$
+H_0\vert 11 \rangle = \epsilon_{11}\vert 11 \rangle.
+$$
+
+<p>The interacting part of the Hamiltonian \( H_{\mathrm{I}} \) is given by the tensor product of two \( \sigma_x \) and \( \sigma_z \)  matrices, respectively, that is</p>
+$$
+H_{\mathrm{I}}=H_x\sigma_x\otimes\sigma_x+H_z\sigma_z\otimes\sigma_z,
+$$
+
+<p>where \( H_x \) and \( H_z \) are interaction strength parameters. Our final Hamiltonian matrix is given by</p>
+$$
+\boldsymbol{H}=\begin{bmatrix} \epsilon_{00}+H_z & 0 & 0 & H_x \\
+                       0  & \epsilon_{10}-H_z & H_x & 0 \\
+		       0 & H_x & \epsilon_{01}-H_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{11} +H_z \end{bmatrix}.
+$$
+
+<p>The four eigenstates of the above Hamiltonian matrix can in turn be used to
+define density matrices. As an example, the density matrix of the
+first eigenstate (lowest energy \( E_0 \)) \( \Psi_0 \) is
+</p>
+
+$$
+\rho_0=\left(\alpha_{00}\vert 00 \rangle\langle 00\vert+\alpha_{10}\vert 10 \rangle\langle 10\vert+\alpha_{01}\vert 01 \rangle\langle 01\vert+\alpha_{11}\vert 11 \rangle\langle 11\vert\right),
+$$
+
+<p>where the coefficients \( \alpha_{ij} \) are the eigenvector coefficients
+resulting from the solution of the above eigenvalue problem.
+</p>
+
+<p>We can
+then in turn define the density matrix for the subsets \( A \) or \( B \) as
+</p>
+
+$$
+\rho_A=\mathrm{Tr}_B(\rho_{0})=\langle 0 \vert \rho_{0} \vert 0\rangle_{B}+\langle 1 \vert \rho_{0} \vert 1\rangle_{B},
+$$
+
+<p>or</p>
+
+$$
+\rho_B=\mathrm{Tr}_A(\rho_0)=\langle 0 \vert \rho_{0} \vert 0\rangle_{A}+\langle 1 \vert \rho_{0} \vert 1\rangle_{A}.
+$$
+
+<p>The density matrices for these subsets can be used to compute the
+so-called von Neumann entropy, which is one of the possible measures
+of entanglement. A pure state has entropy equal zero while entangled
+state have an entropy larger than zero. The von-Neumann entropy is
+defined as
+</p>
+
+$$
+S(A,B)=-\mathrm{Tr}\left(\rho_{A,B}\log_2 (\rho_{A,B})\right).
+$$
+
+<p>The example here shows the above von Neumann entropy based on the
+density matrix for the lowest many-body state. We see clearly a jump
+in the entropy around the point where we have a level crossing. At
+interaction strenght \( \lambda=0 \) we have many-body states purely
+defined by their computational basis states. As we switch on the
+interaction strength, we obtain an increased degree of mixing and the
+entropy increases till we reach the level crossing point where we see
+an additional and sudden increase in entropy. Similar behaviors are
+observed for the other states. The most important result from this
+example is that entanglement is driven by the Hamiltonian itself and
+the strength of the interaction matrix elements and the
+non-interacting energies.
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;">%matplotlib inline
+<span style="color: #8B008B; font-weight: bold">from</span>  <span style="color: #008b45; text-decoration: underline">matplotlib</span> <span style="color: #8B008B; font-weight: bold">import</span> pyplot <span style="color: #8B008B; font-weight: bold">as</span> plt
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">scipy.linalg</span> <span style="color: #8B008B; font-weight: bold">import</span> logm, expm
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">log2M</span>(a): <span style="color: #228B22"># base 2 matrix logarithm</span>
+    <span style="color: #8B008B; font-weight: bold">return</span> logm(a)/np.log(<span style="color: #B452CD">2.0</span>)
+
+dim = <span style="color: #B452CD">4</span>
+Hamiltonian = np.zeros((dim,dim))
+<span style="color: #228B22">#number of lambda values</span>
+n = <span style="color: #B452CD">40</span>
+lmbd = np.linspace(<span style="color: #B452CD">0.0</span>,<span style="color: #B452CD">1.0</span>,n)
+Hx = <span style="color: #B452CD">2.0</span>
+Hz = <span style="color: #B452CD">3.0</span>
+<span style="color: #228B22"># Non-diagonal part as sigma_x tensor product with sigma_x</span>
+sx = np.matrix([[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>]])
+sx2 = Hx*np.kron(sx, sx)
+<span style="color: #228B22"># Diagonal part as sigma_z tensor product with sigma_z</span>
+sz = np.matrix([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>]])
+sz2 = Hz*np.kron(sz, sz)
+noninteracting = [<span style="color: #B452CD">0.0</span>, <span style="color: #B452CD">2.5</span>, <span style="color: #B452CD">6.5</span>, <span style="color: #B452CD">7.0</span>]
+D = np.diag(noninteracting)
+Eigenvalue = np.zeros((dim,n))
+Entropy = np.zeros(n)
+
+<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n): 
+    Hamiltonian = lmbd[i]*(sx2+sz2)+D
+    <span style="color: #228B22"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+    EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+    <span style="color: #228B22"># sort eigenvectors and eigenvalues</span>
+    permute = EigValues.argsort()
+    EigValues = EigValues[permute]
+    EigVectors = EigVectors[:,permute]
+    <span style="color: #228B22"># Compute density matrix for selected system state, here ground state</span>
+    DensityMatrix = np.zeros((dim,dim))
+    DensityMatrix = np.outer(EigVectors[:,<span style="color: #B452CD">0</span>],EigVectors[:,<span style="color: #B452CD">0</span>])
+    <span style="color: #228B22"># Project down on substates and find density matrix for subsystem</span>
+    d = np.matrix([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]])
+    v1 = [<span style="color: #B452CD">1.0</span>,<span style="color: #B452CD">0.0</span>]
+    proj1 = np.kron(v1,d)
+    x1 = proj1 @ DensityMatrix @ proj1.T
+    v2 = [<span style="color: #B452CD">0.0</span>,<span style="color: #B452CD">1.0</span>]
+    proj2 = np.kron(v2,d)
+    x2 = proj2 @ DensityMatrix @ proj2.T
+    <span style="color: #228B22"># Total density matrix for subsystem</span>
+    total = x1+x2
+    <span style="color: #228B22"># von Neumann Entropy for subsystem </span>
+    Entropy[i] = -np.matrix.trace(total @ log2M(total))
+    <span style="color: #228B22"># Plotting eigenvalues and entropy as functions of interaction strengths</span>
+    Eigenvalue[<span style="color: #B452CD">0</span>,i] = EigValues[<span style="color: #B452CD">0</span>]
+    Eigenvalue[<span style="color: #B452CD">1</span>,i] = EigValues[<span style="color: #B452CD">1</span>]
+    Eigenvalue[<span style="color: #B452CD">2</span>,i] = EigValues[<span style="color: #B452CD">2</span>]
+    Eigenvalue[<span style="color: #B452CD">3</span>,i] = EigValues[<span style="color: #B452CD">3</span>]
+plt.plot(lmbd, Eigenvalue[<span style="color: #B452CD">0</span>,:] ,<span style="color: #CD5555">&#39;b-&#39;</span>,lmbd, Eigenvalue[<span style="color: #B452CD">1</span>,:],<span style="color: #CD5555">&#39;g-&#39;</span>,)
+plt.plot(lmbd, Eigenvalue[<span style="color: #B452CD">2</span>,:] ,<span style="color: #CD5555">&#39;r-&#39;</span>,lmbd, Eigenvalue[<span style="color: #B452CD">3</span>,:],<span style="color: #CD5555">&#39;y-&#39;</span>,)
+plt.xlabel(<span style="color: #CD5555">&#39;$\lambda$&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;Eigenvalues&#39;</span>)
+plt.show()
+plt.plot(lmbd, Entropy)
+plt.xlabel(<span style="color: #CD5555">&#39;$\lambda$&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;Entropy&#39;</span>)          
+plt.show
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h2 id="entropies-and-density-matrices">Entropies and density matrices </h2>
+<h3 id="shannon-information-entropy">Shannon information entropy </h3>
+
+<p>We start our discussions with the classical information entropy, or
+just Shannon entropy, before we move over to a quantum mechanical way
+to define the entropy based on the density matrices discussed earlier.
+</p>
+
+<p>We define a set of random variables \( X=\{x_0,x_1,\dots,x_{n-1}\} \) with probability for an outcome \( x\in X \) given by \( p_X(x) \), the
+information entropy is defined as
+</p>
+$$
+S=-\sum_{x\in X}p_X(x)\log_2{p_X(x)}.
+$$
+<h3 id="von-neumann-entropy">Von Neumann entropy </h3>
+
+$$
+S=-\mathrm{Tr}[\rho\log_2{\rho}].
+$$
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Lecture next week</b>
+<p>
+<ol>
+<li> More on entanglement and entropies</li>
+<li> Einstein-Podolsky-Rosen paradox</li>
+<li> Bell's inequalities</li>
+</ol>
 </div>
 
 <!-- ------------------- end of main content --------------- -->
