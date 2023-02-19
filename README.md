@@ -62,8 +62,6 @@
   - Entropy and traces of density matrices
   - Einstein-Podolsky-Rosen paradox
   - Bell's inequalities
-
-
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, section 2.3 and chapter 4  
 
