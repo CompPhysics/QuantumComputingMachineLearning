@@ -60,19 +60,18 @@
   - Review of Schmidt decomposition and entanglement from last week, see jupyter-notebook at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week4/ipynb/week4.ipynb"
   - More on entanglement
   - Entropy and traces of density matrices
-  - Einstein-Podolsky-Rosen paradox
-  - Bell's inequalities
+  - Einstein-Podolsky-Rosen paradox and Bell's inequalities
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, section 2.3 and chapter 4  
 
 ## February 27-March 3, 2023. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
-  - Quantum gates and operations
+  - Quantum gates and operations and simple quantum algorithms
   - Quantum Fourier Transforms
   - Quantum Phase estimation algorithm
-  - Eigenstates of specific Hamiltonians
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  March 6-10, 2023. Algorithms for solving quantum mechanical problems.
+  - Eigenstates of specific Hamiltonians
   - Phase estimation algorithm
   - VQE, Variational Quantum Eigensolver
   - Selected Hamiltonians
