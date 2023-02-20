@@ -63,6 +63,8 @@
   - Einstein-Podolsky-Rosen paradox and Bell's inequalities
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, section 2.3 and chapter 4  
+  - Video of lecture at https://youtu.be/gnlGUjKGDts
+  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary20.pdf  
 
 ## February 27-March 3, 2023. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
