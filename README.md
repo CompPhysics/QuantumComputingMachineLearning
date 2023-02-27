@@ -69,6 +69,8 @@
   - Quantum Fourier Transforms
 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
+  - Video of lecture at https://youtu.be/IkD0fiBhxd0
+  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary27.pdf  
 
 ##  March 6-10, 2023. Algorithms for solving quantum mechanical problems.
   - Introduction of Hamiltonians to study, the Lipkin model
