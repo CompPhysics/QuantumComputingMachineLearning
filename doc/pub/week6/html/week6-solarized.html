@@ -80,10 +80,12 @@ div.toc p,a {
                3,
                None,
                'two-qubit-system-and-definition-of-density-matrices'),
-              ('Quantum circuits and simple algorithms',
+              ('Quantum gates, circuits and simple algorithms',
                2,
                None,
-               'quantum-circuits-and-simple-algorithms')]}
+               'quantum-gates-circuits-and-simple-algorithms'),
+              ('Single-Qubit Gates', 3, None, 'single-qubit-gates'),
+              ('Two-Qubit Gates', 3, None, 'two-qubit-gates')]}
 end of tocinfo -->
 
 <body>
@@ -359,9 +361,396 @@ plt.show
     </div>
   </div>
 </div>
-<h2 id="quantum-circuits-and-simple-algorithms">Quantum circuits and simple algorithms </h2>
+<h2 id="quantum-gates-circuits-and-simple-algorithms">Quantum gates, circuits and simple algorithms </h2>
 
-<p>See <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/HandWrittenNotes/2023/NotesFebruary27.pdf" target="_blank">whiteboard notes</a></p>
+<p>Quantum gates are physical actions that are applied to the physical
+system representing the qubits. Mathematically, they are
+complex-valued, unitary matrices which act on the complex-values
+normalized vectors that represent qubits. As the quantum analog of
+classical logic gates (such as AND and OR), there is a corresponding
+quantum gate for every classical gate; however, there are quantum
+gates that have no classical counter-part. They act on a set of qubits
+and, changing their state. That is, if \( U \) is a quantum gate and
+\( \ket{q} \) is a qubit, then acting the gate \( U \) on the qubit \( \ket{q} \)
+transforms the qubit as follows:
+</p>
+
+$$
+\begin{align}
+\ket{q}\overset{U}{\to}U\ket{q}
+. \label{_auto1}
+\end{align}
+$$
+
+<p>This action would be represented as the following quantum circuit</p>
+
+$$
+\begin{align}
+\label{simple_qc}
+\Qcircuit
+{
+\lstick{\ket{q}} & \gate{U} & \rstick{U\ket{q}} \qw 
+}
+\end{align}
+$$
+
+<p>Quantum circuits are diagrammatic representations of quantum
+algorithms. The horizontal dimension corresponds to time; moving left
+to right corresponds to forward motion in time. They consist of a set
+of qubits \( \ket{q_n} \) which are stacked vertically on the left-hand
+side of the diagram. Lines, called quantum wires, extend horizontally
+to the right from each qubit, representing its state moving forward in
+time. Additionally, they contain a set of quantum gates that are
+applied to the quantum wires. Gates are applied chronologically, left
+to right. With this, we can see that the quantum circuit above
+\eqref{simple_qc} implies that the quantum gate \( U \) is being applied
+to the qubit in state \( \ket{q} \).
+</p>
+
+<p>To explain what quantum circuits represent mathematically, consider the following circuit</p>
+
+$$
+\begin{align}
+\label{simple_qce}
+\Qcircuit @C=1em @R=1em
+{
+\lstick{\ket{q_0}} & \gate{A} & \gate{B} & \qw 
+\\
+\lstick{\ket{q_1}} & \gate{C} & \gate{D} & \qw 
+}
+\label{_auto2}
+\end{align}
+$$
+
+<p>This circuit implies the following mathematical statement</p>
+$$
+\begin{align}
+\ket{q_0q_1}
+&\to
+(B\otimes D)(A\otimes C)\ket{q_0q_1}
+\label{_auto3}\\
+&\to
+(BA)\otimes(DC)\ket{q_0q_1}
+\label{_auto4}\\
+&\to 
+BA\ket{q_0}DC\ket{q_1}
+. \label{_auto5}
+\end{align}
+$$
+
+<p>Note that the mathematical form is in reverse order from circuit form
+(\( AB\leftrightarrow BA \)). This is because the operator closest to the
+state (furthest to the right) acts first. Additionally, we are able to
+write the actions of the top two gates and the bottom two as acting
+separately on each qubit as every gate here is a single-qubit gate
+(acting on only one qubit). The same would not be true for certain
+two-qubit gates which would entangle the states of the two qubits, not
+allowing their state to be written in a separable form. Finally, we
+define the depth of a quantum circuit as the number of columns of
+gates. The circuit above thus has a depth of 2 because it contains two
+columns of gates, namely \( A\otimes C \) and \( B\otimes D \).
+</p>
+<h3 id="single-qubit-gates">Single-Qubit Gates </h3>
+
+<p>A single-qubit gate is a physical action that is applied to one qubit. It can be represented by a matrix \( U \) from the group SU(2). Any single-qubit gate can be parameterized by three angles: \( \theta \), \( \phi \), and \( \lambda \) as follows</p>
+
+$$
+\begin{align}
+\label{U}
+U(\theta,\phi,\lambda)
+=
+\begin{pmatrix}
+\cos\frac{\theta}{2} & -e^{i\lambda}\sin\frac{\theta}{2}
+\\
+e^{i\phi}\sin\frac{\theta}{2} & e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
+\end{pmatrix}
+.\end{align}$$
+
+<p>There are several widely used quantum gates, include the following:
+The Pauli gates correspond to the Pauli matrices
+</p>
+
+$$
+\begin{align}
+I
+&=
+\begin{pmatrix}
+1 & 0 \\
+0 & 1
+\end{pmatrix}
+\label{_auto6}
+\\
+X
+&=
+\begin{pmatrix}
+0 & 1 \\
+1 & 0
+\end{pmatrix}
+\label{_auto7}
+\\
+Y
+&=
+\begin{pmatrix}
+0 & -i \\
+i & 0
+\end{pmatrix}
+\label{_auto8}
+\\
+Z
+&=
+\begin{pmatrix}
+1 & 0 \\
+0 & -1
+\end{pmatrix}
+, \label{_auto9}
+\end{align}$$
+
+<p>which satisfy the relation</p>
+
+$$
+\begin{align}
+\comm{\sigma}{\tau}=i\epsilon_{\sigma\tau\upsilon}\upsilon
+, \label{_auto10}
+\end{align}
+$$
+
+<p>for \( \sigma,\tau,\upsilon\in\{X,Y,Z\} \). These gates form a basis for
+the algebra \( \mathfrak{su}(2) \). Exponentiating them will thus give us
+a basis for SU(2), the group within which all single-qubit gates
+live. These exponentiated Pauli gates are called rotation gates
+\( R_{\sigma}(\theta) \) because they rotate the quantum state around the
+axis \( \sigma=X,Y,Z \) of the Bloch sphere by an angle \( \theta \). They are
+defined as
+</p>
+
+$$
+\begin{align}
+R_X(\theta)
+&=
+e^{-i\frac{\theta}{2}X}
+=
+\begin{pmatrix}
+\cos\frac{\theta}{2} & -i\sin\frac{\theta}{2} \\
+-i\sin\frac{\theta}{2} & \cos\frac{\theta}{2} 
+\end{pmatrix},
+\label{_auto11}
+\\
+R_Y(\theta)
+&=
+e^{-i\frac{\theta}{2}Y}
+=
+\begin{pmatrix}
+\cos\frac{\theta}{2} & -\sin\frac{\theta}{2} \\
+\sin\frac{\theta}{2} & \cos\frac{\theta}{2} 
+\end{pmatrix},
+\label{_auto12}
+\\
+R_Z(\theta)
+&=
+e^{-i\frac{\theta}{2}Z}
+=
+\begin{pmatrix}
+e^{-i\theta/2} & 0 \\
+0 & e^{i\theta/2}
+\end{pmatrix}
+. \label{_auto13}
+\end{align}$$
+
+<p>Because they form a basis for \( \text{SU}(2) \), any single-qubit gate can be decomposed into three rotation gates. Indeed</p>
+
+$$
+\begin{align}
+R_z(\phi)R_y(\theta)R_z(\lambda)
+&=
+\begin{pmatrix}
+e^{-i\phi/2} & 0 \\
+0 & e^{i\phi/2}
+\end{pmatrix}
+\begin{pmatrix}
+\cos\frac{\theta}{2} & -\sin\frac{\theta}{2} \\
+\sin\frac{\theta}{2} & \cos\frac{\theta}{2} 
+\end{pmatrix}
+\begin{pmatrix}
+e^{-i\lambda/2} & 0 \\
+0 & e^{i\lambda/2}
+\end{pmatrix}
+\label{_auto14}
+\\
+&=
+e^{-i(\phi+\lambda)/2}
+\begin{pmatrix}
+\cos\frac{\theta}{2} & -e^{i\lambda}\sin\frac{\theta}{2}
+\\
+e^{i\phi}\sin\frac{\theta}{2} & e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
+\end{pmatrix}
+, \label{_auto15}
+\end{align}$$
+
+<p>which is, up to a global phase, equal to the expression for an arbitrary single-qubit gate \eqref{U}.</p>
+<h3 id="two-qubit-gates">Two-Qubit Gates </h3>
+
+<p>A two-qubit gate is a physical action that is applied to two
+qubits. It can be represented by a matrix \( U \) from the group
+SU(4). One important type of two-qubit gates are controlled gates,
+which work as follows: Suppose \( U \) is a single-qubit gate. A
+controlled-\( U \) gate (\( CU \)) acts on two qubits: a control qubit
+\( \ket{x} \) and a target qubit \( \ket{y} \). The controlled-\( U \) gate
+applies the identity \( I \) or the single-qubit gate \( U \) to the target
+qubit if the control gate is in the zero state \( \ket{0} \) or the one
+state \( \ket{1} \), respectively. The control qubit is not acted
+upon. This can be represented as follows:
+</p>
+
+$$
+\begin{align}
+CU\ket{xy}=
+\begin{cases}
+\ket{xy} & \text{if} \ \ket{x}=\ket{0}
+\label{_auto16}\\
+\ket{x}U\ket{y} & \text{if} \ \ket{x}=\ket{1}
+\end{cases}
+. \label{_auto17}
+\end{align}
+$$
+
+<p>The action of a controlled-\( U \) gate \( CU \) can be represented in a quantum circuit as follows</p>
+
+$$
+\begin{align}
+\Qcircuit @C=1em @R=3em 
+{
+\lstick{\ket{x}} & \ctrl{1} & \rstick{\ket{x}} \qw
+\label{_auto18}\\
+\lstick{\ket{y}} & \gate{U} & \rstick{\begin{cases}\ket{y}, & \ket{x}=\ket{0} 
+\label{_auto19}\\ U\ket{y}, & \ket{a}=\ket{x}\end{cases}} \qw
+}
+\label{_auto20}\\
+\nonumber
+\end{align}
+$$
+
+<p>It can be written in matrix form by writing it as a superposition of
+the two possible cases, each written as a simple tensor product
+</p>
+
+$$
+\begin{align}
+CU 
+&= \ket{0}\bra{0}\otimes I + \ket{1}\bra{1}\otimes U
+\label{_auto21}
+\\
+&=\begin{pmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & u_{00} & u_{01} \\
+0 & 0 & u_{10} & u_{11}
+\end{pmatrix}
+. \label{_auto22}
+\end{align}$$
+
+<p>One of the most fundamental controlled gates is the CNOT gate. It is
+defined as the controlled-\( X \) gate \( CX \) and thus flips the state of
+the target qubit if the control qubit is in the zero state
+\( \ket{0} \). It can be written in matrix form as follows:
+</p>
+
+$$
+\begin{align}
+\text{CNOT}
+=\begin{pmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0
+\end{pmatrix}
+. \label{_auto23}
+\end{align}$$
+
+<p>A widely used two-qubit gate that goes beyond the simple controlled function is the SWAP gate. It swaps the states of the two qubits it acts upon</p>
+
+$$
+\begin{align}
+\text{SWAP}\ket{xy}=\ket{yx}
+,\end{align}
+as depicted in the quantum circuit below
+\begin{align}
+\label{swap_def}
+\Qcircuit
+{
+\lstick{\ket{x}} & \qswap      & \rstick{\ket{y}} \qw
+\\
+\lstick{\ket{y}} & \qswap \qwx & \rstick{\ket{x}} \qw
+}
+, \label{_auto24}
+\end{align}
+$$
+
+<p>and has the following matrix form</p>
+
+$$
+\begin{align}
+\text{SWAP}
+=\begin{pmatrix}
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{pmatrix}
+. \label{_auto25}
+\end{align}$$
+
+<p>It can be decomposed into a series of three CNOTs, each of which has its directionality flipped from the previous</p>
+$$
+\begin{align}
+\Qcircuit
+{
+\lstick{\ket{x}} & \ctrl{1} & \targ     & \ctrl{1} & \rstick{\ket{y}} \qw
+\label{_auto26}\\
+\lstick{\ket{y}} & \targ    & \ctrl{-1} & \targ    & \rstick{\ket{x}} \qw
+}
+\label{_auto27}
+\end{align}
+$$
+
+<p>As for arbitrary two-qubit gates \( U\in\text{SU(4)} \), they can be
+optimally decomposed (up to a global phase) into the following
+sequence \<a href="#ref:kak">[1]</a> involving three parameters, fifteen elementary
+one-qubit gates and three CNOT gates
+</p>
+
+$$
+\begin{align}
+\Qcircuit
+{
+\qw & \gate{U_1} & \ctrl{1} & \gate{R_y(\theta_1)} & \targ      & \gate{R_y(\theta_2)} & \ctrl{1} & \gate{U_3} & \qw
+\label{_auto28}\\
+\qw & \gate{U_2} & \targ    & \gate{R_z(\theta_3)} & \ctrl{-1} & \qw                  & \targ     & \gate{U_4} & \qw
+}
+\label{_auto29}
+\end{align}
+$$
+
+<p>where \( U_1,U_2,U_3,U_4 \) are single-qubit gates, each of which can be
+decomposed into three elementary one-qubit gates (rotation
+gates). Additionally, \( \theta_1,\theta_2,\theta_3 \) are parameters to
+be determined by the arbitrary two-qubit gate to be
+decomposed. Two-qubit gates that are restricted to \( U\in\text{SO(4)} \)
+can be decomposed into a shorter depth circuit consisting of just
+twelve elementary single-qubit gates and two CNOT gates
+</p>
+
+$$
+\begin{align}
+\Qcircuit
+{
+\qw & \gate{R_z(\pi/2)} & \gate{R_y(\pi/2)} & \ctrl{1} & \gate{U_1} & \ctrl{1} & \gate{R^*_y(\pi/2)} & \gate{R^*_z(\pi/2)} & \qw
+\label{_auto30}\\
+\qw & \gate{R_z(\pi/2)} & \qw               & \targ    & \gate{U_2} & \targ    & \qw                 & \gate{R^*_z(\pi/2)} & \qw
+}
+\label{_auto31}
+\end{align}
+$$
+
 
 <div class="alert alert-block alert-block alert-text-normal">
 <b>Lecture next week we discuss algorithms for solving quantum mechanical problems, quantum gates and circuits</b>
@@ -374,7 +763,6 @@ plt.show
  <li> Introduction of Hamiltonians to study, the Lipkin model</li>
 </ol>
 </div>
-
 
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">
