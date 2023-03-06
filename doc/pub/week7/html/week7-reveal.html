@@ -1226,28 +1226,50 @@ plt.legend(bbox_to_anchor=(<span style="color: #B452CD">1.05</span>, <span style
     </div>
   </div>
 </div>
+<h3 id="quantum-circuit">Quantum Circuit </h3>
 
+<p>To solve the LM on a quantum computer we have to solve Schrodinger's equation. </p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\
+\tag{17}
+\end{equation}
+$$
+<p>&nbsp;<br>
 
-<!-- # <center> Quantum Circuit  </center> -->
-<!-- To solve the LM on a quantum computer we have to solve Schrodinger's equation. -->
-<!-- \begin{equation} -->
-<!-- H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\ -->
-<!-- \end{equation} -->
-<!-- In \<a href="#LM2">[1]</a> <a href="#LM1">[2]</a>, they take the LM Hamiltonian from equation (1) mapping the creation and annihilation operators to Pauli operators Z, X, Y using the Jordan-Wigner transformation. The Hamiltonian then takes the form of -->
-<!-- \begin{equation} -->
-<!-- H = \frac{\epsilon}{2}(Z_1+Z_1) - \frac{V}{2}(X_1X_2 - Y_1Y_2) -->
-<!-- \end{equation} -->
-<!-- Where the Pauli operators are the measurement basis which the quantum circuit is measured in. However, before measuring, we first have to prepare the initial state \( |\psi(\tilde{\theta})\rangle \) for \( \Omega=2 \) of the LM circuit -->
-<!-- \begin{equation} -->
-<!-- |\psi(\tilde{\theta})\rangle = cos(\tilde{\theta})|00\rangle+sin(\tilde{\theta})|11\rangle -->
-<!-- \end{equation} -->
-<!-- Where \( |00\rangle =|\uparrow\uparrow\rangle \), \( |11\rangle=|\downarrow\downarrow\rangle \), and \( \tilde{\theta}=\theta-\frac{\pi}{2} \). The LM circuit for \( \Omega=2 \) is: -->
-<!--  -->
-<!-- ![qc.JPG](attachment:qc.JPG) -->
-<!--  -->
-<!-- This type of problem resides in the pantheon of variational methods where we minimize \( \tilde{\theta} \). This problem was coded using IBM's python library Qiskit. Since this is a variational problem, the use of Qiskit's Variational Quantum Eigensolver (VQE) was used to find the optimal \( \tilde{\theta} \) that minimizes \( \langle\psi(\tilde{\theta})|H|\psi(\tilde{\theta})\rangle \). -->
+<p>We map the creation and annihilation operators to Pauli operators Z, X, Y using the Jordan-Wigner transformation. The Hamiltonian then takes the form of</p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+H = \frac{\epsilon}{2}(Z_1+Z_1) - \frac{V}{2}(X_1X_2 - Y_1Y_2),
+\tag{18}
+\end{equation}
+$$
+<p>&nbsp;<br>
 
-<!-- In[13]: -->
+<p>where the Pauli operators are the measurement basis which the quantum
+circuit is measured in. However, before measuring, we first have to
+prepare the initial state \( |\psi(\tilde{\theta})\rangle \) for
+\( \Omega=2 \) of the LM circuit
+</p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+|\psi(\tilde{\theta})\rangle = cos(\tilde{\theta})|00\rangle+sin(\tilde{\theta})|11\rangle,
+end{equation}
+$$
+<p>&nbsp;<br>
+
+<p>where \( |00\rangle =|\uparrow\uparrow\rangle \), \( |11\rangle=|\downarrow\downarrow\rangle \), and \( \tilde{\theta}=\theta-\frac{\pi}{2} \). </p>
+
+<p>This type of problem resides in the pantheon of variational methods
+where we minimize \( \tilde{\theta} \). This problem was coded using IBM's
+python library Qiskit. Since this is a variational problem, the use of
+Qiskit's Variational Quantum Eigensolver (VQE) was used to find the
+optimal \( \tilde{\theta} \) that minimizes
+\( \langle\psi(\tilde{\theta})|H|\psi(\tilde{\theta})\rangle \).
+</p>
 
 
 <!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
@@ -1297,187 +1319,240 @@ QC.draw(output=<span style="color: #CD5555">&#39;mpl&#39;</span>)
     </div>
   </div>
 </div>
+<h3 id="vqe-method-1">VQE method 1 </h3>
 
+<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
+<ul>
+<p><li> Quantum circuit
+<ol type="a"></li>
+ <p><li> Optimizer</li>
+ <p><li> Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator"</li>
 
-<!-- # <center> VQE method 1  </center> -->
-<!--  -->
-<!-- For this method, we will be using Qiskit's VQE function, where we specifiy -->
-<!--  -->
-<!-- - Quantum circuit -->
-<!-- -  Optimizer -->
-<!-- -  Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator" -->
-<!-- -  Initial point (i.e. \( \theta \) search space) -->
-<!-- - Hamiltonian/measurement basis -->
-<!--  -->
-<!-- To define the Hamiltonian, we will use qiskit Pauli operator functions I,Z,X,Y -->
-<!--  -->
-<!-- In this method, for a given \( \chi \), we will do a search over \( \theta \) from \( -\frac{\pi}{2} \) to \( \frac{\pi}{2} \) and picking out the minimum energy value -->
-
-<!-- In[15]: -->
-
-<!-- sim1 min example -->
-<p>sim = Aer.get_backend('qasm_simulator')
-adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000) #optimizer for VQE
-epsilon = 1
-omega = 2
-chi2 = [0.5,1]
+<p><li> Initial point (i.e. \( \theta \) search space)</li>
+ <p><li> Hamiltonian/measurement basis</li>
+</ol>
+<p>
+</ul>
+<p>
+<p>To define the Hamiltonian, we will use qiskit Pauli operator functions
+I,Z,X,Y.  In this method, for a given \( \chi \), we will do a search over
+\( \theta \) from \( -\frac{\pi}{2} \) to \( \frac{\pi}{2} \) and picking out the
+minimum energy value
 </p>
 
-<p>t = np.arange(-pi/2,pi/2,0.05) #0.1 step size finishs pretty fast
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22">#sim1 min example</span>
+sim = Aer.get_backend(<span style="color: #CD5555">&#39;qasm_simulator&#39;</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>) <span style="color: #228B22">#optimizer for VQE</span>
+epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi2 = [<span style="color: #B452CD">0.5</span>,<span style="color: #B452CD">1</span>]
+
+t = np.arange(-pi/<span style="color: #B452CD">2</span>,pi/<span style="color: #B452CD">2</span>,<span style="color: #B452CD">0.05</span>) <span style="color: #228B22">#0.1 step size finishs pretty fast</span>
 energy = []
-for x in chi2:
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi2:
     ev = []
     v = Vp(epsilon,omega,x)
-    for i in range(len(t)):
-        H = 0.5 * epsilon * ( Z ^ I ) +             0.5 * epsilon * ( I ^ Z ) -             0.5 * v * ( X ^ X ) +             0.5 * v * ( Y ^ Y )
-</p>
+    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(t)):
+        H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) +             <span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z ) -             <span style="color: #B452CD">0.5</span> * v * ( X ^ X ) +             <span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
 
-<p>        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
         result = vqe.compute_minimum_eigenvalue(H)
         ev.append(result.eigenvalue)
     energy.append(ev)
-</p>
 
-<!-- In[16]: -->
 
-<p>plt.plot(t,energy[0],label='$\chi=0.5$')
-plt.plot(t,energy[1],label='$\chi=1$')
-</p>
+plt.plot(t,energy[<span style="color: #B452CD">0</span>],label=<span style="color: #CD5555">&#39;$\chi=0.5$&#39;</span>)
+plt.plot(t,energy[<span style="color: #B452CD">1</span>],label=<span style="color: #CD5555">&#39;$\chi=1$&#39;</span>)
 
-<p>plt.xlabel('$\\theta$')
-plt.ylabel('Ground State Energy')
-plt.title('$E_{g.s}$ vs. \( \\theta \)')
+plt.xlabel(<span style="color: #CD5555">&#39;$\\theta$&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;Ground State Energy&#39;</span>)
+plt.title(<span style="color: #CD5555">&#39;$E_{g.s}$ vs. $\\theta$&#39;</span>)
 plt.legend()
-</p>
-
-<!-- In[17]: -->
-
-<p>epsilon = 1
-omega = 2
-chi3 = np.arange(0,2.1,0.1)
-t = np.arange(-pi/2,pi/2,0.1)
-adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi3 = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">2.1</span>,<span style="color: #B452CD">0.1</span>)
+t = np.arange(-pi/<span style="color: #B452CD">2</span>,pi/<span style="color: #B452CD">2</span>,<span style="color: #B452CD">0.1</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>)
 LM_sim = []
-for x in chi3:
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi3:
     v = Vp(epsilon,omega,x)
     ev = []
-    for i in range(len(t)):
-        H = 0.5 * epsilon * ( Z ^ I ) +            0.5 * epsilon * ( I ^ Z ) -            0.5 * v * ( X ^ X ) +            0.5 * v * ( Y ^ Y )
-</p>
-
-<p>        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
+    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(t)):
+        H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) +            <span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z ) -            <span style="color: #B452CD">0.5</span> * v * ( X ^ X ) +            <span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
+    
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
         result = vqe.compute_minimum_eigenvalue(H)
-</p>
 
-<p>        ev.append(result.eigenvalue)
-    LM_sim.append(min(ev))
-</p>
+        ev.append(result.eigenvalue)
+    LM_sim.append(<span style="color: #658b00">min</span>(ev))
 
-<!-- In[18]: -->
-
-<p>plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
-plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
-plt.scatter(chi3,LM_sim,label='QC sim',color='cyan')
-plt.axvline(1, color = 'k', linestyle='--')
-plt.ylabel('$E_{g.s}$')
-plt.xlabel('$\chi$')
-plt.title(f'$\Omega=2$')
+plt.plot(chi,np.array(exact),label=<span style="color: #CD5555">&#39;$E_{exact}$&#39;</span>,color=<span style="color: #CD5555">&#39;b&#39;</span>)
+plt.plot(chi,np.array(HF),label=<span style="color: #CD5555">&#39;$E_{HF}$&#39;</span>,color=<span style="color: #CD5555">&#39;g&#39;</span>)
+plt.scatter(chi3,LM_sim,label=<span style="color: #CD5555">&#39;QC sim&#39;</span>,color=<span style="color: #CD5555">&#39;cyan&#39;</span>)
+plt.axvline(<span style="color: #B452CD">1</span>, color = <span style="color: #CD5555">&#39;k&#39;</span>, linestyle=<span style="color: #CD5555">&#39;--&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;$E_{g.s}$&#39;</span>)
+plt.xlabel(<span style="color: #CD5555">&#39;$\chi$&#39;</span>)
+plt.title(<span style="color: #CD5555">f&#39;$\Omega=2$&#39;</span>)
 plt.legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Here we will be running the same code, but with a noise model of IBM Quantum Computer Manila.
+Note this code takes a lot longer to run, so maybe reduce range of \( \chi \) and \( t \) i.e. \( \theta \).
 </p>
 
-<!-- Here we will be running the same code, but with a noise model of IBM Quantum Computer Manila. -->
-<!--  -->
-<!-- Note this code takes a lot longer to run, so maybe reduce range of \( \chi \) and \( t \) i.e. \( \theta \). -->
 
-<!-- In[19]: -->
-
-<p>IBMQ.load_account()
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">IBMQ.load_account()
 provider = IBMQ.get_provider()
-IBMQC=provider.get_backend('ibmq_manila')
+IBMQC=provider.get_backend(<span style="color: #CD5555">&#39;ibmq_manila&#39;</span>)
 noise_model = NoiseModel.from_backend(IBMQC)
 qi = QuantumInstance(backend=sim, noise_model=noise_model)
-</p>
 
-<!-- In[ ]: -->
-
-<p>epsilon = 1
-omega = 2
-chi4 = np.arange(0,2.1,0.1)
-t = np.arange(-pi/2,pi/2,0.1)
-adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000)
+epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi4 = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">2.1</span>,<span style="color: #B452CD">0.1</span>)
+t = np.arange(-pi/<span style="color: #B452CD">2</span>,pi/<span style="color: #B452CD">2</span>,<span style="color: #B452CD">0.1</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>)
 LM_sim_noise = []
-for x in chi3:
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi3:
     v = Vp(epsilon,omega,x)
     ev = []
-    for i in range(len(t)):
-        H = 0.5 * epsilon * ( Z ^ I ) +            0.5 * epsilon * ( I ^ Z ) -            0.5 * v * ( X ^ X ) +            0.5 * v * ( Y ^ Y )
-</p>
-
-<p>        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=qi,expectation=AerPauliExpectation())
+    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(t)):
+        H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) +            <span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z ) -            <span style="color: #B452CD">0.5</span> * v * ( X ^ X ) +            <span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
+    
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=qi,expectation=AerPauliExpectation())
         result = vqe.compute_minimum_eigenvalue(H)
-</p>
 
-<p>        ev.append(result.eigenvalue)
-    LM_sim_noise.append(min(ev))
-</p>
+        ev.append(result.eigenvalue)
+    LM_sim_noise.append(<span style="color: #658b00">min</span>(ev))
 
-<!-- In[ ]: -->
 
-<p>plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
-plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
-plt.scatter(chi3,LM_sim,label='QC sim',color='cyan')
-plt.scatter(chi4,LM_sim_noise,label='QC sim with noise',color='r')
-plt.axvline(1, color = 'k', linestyle='--')
-plt.ylabel('$E_{g.s}$')
-plt.xlabel('$\chi$')
-plt.title(f'$\Omega=2$')
+plt.plot(chi,np.array(exact),label=<span style="color: #CD5555">&#39;$E_{exact}$&#39;</span>,color=<span style="color: #CD5555">&#39;b&#39;</span>)
+plt.plot(chi,np.array(HF),label=<span style="color: #CD5555">&#39;$E_{HF}$&#39;</span>,color=<span style="color: #CD5555">&#39;g&#39;</span>)
+plt.scatter(chi3,LM_sim,label=<span style="color: #CD5555">&#39;QC sim&#39;</span>,color=<span style="color: #CD5555">&#39;cyan&#39;</span>)
+plt.scatter(chi4,LM_sim_noise,label=<span style="color: #CD5555">&#39;QC sim with noise&#39;</span>,color=<span style="color: #CD5555">&#39;r&#39;</span>)
+plt.axvline(<span style="color: #B452CD">1</span>, color = <span style="color: #CD5555">&#39;k&#39;</span>, linestyle=<span style="color: #CD5555">&#39;--&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;$E_{g.s}$&#39;</span>)
+plt.xlabel(<span style="color: #CD5555">&#39;$\chi$&#39;</span>)
+plt.title(<span style="color: #CD5555">f&#39;$\Omega=2$&#39;</span>)
 plt.legend()
-</p>
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3 id="vqe-method-2">VQE method 2 </h3>
 
-<!-- # <center> VQE method 2  </center> -->
-<!--  -->
-<!-- For this method, we will be using Qiskit's VQE function, where we specifiy -->
-<!--  -->
-<!-- - Quantum circuit -->
-<!-- -  Optimizer -->
-<!-- -  Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator" -->
-<!-- - Hamiltonian/measurement basis -->
+<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
+<ol>
+<p><li> Quantum circuit</li>
+<p><li> Optimizer</li>
+<p><li> Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator"</li> 
+<p><li> Hamiltonian/measurement basis</li>
+</ol>
+<p>
 
-<!-- In[ ]: -->
-
-<p>epsilon = 1
-omega = 2
-chi5 = np.arange(0,2.1,0.1)
-adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000)
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi5 = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">2.1</span>,<span style="color: #B452CD">0.1</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>)
 LM_sim = []
-for x in chi5:
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi5:
     v = Vp(epsilon,omega,x)
-</p>
-
-<p>    H = 0.5 * epsilon * ( Z ^ I ) +        0.5 * epsilon * ( I ^ Z ) -        0.5 * v * ( X ^ X ) +        0.5 * v * ( Y ^ Y )</p>
-
-<p>    vqe = VQE(ansatz=LM_circuit(),optimizer=adam,quantum_instance=vec,expectation=AerPauliExpectation())
+    
+    H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) +        <span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z ) -        <span style="color: #B452CD">0.5</span> * v * ( X ^ X ) +        <span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
+    
+    vqe = VQE(ansatz=LM_circuit(),optimizer=adam,quantum_instance=vec,expectation=AerPauliExpectation())
     result = vqe.compute_minimum_eigenvalue(H)
     LM_sim.append(result.eigenvalue)
-</p>
 
-<!-- In[ ]: -->
 
-<p>plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
-plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
-plt.scatter(chi5,LM_sim,label='QC state vec',color='cyan')
-plt.axvline(1, color = 'k', linestyle='--')
-plt.ylabel('$E_{g.s}$')
-plt.xlabel('$\chi$')
-plt.title('$\Omega=2$')
+plt.plot(chi,np.array(exact),label=<span style="color: #CD5555">&#39;$E_{exact}$&#39;</span>,color=<span style="color: #CD5555">&#39;b&#39;</span>)
+plt.plot(chi,np.array(HF),label=<span style="color: #CD5555">&#39;$E_{HF}$&#39;</span>,color=<span style="color: #CD5555">&#39;g&#39;</span>)
+plt.scatter(chi5,LM_sim,label=<span style="color: #CD5555">&#39;QC state vec&#39;</span>,color=<span style="color: #CD5555">&#39;cyan&#39;</span>)
+plt.axvline(<span style="color: #B452CD">1</span>, color = <span style="color: #CD5555">&#39;k&#39;</span>, linestyle=<span style="color: #CD5555">&#39;--&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;$E_{g.s}$&#39;</span>)
+plt.xlabel(<span style="color: #CD5555">&#39;$\chi$&#39;</span>)
+plt.title(<span style="color: #CD5555">&#39;$\Omega=2$&#39;</span>)
 plt.legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>One thing to note is that method 2 only works for simulation. Where
+method 1 can work using IBM quantum computers. However, method 2 does
+run faster then method 1.
 </p>
-
-<!-- One thing to note is that method 2 only works for simulation. Where method 1 can work using IBM quantum computers. However, method 2 does run faster then method 1. -->
-
-<!-- In[ ]: -->
-
-<!-- In[ ]: -->
 </section>
 
 

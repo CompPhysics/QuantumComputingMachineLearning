@@ -599,26 +599,38 @@ plt.legend(bbox_to_anchor=(1.05, 1))
 
 
 
-# # <center> Quantum Circuit  </center>
-# To solve the LM on a quantum computer we have to solve Schrodinger's equation. 
-# \begin{equation}
-#     H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\
-# \end{equation}
-# In \cite{LM2,LM1}, they take the LM Hamiltonian from equation (1) mapping the creation and annihilation operators to Pauli operators Z, X, Y using the Jordan-Wigner transformation. The Hamiltonian then takes the form of
-# \begin{equation}
-#       H = \frac{\epsilon}{2}(Z_1+Z_1) - \frac{V}{2}(X_1X_2 - Y_1Y_2)
-# \end{equation}
-# Where the Pauli operators are the measurement basis which the quantum circuit is measured in. However, before measuring, we first have to prepare the initial state $|\psi(\tilde{\theta})\rangle$ for $\Omega=2$ of the LM circuit
-# \begin{equation}
-#      |\psi(\tilde{\theta})\rangle = cos(\tilde{\theta})|00\rangle+sin(\tilde{\theta})|11\rangle
-# \end{equation}
-# Where $|00\rangle =|\uparrow\uparrow\rangle$, $|11\rangle=|\downarrow\downarrow\rangle$, and $\tilde{\theta}=\theta-\frac{\pi}{2}$. The LM circuit for $\Omega=2$ is:
-# 
-# ![qc.JPG](attachment:qc.JPG)
-# 
-# This type of problem resides in the pantheon of variational methods where we minimize $\tilde{\theta}$. This problem was coded using IBM's python library Qiskit. Since this is a variational problem, the use of Qiskit's Variational Quantum Eigensolver (VQE) was used to find the optimal $\tilde{\theta}$ that minimizes $\langle\psi(\tilde{\theta})|H|\psi(\tilde{\theta})\rangle$.
+=== Quantum Circuit ===
 
-# In[13]:
+To solve the LM on a quantum computer we have to solve Schrodinger's equation. 
+!bt
+\begin{equation}
+H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\
+\end{equation}
+!et
+We map the creation and annihilation operators to Pauli operators Z, X, Y using the Jordan-Wigner transformation. The Hamiltonian then takes the form of
+!bt
+\begin{equation}
+H = \frac{\epsilon}{2}(Z_1+Z_1) - \frac{V}{2}(X_1X_2 - Y_1Y_2),
+\end{equation}
+!et
+where the Pauli operators are the measurement basis which the quantum
+circuit is measured in. However, before measuring, we first have to
+prepare the initial state $|\psi(\tilde{\theta})\rangle$ for
+$\Omega=2$ of the LM circuit
+!bt
+\begin{equation}
+|\psi(\tilde{\theta})\rangle = cos(\tilde{\theta})|00\rangle+sin(\tilde{\theta})|11\rangle,
+end{equation}
+!et
+where $|00\rangle =|\uparrow\uparrow\rangle$, $|11\rangle=|\downarrow\downarrow\rangle$, and $\tilde{\theta}=\theta-\frac{\pi}{2}$. 
+
+This type of problem resides in the pantheon of variational methods
+where we minimize $\tilde{\theta}$. This problem was coded using IBM's
+python library Qiskit. Since this is a variational problem, the use of
+Qiskit's Variational Quantum Eigensolver (VQE) was used to find the
+optimal $\tilde{\theta}$ that minimizes
+$\langle\psi(\tilde{\theta})|H|\psi(\tilde{\theta})\rangle$.
+
 
 !bc pycod 
 def LM_circuit():
@@ -636,23 +648,21 @@ QC = LM_circuit()
 QC.draw(output='mpl')
 !ec
 
-# # <center> VQE method 1  </center>
-# 
-# For this method, we will be using Qiskit's VQE function, where we specifiy 
-# 
-# - Quantum circuit
-# -  Optimizer
-# -  Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator" 
-# -  Initial point (i.e. $\theta$ search space)
-# - Hamiltonian/measurement basis
-# 
-# To define the Hamiltonian, we will use qiskit Pauli operator functions I,Z,X,Y
-# 
-# In this method, for a given $\chi$, we will do a search over $\theta$ from $-\frac{\pi}{2}$ to $\frac{\pi}{2}$ and picking out the minimum energy value
+=== VQE method 1 ===
 
-# In[15]:
+For this method, we will be using Qiskit's VQE function, where we specifiy 
+* Quantum circuit
+  o Optimizer
+  o Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator" 
+  o Initial point (i.e. $\theta$ search space)
+  o Hamiltonian/measurement basis
+ 
+To define the Hamiltonian, we will use qiskit Pauli operator functions
+I,Z,X,Y.  In this method, for a given $\chi$, we will do a search over
+$\theta$ from $-\frac{\pi}{2}$ to $\frac{\pi}{2}$ and picking out the
+minimum energy value
 
-
+!bc pycod
 #sim1 min example
 sim = Aer.get_backend('qasm_simulator')
 adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000) #optimizer for VQE
@@ -674,9 +684,6 @@ for x in chi2:
     energy.append(ev)
 
 
-# In[16]:
-
-
 plt.plot(t,energy[0],label='$\chi=0.5$')
 plt.plot(t,energy[1],label='$\chi=1$')
 
@@ -684,11 +691,9 @@ plt.xlabel('$\\theta$')
 plt.ylabel('Ground State Energy')
 plt.title('$E_{g.s}$ vs. $\\theta$')
 plt.legend()
+!ec
 
-
-# In[17]:
-
-
+!bc pycod
 epsilon = 1
 omega = 2
 chi3 = np.arange(0,2.1,0.1)
@@ -707,10 +712,6 @@ for x in chi3:
         ev.append(result.eigenvalue)
     LM_sim.append(min(ev))
 
-
-# In[18]:
-
-
 plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
 plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
 plt.scatter(chi3,LM_sim,label='QC sim',color='cyan')
@@ -719,24 +720,17 @@ plt.ylabel('$E_{g.s}$')
 plt.xlabel('$\chi$')
 plt.title(f'$\Omega=2$')
 plt.legend()
+!ec
 
+Here we will be running the same code, but with a noise model of IBM Quantum Computer Manila.
+Note this code takes a lot longer to run, so maybe reduce range of $\chi$ and $t$ i.e. $\theta$.
 
-# Here we will be running the same code, but with a noise model of IBM Quantum Computer Manila.
-# 
-# Note this code takes a lot longer to run, so maybe reduce range of $\chi$ and $t$ i.e. $\theta$.
-
-# In[19]:
-
-
+!bc pycod
 IBMQ.load_account()
 provider = IBMQ.get_provider()
 IBMQC=provider.get_backend('ibmq_manila')
 noise_model = NoiseModel.from_backend(IBMQC)
 qi = QuantumInstance(backend=sim, noise_model=noise_model)
-
-
-# In[ ]:
-
 
 epsilon = 1
 omega = 2
@@ -757,9 +751,6 @@ for x in chi3:
     LM_sim_noise.append(min(ev))
 
 
-# In[ ]:
-
-
 plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
 plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
 plt.scatter(chi3,LM_sim,label='QC sim',color='cyan')
@@ -769,20 +760,17 @@ plt.ylabel('$E_{g.s}$')
 plt.xlabel('$\chi$')
 plt.title(f'$\Omega=2$')
 plt.legend()
+!ec
 
+=== VQE method 2 ===
 
-# # <center> VQE method 2  </center>
-# 
-# For this method, we will be using Qiskit's VQE function, where we specifiy 
-# 
-# - Quantum circuit
-# -  Optimizer
-# -  Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator" 
-# - Hamiltonian/measurement basis
+For this method, we will be using Qiskit's VQE function, where we specifiy 
+o Quantum circuit
+o Optimizer
+o Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator" 
+o Hamiltonian/measurement basis
 
-# In[ ]:
-
-
+!bc pycod
 epsilon = 1
 omega = 2
 chi5 = np.arange(0,2.1,0.1)
@@ -798,9 +786,6 @@ for x in chi5:
     LM_sim.append(result.eigenvalue)
 
 
-# In[ ]:
-
-
 plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
 plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
 plt.scatter(chi5,LM_sim,label='QC state vec',color='cyan')
@@ -809,20 +794,9 @@ plt.ylabel('$E_{g.s}$')
 plt.xlabel('$\chi$')
 plt.title('$\Omega=2$')
 plt.legend()
+!ec
 
-
-# One thing to note is that method 2 only works for simulation. Where method 1 can work using IBM quantum computers. However, method 2 does run faster then method 1.
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
+One thing to note is that method 2 only works for simulation. Where
+method 1 can work using IBM quantum computers. However, method 2 does
+run faster then method 1.
 
