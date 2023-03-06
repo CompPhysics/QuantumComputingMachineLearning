@@ -38,29 +38,29 @@ circuit = qk.QuantumCircuit(qreg,creg) #Create your quantum circuit
 
 
 circuit.draw() #Draw circuit. It is empty
+!ec
 
+Thereafter we perform operations on qubit
 
-# # Perform operations on qubit
-
-
+!bc pycod 
 circuit.x(qreg[0]) #Applies a Pauli X gate to the first qubit in the quantum register
 circuit.draw()
+!ec
+
+and select  a qubit to measure and encode the results to a classical bit
 
 
-# # Chose a qubit to measure and encode the results to a classical bit
-
-
-
+!bc pycod 
 #Measure the first qubit in the quantum register
 #and encode the results to the first qubit in the classical register
 circuit.measure(qreg[0],creg[0])
 circuit.draw()
+!ec
+
+Thereafter we execute the circuit
 
 
-# # Execute circuit
-
-
-
+!bc pycod 
 backend = qk.Aer.get_backend('qasm_simulator') 
 #This is the device you want to use. It is an ideal simulation of a quantum device
 
@@ -83,12 +83,12 @@ result = job.result()
 counts = result.get_counts()
 print(counts)
 circuit.clear()
+!ec
+
+Now we create a two-qubit circuit and set up a Bell state
 
 
-# # Create a two-qubit circuit and set up a Bell state
-
-
-
+!bc pycod 
 n_qubits = 2
 n_cbits = 2
 qreg = qk.QuantumRegister(n_qubits)
@@ -105,26 +105,23 @@ circuit.cx(qreg[0],qreg[1])
 
 circuit.draw()
 
-
-
-
 circuit.measure(qreg,creg)
 circuit.draw()
+!ec
 
 
-# In[12]:
 
-
+!bc pycod 
 job = backend.run(circuit,shots=1000)
 result = job.result()
 counts = result.get_counts()
 print(counts)
 circuit.clear()
+!ec
 
+We apply a rotation to a qubit
 
-# # Apply rotation to qubit
-
-
+!bc pycod 
 theta = np.pi/3
 circuit.rx(theta, qreg[0]) #R_x(theta) rotation on the first qubit (qreg[0])
 circuit.measure(qreg,creg)
@@ -134,13 +131,13 @@ result = job.result()
 counts = result.get_counts()
 circuit.clear()
 print(counts)
+!ec
+
+Now we want to find the lowest eigenvalue of $$ H = c_1 Z_0 + c_2 Z_1 + c_3 X_0 Y_1 $$ 
+We will use $$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi> $$
 
 
-# # Find the lowest eigenvalue of $$ H = c_1 Z_0 + c_2 Z_1 + c_3 X_0 Y_1 $$ 
-# # We will use $$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi> $$
-
-
-
+!bc pycod 
 I = np.eye(2)
 X = np.array([[0,1],[1,0]])
 Y = np.array([[0,-1j],[1j,0]])
@@ -164,12 +161,12 @@ H
 
 
 H[0]
+!ec
+
+We create the ansatz
 
 
-# # Create ansatz
-
-
-
+!bc pycod 
 def ansatz(theta,n_qubits):
     qreg = qk.QuantumRegister(n_qubits)
     circuit = qk.QuantumCircuit(qreg)
@@ -188,12 +185,12 @@ n_qubits = 2
 circuit = circuit.compose(ansatz(theta,n_qubits))
 print('After ansatz')
 circuit.draw()
+!ec
+
+Now we change measurement basis
 
 
-# # Change measurement basis
-
-
-
+!bc pycod 
 def basis_change(h_i,n_qubits):
     qreg = qk.QuantumRegister(n_qubits)
     circuit = qk.QuantumCircuit(qreg)
@@ -215,14 +212,13 @@ circuit.draw()
 circuit = circuit.compose(basis_change(H[2],n_qubits))
 print('After basis transformation:')
 print(circuit.draw())
-
+!ec
         
 
-
-# # Get energy for given rotational parameters, theta
-
+Get energy for given rotational parameters $theta$
 
 
+!bc pycod 
 def get_energy(theta):
     n_qubits = 2
     qreg = qk.QuantumRegister(n_qubits)
@@ -256,24 +252,22 @@ def get_energy(theta):
 
 theta = np.random.randn(2)
 get_energy(theta)
-    
+!ec    
 
 
-# # Minimize energy with Scipy
+Minimize energy with Scipy
 
-
-
-
+!bc pycod 
 theta = np.random.randn(2)
 res = minimize(get_energy, theta, method='Powell',tol=1e-12)
 get_energy(res.x)
+!ec
+
+We define  a more flexible ansatz
 
 
-# ## We might need a more flexible ansatz
 
-
-
-
+!bc pycod 
 def ansatz(theta,n_qubits):
     qreg = qk.QuantumRegister(n_qubits)
     circuit = qk.QuantumCircuit(qreg)
@@ -292,13 +286,12 @@ def ansatz(theta,n_qubits):
 theta = np.random.randn(4)
 res = minimize(get_energy, theta, method='Powell',tol=1e-16)
 get_energy(res.x)
+!ec
+
+Minimize energy with gradient descent $$ \frac{\partial E (\theta_1,\dots,\theta_i,\dots,\theta_p)}{\partial \theta_i} = \frac{E(\theta_1,\dots,\theta_i + \pi/2,\dots, \theta_p) - E(\theta_1,\dots, \theta_i - \pi/2,\dots, \theta_p}{2} $$
 
 
-# # Minimize energy with gradient descent
-# # $$ \frac{\partial E (\theta_1,\dots,\theta_i,\dots,\theta_p)}{\partial \theta_i} = \frac{E(\theta_1,\dots,\theta_i + \pi/2,\dots, \theta_p) - E(\theta_1,\dots, \theta_i - \pi/2,\dots, \theta_p}{2} $$
-
-
-
+!bc pycod 
 epochs = 200
 theta = np.random.randn(4)
 for epoch in range(epochs):
@@ -318,12 +311,8 @@ for epoch in range(epochs):
 
 
 ===== Lipkin model =====
-#!/usr/bin/env python
-# coding: utf-8
 
-# In[1]:
-
-
+!bc pycod 
 import numpy as np
 import qiskit
 from qiskit.visualization import circuit_drawer
@@ -348,76 +337,89 @@ from IPython.display import Image
 import warnings
 warnings.filterwarnings('ignore')
 pi=np.pi
+!ec
+
+=== Lipkin Model ===
+
+The Lipkin Model (LM) was introduced by H. Lipkin, N. Meshkov, and A. Glick in 1965. The model considers two levels above and bellow the fermi level to which they are assigned an index of $\sigma_{\pm}$ each with degeneracy $\Omega$ over which fermions are distributed. Using the language of second quantunization representation, the LM
+ 
+!bt
+\begin{equation}
+     \hat{H}_{LM} = \frac{1}{2}\epsilon\sum_{m\sigma}a^{\dagger}_{m\sigma}a_{m\sigma} -\frac{1}{2}V\sum_{mm'\sigma}a^{\dagger}_{m\sigma}a^{\dagger}_{m'\sigma}a_{m'-\sigma}a_{m-\sigma},
+\end{equation}
+!et 
+where $\epsilon$ is the energy of the level, $V$ is the interaction
+strength, and $m=1,\cdots,\Omega$. The first term is a one-body
+interaction which counts the number of nucleons in the level. Where
+the second term is a two-body interaction that destroys and created
+nucleons up and down a level. One can introduce the quasi-spin
+operators defined as
 
 
-# # <center> Lipkin Model </center>
-# \center
-# The Lipkin Model (LM) was introduced by H. Lipkin, N. Meshkov, and A. Glick in 1965. The model considers two levels above and bellow the fermi level to which they are assigned an index of $\sigma_{\pm}$ each with degeneracy $\Omega$ over which fermions are distributed. Using the language of second quantunization representation, the LM
-# 
-# \begin{equation}
-#     \hat{H}_{LM} = \frac{1}{2}\epsilon\sum_{m\sigma}a^{\dagger}_{m\sigma}a_{m\sigma} -\frac{1}{2}V\sum_{mm'\sigma}a^{\dagger}_{m\sigma}a^{\dagger}_{m'\sigma}a_{m'-\sigma}a_{m-\sigma} 
-#     \tag{1}
-# \end{equation}
-# 
-# where $\epsilon$ is the energy of the level, $V$ is the interaction strength, and $m=1,\cdots,\Omega$. The first term is a one-body interaction which counts the number of nucleons in the level. Where the second term is a two-body interaction that destroys and created nucleons up and down a level. One can introduce the quasi-spin operators defined as
-# 
-# \begin{equation}
-#     \begin{split}
-#         \hat{K}_0 &= \frac{1}{2}\sum_{m=1}^{\Omega}(a^{\dagger}_{m+}a_{m+}-a^{\dagger}_{m-}a_{m-})\\ 
-#         \hat{K}_+ & = \sum_{m=1}^{\Omega}a^{\dagger}_{m+}a_{m-}\\
-#         \hat{K}_- & = (\hat{K}_+)^\dagger
-#     \end{split}
-#     \tag{2}
-# \end{equation}
-# 
-# These operators have the following SU(2) angular momentum commutation relation
-# \begin{equation}
-#     [\hat{K}_+,\hat{K}_-] =2\hat{K}_0, \hspace{1cm} [\hat{K}_0,\hat{K}_{\pm}]=\pm\hat{K}_{\pm}
-#     \tag{3}
-# \end{equation}
-# The LM Hammiltonian can be written using the quasi-spin operators as such
-# \begin{equation}
-#     \hat{H}_{LM} = \epsilon\hat{K}_0 -\frac{1}{2}V(\hat{K}_+\hat{K}_++\hat{K}_-\hat{K}_-)
-#     \tag{4}
-# \end{equation}
-# The quasi-spin operators act like lowering and raising angular momentum operators, as such they have these given properties
-# \begin{equation}
-#         \hat{K}_0|KK_0\rangle = K_0|KK_0\rangle\\
-#         \tag{5}
-# \end{equation}
-# \begin{equation}
-#     \hat{K}_{\pm}|KK_0\rangle =\sqrt{K(K+1)-K_0(K_0\pm 1)}|KK_0+1\rangle
-#     \tag{6}
-# \end{equation}
-# With these properties we can calculate the LM Hamiltonian matrix
-# \begin{equation}
-#     \langle KK_0|H_{LM}|KK_0'\rangle
-#     \tag{7}
-# \end{equation}
-# Where the non-zero elements are given by
-# \begin{equation}
-# \begin{split}
-#     \langle KK_0|H_{LM}|KK_0'\rangle & = \epsilon K_0\\
-#     \langle KK_0|H_{LM}|KK_0'\pm 2\rangle & = \langle KK_0\pm 2|H_{LM}|KK_0'\rangle \\
-#     &= -\frac{1}{2}VC
-# \end{split}
-#     \tag{8}
-# \end{equation}
-# Where C is the Clebsch-Gordan Coefficients one gets when $K_{\pm}^2$ operates on the state $|KK_0\rangle$.
-# Using equation (8) one can calculate the exact solution to the Lipkin Model for any $\Omega$.
-# 
-# The collective space of the Hamiltonian is $\Omega+1=3$, and is given by
-# \begin{equation}
-# \begin{pmatrix}
-# -\epsilon & 0 & -V\\
-# 0&0&0\\
-# -V&0&\epsilon
-# \end{pmatrix}
-# \end{equation}
+!bt 
+\begin{equation}
+     \begin{split}
+         \hat{K}_0 &= \frac{1}{2}\sum_{m=1}^{\Omega}(a^{\dagger}_{m+}a_{m+}-a^{\dagger}_{m-}a_{m-})\\ 
+         \hat{K}_+ & = \sum_{m=1}^{\Omega}a^{\dagger}_{m+}a_{m-}\\
+         \hat{K}_- & = (\hat{K}_+)^\dagger.
+     \end{split}
+\end{equation}
+!et
 
-# In[6]:
+These operators have the following SU(2) angular momentum commutation relation
+!bt
+\begin{equation}
+     [\hat{K}_+,\hat{K}_-] =2\hat{K}_0, \hspace{1cm} [\hat{K}_0,\hat{K}_{\pm}]=\pm\hat{K}_{\pm}.
+\end{equation}
+!et
+The LM Hammiltonian can be written using the quasi-spin operators as such
+!bt
+\begin{equation}
+     \hat{H}_{LM} = \epsilon\hat{K}_0 -\frac{1}{2}V(\hat{K}_+\hat{K}_++\hat{K}_-\hat{K}_-).
+\end{equation}
+!et
+The quasi-spin operators act like lowering and raising angular momentum operators, as such they have these given properties
+!bt
+\begin{equation}
+\hat{K}_0|KK_0\rangle = K_0|KK_0\rangle
+\end{equation}
+!et
+!bt
+\begin{equation}
+    \hat{K}_{\pm}|KK_0\rangle =\sqrt{K(K+1)-K_0(K_0\pm 1)}|KK_0+1\rangle,
+\end{equation}
+!et
+With these properties we can calculate the LM Hamiltonian matrix
+!bt
+\begin{equation}
+\langle KK_0|H_{LM}|KK_0'\rangle,
+\end{equation}
+!et
+where the non-zero elements are given by
+!bt
+\begin{equation}
+\begin{split}
+    \langle KK_0|H_{LM}|KK_0'\rangle & = \epsilon K_0\\
+     \langle KK_0|H_{LM}|KK_0'\pm 2\rangle & = \langle KK_0\pm 2|H_{LM}|KK_0'\rangle \\
+     &= -\frac{1}{2}VC,
+\end{split}
+\end{equation}
+!et
+where C is the Clebsch-Gordan Coefficients one gets when $K_{\pm}^2$ operates on the state $|KK_0\rangle$.
+Using equation (8) one can calculate the exact solution to the Lipkin Model for any $\Omega$.
+ 
+The collective space of the Hamiltonian is $\Omega+1=3$, and is given by
+!bt
+\begin{equation}
+\begin{pmatrix}-\epsilon & 0 & -V\\
+ 0&0&0\\
+ -V&0&\epsilon
+\end{pmatrix}
+\end{equation}
+!et
 
 
+!bc pycod 
 #function that sorts eigenvalues with its eigenvectors in accending order
 def eigen(A):
     eigenValues, eigenVectors = LA.eig(A)
@@ -459,10 +461,10 @@ def quasi_spin(E,V,N):
 def Vp(E,omega,chi):
   return (chi*E)/(omega-1)
 
+!ec
 
-# In[7]:
 
-
+!bc pycod 
 #parameters
 E = 1
 chi = np.arange(0,2.1,0.1)
@@ -479,83 +481,98 @@ for i in chi:
   EV0.append(EigenV[0])
   EV1.append(EigenV[1])
   EV2.append(EigenV[2])
+!ec
 
 
-# In[8]:
 
-
+!bc pycod 
 matrix = pd.DataFrame(Ham[5].real)
 print('Hamiltonian matrix')
 matrix.head()
+!ec
 
 
-# In[9]:
 
-
+!bc pycod 
 plt.plot(chi,EV0)
 plt.plot(chi,EV1)
 plt.plot(chi,EV2)
 plt.xlabel('$\chi$')
 plt.ylabel('Energy')
 plt.title('$\Omega=2$ exact Lipkin Model')
+!ec
+
+=== Hartree Fock ===
+A variational method in quantum mechanics, starts with the Schrodinger equation where one minimizes the energy for a given trail wave function $|\psi\rangle$.
+
+!bt
+\begin{equation}
+\delta\frac{\langle\psi |\hat{H}|\psi\rangle}{\langle\psi|\psi\rangle}=0
+\end{equation}
+!et
+
+The Hartree Fock (HF) method is a variational method that assumes that
+the exact N-body wavefunction of the system can be approimated by a
+single Slater determinant, where energy of the system is minimized and
+the trial wave function is the particle number conserving coherent
+product state. The SU(2) coherent states map a two-dimensional sphere
+known as the bloch sphere onto the complex plane,
+
+!bt
+\begin{equation}
+\tau = tan\frac{\theta}{2}e^{-i\phi}
+\end{equation}
+!et
+where the normalized coherent SU(2) state can be written in the language of LM:
+!bt
+\begin{equation}
+|\tau\rangle = \frac{1}{(1+|\tau|^2)^{\Omega/2}}e^{\tau\hat{K}_+}|\frac{\Omega}{2},-\frac{\Omega}{2}\rangle,
+\end{equation}
+!et
+The $E_{g.s}$ of the LM given HF coherent states is:
+!bt
+\begin{equation}
+E(\tau) = \langle \tau|\hat{H}_{LM}|\tau\rangle.
+\end{equation}
+!et
+To calculate equation the last euation, we use generating functions for:
+!bt
+\begin{equation}
+\begin{split}
+\langle \tau|\hat{K}_{0}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
+\langle \tau|\hat{K}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
+\end{split}
+\end{equation}
+!et
+Then using the definition of $\tau$ in equation (10) we can write down the energy:
+!bt
+\begin{equation}
+E(\tau) = -\frac{\epsilon}{2}\Omega(cos\theta+\frac{\chi}{2}sin^2\theta cos2\phi),
+\end{equation}
+!et
+where $\chi=\frac{V}{\epsilon}(\Omega-1)$. Minimizing $E(\tau)$ with respect to $\theta,\phi$, we obtain the ground state Hartree Fock energy
+!bt
+\begin{equation}
+\begin{split}
+E_{HF}  = -\frac{\Omega}{2}\epsilon &\hspace{1cm} \chi<1\\
+E_{HF}  = -\frac{\Omega}{4}\epsilon(\chi+\frac{1}{\chi}) &\hspace{1cm} \chi\ge 1
+\end{split}
+\end{equation}
+!et
 
 
-# # <center> Hartree Fock  </center>
-# A variational method in quantum mechanics, starts with the Schrodinger equation where one minimizes the energy for a given trail wave function $|\psi\rangle$.
-# \begin{equation}
-#     \delta\frac{\langle\psi |\hat{H}|\psi\rangle}{\langle\psi|\psi\rangle}=0
-#     \tag{9}
-# \end{equation}
-# The Hartree Fock (HF) method is a variational method that assumes that the exact N-body wavefunction of the system can be approimated by a single Slater determinant, where energy of the system is minimized and the trial wave function is the particle number conserving coherent product state. The SU(2) coherent states map a two-dimensional sphere known as the bloch sphere onto the complex plane,
-# \begin{equation}
-#     \tau = tan\frac{\theta}{2}e^{-i\phi}
-#     \tag{10}
-# \end{equation}
-#  where the normalized coherent SU(2) state can be written in the language of LM:
-# \begin{equation}
-#     |\tau\rangle = \frac{1}{(1+|\tau|^2)^{\Omega/2}}e^{\tau\hat{K}_+}|\frac{\Omega}{2},-\frac{\Omega}{2}\rangle
-#     \tag{11}
-# \end{equation}
-# The $E_{g.s}$ of the LM given HF coherent states is:
-# \begin{equation}
-#     E(\tau) = \langle \tau|\hat{H}_{LM}|\tau\rangle
-#     \tag{12}
-# \end{equation}
-# To calculate equation (12), we use generating functions for:
-# \begin{equation}
-# \begin{split}
-# \langle \tau|\hat{K}_{0}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
-# \langle \tau|\hat{K}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
-# \end{split}
-# \end{equation}
-# Then using the definition of $\tau$ in equation (10) we can write down the energy:
-# \begin{equation}
-#     E(\tau) = -\frac{\epsilon}{2}\Omega(cos\theta+\frac{\chi}{2}sin^2\theta cos2\phi)
-#     \tag{13}
-# \end{equation}
-# where $\chi=\frac{V}{\epsilon}(\Omega-1)$. Minimizing $E(\tau)$ with respect to $\theta,\phi$, we obtain the ground state Hartree Fock energy
-# \begin{equation}
-#     \begin{split}
-#         E_{HF}  = -\frac{\Omega}{2}\epsilon &\hspace{1cm} \chi<1\\
-#         E_{HF}  = -\frac{\Omega}{4}\epsilon(\chi+\frac{1}{\chi}) &\hspace{1cm} \chi\ge1
-#     \end{split}
-#     \tag{14}
-# \end{equation}
-
-# In[10]:
-
-
+!bc pycod 
 def E_HF(x,E,omega):
   if x < 1:
     EHF = -(omega/2)*E
   elif x >= 1:
     EHF = -(omega/4)*E*(x+(1/x))
   return EHF
+!ec
 
 
-# In[11]:
 
-
+!bc pycod 
 epsilon = 1
 Omega = 2
 
@@ -566,11 +583,11 @@ for x in chi:
     v = Vp(epsilon,omega,x)
     e,h = quasi_spin(epsilon,v,omega)
     exact.append(e[0].real)
+!ec
 
 
-# In[12]:
 
-
+!bc pycod 
 plt.plot(chi,HF,label='HF')
 plt.plot(chi,exact,label='exact')
 plt.xlabel('$\chi$')
@@ -578,6 +595,8 @@ plt.ylabel('Energy')
 plt.axvline(1, color = 'k', linestyle='--')
 plt.title('$\Omega=2$ exact Lipkin Model')
 plt.legend(bbox_to_anchor=(1.05, 1))
+!ec
+
 
 
 # # <center> Quantum Circuit  </center>
@@ -601,21 +620,21 @@ plt.legend(bbox_to_anchor=(1.05, 1))
 
 # In[13]:
 
-
+!bc pycod 
 def LM_circuit():
     theta = Parameter('theta')
     QC = QuantumCircuit(2)
     QC.ry(2*(theta-np.pi/2),0)
     QC.cnot(0,1)
     return QC
+!ec
 
 
-# In[14]:
 
-
+!bc pycod 
 QC = LM_circuit()
 QC.draw(output='mpl')
-
+!ec
 
 # # <center> VQE method 1  </center>
 # 
