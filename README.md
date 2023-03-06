@@ -77,6 +77,9 @@
   - Quantum Phase estimation algorithm
   - VQE, Variational Quantum Eigensolver
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
+  - Video of lecture at https://youtu.be/uf9xwcl2IEE
+  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch6.pdf    
+
 
 ##  March 13-17, 2023. Solving quantum mechanical problems
   - Analyzing the solution of eigenvalue problems using the Lipkin model
