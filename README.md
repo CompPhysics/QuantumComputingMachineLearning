@@ -84,7 +84,8 @@
 ##  March 13-17, 2023. Solving quantum mechanical problems
   - Analyzing the solution of eigenvalue problems using the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
-
+  - Video of lecture at https://youtu.be/ffIwxiUJGT4
+  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch13.pdf    
 ## March 20-24, 2023. Second quantization and Hamiltonians for quantum computing
   - Second quantization
   - Jordan-Wigner transformation
