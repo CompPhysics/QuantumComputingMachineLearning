@@ -16,9 +16,9 @@ DATE: today
 !split
 ===== Simple Hamiltonian, the Lipkin model =====
 
-We will study a schematic model (the Lipkin model, Nucl.
-Phys. {\bf 62} (1965) 188) for the interaction among  $2$ and more 
-fermions that can occupy two different energy levels. Each levels has degeneration $d=4$. The two levels have quantum numbers $\sigma=\pm 1$,
+We will study a schematic model (the Lipkin model, see Nuclear
+Physics _62_ (1965) 188), for the interaction among  $2$ and more 
+fermions that can occupy two different energy levels. For four fermions Each levels has degeneration $d=4$. The two levels have quantum numbers $\sigma=\pm 1$,
 with the upper level having  $\sigma=+1$ and energy
 $\varepsilon_{1}=
 \varepsilon/2$. The lower level  has $\sigma=-1$ and energy
@@ -26,7 +26,7 @@ $\varepsilon_{2}=-\varepsilon/2$.
 In addition, the substates  of each level are characterized  
 by the quantum numbers $p=1,2,3,4$.
 
-We define the single-particle states
+We define the single-particle states (for the four fermion case which we will work on here)
 !bt
 \[
 \vert u_{\sigma =-1,p}\rangle=a_{-p}^{\dagger}\vert 0\rangle
@@ -94,7 +94,7 @@ a_{p\sigma}^{\dagger}a_{p\sigma}.
 \]
 !et
 
-We have the following quasispon operators
+We have the following quasispin operators
 !bt
 \begin{align}
 J_{\pm} = \sum_p a_{p\pm}^\dagger a_{p\mp},
@@ -485,7 +485,7 @@ We can use the lowering and raising operators for spin in order to define the ot
 \begin{align}
 J_+ \vert J,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z + 1)} \vert J,J_z + 1\rangle,
 label{eq:J+ket} \\
-J_- \vertJ,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z - 1)} \vert J,J_z - 1\rangle.
+J_- \vert J,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z - 1)} \vert J,J_z - 1\rangle.
 label{eq:J-ket}
 \end{align}
 !et
@@ -616,7 +616,7 @@ The quasi-spin operators act like lowering and raising angular momentum operator
 With these properties we can calculate the LM Hamiltonian matrix
 !bt
 \begin{equation}
-\langle JJ_z|H_{LM}|JKJ_z'\rangle,
+\langle JJ_z|H_{LM}|JJ_z'\rangle,
 \end{equation}
 !et
 where the non-zero elements are given by
@@ -727,6 +727,7 @@ plt.title('$\Omega=2$ exact Lipkin Model')
 !ec
 
 === Hartree Fock ===
+
 A variational method in quantum mechanics, starts with the Schrodinger equation where one minimizes the energy for a given trail wave function $|\psi\rangle$.
 
 !bt
@@ -763,8 +764,8 @@ To calculate equation the last euation, we use generating functions for:
 !bt
 \begin{equation}
 \begin{split}
-\langle \tau|\hat{K}_{0}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
-\langle \tau|\hat{K}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
+\langle \tau|\hat{J}_{z}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
+\langle \tau|\hat{J}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
 \end{split}
 \end{equation}
 !et
@@ -831,7 +832,7 @@ To solve the LM on a quantum computer we have to solve Schrodinger's equation.
 H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\
 \end{equation}
 !et
-We map the creation and annihilation operators to Pauli operators Z, X, Y using the Jordan-Wigner transformation. The Hamiltonian then takes the form of
+We map the creation and annihilation operators to Pauli spin matrices/operators Z, X, Y (show this). The Hamiltonian then takes the form of
 !bt
 \begin{equation}
 H = \frac{\epsilon}{2}(Z_1+Z_1) - \frac{V}{2}(X_1X_2 - Y_1Y_2),
@@ -843,7 +844,7 @@ prepare the initial state $|\psi(\tilde{\theta})\rangle$ for
 $\Omega=2$ of the LM circuit
 !bt
 \begin{equation}
-|\psi(\tilde{\theta})\rangle = cos(\tilde{\theta})|00\rangle+sin(\tilde{\theta})|11\rangle,
+\vert\psi(\tilde{\theta})\rangle = \cos{(\tilde{\theta})}\vert 00\rangle+\sin{(\tilde{\theta})}\vert 11\rangle,
 end{equation}
 !et
 where $|00\rangle =|\uparrow\uparrow\rangle$, $|11\rangle=|\downarrow\downarrow\rangle$, and $\tilde{\theta}=\theta-\frac{\pi}{2}$. 
@@ -872,7 +873,7 @@ QC = LM_circuit()
 QC.draw(output='mpl')
 !ec
 
-=== VQE method 1 ===
+=== VQE method ===
 
 For this method, we will be using Qiskit's VQE function, where we specifiy 
 * Quantum circuit
@@ -881,7 +882,7 @@ For this method, we will be using Qiskit's VQE function, where we specifiy
   o Initial point (i.e. $\theta$ search space)
   o Hamiltonian/measurement basis
  
-To define the Hamiltonian, we will use qiskit Pauli operator functions
+To define the Hamiltonian, we will use the Qiskit Pauli operator functions
 I,Z,X,Y.  In this method, for a given $\chi$, we will do a search over
 $\theta$ from $-\frac{\pi}{2}$ to $\frac{\pi}{2}$ and picking out the
 minimum energy value
@@ -946,47 +947,7 @@ plt.title(f'$\Omega=2$')
 plt.legend()
 !ec
 
-Here we will be running the same code, but with a noise model of IBM Quantum Computer Manila.
-Note this code takes a lot longer to run, so maybe reduce range of $\chi$ and $t$ i.e. $\theta$.
-
-!bc pycod
-IBMQ.load_account()
-provider = IBMQ.get_provider()
-IBMQC=provider.get_backend('ibmq_manila')
-noise_model = NoiseModel.from_backend(IBMQC)
-qi = QuantumInstance(backend=sim, noise_model=noise_model)
-
-epsilon = 1
-omega = 2
-chi4 = np.arange(0,2.1,0.1)
-t = np.arange(-pi/2,pi/2,0.1)
-adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000)
-LM_sim_noise = []
-for x in chi3:
-    v = Vp(epsilon,omega,x)
-    ev = []
-    for i in range(len(t)):
-        H = 0.5 * epsilon * ( Z ^ I ) +            0.5 * epsilon * ( I ^ Z ) -            0.5 * v * ( X ^ X ) +            0.5 * v * ( Y ^ Y )
-    
-        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=qi,expectation=AerPauliExpectation())
-        result = vqe.compute_minimum_eigenvalue(H)
-
-        ev.append(result.eigenvalue)
-    LM_sim_noise.append(min(ev))
-
-
-plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
-plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
-plt.scatter(chi3,LM_sim,label='QC sim',color='cyan')
-plt.scatter(chi4,LM_sim_noise,label='QC sim with noise',color='r')
-plt.axvline(1, color = 'k', linestyle='--')
-plt.ylabel('$E_{g.s}$')
-plt.xlabel('$\chi$')
-plt.title(f'$\Omega=2$')
-plt.legend()
-!ec
-
-=== VQE method 2 ===
+=== VQE method using Qiskit ===
 
 For this method, we will be using Qiskit's VQE function, where we specifiy 
 o Quantum circuit
@@ -1020,9 +981,7 @@ plt.title('$\Omega=2$')
 plt.legend()
 !ec
 
-One thing to note is that method 2 only works for simulation. Where
-method 1 can work using IBM quantum computers. However, method 2 does
-run faster then method 1.
+Typically, running with Qiskit's own VQE is faster.
 
 !bblock Lecture next week we discuss the quantum Fourier transform and the phase estimatiaon algorithm
   o Quantum Fourier transform
