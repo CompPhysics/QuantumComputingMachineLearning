@@ -65,7 +65,6 @@ doconce format html week8.do.txt --html_style=bootstrap --pygments_html_style=de
                2,
                None,
                'quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model'),
-              ('Lipkin Model', 3, None, 'lipkin-model'),
               ('Hartree Fock', 3, None, 'hartree-fock'),
               ('Quantum Circuit', 3, None, 'quantum-circuit'),
               ('VQE method 1', 3, None, 'vqe-method-1'),
@@ -111,7 +110,6 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#constructing-the-hamiltonian-matrix-for-j-2" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Constructing the Hamiltonian matrix for \( J=2 \)</a></li>
      <!-- navigation toc: --> <li><a href="#variational-quantum-eigensolver" style="font-size: 80%;"><b>Variational Quantum Eigensolver</b></a></li>
      <!-- navigation toc: --> <li><a href="#quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model" style="font-size: 80%;"><b>Quantum computing and solving  the eigenvalue problem for the Lipkin model</b></a></li>
-     <!-- navigation toc: --> <li><a href="#lipkin-model" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Lipkin Model</a></li>
      <!-- navigation toc: --> <li><a href="#hartree-fock" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Hartree Fock</a></li>
      <!-- navigation toc: --> <li><a href="#quantum-circuit" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Quantum Circuit</a></li>
      <!-- navigation toc: --> <li><a href="#vqe-method-1" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;VQE method 1</a></li>
@@ -632,6 +630,7 @@ $$
 
 <p>and \( J \) is a good quantum number.</p>
 <h3 id="constructing-the-hamiltonian-matrix-for-j-2" class="anchor">Constructing the Hamiltonian matrix for \( J=2 \) </h3>
+
 <p>We start with the state (unique) where all spins point down</p>
 $$
 \begin{equation}
@@ -646,9 +645,9 @@ We can use the lowering and raising operators for spin in order to define the ot
 </p>
 $$
 \begin{align}
-J_+ \vert J,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z + 1)} \ket{J,J_z + 1},
+J_+ \vert J,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z + 1)} \vert J,J_z + 1\rangle,
 \label{eq:J+ket} \\
-J_- \vertJ,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z - 1)} \ket{J,J_z - 1}.
+J_- \vertJ,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z - 1)} \vert J,J_z - 1\rangle.
 \label{eq:J-ket}
 \end{align}
 $$
@@ -657,13 +656,13 @@ $$
 \( J_+ \) on \( \vert 2,-2\rangle \)
 </p>
 $$
-J_+ \vert 2,-2\rangle = \sqrt{2(2+1) - (-2)(-2+1)} \ket{2,-2+1} =\sqrt{6 - 2} \ket{2,-1} = 2\vert 2,-1\rangle,
+J_+ \vert 2,-2\rangle = \sqrt{2(2+1) - (-2)(-2+1)} \vert 2,-2+1\rangle =\sqrt{6 - 2} \vert 2,-1\rangle = 2\vert 2,-1\rangle,
 $$
 
 <p>which gives</p>
 $$
 \begin{align}
-\vert 2,-1\rangle &= \frac{1}{2} J_+ \ket{2,-2} \notag 
+\vert 2,-1\rangle &= \frac{1}{2} J_+ \vert 2,-2\rangle \notag 
 \label{_auto1}\\
 &= \frac{1}{2} \sum_p a_{p+}^\dagger a_{p-} a_{1-}^{\dagger} a_{2-}^{\dagger}
 a_{3-}^{\dagger} a_{4-}^{\dagger} \vert 0\rangle \notag 
@@ -679,7 +678,7 @@ $$
 
 <p>We can construct all the other states in the same way. That is</p>
 $$
-J_+ \ket{2,-1} = \sqrt{2(2+1) - (-1)(-1+1)} \ket{2,-1+1} = \sqrt{6} \ket{2,0},
+J_+ \vert 2,-1\rangle = \sqrt{2(2+1) - (-1)(-1+1)} \vert 2,-1+1\rangle = \sqrt{6} \vert 2,0\rangle,
 $$
 
 <p>which results in</p>
@@ -790,72 +789,22 @@ pi<span style="color: #666666">=</span>np<span style="color: #666666">.</span>pi
     </div>
   </div>
 </div>
-<h3 id="lipkin-model" class="anchor">Lipkin Model </h3>
 
-<p>The Lipkin Model (LM) was introduced by H. Lipkin, N. Meshkov, and A. Glick in 1965. The model considers two levels above and bellow the fermi level to which they are assigned an index of \( \sigma_{\pm} \) each with degeneracy \( \Omega \) over which fermions are distributed. Using the language of second quantunization representation, the LM</p>
-
+<p>We turn now to a simpler Lipkin model without the \( W \)-term and a total spin of \( J=1 \) as maximum value of the spin, with a Hamiltonian</p>
 $$
 \begin{equation}
-     \hat{H}_{LM} = \frac{1}{2}\epsilon\sum_{m\sigma}a^{\dagger}_{m\sigma}a_{m\sigma} -\frac{1}{2}V\sum_{mm'\sigma}a^{\dagger}_{m\sigma}a^{\dagger}_{m'\sigma}a_{m'-\sigma}a_{m-\sigma},
+     \hat{H}_{LM} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
 \label{_auto3}
 \end{equation}
 $$
 
-<p>where \( \epsilon \) is the energy of the level, \( V \) is the interaction
-strength, and \( m=1,\cdots,\Omega \). The first term is a one-body
-interaction which counts the number of nucleons in the level. Where
-the second term is a two-body interaction that destroys and created
-nucleons up and down a level. One can introduce the quasi-spin
-operators defined as
+<p>The quasi-spin operators act like lowering and raising angular momentum operators, as discussed earlier.
+With these properties we can calculate the LM Hamiltonian matrix
 </p>
-
 $$
 \begin{equation}
-     \begin{split}
-         \hat{K}_0 &= \frac{1}{2}\sum_{m=1}^{\Omega}(a^{\dagger}_{m+}a_{m+}-a^{\dagger}_{m-}a_{m-})\\ 
-         \hat{K}_+ & = \sum_{m=1}^{\Omega}a^{\dagger}_{m+}a_{m-}\\
-         \hat{K}_- & = (\hat{K}_+)^\dagger.
-     \end{split}
+\langle JJ_z|H_{LM}|JKJ_z'\rangle,
 \label{_auto4}
-\end{equation}
-$$
-
-<p>These operators have the following SU(2) angular momentum commutation relation</p>
-$$
-\begin{equation}
-     [\hat{K}_+,\hat{K}_-] =2\hat{K}_0, \hspace{1cm} [\hat{K}_0,\hat{K}_{\pm}]=\pm\hat{K}_{\pm}.
-\label{_auto5}
-\end{equation}
-$$
-
-<p>The LM Hammiltonian can be written using the quasi-spin operators as such</p>
-$$
-\begin{equation}
-     \hat{H}_{LM} = \epsilon\hat{K}_0 -\frac{1}{2}V(\hat{K}_+\hat{K}_++\hat{K}_-\hat{K}_-).
-\label{_auto6}
-\end{equation}
-$$
-
-<p>The quasi-spin operators act like lowering and raising angular momentum operators, as such they have these given properties</p>
-$$
-\begin{equation}
-\hat{K}_0|KK_0\rangle = K_0|KK_0\rangle
-\label{_auto7}
-\end{equation}
-$$
-
-$$
-\begin{equation}
-    \hat{K}_{\pm}|KK_0\rangle =\sqrt{K(K+1)-K_0(K_0\pm 1)}|KK_0+1\rangle,
-\label{_auto8}
-\end{equation}
-$$
-
-<p>With these properties we can calculate the LM Hamiltonian matrix</p>
-$$
-\begin{equation}
-\langle KK_0|H_{LM}|KK_0'\rangle,
-\label{_auto9}
 \end{equation}
 $$
 
@@ -863,26 +812,26 @@ $$
 $$
 \begin{equation}
 \begin{split}
-    \langle KK_0|H_{LM}|KK_0'\rangle & = \epsilon K_0\\
-     \langle KK_0|H_{LM}|KK_0'\pm 2\rangle & = \langle KK_0\pm 2|H_{LM}|KK_0'\rangle \\
+    \langle JJ_z|H_{LM}|JJ_z'\rangle & = \epsilon J_z\\
+     \langle JJ_z|H_{LM}|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H_{LM}|JJ_z'\rangle \\
      &= -\frac{1}{2}VC,
 \end{split}
-\label{_auto10}
+\label{_auto5}
 \end{equation}
 $$
 
-<p>where C is the Clebsch-Gordan Coefficients one gets when \( K_{\pm}^2 \) operates on the state \( |KK_0\rangle \).
-Using equation (8) one can calculate the exact solution to the Lipkin Model for any \( \Omega \).
+<p>where \( C \) is the Clebsch-Gordan coefficients one gets when \( J_{\pm}^2 \) operates on the state \( |JJ_z\rangle \).
+Using the above definitions  we can calculate the exact solution to the Lipkin model.
 </p>
 
-<p>The collective space of the Hamiltonian is \( \Omega+1=3 \), and is given by</p>
+<p>The Hamiltonian is given by</p>
 $$
 \begin{equation}
 \begin{pmatrix}-\epsilon & 0 & -V\\
  0&0&0\\
  -V&0&\epsilon
 \end{pmatrix}
-\label{_auto11}
+\label{_auto6}
 \end{equation}
 $$
 
@@ -1036,7 +985,7 @@ plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;
 $$
 \begin{equation}
 \delta\frac{\langle\psi |\hat{H}|\psi\rangle}{\langle\psi|\psi\rangle}=0
-\label{_auto12}
+\label{_auto7}
 \end{equation}
 $$
 
@@ -1051,7 +1000,7 @@ known as the bloch sphere onto the complex plane,
 $$
 \begin{equation}
 \tau = tan\frac{\theta}{2}e^{-i\phi}
-\label{_auto13}
+\label{_auto8}
 \end{equation}
 $$
 
@@ -1059,7 +1008,7 @@ $$
 $$
 \begin{equation}
 |\tau\rangle = \frac{1}{(1+|\tau|^2)^{\Omega/2}}e^{\tau\hat{K}_+}|\frac{\Omega}{2},-\frac{\Omega}{2}\rangle,
-\label{_auto14}
+\label{_auto9}
 \end{equation}
 $$
 
@@ -1067,7 +1016,7 @@ $$
 $$
 \begin{equation}
 E(\tau) = \langle \tau|\hat{H}_{LM}|\tau\rangle.
-\label{_auto15}
+\label{_auto10}
 \end{equation}
 $$
 
@@ -1078,7 +1027,7 @@ $$
 \langle \tau|\hat{K}_{0}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
 \langle \tau|\hat{K}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
 \end{split}
-\label{_auto16}
+\label{_auto11}
 \end{equation}
 $$
 
@@ -1086,7 +1035,7 @@ $$
 $$
 \begin{equation}
 E(\tau) = -\frac{\epsilon}{2}\Omega(cos\theta+\frac{\chi}{2}sin^2\theta cos2\phi),
-\label{_auto17}
+\label{_auto12}
 \end{equation}
 $$
 
@@ -1097,7 +1046,7 @@ $$
 E_{HF}  = -\frac{\Omega}{2}\epsilon &\hspace{1cm} \chi < 1\\
 E_{HF}  = -\frac{\Omega}{4}\epsilon(\chi+\frac{1}{\chi}) &\hspace{1cm} \chi\ge 1
 \end{split}
-\label{_auto18}
+\label{_auto13}
 \end{equation}
 $$
 
@@ -1190,7 +1139,7 @@ plt<span style="color: #666666">.</span>legend(bbox_to_anchor<span style="color:
 $$
 \begin{equation}
 H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\
-\label{_auto19}
+\label{_auto14}
 \end{equation}
 $$
 
@@ -1198,7 +1147,7 @@ $$
 $$
 \begin{equation}
 H = \frac{\epsilon}{2}(Z_1+Z_1) - \frac{V}{2}(X_1X_2 - Y_1Y_2),
-\label{_auto20}
+\label{_auto15}
 \end{equation}
 $$
 
