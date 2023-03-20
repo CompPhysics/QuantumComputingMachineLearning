@@ -86,12 +86,12 @@
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
   - Video of lecture at https://youtu.be/ffIwxiUJGT4
   - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch13.pdf    
-## March 20-24, 2023. Second quantization and Hamiltonians for quantum computing
-  - Second quantization
-  - Jordan-Wigner transformation
-  - Suzuki-Trotter approximation
+## March 20-24, 2023. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model and 
+and project 1
+  - VQE and Qiskit
+  - Discussion of project 1
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
-
+- Video of lecture at https://youtu.be/ZKv8pEy3Y_4
 ## March 27-31, 2023. Suzuki-Trotter approximation
   - Suzuki-Trotter approximation and quantum computing
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
