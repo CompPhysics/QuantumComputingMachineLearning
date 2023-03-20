@@ -9,7 +9,6 @@ DATE: today
 !bblock 
   o Simple Hamiltonian, the Lipkin model
   o Introducing the Variational Quantum Eigensolver (VQE)
-  o Analyzing the solution of eigenvalue problems using the Lipkin model
 !eblock
 
 * "Video of lecture":"https://youtu.be/ffIwxiUJGT4"
@@ -577,13 +576,233 @@ This will be added later.
 !split
 ===== Variational Quantum Eigensolver =====
 
+One initial algorithm to estimate the eigen-energies of a quantum
+Hamiltonian was quantum phase estimation. In it, one
+encodes the eigen-energies, one binary bit at a time (up to $n$ bits),
+into the complex phases of the quantum states of the Hilbert space for
+$n$ qubits. It does this by applying powers of controlled unitary
+evolution operators to a quantum state that can be expanded in terms
+of the Hamiltonian's eigenvectors of interest. The eigen-energies are
+encoded into the complex phases in such a way that taking the inverse
+quantum Fourier transformation of the states into which the
+eigen-energies are encoded results in a measurement probability
+distribution that has peaks around the bit strings that represent a
+binary fraction which corresponds to the eigen-energies of the quantum
+state acted upon by the controlled unitary operators. While quantum
+phase estimation (QPE) is provably efficient, non-hybrid, and
+non-variational, the number of qubits and length of circuits required
+is too great for our NISQ era quantum computers. Thus, QPE is only
+efficiently applicable to large, fault-tolerant quantum computers that
+likely won't exist in the near, but the far future.
 
-"See whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch13.pdf"
+Therefore, a different algorithm for finding the eigen-energies of a
+quantum Hamiltonian was put forth in 2014 called the variational
+quantum eigensolver, commonly referred to as VQE. The
+algorithm is hybrid, meaning that it requires the use of both a
+quantum computer and a classical computer. It is also variational,
+meaning that it relies, ultimately, on solving an optimization problem
+by varying parameters and thus is not as deterministic as QPE. The
+variational quantum eigensolver is based on the variational principle:
+The expectation value of a Hamiltonian $H$ in a state
+$|\psi(\theta)\rangle$ parameterized by a set of angles $\theta$, is
+always greater than or equal to the minimum eigen-energy $E_0$. To see
+this, let $|n\rangle$ be the eigenstates of $H$, that is
+
+!bt
+\begin{align}
+H|n\rangle=E_n|n\rangle.
+\end{align}
+!et
+
+We can then expand our state $|\psi(\theta)\rangle$ in terms of said eigenstates
+
+!bt
+\begin{align}
+|\psi(\theta)\rangle=\sum_nc_n|n\rangle,
+\end{align}
+!et
+and plug this into the expectation value to yield
+!bt
+\begin{align}
+\langle\psi(\theta)|H|\psi(\theta)\rangle
+&=
+\sum_{nm}c^*_mc_n\langle m|H|n \rangle
+\nonumber
+\\
+&=
+\sum_{nm}c^*_mc_nE_n\langle m|n \rangle
+\nonumber
+\\
+&=
+\sum_{nm}\delta_{nm}c^*_mc_nE_n
+\nonumber
+\\
+&=
+\sum_{n}|c_n|^2E_n
+\nonumber
+\\
+&\geq
+E_0\sum_{n}|c_n|^2
+\nonumber
+\\
+&=
+E_0,
+\end{align}
+!et
+which implies that we can minimize over the set of angles $\theta$ and arrive at the ground state energy $E_0$
+
+!bt
+\begin{align}
+\min_\theta \ \langle\psi(\theta)|H|\psi(\theta)\rangle=E_0.
+\end{align}
+!et
+
+Using this fact, the VQE algorithm can be broken down into the following steps
+o Prepare the variational state $|\psi(\theta)\rangle$ on a quantum computer.
+o Measure this circuit in various bases and send these measurements to a classical computer
+o The classical computer post-processes the measurement data to compute the expectation value $\langle\psi(\theta)|H|\psi(\theta)\rangle$
+o The classical computer varies the parameters $\theta$ according to a classical minimization algorithm and sends them back to the quantum computer which runs step 1 again.
+
+This loop continues until the classical optimization algorithm
+terminates which results in a set of angles $\theta_{\text{min}}$ that
+characterize the ground state $|\phi(\theta_{\text{min}})\rangle$ and
+an estimate for the ground state energy
+$\langle\psi(\theta_{\text{min}})|H|\psi(\theta_{\text{min}})\rangle$.
+
+=== Expectation values ===
+
+To execute the second step of VQE, we need to understand how expectation values of operators can be estimated via quantum computers by post-processing measurements of quantum circuits in different basis. To rotate bases, one uses the basis rotator $B_\sigma$ which is defined for each Pauli gate $\sigma$ to be
+
+!bt
+\begin{align}
+B_{\sigma} =
+\begin{cases}
+H, & \text{if} \ \sigma = X \\
+HS^{\dagger}, & \text{if} \ \sigma = Y \\
+I, & \text{if} \ \sigma = Z \\
+\end{cases}.
+\end{align}
+!et
+Note the following identity of the basis rotator
+!bt
+\begin{align}
+B^\dagger_\sigma Z B_\sigma = \sigma
+,\end{align}
+!et
+which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$. With this, we see that the expectation value of an arbitrary
+Pauli-gate $\sigma$ in the state $\ket{\psi}$ can be expressed as a linear combination of probabilities
+!bt
+\begin{align}
+E_{\psi}(\sigma)
+&= \mel{\psi}{\sigma}{\psi} \nonumber \\
+&=\mel{\psi}{B_{\sigma}^{\dagger}ZB_{\sigma}}{\psi} \nonumber \\
+&=\mel{\phi}{Z}{\phi} \nonumber \\
+&=\mel{\phi}{\left(\sum_{x\in\{0,1\}}(-1)^x\ket{x}\bra{x}\right)}{\phi} \nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^x\abs{\bra{x}\ket{\phi}}^2\nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^xP(\ket{\phi}\to\ket{x}),
+\end{align}
+!et
+
+where $\ket{\phi}=\ket{B_\sigma\phi}$ and $P(\ket{\phi}\to\ket{x}$ is the probability that the state $\ket{\phi}$ collapses to the state $\ket{x}$ when measured. This can be extended to any arbitrary Pauli string: consider the string of Pauli operators $P=\bigotimes_{p\in Q}\sigma_p$ which acts non-trivially on the set of qubits $Q$ which is a subset of the total set of $n$ qubits in the system. Then 
+
+!bt
+\begin{align}
+E_{\psi}\left(P\right)
+&=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)\ket{\psi} \nonumber \\
+&=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\ket{\psi} \nonumber \\
+&=\bra{\psi}\left(\bigotimes_{p \in Q}B_{\sigma_p}^{\dagger}Z_pB_{\sigma_p}\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\ket{\psi} \nonumber \\
+&=
+\bra{\psi}\left(\bigotimes_{p \in Q}B_{\sigma_p}^{\dagger}\right)
+\left(\bigotimes_{p \in Q}Z_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)
+\left(\bigotimes_{p \in Q}B_{\sigma_p}\right)\ket{\psi} \nonumber 
+\\
+&=
+\bra{\phi}
+\left(\bigotimes_{p \in Q}Z_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)
+\ket{\phi} \nonumber \\
+&=
+\bra{\phi}
+\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\ket{x_p}\bra{x_p}\right)
+\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\ket{y_q}\bra{y_q}\right)
+\ket{\phi} 
+\nonumber 
+\\
+&=
+\bra{\phi}
+\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\ket{x}\bra{x}\right)
+\ket{\phi} 
+\nonumber 
+\\
+&=
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\abs{\bra{x}\ket{\phi}}^2
+\nonumber 
+\\
+&=
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\ket{\phi}\to\ket{x})
+,\end{align}
+where $\ket{\phi}=\ket{\bigotimes_{p\in Q}B_{\sigma_p}\psi}$. Finally, because the expectation value is linear
+\begin{align}
+E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
+\end{align}
+!et
+one can estimate any observable that can be written as a linear combination of Pauli-string terms. 
+
+=== Measurement ===
+
+To estimate the probability $P(\ket{\phi}\to \ket{x})$ from the
+previous section, one prepares the state $\ket{\phi}$ on a quantum
+computer and measures it, and then repeats this process (prepare and
+measure) several times. The probability $P(\ket{\phi}\to \ket{x})$ is
+estimated to be the number of times that one measures the bit-string
+$x$ divided by the total number of measurements that one makes; that
+is
 
 
-!bblock Lecture next week we finalize the discussion of the VQE and the Lipkin model
-  o VQE examples and discussion of results
-  o Discussion of the project
+!bt
+\begin{align}
+P(\ket{\phi}\to \ket{x}) \approx \sum_{m=1}^M\frac{x_m}{M},
+\end{align}
+!et
+where
+!bt
+\begin{align}
+x_m
+=
+\begin{cases}
+1 & \text{if the result of measurement is $x$} 
+\\
+0 & \text{if the result of measurement is not $x$}.
+\end{cases}
+\end{align}
+!et
+
+By the law of large numbers the approximation approaches equality as
+$M$ goes to infinity
+
+!bt
+\begin{align}
+P(\ket{\phi}\to \ket{x}) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
+\end{align}
+!et
+
+As we obviously do not have infinite time nor infinite quantum
+computers (which could be run in parallel), we must truncate our
+number of measurement $M$ to a finite, but sufficiently large
+number. More precisely, for precision $\epsilon$, each expectation
+estimation subroutine within VQE requires $\mathcal{O}(1/\epsilon^2)$
+samples from circuits with depth $\mathcal{O}(1)$.
+
+
+
+!bblock Lecture next week we continue  the discussion of the VQE and the Lipkin model
+o Discussion of the project
+o VQE examples and discussion of results
 !eblock
+
+
 
 
