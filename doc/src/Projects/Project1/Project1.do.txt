@@ -5,16 +5,18 @@ DATE: Spring semester 2023
 
 ======= Project suggestion  =======
 
+The aim of this project is to study the so-called Lipkin model (which is a simplified Hamiltonian) using the VQE algorithm.
+We will follow closely the article at URL:"https://journals.aps.org/prc/pdf/10.1103/PhysRevC.106.024319". 
 
-=== Part a) ===
+===== Part a) =====
 
 Write a function which sets up a one-qubit basis and apply the various
 Pauli matrices to these basis states.  Apply the Hadamard and Phase
 gates to the same one-qubit basis states and study their actions on
 these states. Define also Bell states and write a code where you
-implement a Hadamard gate and a _CNOT_ gate on one of the Bell
-states. Perform thereafter a measurement on the first qubit and
-thereafter on the second qubit. The measurements should be performed a
+implement a Hadamard gate and thereafter a _CNOT_ gate on one of the Bell
+states of your choice. Perform thereafter a measurement on the first qubit and
+thereafter on the second qubit. The measurements should be performed 
 several times and it is the average results of these measurements
 which should be discussed and presented.
 
@@ -26,7 +28,7 @@ URL:"https://quantum-computing.ibm.com/composer/docs/iqx/first-circuit".
 
 
 
-=== Part b) ===
+===== Part b) =====
 
 We define a  symmetric matrix  $H\in {\mathbb{R}}^{2\times 2}$
 !bt
@@ -69,10 +71,10 @@ H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
 and
 !bt
 \[
-H_I = c \bm{I} \omega_z(s)\sigma_z + \omega_x\sigma_x,
+H_I = c \bm{I} +\omega_z\sigma_z + \omega_x\sigma_x,
 \]
 !et
-with $c = (V_{11}+V_{22})/2$, $\omega_z = (V_{11}-V_{22})/2$ and $\omega_x = V_12$.
+with $c = (V_{11}+V_{22})/2$, $\omega_z = (V_{11}-V_{22})/2$ and $\omega_x = V_{12}=V_{21}$.
 We let our Hamiltonian depend linearly on a strength parameter $\lambda$
 
 !bt
@@ -86,11 +88,10 @@ represent the non-interacting (or unperturbed) and fully interacting
 system, respectively.  The model is an eigenvalue problem with only
 two available states.
 
-You can set parameters 
-in the results below we set the parameters $E_1=0$,
+Here we set the parameters $E_1=0$,
 $E_2=4$, $V_{11}=-V_{22}=3$ and $V_{12}=V_{21}=0.2$.
-The
-non-interacting solutions represent our computational basis.
+
+The non-interacting solutions represent our computational basis.
 Pertinent to our choice of parameters, is that at $\lambda\geq 2/3$,
 the lowest eigenstate is dominated by $\vert 1\rangle$ while the upper
 is $\vert 0 \rangle$. At $\lambda=1$ the $\vert 0 \rangle$ mixing of
@@ -107,7 +108,7 @@ Study the behavior of these eigenstates as functions of the interaction strength
 Comment your results.
 
 
-=== Part c) ===
+===== Part c) =====
 
 Implement now the variational quantum eigensolver (VQE) for the above
 Hamiltonian and set up the circuit(s) which is(are) needed in order to find
@@ -117,7 +118,7 @@ code (based on the setup from part a)) or both approaches. Discuss
 your results.
 
 
-=== Part d) ===
+===== Part d) =====
 
 Extend part c) to a two-qubit system with the following computational
 basis states and Hamiltonian matrix written out in terms of Pauli spin
@@ -267,7 +268,7 @@ the strength of the interaction matrix elements and the
 non-interacting energies.
 
 
-=== Part e) ===
+===== Part e) =====
 
 Compute now the eigenvalues of this system using the VQE method and
 set up the circuits needed to find the lowest state. Compare these
@@ -275,15 +276,108 @@ results with those from the previous part. Feel free again to either
 use your own code for the circuit and your VQE code or use the
 functionality of "Qiskit":"https://qiskit.org/", or both.
 
-=== Part f) ===
+===== Part f) =====
 
-We introduce now the Lipkin Hamiltonian and study this for the $3\times 3$ matrix case with total spin $J=1$ and the $5\times 5$ matrix for the $J=2$ case. 
+We introduce now the Lipkin Hamiltonian and study this for the
+$3\times 3$ matrix case with total spin $J=1$ and the $5\times 5$
+matrix for the $J=2$ case.
+We will follow closely the article in the Physical Review C, volume 106, see URL:"https://journals.aps.org/prc/pdf/10.1103/PhysRevC.106.024319".
+
+The Hamiltonian in second quantization is given by
+!bt
+\[
+H = H_0 + H_1 +H_2,
+\]
+!et
+with 
+!bt
+\[
+H_0 = \frac{1}{2} \varepsilon \sum_{p\sigma}\sigma a_{p\sigma}^{\dagger}a_{p\sigma},
+\]
+!et
+and
+!bt
+\[
+H_1 = \frac{1}{2} V \sum_{p,p',\sigma} a_{p\sigma}^\dagger a_{p'\sigma}^\dagger a_{p'-\sigma} a_{p-\sigma},
+\]
+!et
+and
+!bt
+\[
+H_{2} = \frac{1}{2} W \sum_{p,p',\sigma}a_{p\sigma}^\dagger a_{p'-\sigma}^\dagger a_{p'\sigma}a_{p-\sigma}.
+\]
+!et
+We can rewrite this Hamiltonian in terms of the so-called quasispin operators leading to
+!bt
+\begin{equation}
+H_0 = \varepsilon J_z,
+\end{equation}
+!et
+and
+!bt
+\begin{equation}
+H_1 = \frac{1}{2} V \left( J_+^2 + J_-^2 \right).
+\end{equation}
+!et
+!bt
+\begin{equation}
+H_2 = \frac{1}{2} W \left( -N + J_+ J_- + J_- J_+ \right).
+\end{equation}
+!et
 
 
 
+We start here with a simpler case, namely the $J=1$ case and we set $W=0$. Show that Hamiltonian matrix is then given by
+!bt
+\begin{equation}
+H_{J = 1} =
+\begin{pmatrix}-\epsilon & 0 & -V\\
+ 0&0&0\\
+ -V&0&\epsilon
+\end{pmatrix}
+\end{equation}
+!et
 
 
+To solve the above hamiltonian problem on a quantum computer we need
+to rewrite the Hamiltonian in terms of the Pauli spin
+matrices. Rewrite the above $J=1$ Hamiltonian (with $N=2$ particles)
+in terms of the Pauli matrices and the identity matrix.
 
+
+For $J=2$ we have a $5\times 5$ matrix given by
+!bt
+\begin{equation}
+H_{J = 2} =
+\begin{pmatrix}
+-2\varepsilon & 0 & \sqrt{6}V & 0 & 0 \\
+0 & -\varepsilon + 3W & 0 & 3V & 0 \\
+\sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
+0 & 3V & 0 & \varepsilon + 3W & 0 \\
+0 & 0 & \sqrt{6}V & 0 & 2\varepsilon
+\end{pmatrix}
+
+\end{equation}
+!et
+
+Find also the $J=2$ Hamiltonian ($N=4$ particles) in terms of the same matrices (still with $W=0$).
+
+_Challenge:_ Set up the Hamiltonian with the $W$ term as well in terms of the Pauli spin matrices.
+
+Diagonalize thereafter, using classical methods, the above Hamiltonian matrices and find the
+eigenvalues as functions of the strength of the interaction $V$ while
+keeping the single-particle energies fixed. Comment your results. Feel
+free to add the Hartree-Fock results as discussed in the lectures.
+
+===== Part g) =====
+
+Use now the VQE method to find the same eigenvalues as in part f) and
+set up the circuits and simulations which are needed. Compare your
+results with those from part f) and comment your results.
+
+===== Part h) =====
+
+Try to write your report as a scientific article. You can use the article in the Physical Review C, volume 106, see URL:"https://journals.aps.org/prc/pdf/10.1103/PhysRevC.106.024319" as a template for your report.
 
 
 
@@ -327,6 +421,10 @@ The preferred format for the report is a PDF file. You can also use DOC or posts
 Finally, 
 we encourage you to collaborate. Optimal working groups consist of 
 2-3 students. You can then hand in a common report. 
+
+
+
+
 
 
 
