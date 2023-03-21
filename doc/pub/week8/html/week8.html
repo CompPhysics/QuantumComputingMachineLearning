@@ -808,15 +808,15 @@ $$
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="variational-quantum-eigensolver">Variational Quantum Eigensolver </h2>
 
-<p>One initial algorithm to estimate the eigen-energies of a quantum
-Hamiltonian was quantum phase estimation. In it, one
-encodes the eigen-energies, one binary bit at a time (up to \( n \) bits),
+<p>One initial algorithm to estimate the eigenenergies of a quantum
+Hamiltonian was <a href="https://qiskit.org/textbook/ch-algorithms/quantum-phase-estimation.html" target="_blank">quantum phase estimation</a>. In it, one
+encodes the eigenenergies, one binary bit at a time (up to \( n \) bits),
 into the complex phases of the quantum states of the Hilbert space for
 \( n \) qubits. It does this by applying powers of controlled unitary
 evolution operators to a quantum state that can be expanded in terms
-of the Hamiltonian's eigenvectors of interest. The eigen-energies are
+of the Hamiltonian's eigenvectors of interest. The eigenenergies are
 encoded into the complex phases in such a way that taking the inverse
-quantum Fourier transformation of the states into which the
+quantum Fourier transformation (see material on Quantum Fourier Transforms) of the states into which the
 eigen-energies are encoded results in a measurement probability
 distribution that has peaks around the bit strings that represent a
 binary fraction which corresponds to the eigen-energies of the quantum
@@ -830,7 +830,7 @@ likely won't exist in the near, but the far future.
 
 <p>Therefore, a different algorithm for finding the eigen-energies of a
 quantum Hamiltonian was put forth in 2014 called the variational
-quantum eigensolver, commonly referred to as VQE. The
+quantum eigensolver, commonly referred to as <a href="https://arxiv.org/abs/2111.05176" target="_blank">VQE</a>. The
 algorithm is hybrid, meaning that it requires the use of both a
 quantum computer and a classical computer. It is also variational,
 meaning that it relies, ultimately, on solving an optimization problem
@@ -875,15 +875,7 @@ $$
 \nonumber
 \\
 &=
-\sum_{n}|c_n|^2E_n
-\nonumber
-\\
-&\geq
-E_0\sum_{n}|c_n|^2
-\nonumber
-\\
-&=
-E_0,
+\sum_{n}|c_n|^2E_n \geq E_0\sum_{n}|c_n|^2=E_0,
 \label{_auto5}
 \end{align}
 $$
@@ -912,19 +904,21 @@ an estimate for the ground state energy
 </p>
 <h3 id="expectation-values">Expectation values </h3>
 
-<p>To execute the second step of VQE, we need to understand how expectation values of operators can be estimated via quantum computers by post-processing measurements of quantum circuits in different basis. To rotate bases, one uses the basis rotator \( B_\sigma \) which is defined for each Pauli gate \( \sigma \) to be</p>
+<p>To execute the second step of VQE, we need to understand how
+expectation values of operators can be estimated via quantum computers
+by post-processing measurements of quantum circuits in different
+basis. To rotate bases, one uses the basis rotator \( R_\sigma \) which is
+defined for each Pauli gate \( \sigma \) to be
+</p>
 
 $$
 \begin{align}
-B_{\sigma} =
-\begin{cases}
-H, & \text{if} \ \sigma = X 
+R_{\sigma} = H, & \text{if} \ \sigma = X 
 \label{_auto7}\\
 HS^{\dagger}, & \text{if} \ \sigma = Y 
 \label{_auto8}\\
 I, & \text{if} \ \sigma = Z 
 \label{_auto9}\\
-\end{cases}.
 \label{_auto10}
 \end{align}
 $$
@@ -932,70 +926,77 @@ $$
 <p>Note the following identity of the basis rotator</p>
 $$
 \begin{align}
-B^\dagger_\sigma Z B_\sigma = \sigma
+R^\dagger_\sigma Z R_\sigma = \sigma
 , \label{_auto11}
 \end{align}
 $$
 
 <p>which follows from the fact that \( HZH=X \) and \( SXS^\dagger=Y \). With this, we see that the expectation value of an arbitrary
-Pauli-gate \( \sigma \) in the state \( \ket{\psi} \) can be expressed as a linear combination of probabilities
+Pauli-gate \( \sigma \) in the state \( \vert\psi\rangle \) can be expressed as a linear combination of probabilities
 </p>
 $$
 \begin{align}
 E_{\psi}(\sigma)
 &= \mel{\psi}{\sigma}{\psi} \nonumber \\
-&=\mel{\psi}{B_{\sigma}^{\dagger}ZB_{\sigma}}{\psi} \nonumber \\
+&=\mel{\psi}{R_{\sigma}^{\dagger}ZR_{\sigma}}{\psi} \nonumber \\
 &=\mel{\phi}{Z}{\phi} \nonumber \\
-&=\mel{\phi}{\left(\sum_{x\in\{0,1\}}(-1)^x\ket{x}\bra{x}\right)}{\phi} \nonumber \\
-&=\sum_{x\in\{0,1\}}(-1)^x\abs{\bra{x}\ket{\phi}}^2\nonumber \\
-&=\sum_{x\in\{0,1\}}(-1)^xP(\ket{\phi}\to\ket{x}),
+&=\mel{\phi}{\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\bra{x}\right)}{\phi} \nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^x\abs{\bra{x}\vert \phi\rangle}^2\nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
 \label{_auto12}
 \end{align}
 $$
 
-<p>where \( \ket{\phi}=\ket{B_\sigma\phi} \) and \( P(\ket{\phi}\to\ket{x} \) is the probability that the state \( \ket{\phi} \) collapses to the state \( \ket{x} \) when measured. This can be extended to any arbitrary Pauli string: consider the string of Pauli operators \( P=\bigotimes_{p\in Q}\sigma_p \) which acts non-trivially on the set of qubits \( Q \) which is a subset of the total set of \( n \) qubits in the system. Then </p>
+<p>where \( \vert \phi\rangle=\vert R_\sigma\phi\rangle \) and
+\( P(\vert \phi\rangle\to\vert x\rangle \) is the probability that the state
+\( \vert \phi\rangle \) collapses to the state \( \vert x\rangle \) when measured. This can
+be extended to any arbitrary Pauli string: consider the string of
+Pauli operators \( P=\bigotimes_{p\in Q}\sigma_p \) which acts
+non-trivially on the set of qubits \( Q \) which is a subset of the total
+set of \( n \) qubits in the system. Then
+</p>
 
 $$
 \begin{align}
 E_{\psi}\left(P\right)
-&=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)\ket{\psi} \nonumber \\
+&=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
 &=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)
-\left(\bigotimes_{q\notin Q}I_q\right)\ket{\psi} \nonumber \\
-&=\bra{\psi}\left(\bigotimes_{p \in Q}B_{\sigma_p}^{\dagger}Z_pB_{\sigma_p}\right)
-\left(\bigotimes_{q\notin Q}I_q\right)\ket{\psi} \nonumber \\
+\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
+&=\bra{\psi}\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}Z_pR_{\sigma_p}\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
 &=
-\bra{\psi}\left(\bigotimes_{p \in Q}B_{\sigma_p}^{\dagger}\right)
+\bra{\psi}\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}\right)
 \left(\bigotimes_{p \in Q}Z_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)
-\left(\bigotimes_{p \in Q}B_{\sigma_p}\right)\ket{\psi} \nonumber 
+\left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
 \\
 &=
 \bra{\phi}
 \left(\bigotimes_{p \in Q}Z_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)
-\ket{\phi} \nonumber \\
+\vert \phi\rangle \nonumber \\
 &=
 \bra{\phi}
-\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\ket{x_p}\bra{x_p}\right)
-\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\ket{y_q}\bra{y_q}\right)
-\ket{\phi} 
+\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\vert x_p\rangle\bra{x_p}\right)
+\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\vert y_q\rangle\bra{y_q}\right)
+\vert \phi\rangle 
 \nonumber 
 \\
 &=
 \bra{\phi}
-\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\ket{x}\bra{x}\right)
-\ket{\phi} 
+\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert x\rangle\bra{x}\right)
+\vert \phi\rangle 
 \nonumber 
 \\
 &=
-\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\abs{\bra{x}\ket{\phi}}^2
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\abs{\bra{x}\vert \phi\rangle}^2
 \nonumber 
 \\
 &=
-\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\ket{\phi}\to\ket{x})
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle)
 , \label{_auto13}
 \end{align}
-where $\ket{\phi}=\ket{\bigotimes_{p\in Q}B_{\sigma_p}\psi}$. Finally, because the expectation value is linear
+where $\vert \phi\rangle=\vert \bigotimes_{p\in Q}R_{\sigma_p}\psi}$. Finally, because the expectation value is linear
 \begin{align}
 E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
 \label{_auto13}
@@ -1005,10 +1006,10 @@ $$
 <p>one can estimate any observable that can be written as a linear combination of Pauli-string terms. </p>
 <h3 id="measurement">Measurement </h3>
 
-<p>To estimate the probability \( P(\ket{\phi}\to \ket{x}) \) from the
-previous section, one prepares the state \( \ket{\phi} \) on a quantum
+<p>To estimate the probability \( P(\vert \phi}\to \vert x}) \) from the
+previous section, one prepares the state \( \vert \phi} \) on a quantum
 computer and measures it, and then repeats this process (prepare and
-measure) several times. The probability \( P(\ket{\phi}\to \ket{x}) \) is
+measure) several times. The probability \( P(\vert \phi}\to \vert x}) \) is
 estimated to be the number of times that one measures the bit-string
 \( x \) divided by the total number of measurements that one makes; that
 is
@@ -1016,7 +1017,7 @@ is
 
 $$
 \begin{align}
-P(\ket{\phi}\to \ket{x}) \approx \sum_{m=1}^M\frac{x_m}{M},
+P(\vert \phi}\to \vert x}) \approx \sum_{m=1}^M\frac{x_m}{M},
 \label{_auto14}
 \end{align}
 $$
@@ -1041,7 +1042,7 @@ $$
 
 $$
 \begin{align}
-P(\ket{\phi}\to \ket{x}) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
+P(\vert \phi}\to \vert x}) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
 \label{_auto17}
 \end{align}
 $$
