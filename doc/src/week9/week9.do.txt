@@ -13,7 +13,7 @@ DATE: March 20-24
 ===== Reminder on the Lipkin model and Variational Quantum Eigensolver (VQE) =====
 
 
-"See whiteboard notes from week of March 13-17":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch13.pdf" and lecture notes (jupyter-notebook)
+"See lecture notes (jupyter-notebook)
 from the previous week at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb"
 
 !split
@@ -165,103 +165,6 @@ plt.ylabel('Energy')
 plt.title('$\Omega=2$ exact Lipkin Model')
 !ec
 
-=== Hartree Fock ===
-
-A variational method in quantum mechanics, starts with the Schrodinger equation where one minimizes the energy for a given trail wave function $|\psi\rangle$.
-
-!bt
-\begin{equation}
-\delta\frac{\langle\psi |\hat{H}|\psi\rangle}{\langle\psi|\psi\rangle}=0
-\end{equation}
-!et
-
-The Hartree Fock (HF) method is a variational method that assumes that
-the exact N-body wavefunction of the system can be approimated by a
-single Slater determinant, where energy of the system is minimized and
-the trial wave function is the particle number conserving coherent
-product state. The SU(2) coherent states map a two-dimensional sphere
-known as the bloch sphere onto the complex plane,
-
-!bt
-\begin{equation}
-\tau = tan\frac{\theta}{2}e^{-i\phi}
-\end{equation}
-!et
-where the normalized coherent SU(2) state can be written in the language of LM:
-!bt
-\begin{equation}
-|\tau\rangle = \frac{1}{(1+|\tau|^2)^{\Omega/2}}e^{\tau\hat{K}_+}|\frac{\Omega}{2},-\frac{\Omega}{2}\rangle,
-\end{equation}
-!et
-The $E_{g.s}$ of the LM given HF coherent states is:
-!bt
-\begin{equation}
-E(\tau) = \langle \tau|\hat{H}_{LM}|\tau\rangle.
-\end{equation}
-!et
-To calculate equation the last euation, we use generating functions for:
-!bt
-\begin{equation}
-\begin{split}
-\langle \tau|\hat{J}_{z}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
-\langle \tau|\hat{J}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
-\end{split}
-\end{equation}
-!et
-Then using the definition of $\tau$ in equation (10) we can write down the energy:
-!bt
-\begin{equation}
-E(\tau) = -\frac{\epsilon}{2}\Omega(cos\theta+\frac{\chi}{2}sin^2\theta cos2\phi),
-\end{equation}
-!et
-where $\chi=\frac{V}{\epsilon}(\Omega-1)$. Minimizing $E(\tau)$ with respect to $\theta,\phi$, we obtain the ground state Hartree Fock energy
-!bt
-\begin{equation}
-\begin{split}
-E_{HF}  = -\frac{\Omega}{2}\epsilon &\hspace{1cm} \chi<1\\
-E_{HF}  = -\frac{\Omega}{4}\epsilon(\chi+\frac{1}{\chi}) &\hspace{1cm} \chi\ge 1
-\end{split}
-\end{equation}
-!et
-
-
-!bc pycod 
-def E_HF(x,E,omega):
-  if x < 1:
-    EHF = -(omega/2)*E
-  elif x >= 1:
-    EHF = -(omega/4)*E*(x+(1/x))
-  return EHF
-!ec
-
-
-
-!bc pycod 
-epsilon = 1
-Omega = 2
-
-HF = []
-exact = []
-for x in chi:
-    HF.append(E_HF(x,epsilon,omega).real)
-    v = Vp(epsilon,omega,x)
-    e,h = quasi_spin(epsilon,v,omega)
-    exact.append(e[0].real)
-!ec
-
-
-
-!bc pycod 
-plt.plot(chi,HF,label='HF')
-plt.plot(chi,exact,label='exact')
-plt.xlabel('$\chi$')
-plt.ylabel('Energy')
-plt.axvline(1, color = 'k', linestyle='--')
-plt.title('$\Omega=2$ exact Lipkin Model')
-plt.legend(bbox_to_anchor=(1.05, 1))
-!ec
-
-
 
 === Quantum Circuit ===
 
@@ -281,6 +184,15 @@ where the Pauli operators are the measurement basis which the quantum
 circuit is measured in. The subscripts refer to quibits $0$ and $1$ respectively. Since we have two particles in this case, we end up with a two qubit state, as indicated
 in the ansatz for the initial state here.
 The Hamiltonian can thus we rewritten as a $4\times 4$ matrix acting on a two-qubit state. 
+
+
+
+
+
+
+
+
+
 
 
 However, before measuring, we first have to
@@ -421,7 +333,308 @@ plt.title('$\Omega=2$')
 plt.legend()
 !ec
 
-Typically, running with Qiskit's own VQE is faster.
+
+Following the procedure of the symmetry method laid out in subsection (\ref{symmetry_method_subsection}), we start by identifying the symmetries of the Lipkin Hamiltonian. The first symmetry is the particle-number. The particle number operator
+\begin{align}
+N=\sum_{n\sigma}a^\dagger_{n\sigma}a_{n\sigma}
+,\end{align}
+commutes with the Lipkin Hamiltonian. This can be seen by examining the Hamiltonian (\ref{hamiltonian}) and noticing that the one-body part simply counts particles while the two-body term moves particles in pairs. Thus, the Hamiltonian conserves particle number. To find more symmetries we rewrite the Lipkin Hamiltonian in terms of SU(2) operators
+\begin{align}
+\label{lipkin_symmetry_hamiltonian}
+H = \epsilon J_z + \frac{1}{2}V(J^2_++J^2_-),
+\end{align}
+via the mapping
+\begin{align}
+\label{jz}
+J_z
+&=
+\sum_{n}j_z^{(n)},
+\\
+\label{jpm}
+J_\pm&=\sum_nj^{(n)}_{\pm},
+\end{align}
+where
+\begin{align}
+\label{small_jz}
+j_z^{(n)}
+&=
+\frac{1}{2}\sum_{\sigma}\sigma a^\dagger_{n\sigma}a_{n\sigma},
+\\
+\label{small_jpm}
+j^{(n)}_{\pm}
+&=
+a^\dagger_{n\pm}a_{n\mp}.
+\end{align}
+These operators obey the SU(2) commutation relations
+\begin{align}
+\label{comm1}
+\comm{J_+}{J_-}&=2J_z,
+\\
+\label{comm2}
+\comm{J_z}{J_\pm}&=\pm J_\pm,
+\end{align}
+as justified in Appendix \ref{appendix:angular_momentum_commutation_relations}. Here, the ladder operators are defined as $J_{\pm}= J_x\pm iJ_y$. With this rewriting, we can see that the total spin operator $J^2$, which is defined as 
+\begin{align}
+J^2= J^2_x+J^2_y+J^2_z =
+\frac{1}{2}\acomm{J_+}{J_-}+J_z^2
+,\end{align}
+commutes with the Hamiltonian since the Hamiltonian is written explicitly in terms of SU(2) operators and $J^2$ is the center of SU(2), meaning that it commutes with all of its elements. Finally, we note that the signature operator
+\begin{align}
+R=e^{i\phi J_z}
+,\end{align}
+commutes with the Hamiltonian, which can be explained as follows: Writing $J_z$ as
+\begin{align}
+J_z=\frac{1}{2}(N_+-N_-),
+\end{align}
+where $N_\pm=\sum_{n\pm}a^\dagger_{n\pm}a_{n\pm}$, allows us to see that it measures half the difference between the number of particles in the upper and lower levels. Thus, the possible eigenvalues $r$ of the signature operator are
+\begin{align}
+r
+=
+\begin{cases}
++1, & j_z=2n \\
++i, & j_z=2n+\frac{1}{2} \\
+-1, & j_z=2n+1 \\
+-i, & j_z=2n+\frac{3}{2} \\
+\end{cases}
+\end{align}
+for $n\in\mathbb{Z}$. Note that $r$ is real or imaginary if the number of particles $N$ is even or odd, respectively. Since, as discussed above, the Lipkin Hamiltonian conserves $N$, $r$ cannot jump between being real and imaginary. Additionally, because particles must be moved in pairs, and $J_z$ measures half the difference between particles in the upper and lower levels, $j_z$ can only change by as
+\begin{align}
+j_z
+&\to
+\frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
+\nonumber
+\\
+&=
+J_z\pm2n.
+\end{align}
+We have determined that the symmetry operators $N$, $J$, and $R$ commute with the Hamiltonian. Let their eigenvalues be $n$, $j$, and $r$, respectively. These become our new quantum numbers. Starting with the particle number operator $N$, because $H$ cannot mix states from one particle number to another $\mel{N}{H}{N'}=0$ if $N\neq N'$, where $\ket{N}$ represents a state with $n$ particles,
+the Hamiltonian matrix is block diagonal with $N$ blocks. Each block corresponds to a different particle number ($n=0,1,...,2\Omega$) with size $n^2/4+n$. This is a direct result of the particle number symmetry. We now move on to the total-spin operator. Because the Hamiltonian can not mix states with different $J$, we have that $\mel{J}{H}{J'}=0$ for $J\neq J'$. Now, for a given $N$, we label our basis states $\ket{jj_z}$ where $j_z=-j,-j+1,...,j-1,j$.
+The non-zero Hamiltonian matrix elements are
+\begin{align}
+\bra{JJ_z}H\ket{J'J'_z} 
+&=
+\delta_{JJ'}\epsilon j_z,
+\\
+\bra{JJ_z+2}H\ket{JJ_z} &= 
+-\frac{V}{2}\sqrt{[j(j+1)-j_z(j_z+1)]}
+\nonumber
+\\
+&\times
+\sqrt{[j(j+1)-(j_z+1)(j_z+2)]},
+\\
+\bra{JJ_z-2}H\ket{JJ_z} &= 
+-\frac{V}{2}\sqrt{[j(j+1)-j_z(j_z-1)]}
+\nonumber
+\\
+&\times
+\sqrt{[j(j+1)-(j_z-1)(j_z-2)]},
+\end{align}
+since the operators that make up the Hamiltonian act on the basis states as follows:
+\begin{align}
+J_z\ket{JJ_z}&=j_z\ket{JJ_z},
+\\
+J_{\pm}\ket{JJ_z}&=\sqrt{j(j+1)-j_z(j_z\pm1)}\ket{JJ_z\pm1}
+,\end{align}
+Note that the maximum possible value of $j_z$ is $N/2$ which would correspond to the state where all $N$ particles are spin up:
+\begin{align}
+j_z\ket{\uparrow\cdots\uparrow}
+=
+\frac{1}{2}\sum_{m\sigma}N_{m\sigma}\ket{\uparrow\cdots\uparrow}=\frac{N}{2}
+.\end{align}
+Therefore, the maximum value of $j$ is also $N/2$ and thus its possible values are $j=N/2,N/2-1,...,1$ if $N$ is even and $j=N/2,N/2-1,...,1/2$ if $N$ is odd. For each $j$ the possible values of $j_z$ are $j_z=j,j-1,...,-j$. Thus, there are $2j+1$ possible values of $j_z$ for each $j$. This implies that each $n$-block of the Hamiltonian matrix is itself a block diagonal matrix consisting of $\left\lfloor N/2 \right\rfloor$ blocks. Each block corresponds with a total spin value ($j=N/2,N/2-1,...$) and has length $2j+1$. This is the direct result of the total spin symmetry. Finally, we move to the signature $R$. Each $j$-block is again, itself a block diagonal with two blocks ($r=\pm1$ if $N$ is even or $r=\pm i$ if $N$ is odd) which have size $j$ and $j+1$, respectively. The energies are computed by direct diagonalization of the Hamiltonian matrix we've been describing above.
+
+One can see in Figure \ref{fig:fci_plot} that the energies computed via the symmetry method (depicted as block dots) exactly match the results of the FCI method. This is a demonstration that the symmetry method is indeed a valid, exact solution for the Lipkin model. The symmetry method is also used to solve the Lipkin Hamiltonian for the case of $\Omega=N=10$. With the FCI method, this would involve diagonalizing a size ${20 \choose 10}\sim10^5$, square matrix. But, with the symmetry method, one need only diagonalize several smaller square matrices, the largest of which is size 30, which is $j(j+1)$ for $j=N/2$. The eigenvalues of the Lipkin Hamiltonian for single-particle energy $\epsilon=1$ are plotted against various pairing strengths $V$ in Figure \ref{fig:lipkin_energies}.
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.325]{lipkin_energies.jpg}
+    \caption{The energy eigenvalues ($E$) of the Lipkin model, computed via the symmetry method, are plotted for various interaction strengths ($V$). The level degeneracy $\Omega$ and particle number $N$ are both ten while the single-particle energy $\epsilon$ is one. The solid and dashed lines correspond to signature numbers $r=+1$ and $r=-1$, respectively. The colors yellow, magenta, cyan, red, green, and blue correspond to $j$=0,1,2,3,4,5, respectively.}
+    \label{fig:lipkin_energies}
+\end{figure}
+Each color represents a different value of $j$. For example, the eigenvalue energies plotted in blue were the result of diagonalizing the $j=5$ block. The lines are solid and dashed to correspond to the signature $r=+1$ and $r=-1$, respectively. We note that for $V=0$, there are $11=N+1$ values that the energies can take, corresponding to the fact that the Lipkin model with no interaction strength is simply $\epsilon J_z$; thus the Hamiltonian simply counts half the difference between the number of particles in the two levels, a number which has 11 possible values: $j_z=0,\pm1,\pm2,\pm3,\pm4,\pm5$. However, as the pairing strength is turned on, the energies start to bend and split. We notice that as $V$ increase, the energies for $r=+1$ and $r=-1$ start to pair up and equal one another, their states becoming degenerate. 
+
+\section{Quantum Solutions}
+
+To solve the Lipkin model with a quantum computer, the first step is
+to map the system to a set of qubits. We'll restrict ourselves here to
+the half-filled case where the number of particles $N$ equals the
+degeneracy of the states $\Omega$. One could assign each possible
+state $(n,\sigma)$ a qubit such that the qubit being in the state
+$\ket{1}$ or $\ket{0}$ would imply that the state $(n,\sigma)$ is
+occupied or unoccupied, respectively. This mapping scheme (which we'll
+call occupation mapping) requires 2$\Omega$ qubits. Additionally, any
+ansatz that would restrict the minimization search to the correct
+subspace of constant Hamming weight $N$ (since the number of particles
+$N$ is conserved) would necessitate the use of at least four-qubit
+gates. This is because moving a pair of particles in this scheme would
+require two annihilation operators on the states from which the pair
+particles move and two creation operators on the states to which the
+pair of particles move. That is, it takes a four-qubit gate to change
+between the states $\ket{1100}$ and $\ket{0011}$, for example. And, as
+discussed in the chapter of quantum computing, it is only known how to
+efficiently decompose up to two qubit gates. Thus the involvement of
+four qubit gates would necessitate a longer depth circuit than one
+involving only two and one qubit gates, creating more noise and less
+accurate results.
+
+However, because there are only two energy levels in the Lipkin model,
+any other natural mapping is possible. In this mapping scheme (which
+we'll call level mapping) each doublet ($(n,+1)$, $(n,-1)$) would be
+assigned a qubit such that the qubit being in the state $\ket{0}$ or
+$\ket{1}$ would imply that the particle is in the $(n,+1)$ or $(n,-1)$
+state, respectively. Note that these are the only two possible
+configurations of the doublet as we are restricting ourselves to the
+half-filled case and the Lipkin Hamiltonian only moves particles
+between energy levels, not degenerate states. Thus the level mapping
+only requires $\Omega$ qubits which is half that of the occupation
+mapping. Additionally, any ansatz that would restrict the minimization
+search to the correct subspace of constant Hamming weight $N$ requires
+at most, only two qubit gates. This is because moving a pair of
+particles in this scheme only changes the state of two doublets (and
+therefore qubits). That is, it only takes a two-qubit gate to change
+between the states $\ket{00}$ and $\ket{11}$, for example. As an
+efficient decomposition two-qubit gates is known, the ansatz for this
+mapping would be shorter (and thus less noisy) than that of the
+previous mapping.
+
+One could imagine a third mapping scheme which would require even less
+qubits in which each of the possible states in the spin basis
+$\ket{JJ_z}$ is mapped to a single qubit. In this spin mapping, there
+are only $2J+1$ possible states (since $J_z=-J,-J+1,...,J-1,J$) for
+each value of $J$. And, since the Hamiltonian is block diagonal (with
+a different block for each $J$) the eigenvalues of the Hamiltonian are
+simply the eigenvalues of each block, which may be calculated
+separately. Since the maximum value of $J$ is $J_{\text{max}}=N/2$,
+the largest number of qubits would be
+$2J_{\text{max}}+1=N+1$. However, $\left\lfloor N/2 \right\rfloor$
+different circuit would need to be used for minimization for all
+possible values of $J$, to explore the entire Hilbert space. (The
+minimum of the set of minimum energies that each circuit finds would
+be the ground state energy of the entire system.) This increases,
+linearly, the amount of time required to find the ground state energy.
+
+After reviewing the three possible mappings, it is our view that the
+level mapping \cite{ref:lipkin_naive} is the best suited for NISQ era
+devices given its low qubit count and ability to search the entire
+relevant Hilbert space with one circuit (which reduces time to
+solution) and the fact that at most, only two-qubit gates are required
+of the ansatz, leading to shorter depth (and thus less noisy)
+circuits. With this mapping, the Hamiltonian takes the form utilized
+in the symmetry method (subsection \ref{subsection:symmetry_method})
+which was given by equation (\ref{lipkin_symmetry_hamiltonian}) as
+
+
+\begin{align}
+H
+=
+\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
+\end{align}
+Plugging the mapping from the total $J$ operators to individual $j$ operators (equations \ref{small_jz} and \ref{small_jpm}) yields
+\begin{align}
+H
+&=
+\epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\left[\left(\sum_nj^{(n)}_{+}\right)^2+\left(\sum_nj^{(n)}_{-}\right)^2\right]
+\\
+&=
+\epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\sum_{n,m}\left(j^{(n)}_+j^{(m)}_++j^{(n)}_-j^{(m)}_-\right)
+\\
+&=
+\epsilon\sum_{n}j_z^{(n)} + 
+2V\sum_{n<m}\left(j^{(n)}_xj^{(m)}_x-j^{(n)}_yj^{(m)}_y\right),
+\end{align}
+where we've used the definitions
+\begin{align}
+j_{\pm}^{(n)}=j_x^{(n)}\pm ij_y^{(n)}.
+\end{align}
+To convert to Pauli matrices, we'll make the transformations
+\begin{align}
+j_x^{(n)} &\to X_n/2,
+\\
+j_y^{(n)} &\to Y_n/2,
+\\
+j_z^{(n)} &\to Z_n/2,
+\end{align}
+which preserves the SU(2) commutation relations (\ref{comm1} and \ref{comm2}) and thus is allowable. This transforms our Hamiltonian into
+\begin{align}
+H=\frac{1}{2}\epsilon\sum_{k=1}^nZ_k+\frac{1}{2}V\sum_{n\neq j=1}^N(X_kX_j-Y_kY_j).
+\end{align}
+With this form, we can clearly see that the first (one-body) term in the Hamiltonian returns the energy $-\epsilon/2$ or $+\epsilon/2$ if the qubit representing the particle of a doublet is in the ground ($\ket{1}$) or excited ($\ket{0}$) state, respectively. The action of the second (two-body) term in the Hamiltonian can be determined by noting that
+\begin{align}
+\frac{1}{2}(XX-YY)\ket{00} &= \ket{11},
+\\
+\frac{1}{2}(XX-YY)\ket{01} &= 0,
+\\
+\frac{1}{2}(XX-YY)\ket{10} &= 0,
+\\
+\frac{1}{2}(XX-YY)\ket{11} &= \ket{00}.
+\end{align}
+That is, the two-body term moves a pair of particles between the ground states $\ket{00}$ and the excited states $\ket{11}$ of their respective doublets.  
+
+To construct an efficient ansatz, we must determine the subspace within which the Hamiltonian lives. To begin, note that particles are only ever moved between energy levels in pairs. This implies that all possible states have a Hamming weight of constant parity (odd or even); this is the same as the signature $r$ being conserved. Further, note that the Hamiltonian's coefficients ($\epsilon$ and $V$) are state independent (do not depend on the indices $n$ or $m$) as the states labeled by these indices are degenerate and thus have the same energy level. Thus, the Hamiltonian treats all states with the same number of excited particles (Hamming weight of the state) as the same. Therefore, the following ansatz forms exactly cover the subspace within which the $N$-degenerate Hamiltonian explores:
+\begin{align}
+\ket{\psi_{\text{even}}}&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\ket{D^n_{2k}},
+\\
+\ket{\psi_{\text{odd}}}&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\ket{D^n_{2k+1}}.
+\end{align}
+Here $\ket{D^n_k}$ represents a Dicke state which is defined as equal superposition of all $n$-qubit states with Hamming weight $k$. That is
+\begin{align}
+\ket{D^n_k}
+=
+\frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\ket{x},
+\end{align}
+where $h^n_k= \{\ket{x} \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\}$. There are two ways we can think of to prepare such ansatz: The first is to prepare them exactly as it is known how to deterministically prepare Dicke states with linear depth. The reference provides an algorithm for preparing a set of gates $U^n_k$ that prepares a Dicke state from a product state of Hamming weight $k$; that is
+\begin{align}
+U^n_k\ket{1}^{\otimes k}\ket{0}^{\otimes n-k}=\ket{D^n_k}.
+\end{align}
+It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the $k=6$ case, as an example) is given below
+\begin{align}
+\label{dicke_superposition}
+\Qcircuit @C=0.8em @R=0.8em
+{
+\lstick{\ket{0}} & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
+\\
+\lstick{\ket{0}} & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
+\\
+\lstick{\ket{0}} & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
+\\
+\lstick{\ket{0}} & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
+\\
+\lstick{\ket{0}} & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
+\\
+\lstick{\ket{0}} & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
+\
+}
+\end{align}
+The $R_y$ gates and CNOT gates prepare an arbitrary real superposition of product states with even Hamming weight $k$; then the $R_z$ gates add arbitrary phases to each of the states
+\begin{align}
+\ket{000000}
+\to \ &\cos(\theta_0/2)\ket{000000} 
+\nonumber
+\\
++\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\ket{110000} 
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\ket{111100}
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\ket{111111}.
+\end{align}
+Finally, $U^n_k$ converts each product state to its corresponding Dicke state. Thus, all together the circuit acts as
+\begin{align}
+\ket{000000}
+\to \ &\cos(\theta_0/2)\ket{D^6_0} 
+\nonumber
+\\
++\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\ket{D^6_2} 
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\ket{D^6_4}
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\ket{D^6_6}.
+\end{align}
+The circuit (\ref{dicke_superposition}) can be extended naturally for any even value of $k$. For odd values of $k$, one need simply add a single-qubit to the top of the circuit for $k-1$ and apply the $X$ gate to it. Although this ansatz has linear depth, the circuit for $U^n_k$ involves several double-controlled gates which involve the usage of several CNOT gates to decompose. As the CNOT gate is often the noisiest gate in NISQ era quantum computers, it is best to minimize their use.
+
 
 
 
