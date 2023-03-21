@@ -373,7 +373,6 @@ and finally
 \[
 j_z^{(n)} \rightarrow Z_n/2,
 \]
-!et
 which preserve the above $SU(2)$  commutation relations. This transforms our Hamiltonian into
 !bt
 \[
@@ -499,4 +498,127 @@ circuit for $U^n_k$ involves several double-controlled gates which
 involve the usage of several CNOT gates to decompose. As the CNOT gate
 is often the noisiest gate in NISQ era quantum computers, it is best
 to minimize their use.
+
+
+
+
+!bc pycod 
+def LM_circuit():
+    theta = Parameter('theta')
+    QC = QuantumCircuit(2)
+    QC.ry(2*(theta-np.pi/2),0)
+    QC.cnot(0,1)
+    return QC
+!ec
+
+
+
+!bc pycod 
+QC = LM_circuit()
+QC.draw(output='mpl')
+!ec
+
+=== VQE method ===
+
+For this method, we will be using Qiskit's VQE function, where we specifiy 
+* Quantum circuit
+  o Optimizer
+  o Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator" 
+  o Initial point (i.e. $\theta$ search space)
+  o Hamiltonian/measurement basis
+ 
+To define the Hamiltonian, we will use the Qiskit Pauli operator functions
+I,Z,X,Y.  In this method, for a given $\chi$, we will do a search over
+$\theta$ from $-\frac{\pi}{2}$ to $\frac{\pi}{2}$ and picking out the
+minimum energy value
+
+!bc pycod
+#sim1 min example
+sim = Aer.get_backend('qasm_simulator')
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000) #optimizer for VQE
+epsilon = 1
+omega = 2
+chi2 = [0.5,1]
+
+t = np.arange(-pi/2,pi/2,0.05) #0.1 step size finishs pretty fast
+energy = []
+for x in chi2:
+    ev = []
+    v = Vp(epsilon,omega,x)
+    for i in range(len(t)):
+        H = 0.5 * epsilon * ( Z ^ I ) + 0.5 * epsilon * ( I ^ Z ) -0.5 * v * ( X ^ X ) +0.5 * v * ( Y ^ Y )
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
+        result = vqe.compute_minimum_eigenvalue(H)
+        ev.append(result.eigenvalue)
+    energy.append(ev)
+
+
+plt.plot(t,energy[0],label='$\chi=0.5$')
+plt.plot(t,energy[1],label='$\chi=1$')
+plt.xlabel('$\\theta$')
+plt.ylabel('Ground State Energy')
+plt.title('$E_{g.s}$ vs. $\\theta$')
+plt.legend()
+!ec
+
+!bc pycod
+epsilon = 1
+omega = 2
+chi3 = np.arange(0,2.1,0.1)
+t = np.arange(-pi/2,pi/2,0.1)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000)
+LM_sim = []
+for x in chi3:
+    v = Vp(epsilon,omega,x)
+    ev = []
+    for i in range(len(t)):
+        H = 0.5 * epsilon * ( Z ^ I ) +0.5 * epsilon * ( I ^ Z ) -0.5 * v * ( X ^ X ) +0.5 * v * ( Y ^ Y )
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
+        result = vqe.compute_minimum_eigenvalue(H)
+
+        ev.append(result.eigenvalue)
+    LM_sim.append(min(ev))
+
+plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
+plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
+plt.scatter(chi3,LM_sim,label='QC sim',color='cyan')
+plt.axvline(1, color = 'k', linestyle='--')
+plt.ylabel('$E_{g.s}$')
+plt.xlabel('$\chi$')
+plt.title(f'$\Omega=2$')
+plt.legend()
+!ec
+
+=== VQE method using Qiskit ===
+
+For this method, we will be using Qiskit's VQE function, where we specifiy 
+o Quantum circuit
+o Optimizer
+o Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator" 
+o Hamiltonian/measurement basis
+
+!bc pycod
+epsilon = 1
+omega = 2
+chi5 = np.arange(0,2.1,0.1)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=10000)
+LM_sim = []
+for x in chi5:
+    v = Vp(epsilon,omega,x)
+    H = 0.5 * epsilon * ( Z ^ I ) +0.5 * epsilon * ( I ^ Z )-0.5 * v * ( X ^ X ) + 0.5 * v * ( Y ^ Y )
+    vec = Aer.get_backend('statevector_simulator')
+    vqe = VQE(ansatz=LM_circuit(),optimizer=adam,quantum_instance=vec,expectation=AerPauliExpectation())
+    result = vqe.compute_minimum_eigenvalue(H)
+    LM_sim.append(result.eigenvalue)
+
+
+plt.plot(chi,np.array(exact),label='$E_{exact}$',color='b')
+plt.plot(chi,np.array(HF),label='$E_{HF}$',color='g')
+plt.scatter(chi5,LM_sim,label='QC state vec',color='cyan')
+plt.axvline(1, color = 'k', linestyle='--')
+plt.ylabel('$E_{g.s}$')
+plt.xlabel('$\chi$')
+plt.title('$\Omega=2$')
+plt.legend()
+!ec
 

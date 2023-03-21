@@ -46,10 +46,11 @@ doconce format html week9.do.txt --html_style=bootstrap --pygments_html_style=de
                2,
                None,
                'quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model'),
-              ('Hartree Fock', 3, None, 'hartree-fock'),
-              ('Quantum Circuit', 3, None, 'quantum-circuit'),
-              ('VQE method', 3, None, 'vqe-method'),
-              ('VQE method using Qiskit', 3, None, 'vqe-method-using-qiskit')]}
+              ('Quantum Circuit, rewriting the Lipkin model in terms of Pauli '
+               'matrices',
+               3,
+               None,
+               'quantum-circuit-rewriting-the-lipkin-model-in-terms-of-pauli-matrices')]}
 end of tocinfo -->
 
 <body>
@@ -86,10 +87,7 @@ MathJax.Hub.Config({
         <ul class="dropdown-menu">
      <!-- navigation toc: --> <li><a href="#reminder-on-the-lipkin-model-and-variational-quantum-eigensolver-vqe" style="font-size: 80%;"><b>Reminder on the Lipkin model and Variational Quantum Eigensolver (VQE)</b></a></li>
      <!-- navigation toc: --> <li><a href="#quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model" style="font-size: 80%;"><b>Quantum computing and solving  the eigenvalue problem for the Lipkin model</b></a></li>
-     <!-- navigation toc: --> <li><a href="#hartree-fock" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Hartree Fock</a></li>
-     <!-- navigation toc: --> <li><a href="#quantum-circuit" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Quantum Circuit</a></li>
-     <!-- navigation toc: --> <li><a href="#vqe-method" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;VQE method</a></li>
-     <!-- navigation toc: --> <li><a href="#vqe-method-using-qiskit" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;VQE method using Qiskit</a></li>
+     <!-- navigation toc: --> <li><a href="#quantum-circuit-rewriting-the-lipkin-model-in-terms-of-pauli-matrices" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Quantum Circuit, rewriting the Lipkin model in terms of Pauli matrices</a></li>
 
         </ul>
       </li>
@@ -126,7 +124,7 @@ MathJax.Hub.Config({
 <div class="panel-body">
 <!-- subsequent paragraphs come in larger fonts, so start with a paragraph -->
 <ol>
- <li> Finalize the discussion of the VQE and the Lipkin model</li>
+ <li> Preparing the Lipkin model for  VQE quantum computing</li>
  <li> <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/Projects/2023/Project1" target="_self">Discussion of the project</a></li>
  <li> <a href="https://youtu.be/ZKv8pEy3Y_4" target="_self">Video of lecture</a></li>
 </ol>
@@ -140,105 +138,62 @@ MathJax.Hub.Config({
 <!-- !split -->
 <h2 id="reminder-on-the-lipkin-model-and-variational-quantum-eigensolver-vqe" class="anchor">Reminder on the Lipkin model and Variational Quantum Eigensolver (VQE) </h2>
 
-<p><a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch13.pdf" target="_self">See whiteboard notes from week of March 13-17</a> and lecture notes (jupyter-notebook)
-from the previous week at <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb" target="_self"><tt>https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb</tt></a>
+<p>"See lecture notes (jupyter-notebook)
+from the week of March 13-17 at <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb" target="_self"><tt>https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb</tt></a>.
 </p>
 
 <!-- !split -->
 <h2 id="quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model" class="anchor">Quantum computing and solving  the eigenvalue problem for the Lipkin model </h2>
 
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">qiskit</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.visualization</span> <span style="color: #008000; font-weight: bold">import</span> circuit_drawer
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.quantum_info</span> <span style="color: #008000; font-weight: bold">import</span> Statevector
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">import</span> figure
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">import</span> QuantumRegister, QuantumCircuit, ClassicalRegister, Aer, assemble
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.providers.aer.noise</span> <span style="color: #008000; font-weight: bold">import</span> NoiseModel
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pylatexenc</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.algorithms</span> <span style="color: #008000; font-weight: bold">import</span> VQE
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.utils</span> <span style="color: #008000; font-weight: bold">import</span> QuantumInstance
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.opflow</span> <span style="color: #008000; font-weight: bold">import</span> X, Z, I, Y
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.circuit</span> <span style="color: #008000; font-weight: bold">import</span> Parameter
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.algorithms.optimizers</span> <span style="color: #008000; font-weight: bold">import</span> ADAM
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.opflow</span> <span style="color: #008000; font-weight: bold">import</span> AerPauliExpectation
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">import</span> IBMQ
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">cmath</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">scipy.sparse</span> <span style="color: #008000; font-weight: bold">import</span> diags
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy.linalg</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">LA</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">IPython.display</span> <span style="color: #008000; font-weight: bold">import</span> Image
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">warnings</span>
-warnings<span style="color: #666666">.</span>filterwarnings(<span style="color: #BA2121">&#39;ignore&#39;</span>)
-pi<span style="color: #666666">=</span>np<span style="color: #666666">.</span>pi
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>We turn now to a simpler Lipkin model without the \( W \)-term and a total spin of \( J=1 \) as maximum value of the spin, with a Hamiltonian</p>
+<p>We turn now to a simpler variant of the Lipkin model without the \( W \)-term and a total spin of \( J=1 \) only as maximum value of the spin.
+This corresponds to a system with \( N=2 \) particles (fermions in our case).
+Our Hamiltonian is given by the quasispin operators (see below) 
+</p>
 $$
-\begin{equation}
-     \hat{H}_{LM} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
-\label{_auto1}
-\end{equation}
+     \hat{H} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
 $$
 
-<p>The quasi-spin operators act like lowering and raising angular momentum operators, as discussed earlier.
-With these properties we can calculate the LM Hamiltonian matrix
+<p><a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb" target="_self">As discussed
+previously</a>,
+the quasispin operators act like lowering and raising angular momentum
+operators.
+</p>
+
+<p>With these properties we can calculate the Hamiltonian
+matrix for the Lipkin model by computing the various matrix elements
 </p>
 $$
 \begin{equation}
-\langle JJ_z|H_{LM}|JJ_z'\rangle,
-\label{_auto2}
+\langle JJ_z|H|JJ_z'\rangle,
+\label{_auto1}
 \end{equation}
 $$
 
 <p>where the non-zero elements are given by</p>
 $$
-\begin{equation}
 \begin{split}
-    \langle JJ_z|H_{LM}|JJ_z'\rangle & = \epsilon J_z\\
-     \langle JJ_z|H_{LM}|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H_{LM}|JJ_z'\rangle \\
-     &= -\frac{1}{2}VC,
+\langle JJ_z|H|JJ_z'\rangle & = \epsilon J_z\\
+\langle JJ_z|H|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H|JJ_z'\rangle \\ &= -\frac{1}{2}VC,
 \end{split}
-\label{_auto3}
-\end{equation}
 $$
 
-<p>where \( C \) is the Clebsch-Gordan coefficients one gets when \( J_{\pm}^2 \) operates on the state \( |JJ_z\rangle \).
-Using the above definitions  we can calculate the exact solution to the Lipkin model.
+<p>where \( C \) is the Clebsch-Gordan coefficients (from the raising and lowering operators) one gets when
+\( J_{\pm}^2 \) operates on the state \( |JJ_z\rangle \).  Using the above
+definitions we can calculate the exact solution to the Lipkin model.
 </p>
 
-<p>The Hamiltonian is given by</p>
+<p>With the \( V \)-interaction terms, we obtain the following Hamiltonian matrix</p>
 $$
 \begin{equation}
 \begin{pmatrix}-\epsilon & 0 & -V\\
  0&0&0\\
  -V&0&\epsilon
 \end{pmatrix}
-\label{_auto4}
+\label{_auto2}
 \end{equation}
 $$
 
-
+<p>The following <b>python</b> code sets up the above matrix and finds the pertinent eigenvalues.</p>
 
 <!-- code=python (!bc pycod) typeset with pygments style "default" -->
 <div class="cell border-box-sizing code_cell rendered">
@@ -382,417 +337,369 @@ plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;
     </div>
   </div>
 </div>
-<h3 id="hartree-fock" class="anchor">Hartree Fock </h3>
+<h3 id="quantum-circuit-rewriting-the-lipkin-model-in-terms-of-pauli-matrices" class="anchor">Quantum Circuit, rewriting the Lipkin model in terms of Pauli matrices </h3>
 
-<p>A variational method in quantum mechanics, starts with the Schrodinger equation where one minimizes the energy for a given trail wave function \( |\psi\rangle \).</p>
-
-$$
-\begin{equation}
-\delta\frac{\langle\psi |\hat{H}|\psi\rangle}{\langle\psi|\psi\rangle}=0
-\label{_auto5}
-\end{equation}
-$$
-
-<p>The Hartree Fock (HF) method is a variational method that assumes that
-the exact N-body wavefunction of the system can be approimated by a
-single Slater determinant, where energy of the system is minimized and
-the trial wave function is the particle number conserving coherent
-product state. The SU(2) coherent states map a two-dimensional sphere
-known as the bloch sphere onto the complex plane,
+<p>To solve the Lipkin model on a quantum computer we have to solve
+Schrodinger's equation. To achieve this, we will use the Variational
+Quantum Eigensolver (VQE) <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb" target="_self">discussed
+earlier</a>.
 </p>
 
+<p>Before we proceed however, we need to rewrite the quasispin operators in terms of Pauli spin matrices/operators.</p>
+
+<p>We take the liberty here of reminding you of some of the derivations done previously.
+We defined the number operator as
+</p>
 $$
-\begin{equation}
-\tau = tan\frac{\theta}{2}e^{-i\phi}
-\label{_auto6}
-\end{equation}
+N=\sum_{n\sigma}a^\dagger_{n\sigma}a_{n\sigma},
 $$
 
-<p>where the normalized coherent SU(2) state can be written in the language of LM:</p>
+<p>which commutes with the Lipkin Hamiltonian. This can be seen by
+examining the Lipkin model Hamiltonian and noticing that the one-body
+part simply counts particles while the two-body term moves particles
+in pairs. Thus, the Hamiltonian conserves particle number. To find
+more symmetries we rewrote the Lipkin Hamiltonian in terms of \( SU(2) \) quasispin
+operators
+</p>
 $$
-\begin{equation}
-|\tau\rangle = \frac{1}{(1+|\tau|^2)^{\Omega/2}}e^{\tau\hat{K}_+}|\frac{\Omega}{2},-\frac{\Omega}{2}\rangle,
-\label{_auto7}
-\end{equation}
+\begin{align}
+H = \epsilon J_z + \frac{1}{2}V(J^2_++J^2_-),
+\label{_auto3}
+\end{align}
 $$
 
-<p>The \( E_{g.s} \) of the LM given HF coherent states is:</p>
+<p>via the mappings</p>
 $$
-\begin{equation}
-E(\tau) = \langle \tau|\hat{H}_{LM}|\tau\rangle.
+J_z=\sum_{n}j_z^{(n)},
+$$
+
+<p>and</p>
+$$
+J_\pm=\sum_nj^{(n)}_{\pm},
+$$
+
+<p>where we have the onebody operators</p>
+$$
+j_z^{(n)}=\frac{1}{2}\sum_{\sigma}\sigma a^\dagger_{n\sigma}a_{n\sigma},
+$$
+
+<p>and</p>
+$$
+j^{(n)}_{\pm}=a^\dagger_{n\pm}a_{n\mp}.
+$$
+
+<p>These operators obey the \( SU(2) \) commutation relations</p>
+
+$$
+[J_+,J_-]&=2J_z,
+$$
+
+<p>and</p>
+$$
+[J_z,J_\pm]&=\pm J_\pm.
+$$
+
+<p>Here the ladder operators are defined as \( J_{\pm}= J_x\pm iJ_y \). With this rewriting, we can see that the total spin operator \( J^2 \), which is defined as </p>
+$$
+J^2= J^2_x+J^2_y+J^2_z =
+\frac{1}{2}\acomm{J_+}{J_-}+J_z^2,
+$$
+
+<p>commutes with the Hamiltonian since the Hamiltonian.
+We note also that the rotation operator
+</p>
+$$
+R=e^{i\phi J_z},
+$$
+
+<p>commutes with the Hamiltonian, which can be explained as follows. Writing \( J_z \) as</p>
+$$
+J_z=\frac{1}{2}(N_+-N_-),
+$$
+
+<p>where \( N_\pm=\sum_{n\pm}a^\dagger_{n\pm}a_{n\pm} \), allows us to see that it measures half the difference between the number of particles in the upper and lower levels. Thus, the possible eigenvalues \( r \) of the signature operator are</p>
+$$
+\begin{align}
+r=+1, & j_z=2n 
+\label{_auto4}\\
+r=+i, & j_z=2n+\frac{1}{2} 
+\label{_auto5}\\
+r=-1, & j_z=2n+1 
+\label{_auto6}\\
+r=-i, & j_z=2n+\frac{3}{2} 
+\label{_auto7}\\
 \label{_auto8}
-\end{equation}
+\end{align}
 $$
 
-<p>To calculate equation the last euation, we use generating functions for:</p>
+<p>for \( n\in\mathbb{Z} \). Note that \( r \) is real or imaginary if the number
+of particles \( N \) is even or odd, respectively. Since, as discussed
+above, the Lipkin Hamiltonian conserves \( N \), \( r \) cannot jump between
+being real and imaginary. Additionally, because particles must be
+moved in pairs, and \( J_z \) measures half the difference between
+particles in the upper and lower levels, \( j_z \) can only change by as
+</p>
+
 $$
-\begin{equation}
-\begin{split}
-\langle \tau|\hat{J}_{z}|\tau\rangle &= \frac{1}{2}\Omega\frac{|\tau|^2-1}{\tau|^2+1}\\
-\langle \tau|\hat{J}_{\pm}^2|\tau\rangle &= \Omega\frac{\tau^*}{|\tau|^2+1}
-\end{split}
+\begin{align}
+j_z
+&\to
+\frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
+\nonumber
+\\
+&=
+J_z\pm2n.
 \label{_auto9}
-\end{equation}
+\end{align}
 $$
 
-<p>Then using the definition of \( \tau \) in equation (10) we can write down the energy:</p>
+<p>To solve the Lipkin model with a quantum computer, the first step is
+to map the system to a set of qubits. We will  restrict ourselves here to
+the half-filled case where the number of particles \( N \) equals the
+degeneracy of the states \( \Omega \). One could assign each possible
+state \( (n,\sigma) \) a qubit such that the qubit being in the state
+\( \vert 1\rangle \) or \( \vert 0\rangle \) would imply that the state \( (n,\sigma) \) is
+occupied or unoccupied, respectively. This mapping scheme (which we'll
+call occupation mapping) requires 2$\Omega$ qubits. Additionally, any
+ansatz that would restrict the minimization search to the correct
+subspace of constant Hamming weight \( N \) (since the number of particles
+\( N \) is conserved) would necessitate the use of at least four-qubit
+gates. This is because moving a pair of particles in this scheme would
+require two annihilation operators on the states from which the pair
+particles move and two creation operators on the states to which the
+pair of particles move. That is, it takes a four-qubit gate to change
+between the states \( \vert 1100\rangle \) and \( \vert 0011\rangle \), for example. 
+We only known how to
+efficiently decompose up to two qubit gates. Thus the involvement of
+four qubit gates would necessitate a longer depth circuit than one
+involving only two and one qubit gates, creating more noise and less
+accurate results.
+</p>
+
+<p>However, because there are only two energy levels in the Lipkin model,
+any other natural mapping is possible. In this mapping scheme (which
+we will call level mapping) each doublet (\( (n,+1) \), \( (n,-1) \)) would be
+assigned a qubit such that the qubit being in the state \( \vert 0\rangle \) or
+\( \vert 1\rangle \) would imply that the particle is in the \( (n,+1) \) or \( (n,-1) \)
+state, respectively. Note that these are the only two possible
+configurations of the doublet as we are restricting ourselves to the
+half-filled case and the Lipkin Hamiltonian only moves particles
+between energy levels, not degenerate states. Thus the level mapping
+only requires \( \Omega \) qubits which is half that of the occupation
+mapping. Additionally, any ansatz that would restrict the minimization
+search to the correct subspace of constant Hamming weight \( N \) requires
+at most, only two qubit gates. This is because moving a pair of
+particles in this scheme only changes the state of two doublets (and
+therefore qubits). That is, it only takes a two-qubit gate to change
+between the states \( \vert 00\rangle \) and \( \vert 11\rangle \), for example. As an
+efficient decomposition two-qubit gates is known, the ansatz for this
+mapping would be shorter (and thus less noisy) than that of the
+previous mapping.
+</p>
+
+<p>One could imagine a third mapping scheme which would require even less
+qubits in which each of the possible states in the spin basis
+\( \vert JJ_z\rangle \) is mapped to a single qubit. In this spin mapping, there
+are only \( 2J+1 \) possible states (since \( J_z=-J,-J+1,...,J-1,J \)) for
+each value of \( J \). And, since the Hamiltonian is block diagonal (with
+a different block for each \( J \)) the eigenvalues of the Hamiltonian are
+simply the eigenvalues of each block, which may be calculated
+separately. Since the maximum value of \( J \) is \( J_{\text{max}}=N/2 \),
+the largest number of qubits would be
+\( 2J_{\text{max}}+1=N+1 \). However, \( \left\lfloor N/2 \right\rfloor \)
+different circuit would need to be used for minimization for all
+possible values of \( J \), to explore the entire Hilbert space. (The
+minimum of the set of minimum energies that each circuit finds would
+be the ground state energy of the entire system.) This increases,
+linearly, the amount of time required to find the ground state energy.
+</p>
+
+<p>After reviewing the three possible mappings, it is our view that the
+level mapping is the best suited for NISQ era
+devices given its low qubit count and ability to search the entire
+relevant Hilbert space with one circuit (which reduces time to
+solution) and the fact that at most, only two-qubit gates are required
+of the ansatz, leading to shorter depth (and thus less noisy)
+circuits.
+</p>
+
+<p>The Hamiltonian takes the form</p>
+
 $$
-\begin{equation}
-E(\tau) = -\frac{\epsilon}{2}\Omega(cos\theta+\frac{\chi}{2}sin^2\theta cos2\phi),
+\begin{align}
+H=\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
 \label{_auto10}
-\end{equation}
+\end{align}
 $$
 
-<p>where \( \chi=\frac{V}{\epsilon}(\Omega-1) \). Minimizing \( E(\tau) \) with respect to \( \theta,\phi \), we obtain the ground state Hartree Fock energy</p>
+<p>Plugging the mapping from the total \( J \) operators to the individual one-body \( j \) operators yields</p>
+
 $$
-\begin{equation}
-\begin{split}
-E_{HF}  = -\frac{\Omega}{2}\epsilon &\hspace{1cm} \chi < 1\\
-E_{HF}  = -\frac{\Omega}{4}\epsilon(\chi+\frac{1}{\chi}) &\hspace{1cm} \chi\ge 1
-\end{split}
-\label{_auto11}
-\end{equation}
-$$
-
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">E_HF</span>(x,E,omega):
-  <span style="color: #008000; font-weight: bold">if</span> x <span style="color: #666666">&lt;</span> <span style="color: #666666">1</span>:
-    EHF <span style="color: #666666">=</span> <span style="color: #666666">-</span>(omega<span style="color: #666666">/2</span>)<span style="color: #666666">*</span>E
-  <span style="color: #008000; font-weight: bold">elif</span> x <span style="color: #666666">&gt;=</span> <span style="color: #666666">1</span>:
-    EHF <span style="color: #666666">=</span> <span style="color: #666666">-</span>(omega<span style="color: #666666">/4</span>)<span style="color: #666666">*</span>E<span style="color: #666666">*</span>(x<span style="color: #666666">+</span>(<span style="color: #666666">1/</span>x))
-  <span style="color: #008000; font-weight: bold">return</span> EHF
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;">epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
-Omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
-
-HF <span style="color: #666666">=</span> []
-exact <span style="color: #666666">=</span> []
-<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi:
-    HF<span style="color: #666666">.</span>append(E_HF(x,epsilon,omega)<span style="color: #666666">.</span>real)
-    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
-    e,h <span style="color: #666666">=</span> quasi_spin(epsilon,v,omega)
-    exact<span style="color: #666666">.</span>append(e[<span style="color: #666666">0</span>]<span style="color: #666666">.</span>real)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;">plt<span style="color: #666666">.</span>plot(chi,HF,label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;HF&#39;</span>)
-plt<span style="color: #666666">.</span>plot(chi,exact,label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;exact&#39;</span>)
-plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$\chi$&#39;</span>)
-plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;Energy&#39;</span>)
-plt<span style="color: #666666">.</span>axvline(<span style="color: #666666">1</span>, color <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;k&#39;</span>, linestyle<span style="color: #666666">=</span><span style="color: #BA2121">&#39;--&#39;</span>)
-plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;$\Omega=2$ exact Lipkin Model&#39;</span>)
-plt<span style="color: #666666">.</span>legend(bbox_to_anchor<span style="color: #666666">=</span>(<span style="color: #666666">1.05</span>, <span style="color: #666666">1</span>))
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<h3 id="quantum-circuit" class="anchor">Quantum Circuit </h3>
-
-<p>To solve the Lipkin model on a quantum computer we have to solve Schrodinger's equation. </p>
-$$
-\begin{equation}
-H|\psi(\tilde{\theta})\rangle = E|\psi(\tilde{\theta})\rangle\\
-\label{_auto12}
-\end{equation}
-$$
-
-<p>We map the creation and annihilation operators to Pauli spin matrices/operators Z, X, Y (show this). The Hamiltonian then takes the form of</p>
-$$
-\begin{equation}
-H = \frac{\epsilon}{2}(Z_0\otimes \boldsymbol{I}_1+Z_1\otimes \boldsymbol{I}_0) - \frac{V}{2}(X_0\otimes X_1 - Y_0\otimes Y_1),
+\begin{align}
+H &= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\left[\left(\sum_nj^{(n)}_{+}\right)^2+\left(\sum_nj^{(n)}_{-}\right)^2\right]
+\label{_auto11}\\
+&= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\sum_{n,m}\left(j^{(n)}_+j^{(m)}_++j^{(n)}_-j^{(m)}_-\right)
+\label{_auto12}\\
+&= \epsilon\sum_{n}j_z^{(n)} + 2V\sum_{n < m}\left(j^{(n)}_xj^{(m)}_x-j^{(n)}_yj^{(m)}_y\right),
 \label{_auto13}
-\end{equation}
+\end{align}
 $$
 
-<p>where the Pauli operators are the measurement basis which the quantum
-circuit is measured in. The subscripts refer to quibits \( 0 \) and \( 1 \) respectively. Since we have two particles in this case, we end up with a two qubit state, as indicated
-in the ansatz for the initial state here.
-The Hamiltonian can thus we rewritten as a \( 4\times 4 \) matrix acting on a two-qubit state. 
-</p>
-
-<p>However, before measuring, we first have to
-prepare the initial state \( \vert\psi(\tilde{\theta})\rangle \) for
-\( \Omega=2 \) of the LM circuit
-</p>
+<p>where we have used the definitions</p>
 $$
-\begin{equation}
-\vert\psi(\tilde{\theta})\rangle = \cos{ (\tilde{\theta})}\vert 00\rangle+\sin{(\tilde{\theta})}\vert 11\rangle,
-\label{_auto14}
-\end{equation}
+j_{\pm}^{(n)}=j_x^{(n)}\pm ij_y^{(n)}.
 $$
 
-<p>where \( |00\rangle =|\uparrow\uparrow\rangle \), \( |11\rangle=|\downarrow\downarrow\rangle \), and \( \tilde{\theta}=\theta-\frac{\pi}{2} \). </p>
+<p>To convert to Pauli matrices, we make the transformations</p>
+$$
+j_x^{(n)} \rightarrow X_n/2,
+$$
 
-<p>This type of problem resides in the pantheon of variational methods
-where we minimize \( \tilde{\theta} \). This problem was coded using IBM's
-python library Qiskit. Since this is a variational problem, the use of
-Qiskit's Variational Quantum Eigensolver (VQE) was used to find the
-optimal \( \tilde{\theta} \) that minimizes
-\( \langle\psi(\tilde{\theta})|H|\psi(\tilde{\theta})\rangle \).
+<p>and</p>
+$$
+j_y^{(n)} \rightarrow Y_n/2,
+$$
+
+<p>and finally</p>
+$$
+j_z^{(n)} \rightarrow Z_n/2,
+$$
+
+<p>which preserve the above \( SU(2) \)  commutation relations. This transforms our Hamiltonian into</p>
+$$
+H=\frac{1}{2}\epsilon\sum_{k=1}^nZ_k+\frac{1}{2}V\sum_{n\neq j=1}^N(X_kX_j-Y_kY_j).
+$$
+
+<p>With this form, we can clearly see that the first (one-body) term in
+the Hamiltonian returns the energy \( -\epsilon/2 \) or \( +\epsilon/2 \) if
+the qubit representing the particle of a doublet is in the ground
+(\( \vert 1\rangle \)) or excited (\( \vert 0\rangle \)) state,
+respectively. The action of the second (two-body) term in the
+Hamiltonian can be determined by noting that
+</p>
+$$
+\begin{align}
+\frac{1}{2}(XX-YY)\vert 00} &= \vert 11\rangle,
+\label{_auto14}\\
+\frac{1}{2}(XX-YY)\vert 01\rangle &= 0,
+\label{_auto15}\\
+\frac{1}{2}(XX-YY)\vert 10\rangle &= 0,
+\label{_auto16}\\
+\frac{1}{2}(XX-YY)\vert 11\rangle &= \vert 00\rangle.
+\label{_auto17}
+\end{align}
+$$
+
+<p>That is, the two-body term moves a pair of particles between the
+ground states \( \vert 00\rangle \) and the excited states \( \vert
+11\rangle \) of their respective doublets.
 </p>
 
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">LM_circuit</span>():
-    theta <span style="color: #666666">=</span> Parameter(<span style="color: #BA2121">&#39;theta&#39;</span>)
-    QC <span style="color: #666666">=</span> QuantumCircuit(<span style="color: #666666">2</span>)
-    QC<span style="color: #666666">.</span>ry(<span style="color: #666666">2*</span>(theta<span style="color: #666666">-</span>np<span style="color: #666666">.</span>pi<span style="color: #666666">/2</span>),<span style="color: #666666">0</span>)
-    QC<span style="color: #666666">.</span>cnot(<span style="color: #666666">0</span>,<span style="color: #666666">1</span>)
-    <span style="color: #008000; font-weight: bold">return</span> QC
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;">QC <span style="color: #666666">=</span> LM_circuit()
-QC<span style="color: #666666">.</span>draw(output<span style="color: #666666">=</span><span style="color: #BA2121">&#39;mpl&#39;</span>)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<h3 id="vqe-method" class="anchor">VQE method </h3>
-
-<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
-<ul>
-<li> Quantum circuit
-<ol type="a"></li>
- <li> Optimizer</li>
- <li> Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator"</li> 
- <li> Initial point (i.e. \( \theta \) search space)</li>
- <li> Hamiltonian/measurement basis</li>
-</ol>
-</ul>
-<p>To define the Hamiltonian, we will use the Qiskit Pauli operator functions
-I,Z,X,Y.  In this method, for a given \( \chi \), we will do a search over
-\( \theta \) from \( -\frac{\pi}{2} \) to \( \frac{\pi}{2} \) and picking out the
-minimum energy value
+<p>To construct an efficient ansatz, we must determine the subspace
+within which the Hamiltonian lives. To begin, note that particles are
+only ever moved between energy levels in pairs. This implies that all
+possible states have a Hamming weight of constant parity (odd or
+even); this is the same as the signature \( r \) being conserved. Further,
+note that the Hamiltonian's coefficients (\( \epsilon \) and \( V \)) are
+state independent (do not depend on the indices \( n \) or \( m \)) as the
+states labeled by these indices are degenerate and thus have the same
+energy level. Thus, the Hamiltonian treats all states with the same
+number of excited particles (Hamming weight of the state) as the
+same. Therefore, the following ansatz forms exactly cover the subspace
+within which the \( N \)-degenerate Hamiltonian explores:
 </p>
 
+$$
+\begin{align}
+\vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
+\label{_auto18}\\
+\vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
+\label{_auto19}
+\end{align}
+$$
 
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic">#sim1 min example</span>
-sim <span style="color: #666666">=</span> Aer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;qasm_simulator&#39;</span>)
-adam <span style="color: #666666">=</span>qiskit<span style="color: #666666">.</span>algorithms<span style="color: #666666">.</span>optimizers<span style="color: #666666">.</span>ADAM(maxiter<span style="color: #666666">=10000</span>) <span style="color: #408080; font-style: italic">#optimizer for VQE</span>
-epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
-omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
-chi2 <span style="color: #666666">=</span> [<span style="color: #666666">0.5</span>,<span style="color: #666666">1</span>]
+<p>Here \( \vert D^n_k\rangle \) represents a Dicke state which is defined as equal superposition of all \( n \)-qubit states with Hamming weight \( k \). That is</p>
 
-t <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">-</span>pi<span style="color: #666666">/2</span>,pi<span style="color: #666666">/2</span>,<span style="color: #666666">0.05</span>) <span style="color: #408080; font-style: italic">#0.1 step size finishs pretty fast</span>
-energy <span style="color: #666666">=</span> []
-<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi2:
-    ev <span style="color: #666666">=</span> []
-    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
-    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">len</span>(t)):
-        H <span style="color: #666666">=</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( Z <span style="color: #666666">^</span> I ) <span style="color: #666666">+</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( I <span style="color: #666666">^</span> Z ) <span style="color: #666666">-0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( X <span style="color: #666666">^</span> X ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( Y <span style="color: #666666">^</span> Y )
-        vqe <span style="color: #666666">=</span> VQE(ansatz<span style="color: #666666">=</span>LM_circuit(),optimizer<span style="color: #666666">=</span>adam,initial_point<span style="color: #666666">=</span>[t[i]],quantum_instance<span style="color: #666666">=</span>sim,expectation<span style="color: #666666">=</span>AerPauliExpectation())
-        result <span style="color: #666666">=</span> vqe<span style="color: #666666">.</span>compute_minimum_eigenvalue(H)
-        ev<span style="color: #666666">.</span>append(result<span style="color: #666666">.</span>eigenvalue)
-    energy<span style="color: #666666">.</span>append(ev)
+$$
+\begin{align}
+\vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
+\label{_auto20}
+\end{align}
+$$
 
+<p>where \( h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\} \). There are two ways we can think of to prepare such ansatz: The first is to prepare them exactly as it is known how to deterministically prepare Dicke states with linear depth. The reference provides an algorithm for preparing a set of gates \( U^n_k \) that prepares a Dicke state from a product state of Hamming weight \( k \); that is</p>
+$$
+\begin{align}
+U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
+\label{_auto21}
+\end{align}
+$$
 
-plt<span style="color: #666666">.</span>plot(t,energy[<span style="color: #666666">0</span>],label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$\chi=0.5$&#39;</span>)
-plt<span style="color: #666666">.</span>plot(t,energy[<span style="color: #666666">1</span>],label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$\chi=1$&#39;</span>)
-plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$</span><span style="color: #BB6622; font-weight: bold">\\</span><span style="color: #BA2121">theta$&#39;</span>)
-plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;Ground State Energy&#39;</span>)
-plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{g.s}</span><span style="color: #BA2121">$ vs. $</span><span style="color: #BB6622; font-weight: bold">\\</span><span style="color: #BA2121">theta$&#39;</span>)
-plt<span style="color: #666666">.</span>legend()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;">epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
-omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
-chi3 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">0</span>,<span style="color: #666666">2.1</span>,<span style="color: #666666">0.1</span>)
-t <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">-</span>pi<span style="color: #666666">/2</span>,pi<span style="color: #666666">/2</span>,<span style="color: #666666">0.1</span>)
-adam <span style="color: #666666">=</span>qiskit<span style="color: #666666">.</span>algorithms<span style="color: #666666">.</span>optimizers<span style="color: #666666">.</span>ADAM(maxiter<span style="color: #666666">=10000</span>)
-LM_sim <span style="color: #666666">=</span> []
-<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi3:
-    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
-    ev <span style="color: #666666">=</span> []
-    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">len</span>(t)):
-        H <span style="color: #666666">=</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( Z <span style="color: #666666">^</span> I ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( I <span style="color: #666666">^</span> Z ) <span style="color: #666666">-0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( X <span style="color: #666666">^</span> X ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( Y <span style="color: #666666">^</span> Y )
-        vqe <span style="color: #666666">=</span> VQE(ansatz<span style="color: #666666">=</span>LM_circuit(),optimizer<span style="color: #666666">=</span>adam,initial_point<span style="color: #666666">=</span>[t[i]],quantum_instance<span style="color: #666666">=</span>sim,expectation<span style="color: #666666">=</span>AerPauliExpectation())
-        result <span style="color: #666666">=</span> vqe<span style="color: #666666">.</span>compute_minimum_eigenvalue(H)
+<p>It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the \( k=6 \) case, as an example) is given below</p>
+$$
+\begin{align}
+\label{dicke_superposition}
+\Qcircuit @C=0.8em @R=0.8em
+{
+\lstick{\vert 0}\rangle & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
+\\
+\lstick{\vert 0}\rangle & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
+\label{_auto22}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
+\label{_auto23}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
+\label{_auto24}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
+\label{_auto25}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
+\
+}
+\label{_auto26}
+\end{align}
+$$
 
-        ev<span style="color: #666666">.</span>append(result<span style="color: #666666">.</span>eigenvalue)
-    LM_sim<span style="color: #666666">.</span>append(<span style="color: #008000">min</span>(ev))
+<p>The \( R_y \) gates and CNOT gates prepare an arbitrary real superposition of product states with even Hamming weight \( k \); then the \( R_z \) gates add arbitrary phases to each of the states</p>
 
-plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(exact),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{exact}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;b&#39;</span>)
-plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(HF),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{HF}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;g&#39;</span>)
-plt<span style="color: #666666">.</span>scatter(chi3,LM_sim,label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;QC sim&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;cyan&#39;</span>)
-plt<span style="color: #666666">.</span>axvline(<span style="color: #666666">1</span>, color <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;k&#39;</span>, linestyle<span style="color: #666666">=</span><span style="color: #BA2121">&#39;--&#39;</span>)
-plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{g.s}</span><span style="color: #BA2121">$&#39;</span>)
-plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$\chi$&#39;</span>)
-plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">f&#39;$\Omega=2$&#39;</span>)
-plt<span style="color: #666666">.</span>legend()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<h3 id="vqe-method-using-qiskit" class="anchor">VQE method using Qiskit </h3>
+$$
+\begin{align}
+\vert 000000\rangle
+\to \ &\cos(\theta_0/2)\vert 000000\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert 110000\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert 111100\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert 111111\rangle.
+\end{align}
+Finally, $U^n_k$ converts each product state to its corresponding Dicke state. Thus, all together the circuit acts as
+\begin{align}
+\vert 000000\rangle
+\to \ &\cos(\theta_0/2)\vert D^6_0\rangle 
+\nonumber
+\\
++\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert D^6_2\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert D^6_4\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert D^6_6\rangle.
+\label{_auto27}
+\end{align}
+$$
 
-<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
-<ol>
-<li> Quantum circuit</li>
-<li> Optimizer</li>
-<li> Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator"</li> 
-<li> Hamiltonian/measurement basis</li>
-</ol>
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;">epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
-omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
-chi5 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">0</span>,<span style="color: #666666">2.1</span>,<span style="color: #666666">0.1</span>)
-adam <span style="color: #666666">=</span>qiskit<span style="color: #666666">.</span>algorithms<span style="color: #666666">.</span>optimizers<span style="color: #666666">.</span>ADAM(maxiter<span style="color: #666666">=10000</span>)
-LM_sim <span style="color: #666666">=</span> []
-<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi5:
-    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
-    H <span style="color: #666666">=</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( Z <span style="color: #666666">^</span> I ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( I <span style="color: #666666">^</span> Z )<span style="color: #666666">-0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( X <span style="color: #666666">^</span> X ) <span style="color: #666666">+</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( Y <span style="color: #666666">^</span> Y )
-    vec <span style="color: #666666">=</span> Aer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;statevector_simulator&#39;</span>)
-    vqe <span style="color: #666666">=</span> VQE(ansatz<span style="color: #666666">=</span>LM_circuit(),optimizer<span style="color: #666666">=</span>adam,quantum_instance<span style="color: #666666">=</span>vec,expectation<span style="color: #666666">=</span>AerPauliExpectation())
-    result <span style="color: #666666">=</span> vqe<span style="color: #666666">.</span>compute_minimum_eigenvalue(H)
-    LM_sim<span style="color: #666666">.</span>append(result<span style="color: #666666">.</span>eigenvalue)
-
-
-plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(exact),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{exact}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;b&#39;</span>)
-plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(HF),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{HF}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;g&#39;</span>)
-plt<span style="color: #666666">.</span>scatter(chi5,LM_sim,label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;QC state vec&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;cyan&#39;</span>)
-plt<span style="color: #666666">.</span>axvline(<span style="color: #666666">1</span>, color <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;k&#39;</span>, linestyle<span style="color: #666666">=</span><span style="color: #BA2121">&#39;--&#39;</span>)
-plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{g.s}</span><span style="color: #BA2121">$&#39;</span>)
-plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$\chi$&#39;</span>)
-plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;$\Omega=2$&#39;</span>)
-plt<span style="color: #666666">.</span>legend()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>Typically, running with Qiskit's own VQE is faster.</p>
+<p>The circuit of Eq. m\eqref{dicke_superposition} can be extended
+naturally for any even value of \( k \). For odd values of \( k \), one need
+simply add a single-qubit to the top of the circuit for \( k-1 \) and
+apply the \( X \) gate to it. Although this ansatz has linear depth, the
+circuit for \( U^n_k \) involves several double-controlled gates which
+involve the usage of several CNOT gates to decompose. As the CNOT gate
+is often the noisiest gate in NISQ era quantum computers, it is best
+to minimize their use.
+</p>
 
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->
