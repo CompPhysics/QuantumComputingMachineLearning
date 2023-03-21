@@ -566,12 +566,175 @@ H_{J = 2} =
 label{eq:HJ=2}
 \end{equation}
 !et
-Inserting values for the constants $\epsilon$, $V$ and $W$ we can in turn diagonalize the above matrix and obtain the relevant eigenvalues. 
+
+
+
+We can now select a set of parameters and diagonalize the above matrix. We select $\epsilon = 2$, $V = -1/3$, $W = -1/4$ and our matrix becoes
+!bt
+\[ H_{J=2}^{(1)} =
+\begin{pmatrix}
+-4 & 0 & -\sqrt{6}/3 & 0 & 0 \\
+0 & -2 - 3/4 & 0 & -1 & 0 \\
+-\sqrt{6}/3 & 0 & -1 & 0 & -\sqrt{6}/3 \\
+0 & -1 & 0 & 2 + -3/4 & 0 \\
+0 & 0 & -\sqrt{6}/3 & 0 & 4
+\end{pmatrix}, \]
+!et
+which gives the eigenvalue
+!bt
+\[ D = \begin{pmatrix}
+-4.21288 &  0 &  0 &  0 &  0 \\
+0 & -2.98607  & 0  & 0  & 0 \\
+0 &  0 & -0.91914  & 0  & 0 \\
+0 &  0 & 0   & 1.48607  & 0 \\
+0 &  0  & 0  & 0  & 4.13201
+\end{pmatrix}. \]
+!et
+The lowest state has an admixture of basis states given by
+!bt
+\[ \vert \psi_0\rangle = 0.96735\vert2,-2\rangle + 0.25221\vert 2,0\rangle + 0.02507\vert 2,2\rangle,
+\]
+!et
+with energy $E_0 = -4.21288$.
+
+We can now change the parameters to
+$\varepsilon = 2$, $V = -4/3$, $W = -1$. Our matrix reads then
+!bt
+\[ H_{J=2}^{(2)} =
+\begin{pmatrix}
+-4 & 0 & -4\sqrt{6}/3 & 0 & 0 \\
+0 & -5 & 0 & -4 & 0 \\
+-4\sqrt{6}/3 & 0 & -4 & 0 & -4\sqrt{6}/3 \\
+0 & -4 & 0 & -1 & 0 \\
+0 & 0 & -4\sqrt{6}/3 & 0 & 4
+\end{pmatrix}, \]
+!et
+with the following eigenvalues
+!bt
+\[ D = \begin{pmatrix}
+-7.75122 &  0 &  0 &  0  & 0 \\
+0 & -7.47214  & 0  & 0  & 0 \\
+0 &  0  & -1.55581 &  0  & 0 \\
+0 &  0  & 0  & 1.47214  & 0 \\
+0 &  0  & 0  & 0  & 5.30704
+\end{pmatrix}. \]
+!et
+The new ground state (lowest state) has the following admixture of computational basis states
+!bt
+\[ \vert \psi_0\rangle = 0.64268\vert 2,-2\rangle + 0.73816\vert 2,0\rangle + 0.20515 \vert 2,2\rangle, \]
+!et
+with energy $E_0 = -7.75122$.
+
+For the first set of parameters, the likelihood for observing the
+system in the computational basis state $\vert 2,-2 \rangle$ is rather
+large. This is expected since the interaction matrix elements are
+smaller than the single-particle energies.  For the second case, with
+larger matrix elements, we see a much stronger mixing of the other
+states, again as expected due to the ratio of the interaction matrix
+elements and the single-particle energies.
+
+_To do: add simple code_
 
 !split
 ===== Mean field solution, Hartree-Fock theory  and comparison with exact diagonalization =====
 
-This will be added later.
+
+We define now a new basis set (single-particle basis set) given by $\vert \phi_{\alpha,p}\rangle$
+given by a unitary transformation of the original single-particle basis states $\vert u_{\sigma,p}\rangle$
+!bt
+\begin{equation}
+\ket{\phi_{\alpha,p}} = \sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}}.
+\end{equation}
+!et
+
+The new states can thus be written as a linear combination of the
+previous basis states (with fixed $p$). This means that for the new
+basis states,the qyantum numbers $p$ stay the same since they are just
+linear combinations of the previous basis states with the same value
+of $p$.
+Since the previous basis is defined to be orthogonal, it is
+straightforward to demonstrate that the new basis has to preserve the
+orthogonality since we performing a unitary transformation. We will not show that here.
+
+A new Slater determinant can be constructed and is given by
+!bt
+\begin{equation}
+\vert\Psi\rangle = \prod_{p=1}^4 b_{\alpha,p}^\dagger \vert 0\rangle.
+\end{equation}
+!et
+We can express the new creation (and annihilation operators) $b_{\alpha,p}^\dagger$ using $a_{p,\sigma}^\dagger$
+!bt
+\[ \vert\phi_{\alpha,p}\rangle = b_{\alpha,p}^\dagger \vert 0\rangle =
+\sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}} =
+\sum_{\sigma = \pm 1} C_{\alpha \sigma} a_{p\sigma}^\dagger \vert 0\rangle =
+\left( C_{\alpha +} a_{p+}^\dagger + C_{\alpha -} a_{p-}^\dagger \right) \vert 0\rangle. \]
+!et
+
+With these expressions we can calculate the expecation value of the energy
+$E = \langle \Psi\vert H \vert \Psi\rangle$, resulting in
+
+!bt
+\[ E = \bra{\Psi} H \ket{\Psi} = \larngle Psi\vert ( H_0 + H_1 +H_2) \vert\Psir\rangle,
+\]
+!et
+which reads
+!bt
+\[
+E = = 2\varepsilon |C_{\alpha +}|^2 - 2 \varepsilon |C_{\alpha -}|^2 + \\
+\frac{1}{2} V \left( 12(C_{\alpha +}^*)^2 (C_{\alpha -})^2 + 12(C_{\alpha +})^2 (C_{\alpha -}^*)^2 \right) +
+12W|C_{\alpha +}|^2 |C_{\alpha -}|^2 .
+\]
+!et
+If we assume that the coefficients $C_{\alpha \pm}$ are real,  meaning that  $C_{\alpha \pm}^* = C_{\alpha \pm}$, we obtain
+!bt
+\[
+E = = 2\varepsilon C_{\alpha +}^2 - 2 \varepsilon C_{\alpha -}^2 +
+12 (V+W) C_{\alpha +}^2 C_{\alpha -}^2 .
+\]
+!et
+
+We can now minimize the above equation with respect to the coefficients $C$ and assuming they are real, we obtain (using that
+$C_{\alpha +}$ and $C_{\alpha -}$ are real and that the states  $\vert \phi_{\alpha,p}\rangle$ are normalized,
+that $C_{\alpha +}^2 + C_{\alpha -}^2 = 1$. Inserted in the expression for the energy we obtain then
+
+!bt
+\[ E = 2\varepsilon (1 - C_{\alpha -}^2) - 2 \varepsilon C_{\alpha -}^2 +
+12 (V+W) (1 - C_{\alpha -}^2) C_{\alpha -}^2 . \]
+!et
+We simplify the above expression by defnining $x = C_{\alpha -}^2$ og minimize the energy with respect to $x$
+!bt
+\begin{align*}
+\frac{\partial E}{\partial x} &= \frac{\partial}{\partial x} \left[ 2\varepsilon (1 - x) - 2 \varepsilon x +
+12 (V+W) (1 - x) x \right] \\
+&= -2\varepsilon -2\varepsilon + 12(V+W)(-x + 1-x) \\
+&= -4 \varepsilon + 12(V+W)(1-2x).
+\end{align*}
+!et
+
+We obtain the minima by setting
+!bt
+\[ \frac{\partial E}{\partial x} = 0 \quad \Rightarrow \quad -4 \varepsilon + 12(V+W)(1-2x) = 0, \]
+!et
+which results in
+!bt
+\[ -\varepsilon + 3(V+W) = 6(V+W)x \quad \Rightarrow \quad x = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}. \]
+!et
+This gives the following values for $C_{\alpha +}$ and $C_{\alpha -}$:
+!bt
+\begin{equation}
+C_{\alpha -}^2 = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}, \quad C_{\alpha +}^2 = 1 - C_{\alpha -}^2 = \frac{1}{2} + \frac{\varepsilon}{6(V+W)}.
+\end{equation}
+!et
+
+If we have found the energy minimum, this leads to the following stability criteria
+!bt
+\begin{equation}
+(V+W) \leq \frac{\varepsilon}{3} \leq - (V+W),
+\end{equation}
+!et
+where we have assumed that  $V + W < 0$. If we have $V + W > 0$, we simply get a reversed inequality sign.
+
+
 
 !split
 ===== Variational Quantum Eigensolver =====
@@ -648,7 +811,7 @@ characterize the ground state $|\phi(\theta_{\text{min}})\rangle$ and
 an estimate for the ground state energy
 $\langle\psi(\theta_{\text{min}})|H|\psi(\theta_{\text{min}})\rangle$.
 
-=== Expectation values ===
+===== Expectation values =====
 
 To execute the second step of VQE, we need to understand how
 expectation values of operators can be estimated via quantum computers
@@ -741,7 +904,7 @@ E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
 !et
 one can estimate any observable that can be written as a linear combination of Pauli-string terms. 
 
-=== Measurement ===
+===== Measurement =====
 
 To estimate the probability $P(\vert \phi\rangle\to \vert x\rangle)$ from the
 previous section, one prepares the state $\vert \phi\rangle$ on a quantum
@@ -791,173 +954,5 @@ o VQE examples and discussion of results
 !eblock
 
 
-We can now select a set of parameters and diagonalize the above matrix. We select $\epsilon = 2$, $V = -1/3$, $W = -1/4$ and our matrix becoes
-!bt
-\[ H_{J=2}^{(1)} =
-\begin{pmatrix}
--4 & 0 & -\sqrt{6}/3 & 0 & 0 \\
-0 & -2 - 3/4 & 0 & -1 & 0 \\
--\sqrt{6}/3 & 0 & -1 & 0 & -\sqrt{6}/3 \\
-0 & -1 & 0 & 2 + -3/4 & 0 \\
-0 & 0 & -\sqrt{6}/3 & 0 & 4
-\end{pmatrix}, \]
-!et
-which gives the eigenvalue
-!bt
-\[ D = \begin{pmatrix}
--4.21288 &  0 &  0 &  0 &  0 \\
-0 & -2.98607  & 0  & 0  & 0 \\
-0 &  0 & -0.91914  & 0  & 0 \\
-0 &  0 & 0   & 1.48607  & 0 \\
-0 &  0  & 0  & 0  & 4.13201
-\end{pmatrix}. \]
-!et
-The lowest state has an admixture of basis states given by
-!bt
-\[ \vert \psi_0\rangle = 0.96735\vert2,-2\rangle + 0.25221\vert 2,0\rangle + 0.02507\vert 2,2\rangle,
-\]
-!et
-with energy $E_0 = -4.21288$.
-%
-\item $\varepsilon = 2$, $V = -4/3$, $W = -1$: Hamiltonmatrisa blir da:
-\[ H_{J=2}^{(2)} =
-\begin{pmatrix}
--4 & 0 & -4\sqrt{6}/3 & 0 & 0 \\
-0 & -5 & 0 & -4 & 0 \\
--4\sqrt{6}/3 & 0 & -4 & 0 & -4\sqrt{6}/3 \\
-0 & -4 & 0 & -1 & 0 \\
-0 & 0 & -4\sqrt{6}/3 & 0 & 4
-\end{pmatrix}, \]
-som kan diagonaliseres i $PDP^{-1}$ der
-\[ P = \begin{pmatrix}
--0.64268 &  0 & -0.75515 &  0 &  0.12929 \\
-0 &  0.85065 &  0 &  0.52573 &  0 \\
--0.73816 &  0 &  0.56514 &  0 & -0.36843 \\
-0 &  0.52573 &  0 & -0.85065 &  0 \\
--0.20515 &  0 &  0.33222 &  0 &  0.92062
-\end{pmatrix}, \]
-og
-\[ D = \begin{pmatrix}
--7.75122 &  0 &  0 &  0  & 0 \\
-0 & -7.47214  & 0  & 0  & 0 \\
-0 &  0  & -1.55581 &  0  & 0 \\
-0 &  0  & 0  & 1.47214  & 0 \\
-0 &  0  & 0  & 0  & 5.30704
-\end{pmatrix}. \]
-Grunntilstanden blir nå gitt ved den første kolonnen i den nye $P$-matrisen:
-\[ \ket{\text{grunntilstand}} = 0.64268\ket{2,-2} + 0.73816\ket{2,0} + 0.20515 \ket{2,2}, \]
-og denne tilstanden har egenenergi $E_\text{gr} = -7.75122$.
-\end{enumerate}
-%
-For tilfelle 1 er sannsynligheten for å observere systemet i tilstanden $\ket{2,-2}$ være stor dersom systemet blir preparert til å være i grunntilstanden. Det er ikke så rart fordi vekselvirkningen med de gitte parametrene er liten, og effekten av $H_0$ vil derfor dominere. Vekselvirkningsleddene $H_1$ og $H_2$ vil påvirke systemet litt slik at det vil være en viss sannsynlighet for å observere systemet i $\ket{2,0}$ eller $\ket{2,2}$. For tilfelle 2 derimot er effekten av vekselvirkningsleddene langt høyere, og sannsynlighetstettheten blir jevnet mer ut.
 
-Når energien øker vil sannsynligheten for at partikkelen befinner seg i den tilstanden med høyest energi bli større, og det ser man er konsistent med resultatene jeg har fått. Ved høyeste egenenergitilstand er det størst sannsynlighet for å observere partikkelen i tilstanden $\ket{2,2}$, altså med alle partiklene plassert i $\sigma = +1$. På grunn av vekselvirkningen vil det derimot være en viss sannsynlighet for å observere partikkelen i $\ket{2,0}$ og $\ket{2,-2}$ også.
-
-
-
-
-Oppgaveteksten definerer nå en ny enpartikkeltilstand $\ket{\phi_{\alpha,p}}$ definert ut fra en unitær transformasjon på de opprinnelige enpartikkeltilstandene $\ket{u_{\sigma,p}}$:
-\begin{equation}
-\ket{\phi_{\alpha,p}} = \sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}}.
-\label{eq:ut}
-\end{equation}
-%
-De nye tilstandene skrives altså som en lineærkombinasjon av de gamle tilstandene (med $p$ fast). Dermed kan ikke $p$ være noe annet for de nye tilstandene, siden de skrives som en lineærkombinasjon av tilstander som har samme verdi for $p$.
-
-Jeg skal så vise at basisen er ortogonal. Det gjør jeg ved å vise at $\braket{\phi_{\alpha',p'}}{\phi_{\alpha,p}} = \delta_{\alpha \alpha'} \delta_{pp'}$:
-\begin{align*}
-\braket{\phi_{\alpha',p'}}{\phi_{\alpha,p}}
-%
-&= \left( \sum_{\sigma' = \pm 1} C_{\alpha' \sigma'} \ket{u_{\sigma',p'}} \right)^\dagger
-\left( \sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}} \right) \\
-%
-&= \sum_{\sigma,\sigma' = \pm 1} C_{\alpha' \sigma'}^* C_{\alpha \sigma} \braket{u_{\sigma',p'}}{u_{\sigma,p}} \\
-%
-&= \sum_{\sigma,\sigma' = \pm 1} C_{\alpha' \sigma'}^* C_{\alpha \sigma} \delta_{\sigma \sigma'} \delta_{pp'} \\
-%
-&= \delta_{pp'} \sum_{\sigma = \pm 1} C_{\alpha' \sigma}^* C_{\alpha \sigma}.  \\
-\end{align*}
-%
-Det faktum at transformasjonen i ligning \eqref{eq:ut} er unitær, gir at koeffisientene $C_{\alpha \sigma}$ oppfyller følgende betingelse:
-\[ C^\dagger C = I_2 \quad \Rightarrow \quad \sum_{\sigma=\pm 1} C_{\alpha' \sigma}^* C_{\alpha \sigma} = \delta_{\alpha \alpha'}, \]
-da kolonnene i matrisen $C$ vil være ortonormale. Ved å benytte dette over, får jeg
-\begin{equation}
-\braket{\phi_{\alpha',p'}}{\phi_{\alpha,p}} = \delta_{\alpha \alpha'} \delta_{pp'},
-\label{eq:orto}
-\end{equation}
-og beviset er dermed fullført.
-
-
-
-En ny Slaterdeterminant konstruert ved hjelp av de nye tilstandene kan nå konstrueres slik:
-\begin{equation}
-\ket{\Psi} = \prod_{p=1}^4 b_{\alpha,p}^\dagger \ket{0}.
-\label{eq:SDny}
-\end{equation}
-%
-Jeg må uttrykker $b_{\alpha,p}^\dagger$ ved hjelp av $a_{p,\sigma}^\dagger$:
-\[ \ket{\phi_{\alpha,p}} = b_{\alpha,p}^\dagger \ket{0} =
-\sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}} =
-\sum_{\sigma = \pm 1} C_{\alpha \sigma} a_{p\sigma}^\dagger \ket{0} =
-\left( C_{\alpha +} a_{p+}^\dagger + C_{\alpha -} a_{p-}^\dagger \right) \ket{0}. \]
-%
-
-Jeg skal i denne oppgaven beregne $E = \bra{\Psi} H \ket{\Psi}$, hvor $\ket{\Psi}$ er gitt ved ligning \eqref{eq:SDny}. Jeg setter derfor inn for $\bra{\Psi}$ og $\ket{\Psi}$ ved hjelp av nevnte ligning, for $H$ ved å bruke ligning \eqref{eq:H} til \eqref{eq:H2} og for $b_{\alpha,p}$ og $b_{\alpha,p}^\dagger$ ved å bruke ligning \eqref{eq:b}. Det gir
-\[ E = \bra{\Psi} H \ket{\Psi} =
-\bra{\Psi} H_0 \ket{\Psi} + \bra{\Psi} H_1 \ket{\Psi} + \bra{\Psi} H_2 \ket{\Psi}. \]
-\begin{equation}
-\begin{gathered}
-E = \bra{\Psi} H \ket{\Psi} = 2\varepsilon |C_{\alpha +}|^2 - 2 \varepsilon |C_{\alpha -}|^2 + \\
-\frac{1}{2} V \left( 12(C_{\alpha +}^*)^2 (C_{\alpha -})^2 + 12(C_{\alpha +})^2 (C_{\alpha -}^*)^2 \right) +
-12W|C_{\alpha +}|^2 |C_{\alpha -}|^2 .
-\end{gathered}
-\label{eq:PsiHPsi}
-\end{equation}
-%
-Så har jeg fått oppgitt at jeg skal anta at $C_{\alpha \pm}$ er reelle, noe som betyr at $C_{\alpha \pm}^* = C_{\alpha \pm}$. Det gir
-\begin{equation}
-E = \bra{\Psi} H \ket{\Psi} = 2\varepsilon C_{\alpha +}^2 - 2 \varepsilon C_{\alpha -}^2 +
-12 (V+W) C_{\alpha +}^2 C_{\alpha -}^2 .
-\label{eq:PsiHPsiReell}
-\end{equation}
-
-
-\section{Minimumsenergien og krav til parametere}
-
-Jeg benytter resultatet fra forrige oppgave gitt i ligning \eqref{eq:PsiHPsiReell}, og siden jeg vet at $C_{\alpha +}$ og $C_{\alpha -}$ er reelle og at tilstanden $\ket{\phi_{\alpha,p}}$ er normert, har jeg sammenhengen $C_{\alpha +}^2 + C_{\alpha -}^2 = 1$. Det gir at jeg har
-\[ E = 2\varepsilon (1 - C_{\alpha -}^2) - 2 \varepsilon C_{\alpha -}^2 +
-12 (V+W) (1 - C_{\alpha -}^2) C_{\alpha -}^2 . \]
-%
-For enkelhets skyld setter jeg nå $x = C_{\alpha -}^2$ og minimerer så dette uttrykket. Først deriverer jeg energien med hensyn på $x$:
-\begin{align*}
-\frac{\partial E}{\partial x} &= \frac{\partial}{\partial x} \left[ 2\varepsilon (1 - x) - 2 \varepsilon x +
-12 (V+W) (1 - x) x \right] \\
-%
-&= -2\varepsilon -2\varepsilon + 12(V+W)(-x + 1-x) \\
-%
-&= -4 \varepsilon + 12(V+W)(1-2x).
-\end{align*}
-%
-Jeg finner minimum ved å sette uttrykket lik $0$:
-\[ \frac{\partial E}{\partial x} = 0 \quad \Rightarrow \quad -4 \varepsilon + 12(V+W)(1-2x) = 0, \]
-som gir
-\[ -\varepsilon + 3(V+W) = 6(V+W)x \quad \Rightarrow \quad x = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}. \]
-Dette gir følgende verdier på $C_{\alpha +}$ og $C_{\alpha -}$:
-\begin{equation}
-C_{\alpha -}^2 = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}, \quad C_{\alpha +}^2 = 1 - C_{\alpha -}^2 = \frac{1}{2} + \frac{\varepsilon}{6(V+W)}.
-\label{eq:Cmin}
-\end{equation}
-%
-Nå har jeg altså funnet lokale minimumspunkter, men det kan godt hende de ligger utenfor løsningsområdet som er begrenset av $0 \leq C_{\alpha -}^2, C_{\alpha +}^2 \leq 1$. Det har jeg ingen garanti for at de ikke gjør. Som alltid når jeg finner minimumspunkter må jeg også ha med randen av det aktuelle løsningsområdet. Det vil si at det globale minimum (innenfor løsningsområdet) godt kan forekomme ved $C_{\alpha -}^2 = 0$ eller $C_{\alpha -}^2 = 1$. For å finne ut hva som er det faktiske minimumspunktet må jeg sette uttrykkene for $C_{\alpha -}^2$ inn i formelen for energien over, og sjekke hva som gir lavest energi, og om minimumspunktene gitt ved at den deriverte av energien er $0$ gir løsninger innenfor løsningsområdet.
-
-Dersom minimumspunktet for energien funnet ved å derivere ligger innenfor løsningsområdet, vil jeg kunne sette inn ligningen for $C_{\alpha -}^2$ over inn i ulikheten $0 \leq C_{\alpha -}^2 \leq 1$. Dette gir følgende uttrykk:
-\[ 0 \leq \frac{1}{2} - \frac{\varepsilon}{6(V+W)} \leq 1, \]
-som etter litt omstokkingsarbied gir
-\begin{equation}
-(V+W) \leq \frac{\varepsilon}{3} \leq - (V+W),
-\label{eq:C-ineq}
-\end{equation}
-hvor jeg har forutsatt at $V + W < 0$. Dersom $V + W > 0$, vil bare retningen på ulikhetstegnene byttes om. Tilsvarende kunne jeg satt uttrykket for $C_{\alpha +}$ inn i den tilsvarende ulikheten for $C_{\alpha +}$, men jeg får da naturlig nok akkurat samme ulikheter som i ligning \eqref{eq:C-ineq}.
-
-Ved hjelp av variasjonsprinsippet kan jeg dermed finne et estimat for grunntilstandsenergien til systemet ved å putte inn $C_{\alpha +}$ og $C_{\alpha -}$ i ligning \eqref{eq:PsiHPsiReell}. Siden jeg vet at grunntilstandsenergien alltid vil være mindre enn eller lik forventningsverdien til Hamiltonoperatoren (for en vilkårlig bølgefunksjon), vil jeg kunne putte inn de verdiene for $C_{\alpha +}$ og $C_{\alpha -}$ som gir den minste energien i ligning \eqref{eq:PsiHPsiReell} og si at den egentlige grunntilstandsenergien ihvertfall ikke er større enn det. Jeg kan naturlig nok ikke putte inn verdier som ikke oppfyller $0 \leq C_{\alpha -}^2, C_{\alpha +}^2 \leq 1$ siden den aktuelle transformasjonen da ikke vil være en unitær transformasjon som jeg har tatt utgangspunkt i da jeg regnet ut formelen for energien gitt ved ligning \eqref{eq:PsiHPsiReell}.
 

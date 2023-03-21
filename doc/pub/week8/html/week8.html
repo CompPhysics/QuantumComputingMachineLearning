@@ -169,8 +169,8 @@ div.toc p,a {
                2,
                None,
                'variational-quantum-eigensolver'),
-              ('Expectation values', 3, None, 'expectation-values'),
-              ('Measurement', 3, None, 'measurement')]}
+              ('Expectation values', 2, None, 'expectation-values'),
+              ('Measurement', 2, None, 'measurement')]}
 end of tocinfo -->
 
 <body>
@@ -798,12 +798,166 @@ H_{J = 2} =
 \end{equation}
 $$
 
-<p>Inserting values for the constants \( \epsilon \), \( V \) and \( W \) we can in turn diagonalize the above matrix and obtain the relevant eigenvalues. </p>
+<p>We can now select a set of parameters and diagonalize the above matrix. We select \( \epsilon = 2 \), \( V = -1/3 \), \( W = -1/4 \) and our matrix becoes</p>
+$$ H_{J=2}^{(1)} =
+\begin{pmatrix}
+-4 & 0 & -\sqrt{6}/3 & 0 & 0 \\
+0 & -2 - 3/4 & 0 & -1 & 0 \\
+-\sqrt{6}/3 & 0 & -1 & 0 & -\sqrt{6}/3 \\
+0 & -1 & 0 & 2 + -3/4 & 0 \\
+0 & 0 & -\sqrt{6}/3 & 0 & 4
+\end{pmatrix}, $$
+
+<p>which gives the eigenvalue</p>
+$$ D = \begin{pmatrix}
+-4.21288 &  0 &  0 &  0 &  0 \\
+0 & -2.98607  & 0  & 0  & 0 \\
+0 &  0 & -0.91914  & 0  & 0 \\
+0 &  0 & 0   & 1.48607  & 0 \\
+0 &  0  & 0  & 0  & 4.13201
+\end{pmatrix}. $$
+
+<p>The lowest state has an admixture of basis states given by</p>
+$$ \vert \psi_0\rangle = 0.96735\vert2,-2\rangle + 0.25221\vert 2,0\rangle + 0.02507\vert 2,2\rangle,
+$$
+
+<p>with energy \( E_0 = -4.21288 \).</p>
+
+<p>We can now change the parameters to
+\( \varepsilon = 2 \), \( V = -4/3 \), \( W = -1 \). Our matrix reads then
+</p>
+$$ H_{J=2}^{(2)} =
+\begin{pmatrix}
+-4 & 0 & -4\sqrt{6}/3 & 0 & 0 \\
+0 & -5 & 0 & -4 & 0 \\
+-4\sqrt{6}/3 & 0 & -4 & 0 & -4\sqrt{6}/3 \\
+0 & -4 & 0 & -1 & 0 \\
+0 & 0 & -4\sqrt{6}/3 & 0 & 4
+\end{pmatrix}, $$
+
+<p>with the following eigenvalues</p>
+$$ D = \begin{pmatrix}
+-7.75122 &  0 &  0 &  0  & 0 \\
+0 & -7.47214  & 0  & 0  & 0 \\
+0 &  0  & -1.55581 &  0  & 0 \\
+0 &  0  & 0  & 1.47214  & 0 \\
+0 &  0  & 0  & 0  & 5.30704
+\end{pmatrix}. $$
+
+<p>The new ground state (lowest state) has the following admixture of computational basis states</p>
+$$ \vert \psi_0\rangle = 0.64268\vert 2,-2\rangle + 0.73816\vert 2,0\rangle + 0.20515 \vert 2,2\rangle, $$
+
+<p>with energy \( E_0 = -7.75122 \).</p>
+
+<p>For the first set of parameters, the likelihood for observing the
+system in the computational basis state \( \vert 2,-2 \rangle \) is rather
+large. This is expected since the interaction matrix elements are
+smaller than the single-particle energies.  For the second case, with
+larger matrix elements, we see a much stronger mixing of the other
+states, again as expected due to the ratio of the interaction matrix
+elements and the single-particle energies.
+</p>
+
+<b>To do: add simple code</b>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="mean-field-solution-hartree-fock-theory-and-comparison-with-exact-diagonalization">Mean field solution, Hartree-Fock theory  and comparison with exact diagonalization </h2>
 
-<p>This will be added later.</p>
+<p>We define now a new basis set (single-particle basis set) given by \( \vert \phi_{\alpha,p}\rangle \)
+given by a unitary transformation of the original single-particle basis states \( \vert u_{\sigma,p}\rangle \)
+</p>
+$$
+\begin{equation}
+\ket{\phi_{\alpha,p}} = \sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}}.
+\label{_auto3}
+\end{equation}
+$$
+
+<p>The new states can thus be written as a linear combination of the
+previous basis states (with fixed \( p \)). This means that for the new
+basis states,the qyantum numbers \( p \) stay the same since they are just
+linear combinations of the previous basis states with the same value
+of \( p \).
+Since the previous basis is defined to be orthogonal, it is
+straightforward to demonstrate that the new basis has to preserve the
+orthogonality since we performing a unitary transformation. We will not show that here.
+</p>
+
+<p>A new Slater determinant can be constructed and is given by</p>
+$$
+\begin{equation}
+\vert\Psi\rangle = \prod_{p=1}^4 b_{\alpha,p}^\dagger \vert 0\rangle.
+\label{_auto4}
+\end{equation}
+$$
+
+<p>We can express the new creation (and annihilation operators) \( b_{\alpha,p}^\dagger \) using \( a_{p,\sigma}^\dagger \)</p>
+$$ \vert\phi_{\alpha,p}\rangle = b_{\alpha,p}^\dagger \vert 0\rangle =
+\sum_{\sigma = \pm 1} C_{\alpha \sigma} \ket{u_{\sigma,p}} =
+\sum_{\sigma = \pm 1} C_{\alpha \sigma} a_{p\sigma}^\dagger \vert 0\rangle =
+\left( C_{\alpha +} a_{p+}^\dagger + C_{\alpha -} a_{p-}^\dagger \right) \vert 0\rangle. $$
+
+<p>With these expressions we can calculate the expecation value of the energy
+\( E = \langle \Psi\vert H \vert \Psi\rangle \), resulting in
+</p>
+
+$$ E = \bra{\Psi} H \ket{\Psi} = \larngle Psi\vert ( H_0 + H_1 +H_2) \vert\Psir\rangle,
+$$
+
+<p>which reads</p>
+$$
+E = = 2\varepsilon |C_{\alpha +}|^2 - 2 \varepsilon |C_{\alpha -}|^2 + \\
+\frac{1}{2} V \left( 12(C_{\alpha +}^*)^2 (C_{\alpha -})^2 + 12(C_{\alpha +})^2 (C_{\alpha -}^*)^2 \right) +
+12W|C_{\alpha +}|^2 |C_{\alpha -}|^2 .
+$$
+
+<p>If we assume that the coefficients \( C_{\alpha \pm} \) are real,  meaning that  \( C_{\alpha \pm}^* = C_{\alpha \pm} \), we obtain</p>
+$$
+E = = 2\varepsilon C_{\alpha +}^2 - 2 \varepsilon C_{\alpha -}^2 +
+12 (V+W) C_{\alpha +}^2 C_{\alpha -}^2 .
+$$
+
+<p>We can now minimize the above equation with respect to the coefficients \( C \) and assuming they are real, we obtain (using that
+\( C_{\alpha +} \) and \( C_{\alpha -} \) are real and that the states  \( \vert \phi_{\alpha,p}\rangle \) are normalized,
+that \( C_{\alpha +}^2 + C_{\alpha -}^2 = 1 \). Inserted in the expression for the energy we obtain then
+</p>
+
+$$ E = 2\varepsilon (1 - C_{\alpha -}^2) - 2 \varepsilon C_{\alpha -}^2 +
+12 (V+W) (1 - C_{\alpha -}^2) C_{\alpha -}^2 . $$
+
+<p>We simplify the above expression by defnining \( x = C_{\alpha -}^2 \) og minimize the energy with respect to \( x \)</p>
+$$
+\begin{align*}
+\frac{\partial E}{\partial x} &= \frac{\partial}{\partial x} \left[ 2\varepsilon (1 - x) - 2 \varepsilon x +
+12 (V+W) (1 - x) x \right] \\
+&= -2\varepsilon -2\varepsilon + 12(V+W)(-x + 1-x) \\
+&= -4 \varepsilon + 12(V+W)(1-2x).
+\end{align*}
+$$
+
+<p>We obtain the minima by setting</p>
+$$ \frac{\partial E}{\partial x} = 0 \quad \Rightarrow \quad -4 \varepsilon + 12(V+W)(1-2x) = 0, $$
+
+<p>which results in</p>
+$$ -\varepsilon + 3(V+W) = 6(V+W)x \quad \Rightarrow \quad x = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}. $$
+
+<p>This gives the following values for \( C_{\alpha +} \) and \( C_{\alpha -} \):</p>
+$$
+\begin{equation}
+C_{\alpha -}^2 = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}, \quad C_{\alpha +}^2 = 1 - C_{\alpha -}^2 = \frac{1}{2} + \frac{\varepsilon}{6(V+W)}.
+\label{_auto5}
+\end{equation}
+$$
+
+<p>If we have found the energy minimum, this leads to the following stability criteria</p>
+$$
+\begin{equation}
+(V+W) \leq \frac{\varepsilon}{3} \leq - (V+W),
+\label{_auto6}
+\end{equation}
+$$
+
+<p>where we have assumed that  \( V + W < 0 \). If we have \( V + W > 0 \), we simply get a reversed inequality sign.</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="variational-quantum-eigensolver">Variational Quantum Eigensolver </h2>
@@ -845,7 +999,7 @@ this, let \( |n\rangle \) be the eigenstates of \( H \), that is
 $$
 \begin{align}
 H|n\rangle=E_n|n\rangle.
-\label{_auto3}
+\label{_auto7}
 \end{align}
 $$
 
@@ -880,7 +1034,7 @@ characterize the ground state \( |\phi(\theta_{\text{min}})\rangle \) and
 an estimate for the ground state energy
 \( \langle\psi(\theta_{\text{min}})|H|\psi(\theta_{\text{min}})\rangle \).
 </p>
-<h3 id="expectation-values">Expectation values </h3>
+<h2 id="expectation-values">Expectation values </h2>
 
 <p>To execute the second step of VQE, we need to understand how
 expectation values of operators can be estimated via quantum computers
@@ -892,12 +1046,12 @@ defined for each Pauli gate \( \sigma \) to be
 $$
 \begin{align}
 R_{\sigma} = H, & \text{if} \ \sigma = X 
-\label{_auto4}\\
+\label{_auto8}\\
 HS^{\dagger}, & \text{if} \ \sigma = Y 
-\label{_auto5}\\
+\label{_auto9}\\
 I, & \text{if} \ \sigma = Z 
-\label{_auto6}\\
-\label{_auto7}
+\label{_auto10}\\
+\label{_auto11}
 \end{align}
 $$
 
@@ -917,7 +1071,7 @@ E_{\psi}(\sigma)
 &=\langle\phi\vert\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\langle x\vert\right)\vert\phi\rangle \nonumber \\
 &=\sum_{x\in\{0,1\}}(-1)^x\vert\langle x\vert \phi\rangle\vert^2\nonumber \\
 &=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
-\label{_auto8}
+\label{_auto12}
 \end{align}
 $$
 
@@ -968,7 +1122,7 @@ E_{\psi}\left(P\right)
 \\
 &=
 \sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
-\label{_auto9}
+\label{_auto13}
 \end{align}
 $$
 
@@ -979,12 +1133,12 @@ linear
 $$
 \begin{align}
 E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
-\label{_auto10}
+\label{_auto14}
 \end{align}
 $$
 
 <p>one can estimate any observable that can be written as a linear combination of Pauli-string terms. </p>
-<h3 id="measurement">Measurement </h3>
+<h2 id="measurement">Measurement </h2>
 
 <p>To estimate the probability \( P(\vert \phi\rangle\to \vert x\rangle) \) from the
 previous section, one prepares the state \( \vert \phi\rangle \) on a quantum
@@ -998,7 +1152,7 @@ is
 $$
 \begin{align}
 P(\vert \phi\rangle\to \vert x\rangle\rangle \approx \sum_{m=1}^M\frac{x_m}{M},
-\label{_auto11}
+\label{_auto15}
 \end{align}
 $$
 
@@ -1007,9 +1161,9 @@ $$
 \begin{align}
 x_m
 =1 & \text{if the result of measurement is $x$} 
-\label{_auto12}\\
+\label{_auto16}\\
 0 & \text{if the result of measurement is not $x$}.
-\label{_auto13}
+\label{_auto17}
 \end{align}
 $$
 
@@ -1020,7 +1174,7 @@ $$
 $$
 \begin{align}
 P(\vert \phi\rangle\to \vert x\rangle) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
-\label{_auto14}
+\label{_auto18}
 \end{align}
 $$
 
