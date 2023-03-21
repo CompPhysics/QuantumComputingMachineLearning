@@ -208,7 +208,7 @@ MathJax.Hub.Config({
 </center>
 <br>
 <center>
-<h4>Mar 20, 2023</h4>
+<h4>Mar 21, 2023</h4>
 </center> <!-- date -->
 <br>
 
@@ -852,35 +852,19 @@ $$
 <p>We can then expand our state \( |\psi(\theta)\rangle \) in terms of said eigenstates</p>
 
 $$
-\begin{align}
 |\psi(\theta)\rangle=\sum_nc_n|n\rangle,
-\label{_auto4}
-\end{align}
 $$
 
 <p>and plug this into the expectation value to yield</p>
 $$
-\begin{align}
 \langle\psi(\theta)|H|\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m|H|n \rangle
-\nonumber
-\\
-&=
-\sum_{nm}c^*_mc_nE_n\langle m|n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n
-\nonumber
-\\
-&=
-\sum_{n}|c_n|^2E_n \geq E_0\sum_{n}|c_n|^2=E_0,
-\label{_auto5}
-\end{align}
+=\sum_{nm}c^*_mc_nE_n\langle m|n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n=\sum_{n}|c_n|^2E_n \geq E_0\sum_{n}|c_n|^2=E_0,
 $$
 
 <p>which implies that we can minimize over the set of angles \( \theta \) and arrive at the ground state energy \( E_0 \)</p>
 
 $$
-\begin{align}
 \min_\theta \ \langle\psi(\theta)|H|\psi(\theta)\rangle=E_0.
-\label{_auto6}
-\end{align}
 $$
 
 <p>Using this fact, the VQE algorithm can be broken down into the following steps</p>
@@ -908,21 +892,18 @@ defined for each Pauli gate \( \sigma \) to be
 $$
 \begin{align}
 R_{\sigma} = H, & \text{if} \ \sigma = X 
-\label{_auto7}\\
+\label{_auto4}\\
 HS^{\dagger}, & \text{if} \ \sigma = Y 
-\label{_auto8}\\
+\label{_auto5}\\
 I, & \text{if} \ \sigma = Z 
-\label{_auto9}\\
-\label{_auto10}
+\label{_auto6}\\
+\label{_auto7}
 \end{align}
 $$
 
 <p>Note the following identity of the basis rotator</p>
 $$
-\begin{align}
-R^\dagger_\sigma Z R_\sigma = \sigma
-, \label{_auto11}
-\end{align}
+R^\dagger_\sigma Z R_\sigma = \sigma,
 $$
 
 <p>which follows from the fact that \( HZH=X \) and \( SXS^\dagger=Y \). With this, we see that the expectation value of an arbitrary
@@ -931,13 +912,12 @@ Pauli-gate \( \sigma \) in the state \( \vert\psi\rangle \) can be expressed as 
 $$
 \begin{align}
 E_{\psi}(\sigma)
-&= \mel{\psi}{\sigma}{\psi} \nonumber \\
-&=\mel{\psi}{R_{\sigma}^{\dagger}ZR_{\sigma}}{\psi} \nonumber \\
-&=\mel{\phi}{Z}{\phi} \nonumber \\
-&=\mel{\phi}{\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\bra{x}\right)}{\phi} \nonumber \\
-&=\sum_{x\in\{0,1\}}(-1)^x\abs{\bra{x}\vert \phi\rangle}^2\nonumber \\
+&= \langle \psi\vert\sigma\vert\psi\rangle \nonumber \\
+&=\langle\psi\vert R_{\sigma}^{\dagger}ZR_{\sigma}\vert\psi\rangle =\langle \phi\vert Z\vert \phi\rangle \nonumber \\
+&=\langle\phi\vert\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\langle x\vert\right)\vert\phi\rangle \nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^x\vert\langle x\vert \phi\rangle\vert^2\nonumber \\
 &=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
-\label{_auto12}
+\label{_auto8}
 \end{align}
 $$
 
@@ -953,42 +933,42 @@ set of \( n \) qubits in the system. Then
 $$
 \begin{align}
 E_{\psi}\left(P\right)
-&=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
-&=\bra{\psi}\left(\bigotimes_{p\in Q}\sigma_p\right)
+&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
+&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
-&=\bra{\psi}\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}Z_pR_{\sigma_p}\right)
+&=\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}Z_pR_{\sigma_p}\right)
 \left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
 &=
-\bra{\psi}\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}\right)
+\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}\right)
 \left(\bigotimes_{p \in Q}Z_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)
 \left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
 \\
 &=
-\bra{\phi}
+\langle \phi\vert
 \left(\bigotimes_{p \in Q}Z_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)
 \vert \phi\rangle \nonumber \\
 &=
-\bra{\phi}
-\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\vert x_p\rangle\bra{x_p}\right)
-\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\vert y_q\rangle\bra{y_q}\right)
+\langle \phi\vert
+\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\vert x_p\rangle\langle x_p\vert\right)
+\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\vert y_q\rangle\langle y_q\vert\right)
 \vert \phi\rangle 
 \nonumber 
 \\
 &=
-\bra{\phi}
-\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert x\rangle\bra{x}\right)
+\langle \phi\vert
+\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert x\rangle\langle x\vert\right)
 \vert \phi\rangle 
 \nonumber 
 \\
 &=
-\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\abs{\bra{x}\vert \phi\rangle}^2
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert\langle x\vert\vert \phi\rangle\vert^2
 \nonumber 
 \\
 &=
 \sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
-\label{_auto13}
+\label{_auto9}
 \end{align}
 $$
 
@@ -999,7 +979,7 @@ linear
 $$
 \begin{align}
 E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
-\label{_auto14}
+\label{_auto10}
 \end{align}
 $$
 
@@ -1018,7 +998,7 @@ is
 $$
 \begin{align}
 P(\vert \phi\rangle\to \vert x\rangle\rangle \approx \sum_{m=1}^M\frac{x_m}{M},
-\label{_auto15}
+\label{_auto11}
 \end{align}
 $$
 
@@ -1027,9 +1007,9 @@ $$
 \begin{align}
 x_m
 =1 & \text{if the result of measurement is $x$} 
-\label{_auto16}\\
+\label{_auto12}\\
 0 & \text{if the result of measurement is not $x$}.
-\label{_auto17}
+\label{_auto13}
 \end{align}
 $$
 
@@ -1040,7 +1020,7 @@ $$
 $$
 \begin{align}
 P(\vert \phi\rangle\to \vert x\rangle) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
-\label{_auto18}
+\label{_auto14}
 \end{align}
 $$
 
