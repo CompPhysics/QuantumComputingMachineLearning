@@ -94,7 +94,7 @@ and project 1
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 - Video of lecture at https://youtu.be/ZKv8pEy3Y_4
 
-## March 27-31, 2023. Suzuki-Trotter approximation
+## March 27-31, 2023. VQE and project discussion
   - Solving eigenvalue problems with and without Qiskit.
   - Discussion of project 1
   - Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1
