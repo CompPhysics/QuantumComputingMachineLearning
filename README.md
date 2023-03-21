@@ -98,6 +98,7 @@ and project 1
   - Solving eigenvalue problems with and without Qiskit.
   - Discussion of project 1
   - Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1
+  - See also VQE review article at https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 ## April 17-21, 2023. TBA
