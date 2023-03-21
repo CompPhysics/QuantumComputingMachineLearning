@@ -391,18 +391,18 @@ $$
 <p>These operators obey the \( SU(2) \) commutation relations</p>
 
 $$
-[J_+,J_-]&=2J_z,
+[J_+,J_-]=2J_z,
 $$
 
 <p>and</p>
 $$
-[J_z,J_\pm]&=\pm J_\pm.
+[J_z,J_\pm]=\pm J_\pm.
 $$
 
 <p>Here the ladder operators are defined as \( J_{\pm}= J_x\pm iJ_y \). With this rewriting, we can see that the total spin operator \( J^2 \), which is defined as </p>
 $$
 J^2= J^2_x+J^2_y+J^2_z =
-\frac{1}{2}\acomm{J_+}{J_-}+J_z^2,
+\frac{1}{2}\{J_+,J_-\}+J_z^2,
 $$
 
 <p>commutes with the Hamiltonian since the Hamiltonian.
@@ -441,17 +441,10 @@ particles in the upper and lower levels, \( j_z \) can only change by as
 </p>
 
 $$
-\begin{align}
-j_z
-&\to
-\frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
-\nonumber
-\\
-&=
-J_z\pm2n.
-\label{_auto9}
-\end{align}
+j_z\rightarrow \frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
 $$
+
+<p>or \( j_z\rightarrow J_z\pm2n \).</p>
 
 <p>To solve the Lipkin model with a quantum computer, the first step is
 to map the system to a set of qubits. We will  restrict ourselves here to
@@ -528,7 +521,7 @@ circuits.
 $$
 \begin{align}
 H=\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
-\label{_auto10}
+\label{_auto9}
 \end{align}
 $$
 
@@ -537,11 +530,11 @@ $$
 $$
 \begin{align}
 H &= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\left[\left(\sum_nj^{(n)}_{+}\right)^2+\left(\sum_nj^{(n)}_{-}\right)^2\right]
-\label{_auto11}\\
+\label{_auto10}\\
 &= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\sum_{n,m}\left(j^{(n)}_+j^{(m)}_++j^{(n)}_-j^{(m)}_-\right)
-\label{_auto12}\\
+\label{_auto11}\\
 &= \epsilon\sum_{n}j_z^{(n)} + 2V\sum_{n < m}\left(j^{(n)}_xj^{(m)}_x-j^{(n)}_yj^{(m)}_y\right),
-\label{_auto13}
+\label{_auto12}
 \end{align}
 $$
 
@@ -579,14 +572,14 @@ Hamiltonian can be determined by noting that
 </p>
 $$
 \begin{align}
-\frac{1}{2}(XX-YY)\vert 00} &= \vert 11\rangle,
-\label{_auto14}\\
+\frac{1}{2}(XX-YY)\vert 00\rangle &= \vert 11\rangle,
+\label{_auto13}\\
 \frac{1}{2}(XX-YY)\vert 01\rangle &= 0,
-\label{_auto15}\\
+\label{_auto14}\\
 \frac{1}{2}(XX-YY)\vert 10\rangle &= 0,
-\label{_auto16}\\
+\label{_auto15}\\
 \frac{1}{2}(XX-YY)\vert 11\rangle &= \vert 00\rangle.
-\label{_auto17}
+\label{_auto16}
 \end{align}
 $$
 
@@ -612,9 +605,9 @@ within which the \( N \)-degenerate Hamiltonian explores:
 $$
 \begin{align}
 \vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
-\label{_auto18}\\
+\label{_auto17}\\
 \vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
-\label{_auto19}
+\label{_auto18}
 \end{align}
 $$
 
@@ -623,7 +616,7 @@ $$
 $$
 \begin{align}
 \vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
-\label{_auto20}
+\label{_auto19}
 \end{align}
 $$
 
@@ -631,75 +624,21 @@ $$
 $$
 \begin{align}
 U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
-\label{_auto21}
+\label{_auto20}
 \end{align}
 $$
 
-<p>It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the \( k=6 \) case, as an example) is given below</p>
-$$
-\begin{align}
-\label{dicke_superposition}
-\Qcircuit @C=0.8em @R=0.8em
-{
-\lstick{\vert 0}\rangle & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
-\\
-\lstick{\vert 0}\rangle & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
-\label{_auto22}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
-\label{_auto23}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
-\label{_auto24}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
-\label{_auto25}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
-\
-}
-\label{_auto26}
-\end{align}
-$$
+<p>It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the \( k=6 \) case, as an example) is discussed next week.</p>
 
-<p>The \( R_y \) gates and CNOT gates prepare an arbitrary real superposition of product states with even Hamming weight \( k \); then the \( R_z \) gates add arbitrary phases to each of the states</p>
-
-$$
-\begin{align}
-\vert 000000\rangle
-\to \ &\cos(\theta_0/2)\vert 000000\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert 110000\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert 111100\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert 111111\rangle.
-\end{align}
-Finally, $U^n_k$ converts each product state to its corresponding Dicke state. Thus, all together the circuit acts as
-\begin{align}
-\vert 000000\rangle
-\to \ &\cos(\theta_0/2)\vert D^6_0\rangle 
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert D^6_2\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert D^6_4\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert D^6_6\rangle.
-\label{_auto27}
-\end{align}
-$$
-
-<p>The circuit of Eq. m\eqref{dicke_superposition} can be extended
-naturally for any even value of \( k \). For odd values of \( k \), one need
-simply add a single-qubit to the top of the circuit for \( k-1 \) and
-apply the \( X \) gate to it. Although this ansatz has linear depth, the
-circuit for \( U^n_k \) involves several double-controlled gates which
-involve the usage of several CNOT gates to decompose. As the CNOT gate
-is often the noisiest gate in NISQ era quantum computers, it is best
-to minimize their use.
-</p>
+<div class="panel panel-default">
+<div class="panel-body">
+<!-- subsequent paragraphs come in larger fonts, so start with a paragraph -->
+<ol>
+<li> Discussion of the project and how to implement the VQE for the simpler matrix problems</li>
+<li> Solving the Lipkin model with VQE</li>
+</ol>
+</div>
+</div>
 
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->

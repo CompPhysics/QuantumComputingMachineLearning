@@ -205,20 +205,20 @@ These operators obey the $SU(2)$ commutation relations
 
 !bt
 \[
-[J_+,J_-]&=2J_z,
+[J_+,J_-]=2J_z,
 \]
 !et
 and
 !bt
 \[
-[J_z,J_\pm]&=\pm J_\pm.
+[J_z,J_\pm]=\pm J_\pm.
 \]
 !et
 Here the ladder operators are defined as $J_{\pm}= J_x\pm iJ_y$. With this rewriting, we can see that the total spin operator $J^2$, which is defined as 
 !bt
 \[
 J^2= J^2_x+J^2_y+J^2_z =
-\frac{1}{2}\acomm{J_+}{J_-}+J_z^2,
+\frac{1}{2}\{J_+,J_-\}+J_z^2,
 \]
 !et
 commutes with the Hamiltonian since the Hamiltonian.
@@ -252,18 +252,11 @@ moved in pairs, and $J_z$ measures half the difference between
 particles in the upper and lower levels, $j_z$ can only change by as
 
 !bt
-\begin{align}
-j_z
-&\to
-\frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
-\nonumber
-\\
-&=
-J_z\pm2n.
-\end{align}
+\[
+j_z\rightarrow \frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
+\]
 !et
-
-
+or $j_z\rightarrow J_z\pm2n$.
 
 To solve the Lipkin model with a quantum computer, the first step is
 to map the system to a set of qubits. We will  restrict ourselves here to
@@ -389,7 +382,7 @@ respectively. The action of the second (two-body) term in the
 Hamiltonian can be determined by noting that
 !bt
 \begin{align}
-\frac{1}{2}(XX-YY)\vert 00} &= \vert 11\rangle,
+\frac{1}{2}(XX-YY)\vert 00\rangle &= \vert 11\rangle,
 \\
 \frac{1}{2}(XX-YY)\vert 01\rangle &= 0,
 \\
@@ -438,65 +431,10 @@ where $h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\}$. The
 U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
 \end{align}
 !et
-It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the $k=6$ case, as an example) is given below
-!bt
-\begin{align}
-\label{dicke_superposition}
-\Qcircuit @C=0.8em @R=0.8em
-{
-\lstick{\vert 0}\rangle & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
-\\
-\lstick{\vert 0}\rangle & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
-\
-}
-\end{align}
-!et
+It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the $k=6$ case, as an example) is discussed next week.
 
-The $R_y$ gates and CNOT gates prepare an arbitrary real superposition of product states with even Hamming weight $k$; then the $R_z$ gates add arbitrary phases to each of the states
 
-!bt
-\begin{align}
-\vert 000000\rangle
-\to \ &\cos(\theta_0/2)\vert 000000\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert 110000\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert 111100\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert 111111\rangle.
-\end{align}
-Finally, $U^n_k$ converts each product state to its corresponding Dicke state. Thus, all together the circuit acts as
-\begin{align}
-\vert 000000\rangle
-\to \ &\cos(\theta_0/2)\vert D^6_0\rangle 
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert D^6_2\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert D^6_4\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert D^6_6\rangle.
-\end{align}
-!et
-The circuit of Eq. m(ref{dicke_superposition}) can be extended
-naturally for any even value of $k$. For odd values of $k$, one need
-simply add a single-qubit to the top of the circuit for $k-1$ and
-apply the $X$ gate to it. Although this ansatz has linear depth, the
-circuit for $U^n_k$ involves several double-controlled gates which
-involve the usage of several CNOT gates to decompose. As the CNOT gate
-is often the noisiest gate in NISQ era quantum computers, it is best
-to minimize their use.
-
+!bblock Plans for the week March 27-31
+o Discussion of the project and how to implement the VQE for the simpler matrix problems
+o Solving the Lipkin model with VQE
+!eblock
