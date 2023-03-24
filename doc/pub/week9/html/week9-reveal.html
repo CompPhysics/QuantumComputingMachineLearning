@@ -208,7 +208,7 @@ MathJax.Hub.Config({
 <section>
 <h2 id="reminder-on-the-lipkin-model-and-variational-quantum-eigensolver-vqe">Reminder on the Lipkin model and Variational Quantum Eigensolver (VQE) </h2>
 
-<p>"See lecture notes (jupyter-notebook)
+<p>See lecture notes (jupyter-notebook)
 from the week of March 13-17 at <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb" target="_blank"><tt>https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week8/ipynb/week8.ipynb</tt></a>.
 </p>
 </section>
@@ -552,26 +552,14 @@ $$
 <p>or \( j_z\rightarrow J_z\pm2n \).</p>
 
 <p>To solve the Lipkin model with a quantum computer, the first step is
-to map the system to a set of qubits. We will  restrict ourselves here to
-the half-filled case where the number of particles \( N \) equals the
+to map the system to a set of qubits. We will restrict ourselves here
+to the half-filled case where the number of particles \( N \) equals the
 degeneracy of the states \( \Omega \). One could assign each possible
 state \( (n,\sigma) \) a qubit such that the qubit being in the state
-\( \vert 1\rangle \) or \( \vert 0\rangle \) would imply that the state \( (n,\sigma) \) is
-occupied or unoccupied, respectively. This mapping scheme (which we'll
-call occupation mapping) requires 2$\Omega$ qubits. Additionally, any
-ansatz that would restrict the minimization search to the correct
-subspace of constant Hamming weight \( N \) (since the number of particles
-\( N \) is conserved) would necessitate the use of at least four-qubit
-gates. This is because moving a pair of particles in this scheme would
-require two annihilation operators on the states from which the pair
-particles move and two creation operators on the states to which the
-pair of particles move. That is, it takes a four-qubit gate to change
-between the states \( \vert 1100\rangle \) and \( \vert 0011\rangle \), for example. 
-We only known how to
-efficiently decompose up to two qubit gates. Thus the involvement of
-four qubit gates would necessitate a longer depth circuit than one
-involving only two and one qubit gates, creating more noise and less
-accurate results.
+\( \vert 1\rangle \) or \( \vert 0\rangle \) would imply that the state
+\( (n,\sigma) \) is occupied or unoccupied, respectively. This mapping
+scheme (which we will call occupation mapping) requires 2$\Omega$
+qubits.
 </p>
 
 <p>However, because there are only two energy levels in the Lipkin model,
@@ -675,7 +663,13 @@ j_z^{(n)} \rightarrow Z_n/2,
 $$
 <p>&nbsp;<br>
 
-<p>which preserve the above \( SU(2) \)  commutation relations. This transforms our Hamiltonian into</p>
+<p>which preserve the above \( SU(2) \)  commutation relations.
+The factor of \( 1/2 \)
+is due to the eigenvalues of the Pauli matrices being \( \pm 1 \)
+while we are dealing with spin \( 1/2 \) particles.
+</p>
+
+<p>This transforms our Hamiltonian into</p>
 <p>&nbsp;<br>
 $$
 H=\frac{1}{2}\epsilon\sum_{k=1}^nZ_k+\frac{1}{2}V\sum_{n\neq j=1}^N(X_kX_j-Y_kY_j).
@@ -711,9 +705,8 @@ ground states \( \vert 00\rangle \) and the excited states \( \vert
 
 <p>To construct an efficient ansatz, we must determine the subspace
 within which the Hamiltonian lives. To begin, note that particles are
-only ever moved between energy levels in pairs. This implies that all
-possible states have a Hamming weight of constant parity (odd or
-even); this is the same as the signature \( r \) being conserved. Further,
+only ever moved between energy levels in pairs.
+Further,
 note that the Hamiltonian's coefficients (\( \epsilon \) and \( V \)) are
 state independent (do not depend on the indices \( n \) or \( m \)) as the
 states labeled by these indices are degenerate and thus have the same
@@ -764,6 +757,371 @@ $$
 <p><li> Discussion of the project and how to implement the VQE for the simpler matrix problems</li>
 <p><li> Solving the Lipkin model with VQE</li>
 </ol>
+</div>
+
+
+<center>
+<h1 style="text-align: center;">March 27-31, 2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</h1>
+</center>  <!-- document title -->
+
+<!-- author(s): Morten Hjorth-Jensen -->
+<center>
+<b>Morten Hjorth-Jensen</b> [1, 2]
+</center>
+<!-- institution(s) -->
+<center>
+[1] <b>Department of Physics, University of Oslo</b>
+</center>
+<center>
+[2] <b>Department of Physics and Astronomy and Facility for Rare Isotope Beams, Michigan State University</b>
+</center>
+<br>
+<center>
+<h4>Mar 23, 2023</h4>
+</center> <!-- date -->
+<br>
+</section>
+
+<section>
+<h2 id="implementing-the-vqe-method">Implementing the VQE method </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<ol>
+ <p><li> Reminder on basics of the VQE method</li>
+ <p><li> Simulating Hamiltonian systems, from simple \( 2\times 2 \) matrices to the Lipkin model and discussion of the project</li>
+ <p><li> Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1</li>
+ <p><li> <a href="https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub" target="_blank">VQE review article</a></li>
+</ol>
+</div>
+
+<p>To construct an efficient ansatz, we must determine the subspace
+within which the Hamiltonian lives. To begin, note that particles are
+only ever moved between energy levels in pairs. This implies that all
+possible states have a Hamming weight of constant parity (odd or
+even); this is the same as the signature \( r \) being conserved. Further,
+note that the Hamiltonian's coefficients (\( \epsilon \) and \( V \)) are
+state independent (do not depend on the indices \( n \) or \( m \)) as the
+states labeled by these indices are degenerate and thus have the same
+energy level. Thus, the Hamiltonian treats all states with the same
+number of excited particles (Hamming weight of the state) as the
+same. Therefore, the following ansatz forms exactly cover the subspace
+within which the \( N \)-degenerate Hamiltonian explores:
+</p>
+
+<p>&nbsp;<br>
+$$
+\begin{align}
+\vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
+\tag{21}\\
+\vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
+\tag{22}
+\end{align}
+$$
+<p>&nbsp;<br>
+
+<p>Here \( \vert D^n_k\rangle \) represents a Dicke state which is defined as equal superposition of all \( n \)-qubit states with Hamming weight \( k \). That is</p>
+
+<p>&nbsp;<br>
+$$
+\begin{align}
+\vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
+\tag{23}
+\end{align}
+$$
+<p>&nbsp;<br>
+
+<p>where \( h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\} \). There are two ways we can think of to prepare such ansatz: The first is to prepare them exactly as it is known how to deterministically prepare Dicke states with linear depth. The reference provides an algorithm for preparing a set of gates \( U^n_k \) that prepares a Dicke state from a product state of Hamming weight \( k \); that is</p>
+<p>&nbsp;<br>
+$$
+\begin{align}
+U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
+\tag{24}
+\end{align}
+$$
+<p>&nbsp;<br>
+
+<p>It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the \( k=6 \) case, as an example) is given below</p>
+<p>&nbsp;<br>
+$$
+\begin{align}
+\tag{25}
+\Qcircuit @C=0.8em @R=0.8em
+{
+\lstick{\vert 0}\rangle & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
+\\
+\lstick{\vert 0}\rangle & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
+\tag{26}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
+\tag{27}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
+\tag{28}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
+\tag{29}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
+\
+}
+\tag{30}
+\end{align}
+$$
+<p>&nbsp;<br>
+
+<p>The \( R_y \) gates and CNOT gates prepare an arbitrary real superposition of product states with even Hamming weight \( k \); then the \( R_z \) gates add arbitrary phases to each of the states</p>
+
+$$
+\begin{align}
+\vert 000000\rangle
+\to \ &\cos(\theta_0/2)\vert 000000\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert 110000\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert 111100\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert 111111\rangle.
+\end{align}
+Finally, $U^n_k$ converts each product state to its corresponding Dicke state. Thus, all together the circuit acts as
+\begin{align}
+\vert 000000\rangle
+\to \ &\cos(\theta_0/2)\vert D^6_0\rangle 
+\nonumber
+\\
++\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert D^6_2\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert D^6_4\rangle
+\nonumber
+\\
++\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert D^6_6\rangle.
+\tag{31}
+\end{align}
+$$
+
+<p>The circuit of Eq. m<a href="#mjx-eqn-25">(25)</a> can be extended
+naturally for any even value of \( k \). For odd values of \( k \), one need
+simply add a single-qubit to the top of the circuit for \( k-1 \) and
+apply the \( X \) gate to it. Although this ansatz has linear depth, the
+circuit for \( U^n_k \) involves several double-controlled gates which
+involve the usage of several CNOT gates to decompose. As the CNOT gate
+is often the noisiest gate in NISQ era quantum computers, it is best
+to minimize their use.
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">LM_circuit</span>():
+    theta = Parameter(<span style="color: #CD5555">&#39;theta&#39;</span>)
+    QC = QuantumCircuit(<span style="color: #B452CD">2</span>)
+    QC.ry(<span style="color: #B452CD">2</span>*(theta-np.pi/<span style="color: #B452CD">2</span>),<span style="color: #B452CD">0</span>)
+    QC.cnot(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>)
+    <span style="color: #8B008B; font-weight: bold">return</span> QC
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">QC = LM_circuit()
+QC.draw(output=<span style="color: #CD5555">&#39;mpl&#39;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3 id="vqe-method">VQE method </h3>
+
+<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
+<ul>
+<p><li> Quantum circuit
+<ol type="a"></li>
+ <p><li> Optimizer</li>
+ <p><li> Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator"</li>
+
+<p><li> Initial point (i.e. \( \theta \) search space)</li>
+ <p><li> Hamiltonian/measurement basis</li>
+</ol>
+<p>
+</ul>
+<p>
+<p>To define the Hamiltonian, we will use the Qiskit Pauli operator functions
+I,Z,X,Y.  In this method, for a given \( \chi \), we will do a search over
+\( \theta \) from \( -\frac{\pi}{2} \) to \( \frac{\pi}{2} \) and picking out the
+minimum energy value
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22">#sim1 min example</span>
+sim = Aer.get_backend(<span style="color: #CD5555">&#39;qasm_simulator&#39;</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>) <span style="color: #228B22">#optimizer for VQE</span>
+epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi2 = [<span style="color: #B452CD">0.5</span>,<span style="color: #B452CD">1</span>]
+
+t = np.arange(-pi/<span style="color: #B452CD">2</span>,pi/<span style="color: #B452CD">2</span>,<span style="color: #B452CD">0.05</span>) <span style="color: #228B22">#0.1 step size finishs pretty fast</span>
+energy = []
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi2:
+    ev = []
+    v = Vp(epsilon,omega,x)
+    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(t)):
+        H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) + <span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z ) -<span style="color: #B452CD">0.5</span> * v * ( X ^ X ) +<span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
+        result = vqe.compute_minimum_eigenvalue(H)
+        ev.append(result.eigenvalue)
+    energy.append(ev)
+
+
+plt.plot(t,energy[<span style="color: #B452CD">0</span>],label=<span style="color: #CD5555">&#39;$\chi=0.5$&#39;</span>)
+plt.plot(t,energy[<span style="color: #B452CD">1</span>],label=<span style="color: #CD5555">&#39;$\chi=1$&#39;</span>)
+plt.xlabel(<span style="color: #CD5555">&#39;$\\theta$&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;Ground State Energy&#39;</span>)
+plt.title(<span style="color: #CD5555">&#39;$E_{g.s}$ vs. $\\theta$&#39;</span>)
+plt.legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi3 = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">2.1</span>,<span style="color: #B452CD">0.1</span>)
+t = np.arange(-pi/<span style="color: #B452CD">2</span>,pi/<span style="color: #B452CD">2</span>,<span style="color: #B452CD">0.1</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>)
+LM_sim = []
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi3:
+    v = Vp(epsilon,omega,x)
+    ev = []
+    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(t)):
+        H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) +<span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z ) -<span style="color: #B452CD">0.5</span> * v * ( X ^ X ) +<span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
+        vqe = VQE(ansatz=LM_circuit(),optimizer=adam,initial_point=[t[i]],quantum_instance=sim,expectation=AerPauliExpectation())
+        result = vqe.compute_minimum_eigenvalue(H)
+
+        ev.append(result.eigenvalue)
+    LM_sim.append(<span style="color: #658b00">min</span>(ev))
+
+plt.plot(chi,np.array(exact),label=<span style="color: #CD5555">&#39;$E_{exact}$&#39;</span>,color=<span style="color: #CD5555">&#39;b&#39;</span>)
+plt.plot(chi,np.array(HF),label=<span style="color: #CD5555">&#39;$E_{HF}$&#39;</span>,color=<span style="color: #CD5555">&#39;g&#39;</span>)
+plt.scatter(chi3,LM_sim,label=<span style="color: #CD5555">&#39;QC sim&#39;</span>,color=<span style="color: #CD5555">&#39;cyan&#39;</span>)
+plt.axvline(<span style="color: #B452CD">1</span>, color = <span style="color: #CD5555">&#39;k&#39;</span>, linestyle=<span style="color: #CD5555">&#39;--&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;$E_{g.s}$&#39;</span>)
+plt.xlabel(<span style="color: #CD5555">&#39;$\chi$&#39;</span>)
+plt.title(<span style="color: #CD5555">f&#39;$\Omega=2$&#39;</span>)
+plt.legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3 id="vqe-method-using-qiskit">VQE method using Qiskit </h3>
+
+<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
+<ol>
+<p><li> Quantum circuit</li>
+<p><li> Optimizer</li>
+<p><li> Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator"</li> 
+<p><li> Hamiltonian/measurement basis</li>
+</ol>
+<p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">epsilon = <span style="color: #B452CD">1</span>
+omega = <span style="color: #B452CD">2</span>
+chi5 = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">2.1</span>,<span style="color: #B452CD">0.1</span>)
+adam =qiskit.algorithms.optimizers.ADAM(maxiter=<span style="color: #B452CD">10000</span>)
+LM_sim = []
+<span style="color: #8B008B; font-weight: bold">for</span> x <span style="color: #8B008B">in</span> chi5:
+    v = Vp(epsilon,omega,x)
+    H = <span style="color: #B452CD">0.5</span> * epsilon * ( Z ^ I ) +<span style="color: #B452CD">0.5</span> * epsilon * ( I ^ Z )-<span style="color: #B452CD">0.5</span> * v * ( X ^ X ) + <span style="color: #B452CD">0.5</span> * v * ( Y ^ Y )
+    vec = Aer.get_backend(<span style="color: #CD5555">&#39;statevector_simulator&#39;</span>)
+    vqe = VQE(ansatz=LM_circuit(),optimizer=adam,quantum_instance=vec,expectation=AerPauliExpectation())
+    result = vqe.compute_minimum_eigenvalue(H)
+    LM_sim.append(result.eigenvalue)
+
+
+plt.plot(chi,np.array(exact),label=<span style="color: #CD5555">&#39;$E_{exact}$&#39;</span>,color=<span style="color: #CD5555">&#39;b&#39;</span>)
+plt.plot(chi,np.array(HF),label=<span style="color: #CD5555">&#39;$E_{HF}$&#39;</span>,color=<span style="color: #CD5555">&#39;g&#39;</span>)
+plt.scatter(chi5,LM_sim,label=<span style="color: #CD5555">&#39;QC state vec&#39;</span>,color=<span style="color: #CD5555">&#39;cyan&#39;</span>)
+plt.axvline(<span style="color: #B452CD">1</span>, color = <span style="color: #CD5555">&#39;k&#39;</span>, linestyle=<span style="color: #CD5555">&#39;--&#39;</span>)
+plt.ylabel(<span style="color: #CD5555">&#39;$E_{g.s}$&#39;</span>)
+plt.xlabel(<span style="color: #CD5555">&#39;$\chi$&#39;</span>)
+plt.title(<span style="color: #CD5555">&#39;$\Omega=2$&#39;</span>)
+plt.legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 </section>
 
