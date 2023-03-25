@@ -184,7 +184,7 @@ MathJax.Hub.Config({
 </center>
 <br>
 <center>
-<h4>Mar 24, 2023</h4>
+<h4>Week of March 27-31</h4>
 </center> <!-- date -->
 <br>
 
@@ -195,7 +195,7 @@ MathJax.Hub.Config({
 </section>
 
 <section>
-<h2 id="implementing-the-vqe-method">Implementing the VQE method </h2>
+<h2 id="plans-for-the-week-of-march-27-31">Plans for the week of March 27-31 </h2>
 
 <div class="alert alert-block alert-block alert-text-normal">
 <b></b>
@@ -207,6 +207,296 @@ MathJax.Hub.Config({
  <p><li> <a href="https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub" target="_blank">VQE review article</a></li>
 </ol>
 </div>
+</section>
+
+<section>
+<h2 id="implementing-the-vqe-method-one-qubit-system">Implementing the  VQE method, one qubit system </h2>
+
+<p>We start with a simple \( 2\times 2 \) Hamiltonian matrix expressed in
+terms of Pauli \( X \) and \( Z \) matrices, as discussed in the project text.
+</p>
+
+<p>We define a  symmetric matrix  \( H\in {\mathbb{R}}^{2\times 2} \)</p>
+<p>&nbsp;<br>
+$$
+H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
+\end{bmatrix},
+$$
+<p>&nbsp;<br>
+
+<p>We  let \( H = H_0 + H_I \), where</p>
+<p>&nbsp;<br>
+$$
+H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
+$$
+<p>&nbsp;<br>
+
+<p>is a diagonal matrix. Similarly,</p>
+<p>&nbsp;<br>
+$$
+H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
+$$
+<p>&nbsp;<br>
+
+<p>where \( V_{ij} \) represent various interaction matrix elements.
+We can view \( H_0 \) as the non-interacting solution
+</p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
+\tag{1}
+\end{equation}
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+       H_0\vert 1\rangle =E_2\vert 1\rangle,
+\tag{2}
+\end{equation}
+$$
+<p>&nbsp;<br>
+
+<p>where we have defined the orthogonal computational one-qubit basis states \( \vert 0\rangle \) and \( \vert 1\rangle \).</p>
+
+<p>We rewrite \( H \) (and \( H_0 \) and \( H_I \))  via Pauli matrices</p>
+<p>&nbsp;<br>
+$$
+H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
+  + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+H_I = c \boldsymbol{I} +\omega_z\sigma_z + \omega_x\sigma_x,
+$$
+<p>&nbsp;<br>
+
+<p>with \( c = (V_{11}+V_{22})/2 \), \( \omega_z = (V_{11}-V_{22})/2 \) and \( \omega_x = V_{12}=V_{21} \).
+We let our Hamiltonian depend linearly on a strength parameter \( \lambda \)
+</p>
+
+<p>&nbsp;<br>
+$$
+H=H_0+\lambda H_\mathrm{I},
+$$
+<p>&nbsp;<br>
+
+<p>with \( \lambda \in [0,1] \), where the limits \( \lambda=0 \) and \( \lambda=1 \)
+represent the non-interacting (or unperturbed) and fully interacting
+system, respectively.  The model is an eigenvalue problem with only
+two available states.
+</p>
+
+<p>Here we set the parameters \( E_1=0 \),
+\( E_2=4 \), \( V_{11}=-V_{22}=3 \) and \( V_{12}=V_{21}=0.2 \).
+</p>
+
+<p>The non-interacting solutions represent our computational basis.
+Pertinent to our choice of parameters, is that at \( \lambda\geq 2/3 \),
+the lowest eigenstate is dominated by \( \vert 1\rangle \) while the upper
+is \( \vert 0 \rangle \). At \( \lambda=1 \) the \( \vert 0 \rangle \) mixing of
+the lowest eigenvalue is \( 1\% \) while for \( \lambda\leq 2/3 \) we have a
+\( \vert 0 \rangle \) component of more than \( 90\% \).  The character of the
+eigenvectors has therefore been interchanged when passing \( z=2/3 \). The
+value of the parameter \( V_{12} \) represents the strength of the coupling
+between the two states.
+</p>
+</section>
+
+<section>
+<h2 id="two-qubit-system-and-the-vqe">Two-qubit system and the VQE </h2>
+
+<p>We extend now the system  to a two-qubit system with the following computational
+basis states and Hamiltonian matrix written out in terms of Pauli spin
+matrices.
+</p>
+
+<p>This system can be thought of as composed of two subsystems
+\( A \) and \( B \). Each subsystem has computational basis states
+</p>
+
+<p>&nbsp;<br>
+$$
+\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
+$$
+<p>&nbsp;<br>
+
+<p>The subsystems could represent single particles or composite many-particle systems of a given symmetry.
+This leads to the many-body computational basis states
+</p>
+
+<p>&nbsp;<br>
+$$
+\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
+$$
+<p>&nbsp;<br>
+
+<p>and finally</p>
+<p>&nbsp;<br>
+$$
+\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+$$
+<p>&nbsp;<br>
+
+<p>These computational basis states define also the eigenstates of the non-interacting  Hamiltonian</p>
+<p>&nbsp;<br>
+$$
+H_0\vert 00 \rangle = \epsilon_{00}\vert 00 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>&nbsp;<br>
+$$
+H_0\vert 10 \rangle = \epsilon_{10}\vert 10 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>&nbsp;<br>
+$$
+H_0\vert 01 \rangle = \epsilon_{01}\vert 01 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+H_0\vert 11 \rangle = \epsilon_{11}\vert 11 \rangle.
+$$
+<p>&nbsp;<br>
+
+<p>The interacting part of the Hamiltonian \( H_{\mathrm{I}} \) is given by the tensor product of two \( \sigma_x \) and \( \sigma_z \)  matrices, respectively, that is</p>
+<p>&nbsp;<br>
+$$
+H_{\mathrm{I}}=H_x\sigma_x\otimes\sigma_x+H_z\sigma_z\otimes\sigma_z,
+$$
+<p>&nbsp;<br>
+
+<p>where \( H_x \) and \( H_z \) are interaction strength parameters. Our final Hamiltonian matrix is given by</p>
+<p>&nbsp;<br>
+$$
+\boldsymbol{H}=\begin{bmatrix} \epsilon_{00}+H_z & 0 & 0 & H_x \\
+                       0  & \epsilon_{10}-H_z & H_x & 0 \\
+		       0 & H_x & \epsilon_{01}-H_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{11} +H_z \end{bmatrix}.
+$$
+<p>&nbsp;<br>
+
+<p>The four eigenstates of the above Hamiltonian matrix can in turn be used to
+define density matrices. As an example, the density matrix of the
+first eigenstate (lowest energy \( E_0 \)) \( \Psi_0 \) is
+</p>
+
+<p>&nbsp;<br>
+$$
+\rho_0=\left(\alpha_{00}\vert 00 \rangle\langle 00\vert+\alpha_{10}\vert 10 \rangle\langle 10\vert+\alpha_{01}\vert 01 \rangle\langle 01\vert+\alpha_{11}\vert 11 \rangle\langle 11\vert\right),
+$$
+<p>&nbsp;<br>
+
+<p>where the coefficients \( \alpha_{ij} \) are the eigenvector coefficients
+resulting from the solution of the above eigenvalue problem.
+</p>
+
+<p>We can
+then in turn define the density matrix for the subsets \( A \) or \( B \) as
+</p>
+
+<p>&nbsp;<br>
+$$
+\rho_A=\mathrm{Tr}_B(\rho_{0})=\langle 0 \vert \rho_{0} \vert 0\rangle_{B}+\langle 1 \vert \rho_{0} \vert 1\rangle_{B},
+$$
+<p>&nbsp;<br>
+
+<p>or</p>
+
+<p>&nbsp;<br>
+$$
+\rho_B=\mathrm{Tr}_A(\rho_0)=\langle 0 \vert \rho_{0} \vert 0\rangle_{A}+\langle 1 \vert \rho_{0} \vert 1\rangle_{A}.
+$$
+<p>&nbsp;<br>
+
+<p>The density matrices for these subsets can be used to compute the
+so-called von Neumann entropy, which is one of the possible measures
+of entanglement. A pure state has entropy equal zero while entangled
+state have an entropy larger than zero. The von-Neumann entropy is
+defined as
+</p>
+
+<p>&nbsp;<br>
+$$
+S(A,B)=-\mathrm{Tr}\left(\rho_{A,B}\log_2 (\rho_{A,B})\right).
+$$
+<p>&nbsp;<br>
+
+<p>You can select parameter values (or other of your choice)</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">Hx = <span style="color: #B452CD">2.0</span>
+Hz = <span style="color: #B452CD">3.0</span>
+<span style="color: #228B22"># H_0</span>
+Energiesnoninteracting = [<span style="color: #B452CD">0.0</span>, <span style="color: #B452CD">2.5</span>, <span style="color: #B452CD">6.5</span>, <span style="color: #B452CD">7.0</span>]
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Compute the eigenvalues <b>using standard eigenvalue solvers</b> as functions of
+the interaction strength \( \lambda \) and study the role of entanglement.
+Compute thereafter the Von Neumann entropy for one of the subsystems using the denisty matrix  of the lowest
+two-body state . Comment your results.
+</p>
+
+<p>The example here shows the above von Neumann entropy based on the
+density matrix for the lowest many-body state. We see clearly a jump
+in the entropy around the point where we have a level crossing. At
+interaction strenght \( \lambda=0 \) we have many-body states purely
+defined by their computational basis states. As we switch on the
+interaction strength, we obtain an increased degree of mixing and the
+entropy increases till we reach the level crossing point where we see
+an additional and sudden increase in entropy. Similar behaviors are
+observed for the other states. The most important result from this
+example is that entanglement is driven by the Hamiltonian itself and
+the strength of the interaction matrix elements and the
+non-interacting energies.
+</p>
+</section>
+
+<section>
+<h2 id="moving-to-the-lipkin-model">Moving to the Lipkin model </h2>
 
 <p>To construct an efficient ansatz, we must determine the subspace
 within which the Hamiltonian lives. To begin, note that particles are
@@ -226,9 +516,9 @@ within which the \( N \)-degenerate Hamiltonian explores:
 $$
 \begin{align}
 \vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
-\tag{1}\\
+\tag{3}\\
 \vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
-\tag{2}
+\tag{4}
 \end{align}
 $$
 <p>&nbsp;<br>
@@ -239,7 +529,7 @@ $$
 $$
 \begin{align}
 \vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
-\tag{3}
+\tag{5}
 \end{align}
 $$
 <p>&nbsp;<br>
@@ -249,7 +539,7 @@ $$
 $$
 \begin{align}
 U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
-\tag{4}
+\tag{6}
 \end{align}
 $$
 <p>&nbsp;<br>
@@ -258,23 +548,23 @@ $$
 <p>&nbsp;<br>
 $$
 \begin{align}
-\tag{5}
+\tag{7}
 \Qcircuit @C=0.8em @R=0.8em
 {
 \lstick{\vert 0}\rangle & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
 \\
 \lstick{\vert 0}\rangle & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
-\tag{6}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
-\tag{7}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
 \tag{8}\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
+\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
 \tag{9}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
+\tag{10}\\
+\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
+\tag{11}\\
 \lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
 \
 }
-\tag{10}
+\tag{12}
 \end{align}
 $$
 <p>&nbsp;<br>
@@ -308,11 +598,11 @@ Finally, $U^n_k$ converts each product state to its corresponding Dicke state. T
 \nonumber
 \\
 +\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert D^6_6\rangle.
-\tag{11}
+\tag{13}
 \end{align}
 $$
 
-<p>The circuit of Eq. m<a href="#mjx-eqn-5">(5)</a> can be extended
+<p>The circuit of Eq. m<a href="#mjx-eqn-7">(7)</a> can be extended
 naturally for any even value of \( k \). For odd values of \( k \), one need
 simply add a single-qubit to the top of the circuit for \( k-1 \) and
 apply the \( X \) gate to it. Although this ansatz has linear depth, the
