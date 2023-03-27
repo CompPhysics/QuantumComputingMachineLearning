@@ -145,7 +145,7 @@ print(EigValues[0])
 # define also the rotation matrices
 # Define angles theta and phi
 theta = 0.5*np.pi; phi = 0.2*np.pi
-Rx = np.cos(theta*0.5)*I-np.sin(theta*0.5)*X
+Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
 Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
 #define basis states
 basis0 = np.array([1,0])
@@ -164,7 +164,7 @@ n = np.size(angle)
 ExpectationValues = np.zeros((n,n))
 for i in range (n):
     theta = np.pi*angle[i]/180.0
-    Rx = np.cos(theta*0.5)*I-np.sin(theta*0.5)*X
+    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
     for j in range (n):
         phi = np.pi*angle[j]/180.0
         Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
@@ -179,7 +179,7 @@ print(np.min(ExpectationValues))
 
 Clearly, this is not the very best way of proceeding. Rather, here we
 would compute the gradient and thereby find the minimum as function of
-the angles $\theta$ and $\phi$.
+the angles $\theta$ and $\phi$. Furthermore, in sertting up the angles, a better practice is to select random values for these.
 
 
 !split
@@ -216,7 +216,7 @@ the rotational matrices/operators.
 
 !bt
 \[
-R_x(\theta)=\cos{\frac{\theta}{2}}\bm{I}-\imath \sin{\frac{\theta}{2}}\bm{\sigma_x,
+R_x(\theta)=\cos{\frac{\theta}{2}}\bm{I}-\imath \sin{\frac{\theta}{2}}\bm{\sigma}_x,
 \]
 !et
 
@@ -224,7 +224,7 @@ and
 
 !bt
 \[
-R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma_x.
+R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma}_y.
 \]
 !et
 
@@ -476,7 +476,7 @@ non-interacting energies.
 
 
 !split
-===== Switching to Qiskit =====
+===== Switching to Qiskit (notes developed by Stian Bilek) =====
 !bc pycod
 import numpy as np
 import qiskit as qk
@@ -768,67 +768,12 @@ where $h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\}$. The
 U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
 \end{align}
 !et
-It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the $k=6$ case, as an example) is given below
-!bt
-\begin{align}
-\label{dicke_superposition}
-\Qcircuit @C=0.8em @R=0.8em
-{
-\lstick{\vert 0}\rangle & \gate{R_y(\theta_0)} & \ctrl{1} & \qw & \qw & \qw & \qw & \gate{R_z{(\phi_0)}} & \multigate{5}{U^n_k} & \qw 
-\\
-\lstick{\vert 0}\rangle & \qw & \targ & \ctrl{1} & \qw & \qw & \qw & \qw & \ghost{U^n_k} & \qw 
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \gate{R_y{(\theta_1})} & \ctrl{1} & \qw & \qw & \gate{R_z{(\phi_1)}} & \ghost{U^n_k} & \qw
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \targ & \ctrl{1} & \qw & \qw & \ghost{(U^n_k)} & \qw
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \gate{R_y{(\theta_2})} & \ctrl{1} & \gate{R_z{(\phi_2})} & \ghost{U^n_k} & \qw
-\\
-\lstick{\vert 0}\rangle & \qw & \qw & \qw & \qw & \qw & \targ & \qw & \ghost{U^n_k} & \qw
-\
-}
-\end{align}
-!et
 
-The $R_y$ gates and CNOT gates prepare an arbitrary real superposition of product states with even Hamming weight $k$; then the $R_z$ gates add arbitrary phases to each of the states
+It then describes how to one can create an arbitrary superposition of
+Dicke states, which we modify here to restrict ourselves to a Hamming
+weight of constant parity. The circuit to construct such a state (for
+the $k=6$ case, as an example) is given below
 
-!bt
-\begin{align}
-\vert 000000\rangle
-\to \ &\cos(\theta_0/2)\vert 000000\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert 110000\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert 111100\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert 111111\rangle.
-\end{align}
-Finally, $U^n_k$ converts each product state to its corresponding Dicke state. Thus, all together the circuit acts as
-\begin{align}
-\vert 000000\rangle
-\to \ &\cos(\theta_0/2)\vert D^6_0\rangle 
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\cos(\theta_1/2)e^{i\theta_0}\vert D^6_2\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\cos(\theta_2/2)e^{i(\theta_0+\theta_1)}\vert D^6_4\rangle
-\nonumber
-\\
-+\ &\sin(\theta_0/2)\sin(\theta_1/2)\sin\theta_2/2)e^{i(\theta_0+\theta_1+\theta_2)}\vert D^6_6\rangle.
-\end{align}
-!et
-The circuit of Eq. m(ref{dicke_superposition}) can be extended
-naturally for any even value of $k$. For odd values of $k$, one need
-simply add a single-qubit to the top of the circuit for $k-1$ and
-apply the $X$ gate to it. Although this ansatz has linear depth, the
-circuit for $U^n_k$ involves several double-controlled gates which
-involve the usage of several CNOT gates to decompose. As the CNOT gate
-is often the noisiest gate in NISQ era quantum computers, it is best
-to minimize their use.
 
 !bc pycod
 import numpy as np
