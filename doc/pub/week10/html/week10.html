@@ -148,6 +148,7 @@ div.toc p,a {
                2,
                None,
                'implementing-the-vqe-method-one-qubit-system'),
+              ('Setting up the matrix', 2, None, 'setting-up-the-matrix'),
               ('Implementing the VQE', 2, None, 'implementing-the-vqe'),
               ('A smarter way of doing this',
                2,
@@ -300,6 +301,161 @@ the lowest eigenvalue is \( 1\% \) while for \( \lambda\leq 2/3 \) we have a
 eigenvectors has therefore been interchanged when passing \( z=2/3 \). The
 value of the parameter \( V_{12} \) represents the strength of the coupling
 between the two states.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="setting-up-the-matrix">Setting up the matrix </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">from</span>  <span style="color: #0000FF; font-weight: bold">matplotlib</span> <span style="color: #008000; font-weight: bold">import</span> pyplot <span style="color: #008000; font-weight: bold">as</span> plt
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+dim <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+Hamiltonian <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros((dim,dim))
+e0 <span style="color: #666666">=</span> <span style="color: #666666">0.0</span>
+e1 <span style="color: #666666">=</span> <span style="color: #666666">4.0</span>
+Xnondiag <span style="color: #666666">=</span> <span style="color: #666666">0.20</span>
+Xdiag <span style="color: #666666">=</span> <span style="color: #666666">3.0</span>
+Eigenvalue <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(dim)
+<span style="color: #408080; font-style: italic"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #666666">0</span>,<span style="color: #666666">0</span>] <span style="color: #666666">=</span> Xdiag<span style="color: #666666">+</span>e0
+Hamiltonian[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>] <span style="color: #666666">=</span> Xnondiag
+Hamiltonian[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>] <span style="color: #666666">=</span> Hamiltonian[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>]
+Hamiltonian[<span style="color: #666666">1</span>,<span style="color: #666666">1</span>] <span style="color: #666666">=</span> e1<span style="color: #666666">-</span>Xdiag
+<span style="color: #408080; font-style: italic"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors <span style="color: #666666">=</span> np<span style="color: #666666">.</span>linalg<span style="color: #666666">.</span>eig(Hamiltonian)
+permute <span style="color: #666666">=</span> EigValues<span style="color: #666666">.</span>argsort()
+EigValues <span style="color: #666666">=</span> EigValues[permute]
+<span style="color: #408080; font-style: italic"># print only the lowest eigenvalue</span>
+<span style="color: #008000">print</span>(EigValues[<span style="color: #666666">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
+X <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>],[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>]])
+Y <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0</span>,<span style="color: #666666">-1</span>j],[<span style="color: #666666">1</span>j,<span style="color: #666666">0</span>]])
+Z <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>],[<span style="color: #666666">0</span>,<span style="color: #666666">-1</span>]])
+<span style="color: #408080; font-style: italic"># identity matrix</span>
+I <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>],[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>]])
+
+epsilon <span style="color: #666666">=</span> (e0<span style="color: #666666">+</span>e1)<span style="color: #666666">*0.5</span>; omega <span style="color: #666666">=</span> (e0<span style="color: #666666">-</span>e1)<span style="color: #666666">*0.5</span>
+c <span style="color: #666666">=</span> <span style="color: #666666">0.0</span>; omega_z<span style="color: #666666">=</span>Xdiag; omega_x <span style="color: #666666">=</span> Xnondiag
+Hamiltonian <span style="color: #666666">=</span> (epsilon<span style="color: #666666">+</span>c)<span style="color: #666666">*</span>I<span style="color: #666666">+</span>(omega_z<span style="color: #666666">+</span>omega)<span style="color: #666666">*</span>Z<span style="color: #666666">+</span>omega_x<span style="color: #666666">*</span>X
+EigValues, EigVectors <span style="color: #666666">=</span> np<span style="color: #666666">.</span>linalg<span style="color: #666666">.</span>eig(Hamiltonian)
+permute <span style="color: #666666">=</span> EigValues<span style="color: #666666">.</span>argsort()
+EigValues <span style="color: #666666">=</span> EigValues[permute]
+<span style="color: #408080; font-style: italic"># print only the lowest eigenvalue</span>
+<span style="color: #008000">print</span>(EigValues[<span style="color: #666666">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic"># define also the rotation matrices</span>
+<span style="color: #408080; font-style: italic"># Define angles theta and phi</span>
+theta <span style="color: #666666">=</span> <span style="color: #666666">0.5*</span>np<span style="color: #666666">.</span>pi; phi <span style="color: #666666">=</span> <span style="color: #666666">0.2*</span>np<span style="color: #666666">.</span>pi
+Rx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
+Ry <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>Y
+<span style="color: #408080; font-style: italic">#define basis states</span>
+basis0 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1</span>,<span style="color: #666666">0</span>])
+basis1 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">0</span>,<span style="color: #666666">1</span>])
+
+NewBasis <span style="color: #666666">=</span> basis0<span style="color: #666666">*</span>Rx<span style="color: #666666">*</span>Ry
+<span style="color: #408080; font-style: italic"># Compute the expectation value</span>
+Energy <span style="color: #666666">=</span> NewBasis<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> NewBasis
+<span style="color: #008000">print</span>(Energy[<span style="color: #666666">0</span>,<span style="color: #666666">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Not an impressive results. We set up now a loop over many angles \( \theta \) and \( \phi \) and compute the energies</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic"># define a number of angles</span>
+n <span style="color: #666666">=</span> <span style="color: #666666">10</span>
+<span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span> (<span style="color: #666666">0</span>,<span style="color: #666666">180</span>,n):
+    theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">*</span>i<span style="color: #666666">/180.0</span>
+    Rx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
+    <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span> (<span style="color: #666666">0</span>,<span style="color: #666666">180</span>,n):
+        phi <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">*</span>j<span style="color: #666666">/180.0</span>
+        Ry <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>Y
+        NewBasis <span style="color: #666666">=</span> basis0<span style="color: #666666">*</span>Rx<span style="color: #666666">*</span>Ry
+        Energy <span style="color: #666666">=</span> NewBasis<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> NewBasis
+        <span style="color: #008000">print</span>(np<span style="color: #666666">.</span>real(EigValues[<span style="color: #666666">0</span>]<span style="color: #666666">-</span>Energy[<span style="color: #666666">0</span>,<span style="color: #666666">0</span>]))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Clearly, this is not the very best way of proceeding. Rather, here we
+would compute the gradient and thereby find the minimum as function of
+the angles \( \theta \) and \( \phi \).
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>

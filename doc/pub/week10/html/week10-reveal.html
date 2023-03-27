@@ -310,6 +310,162 @@ between the two states.
 </section>
 
 <section>
+<h2 id="setting-up-the-matrix">Setting up the matrix </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span>  <span style="color: #008b45; text-decoration: underline">matplotlib</span> <span style="color: #8B008B; font-weight: bold">import</span> pyplot <span style="color: #8B008B; font-weight: bold">as</span> plt
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+dim = <span style="color: #B452CD">2</span>
+Hamiltonian = np.zeros((dim,dim))
+e0 = <span style="color: #B452CD">0.0</span>
+e1 = <span style="color: #B452CD">4.0</span>
+Xnondiag = <span style="color: #B452CD">0.20</span>
+Xdiag = <span style="color: #B452CD">3.0</span>
+Eigenvalue = np.zeros(dim)
+<span style="color: #228B22"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>] = Xdiag+e0
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>] = Xnondiag
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>] = Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">1</span>] = e1-Xdiag
+<span style="color: #228B22"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
+X = np.array([[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>]])
+Y = np.array([[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>j],[<span style="color: #B452CD">1</span>j,<span style="color: #B452CD">0</span>]])
+Z = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>]])
+<span style="color: #228B22"># identity matrix</span>
+I = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]])
+
+epsilon = (e0+e1)*<span style="color: #B452CD">0.5</span>; omega = (e0-e1)*<span style="color: #B452CD">0.5</span>
+c = <span style="color: #B452CD">0.0</span>; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define also the rotation matrices</span>
+<span style="color: #228B22"># Define angles theta and phi</span>
+theta = <span style="color: #B452CD">0.5</span>*np.pi; phi = <span style="color: #B452CD">0.2</span>*np.pi
+Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+<span style="color: #228B22">#define basis states</span>
+basis0 = np.array([<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>])
+basis1 = np.array([<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
+
+NewBasis = basis0*Rx*Ry
+<span style="color: #228B22"># Compute the expectation value</span>
+Energy = NewBasis.T @ Hamiltonian @ NewBasis
+<span style="color: #658b00">print</span>(Energy[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Not an impressive results. We set up now a loop over many angles \( \theta \) and \( \phi \) and compute the energies</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define a number of angles</span>
+n = <span style="color: #B452CD">10</span>
+<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (<span style="color: #B452CD">0</span>,<span style="color: #B452CD">180</span>,n):
+    theta = np.pi*i/<span style="color: #B452CD">180.0</span>
+    Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+    <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (<span style="color: #B452CD">0</span>,<span style="color: #B452CD">180</span>,n):
+        phi = np.pi*j/<span style="color: #B452CD">180.0</span>
+        Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+        NewBasis = basis0*Rx*Ry
+        Energy = NewBasis.T @ Hamiltonian @ NewBasis
+        <span style="color: #658b00">print</span>(np.real(EigValues[<span style="color: #B452CD">0</span>]-Energy[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>]))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Clearly, this is not the very best way of proceeding. Rather, here we
+would compute the gradient and thereby find the minimum as function of
+the angles \( \theta \) and \( \phi \).
+</p>
+</section>
+
+<section>
 <h2 id="implementing-the-vqe">Implementing the VQE </h2>
 
 <p>For a one-qubit system we can reach every point on the Bloch sphere
