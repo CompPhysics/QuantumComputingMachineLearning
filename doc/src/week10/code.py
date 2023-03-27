@@ -44,10 +44,11 @@ Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
 basis0 = np.array([1,0])
 basis1 = np.array([0,1])
 
-NewBasis = basis0*Rx*Ry
+NewBasis = Ry @ Rx @ basis0
+print(NewBasis)
 # Compute the expectation value
 Energy = NewBasis.T @ Hamiltonian @ NewBasis
-print(Energy[0,0])
+print(Energy)
 # define a number of angles
 n = 20
 angle = np.arange(0,180,10)
@@ -59,9 +60,9 @@ for i in range (n):
     for j in range (n):
         phi = np.pi*angle[j]/180.0
         Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
-        NewBasis = basis0*Rx*Ry
+        NewBasis = Ry @ Rx @ basis0
         Energy = NewBasis.T @ Hamiltonian @ NewBasis
-        Edifference=abs(np.real(EigValues[0]-Energy[0,0]))
+        Edifference=abs(np.real(EigValues[0]-Energy))
         ExpectationValues[i,j]=Edifference
 
 print(np.min(ExpectationValues))

@@ -453,19 +453,20 @@ $$
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define also the rotation matrices</span>
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define the rotation matrices</span>
 <span style="color: #228B22"># Define angles theta and phi</span>
 theta = <span style="color: #B452CD">0.5</span>*np.pi; phi = <span style="color: #B452CD">0.2</span>*np.pi
-Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
 Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
 <span style="color: #228B22">#define basis states</span>
 basis0 = np.array([<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>])
 basis1 = np.array([<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
 
-NewBasis = basis0*Rx*Ry
+NewBasis = Ry @ Rx @ basis0
+<span style="color: #658b00">print</span>(NewBasis)
 <span style="color: #228B22"># Compute the expectation value</span>
 Energy = NewBasis.T @ Hamiltonian @ NewBasis
-<span style="color: #658b00">print</span>(Energy[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>])
+<span style="color: #658b00">print</span>(Energy)
 </pre>
 </div>
       </div>
@@ -489,21 +490,22 @@ Energy = NewBasis.T @ Hamiltonian @ NewBasis
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define a number of angles between 0 and pi</span>
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define a number of angles</span>
+n = <span style="color: #B452CD">20</span>
 angle = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">180</span>,<span style="color: #B452CD">10</span>)
 n = np.size(angle)
 ExpectationValues = np.zeros((n,n))
 <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (n):
     theta = np.pi*angle[i]/<span style="color: #B452CD">180.0</span>
-    Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+    Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
     <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (n):
         phi = np.pi*angle[j]/<span style="color: #B452CD">180.0</span>
         Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
-        NewBasis = basis0*Rx*Ry
+        NewBasis = Ry @ Rx @ basis0
         Energy = NewBasis.T @ Hamiltonian @ NewBasis
-        Edifference=<span style="color: #658b00">abs</span>(np.real(EigValues[<span style="color: #B452CD">0</span>]-Energy[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>]))
+        Edifference=<span style="color: #658b00">abs</span>(np.real(EigValues[<span style="color: #B452CD">0</span>]-Energy))
         ExpectationValues[i,j]=Edifference
-<span style="color: #228B22"># Then print smallest energy difference</span>
+
 <span style="color: #658b00">print</span>(np.min(ExpectationValues))
 </pre>
 </div>
