@@ -95,6 +95,149 @@ eigenvectors has therefore been interchanged when passing $z=2/3$. The
 value of the parameter $V_{12}$ represents the strength of the coupling
 between the two states.
 
+
+
+!split
+===== Implementing the VQE =====
+
+For a one-qubit system we can reach every point on the Bloch sphere
+(as discussed earlier) with a rotation about the $x$-axis and the
+$y$-axis.
+
+We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state $\vert \psi\rangle$
+!bt
+\[
+\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
+\]
+!et
+
+We can produce multiple ansatzes for the new state in terms of the
+angles $\theta$ and $\phi$.  With these ansatzes we can in turn
+calculate the expectation value of the above Hamiltonian, now
+rewritten in terms of various Pauli matrices (and thereby gates), that is compute
+
+!bt
+\[
+\langle \psi \vert (c+\mathcal{E})\bm{I} + (\Omega+\omega_z)\bm{\sigma}_z + \omega_x\bm{\sigma}_x\vert \psi \rangle.
+\]
+!et
+
+We can now set up a series of ansatzes for $\vert \psi \rangle$ as
+function of the angles $\theta$ and $\phi$ and find thereafter the
+variational minimum using for example a gradient descent method.
+
+To do so, we need to remind ourselves about the mathematical expressions for
+the rotational matrices/operators.
+
+!bt
+\[
+R_x(\theta)=\cos{\frac{\theta}{2}}\bm{I}-\imath \sin{\frac{\theta}{2}}\bm{\sigma_x,
+\]
+!et
+
+and
+
+!bt
+\[
+R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma_x.
+\]
+!et
+
+
+!split
+===== A smarter way of doing this =====
+
+The above approach means that we are setting up several matrix-matrix
+amd matrix-vector multiplications. Although straight forward it is not
+the most efficient way of doing this, in particular in case the
+matrices become large (and sparse). But there are some more important
+issues.
+
+In a physical realization of these systems we cannot just multiply the
+state with the Hamiltonian. When performing a measurement we can only
+measure in one particular direction. For the computational basis
+states which we have, $\vert 0\rangle$ and $\vert 1\rangle$, we have
+to measure along the bases of the Pauli matrices and reconstruct the
+eigenvalues from these measurements.
+
+From our earlier discussions we know that the Pauli $Z$ matrix has the above basis states as eigen states through
+
+!bt
+\[
+\bm{\sigma}_z\vert 0 \rangle = \bm{Z}\vert 0 \rangle=+1\vert 0 \rangle,
+\]
+!et
+and
+!bt
+\[
+\bm{\sigma}_z\vert 1 \rangle = \bm{Z}\vert 1 \rangle=-1\vert 1 \rangle,
+\]
+!et
+with eigenvalue $-1$.
+
+For the Pauli $X$ matrix on the other hand we have
+!bt
+\[
+\bm{\sigma}_x\vert 0 \rangle = \bm{X}\vert 0 \rangle=+1\vert 1 \rangle,
+\]
+!et
+and
+!bt
+\[
+\bm{\sigma}_x\vert 1 \rangle = \bm{X}\vert 1 \rangle=-1\vert 0 \rangle,
+\]
+!et
+
+with eigenvalues $1$ in both cases. The latter two equations tell us
+that the computational basis we have chosen, and in which we will
+prepare our states, is not an eigenbasis of the $\sigma_x$ matrix.
+
+We will thus try to rewrite the Pauli $X$ matrix in terms of a Pauli $Z$ matrix. Fortunately this can be done using the Hadamard matrix twice, that is
+
+!bt
+\[
+\bm{X}=\bm{\sigma}_x=\bm{H}\bm{Z}\bm{H}.
+\]
+!et
+
+The Pauli $Y$ matrix can be written as
+
+!bt
+\[
+\bm{Y}=\bm{\sigma}_y=\bm{H}\bm{S}^{\dagger}\bm{Z}\bm{H}\bm{S},
+\]
+!et
+
+where $S$ is the phase matrix
+!bt
+\[
+S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
+\]
+!et
+
+
+
+
+From here and on we will denote the Pauli matrices by $X$, $Y$ and $Z$ and we can write the expectation value of the Hamiltonian as
+!bt
+\[
+\langle \psi \vert (c+\mathcal{E})\bm{I} + (\Omega+\omega_z)\bm{Z} + \omega_x\bm{H}\bm{Z}\bm{H}\vert \psi \rangle,
+\]
+!et
+which we can rewrite as
+!bt
+\[
+(c+\mathcal{E})\langle \psi \vert \bm{I}\vert \psi \rangle+(\Omega+\omega_z)\langle \psi \vert \bm{Z}\vert \psi \rangle+\omega_x\langle \psi \bm{H}\vert \bm{Z}\vert\bm{H}\psi \rangle.
+\]
+!et
+
+The first and second term are to easy to perform a measurement on since we we just need to compute
+$\langle \psi\vert \bm{I}\vert \psi\rangle$ and $\langle \psi\vert \bm{Z}\vert \psi\rangle$.
+For the final term we need just to add the action of the Hadamard matrix and we are done.
+
+
+
+
 !split
 ===== Two-qubit system and the VQE =====
 
@@ -245,6 +388,10 @@ observed for the other states. The most important result from this
 example is that entanglement is driven by the Hamiltonian itself and
 the strength of the interaction matrix elements and the
 non-interacting energies.
+
+
+
+
 
 
 !split
