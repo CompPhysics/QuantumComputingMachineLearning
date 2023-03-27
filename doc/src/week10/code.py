@@ -49,13 +49,19 @@ NewBasis = basis0*Rx*Ry
 Energy = NewBasis.T @ Hamiltonian @ NewBasis
 print(Energy[0,0])
 # define a number of angles
-n = 10
-for i in range (0,180,n):
-    theta = np.pi*i/180.0
+n = 20
+angle = np.arange(0,180,10)
+n = np.size(angle)
+ExpectationValues = np.zeros((n,n))
+for i in range (n):
+    theta = np.pi*angle[i]/180.0
     Rx = np.cos(theta*0.5)*I-np.sin(theta*0.5)*X
-    for j in range (0,180,n):
-        phi = np.pi*j/180.0
+    for j in range (n):
+        phi = np.pi*angle[j]/180.0
         Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
         NewBasis = basis0*Rx*Ry
         Energy = NewBasis.T @ Hamiltonian @ NewBasis
-        print(np.real(EigValues[0]-Energy[0,0]))
+        Edifference=abs(np.real(EigValues[0]-Energy[0,0]))
+        ExpectationValues[i,j]=Edifference
+
+print(np.min(ExpectationValues))
