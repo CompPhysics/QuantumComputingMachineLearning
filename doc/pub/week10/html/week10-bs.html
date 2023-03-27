@@ -324,6 +324,53 @@ EigValues <span style="color: #666666">=</span> EigValues[permute]
       </div>
     </div>
   </div>
+</div>
+
+
+<!-- !split -->
+<h2 id="implementing-the-vqe" class="anchor">Implementing the VQE </h2>
+
+<p>For a one-qubit system we can reach every point on the Bloch sphere
+(as discussed earlier) with a rotation about the \( x \)-axis and the
+\( y \)-axis.
+</p>
+
+<p>We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state \( \vert \psi\rangle \)</p>
+$$
+\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
+$$
+
+<p>We can produce multiple ansatzes for the new state in terms of the
+angles \( \theta \) and \( \phi \).  With these ansatzes we can in turn
+calculate the expectation value of the above Hamiltonian, now
+rewritten in terms of various Pauli matrices (and thereby gates), that is compute
+</p>
+
+$$
+\langle \psi \vert (c+\mathcal{E})\boldsymbol{I} + (\Omega+\omega_z)\boldsymbol{\sigma}_z + \omega_x\boldsymbol{\sigma}_x\vert \psi \rangle.
+$$
+
+<p>We can now set up a series of ansatzes for \( \vert \psi \rangle \) as
+function of the angles \( \theta \) and \( \phi \) and find thereafter the
+variational minimum using for example a gradient descent method.
+</p>
+
+<p>To do so, we need to remind ourselves about the mathematical expressions for
+the rotational matrices/operators.
+</p>
+
+$$
+R_x(\theta)=\cos{\frac{\theta}{2}}\boldsymbol{I}-\imath \sin{\frac{\theta}{2}}\boldsymbol{\sigma}_x,
+$$
+
+<p>and</p>
+
+$$
+R_y(\phi)=\cos{\frac{\phi}{2}}\boldsymbol{I}-\imath \sin{\frac{\phi}{2}}\boldsymbol{\sigma}_y.
+$$
+
+
+
 <!-- code=python (!bc pycod) typeset with pygments style "default" -->
 <div class="cell border-box-sizing code_cell rendered">
   <div class="input">
@@ -401,49 +448,6 @@ ExpectationValues <span style="color: #666666">=</span> np<span style="color: #6
 would compute the gradient and thereby find the minimum as function of
 the angles \( \theta \) and \( \phi \). Furthermore, in sertting up the angles, a better practice is to select random values for these.
 </p>
-
-<!-- !split -->
-<h2 id="implementing-the-vqe" class="anchor">Implementing the VQE </h2>
-
-<p>For a one-qubit system we can reach every point on the Bloch sphere
-(as discussed earlier) with a rotation about the \( x \)-axis and the
-\( y \)-axis.
-</p>
-
-<p>We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state \( \vert \psi\rangle \)</p>
-$$
-\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
-$$
-
-<p>We can produce multiple ansatzes for the new state in terms of the
-angles \( \theta \) and \( \phi \).  With these ansatzes we can in turn
-calculate the expectation value of the above Hamiltonian, now
-rewritten in terms of various Pauli matrices (and thereby gates), that is compute
-</p>
-
-$$
-\langle \psi \vert (c+\mathcal{E})\boldsymbol{I} + (\Omega+\omega_z)\boldsymbol{\sigma}_z + \omega_x\boldsymbol{\sigma}_x\vert \psi \rangle.
-$$
-
-<p>We can now set up a series of ansatzes for \( \vert \psi \rangle \) as
-function of the angles \( \theta \) and \( \phi \) and find thereafter the
-variational minimum using for example a gradient descent method.
-</p>
-
-<p>To do so, we need to remind ourselves about the mathematical expressions for
-the rotational matrices/operators.
-</p>
-
-$$
-R_x(\theta)=\cos{\frac{\theta}{2}}\boldsymbol{I}-\imath \sin{\frac{\theta}{2}}\boldsymbol{\sigma}_x,
-$$
-
-<p>and</p>
-
-$$
-R_y(\phi)=\cos{\frac{\phi}{2}}\boldsymbol{I}-\imath \sin{\frac{\phi}{2}}\boldsymbol{\sigma}_y.
-$$
-
 
 <!-- !split -->
 <h2 id="a-smarter-way-of-doing-this" class="anchor">A smarter way of doing this </h2>
