@@ -195,7 +195,7 @@ R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma}_y.
 # define the rotation matrices
 # Define angles theta and phi
 theta = 0.5*np.pi; phi = 0.2*np.pi
-Rx = np.cos(theta*0.5)*I-np.sin(theta*0.5)*X
+Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
 Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
 #define basis states
 basis0 = np.array([1,0])
@@ -204,7 +204,8 @@ basis1 = np.array([0,1])
 NewBasis = Ry @ Rx @ basis0
 print(NewBasis)
 # Compute the expectation value
-Energy = NewBasis.T @ Hamiltonian @ NewBasis
+#Note hermitian conjugation
+Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
 print(Energy)
 !ec
 Not an impressive results. We set up now a loop over many angles $\theta$ and $\phi$ and compute the energies
@@ -216,12 +217,12 @@ n = np.size(angle)
 ExpectationValues = np.zeros((n,n))
 for i in range (n):
     theta = np.pi*angle[i]/180.0
-    Rx = np.cos(theta*0.5)*I-np.sin(theta*0.5)*X
+    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
     for j in range (n):
         phi = np.pi*angle[j]/180.0
         Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
         NewBasis = Ry @ Rx @ basis0
-        Energy = NewBasis.T @ Hamiltonian @ NewBasis
+        Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
         Edifference=abs(np.real(EigValues[0]-Energy))
         ExpectationValues[i,j]=Edifference
 

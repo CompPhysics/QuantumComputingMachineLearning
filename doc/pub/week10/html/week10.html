@@ -446,7 +446,7 @@ $$
   <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic"># define the rotation matrices</span>
 <span style="color: #408080; font-style: italic"># Define angles theta and phi</span>
 theta <span style="color: #666666">=</span> <span style="color: #666666">0.5*</span>np<span style="color: #666666">.</span>pi; phi <span style="color: #666666">=</span> <span style="color: #666666">0.2*</span>np<span style="color: #666666">.</span>pi
-Rx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
+Rx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
 Ry <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>Y
 <span style="color: #408080; font-style: italic">#define basis states</span>
 basis0 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1</span>,<span style="color: #666666">0</span>])
@@ -455,7 +455,8 @@ basis1 <span style="color: #666666">=</span> np<span style="color: #666666">.</s
 NewBasis <span style="color: #666666">=</span> Ry <span style="color: #666666">@</span> Rx <span style="color: #666666">@</span> basis0
 <span style="color: #008000">print</span>(NewBasis)
 <span style="color: #408080; font-style: italic"># Compute the expectation value</span>
-Energy <span style="color: #666666">=</span> NewBasis<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> NewBasis
+<span style="color: #408080; font-style: italic">#Note hermitian conjugation</span>
+Energy <span style="color: #666666">=</span> NewBasis<span style="color: #666666">.</span>conj()<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> NewBasis
 <span style="color: #008000">print</span>(Energy)
 </pre>
 </div>
@@ -487,12 +488,12 @@ n <span style="color: #666666">=</span> np<span style="color: #666666">.</span>s
 ExpectationValues <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros((n,n))
 <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span> (n):
     theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">*</span>angle[i]<span style="color: #666666">/180.0</span>
-    Rx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
+    Rx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
     <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span> (n):
         phi <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">*</span>angle[j]<span style="color: #666666">/180.0</span>
         Ry <span style="color: #666666">=</span> np<span style="color: #666666">.</span>cos(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>Y
         NewBasis <span style="color: #666666">=</span> Ry <span style="color: #666666">@</span> Rx <span style="color: #666666">@</span> basis0
-        Energy <span style="color: #666666">=</span> NewBasis<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> NewBasis
+        Energy <span style="color: #666666">=</span> NewBasis<span style="color: #666666">.</span>conj()<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> NewBasis
         Edifference<span style="color: #666666">=</span><span style="color: #008000">abs</span>(np<span style="color: #666666">.</span>real(EigValues[<span style="color: #666666">0</span>]<span style="color: #666666">-</span>Energy))
         ExpectationValues[i,j]<span style="color: #666666">=</span>Edifference
 
