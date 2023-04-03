@@ -73,6 +73,18 @@ div.toc p,a {
                'vqe-and-efficient-computations-of-gradients'),
               ('Setting up the matrix', 2, None, 'setting-up-the-matrix'),
               ('Implementing the VQE', 2, None, 'implementing-the-vqe'),
+              ('Gradient descent and calculations of gradients',
+               2,
+               None,
+               'gradient-descent-and-calculations-of-gradients'),
+              ('Basics of gradient descent and stochastic gradient descent',
+               3,
+               None,
+               'basics-of-gradient-descent-and-stochastic-gradient-descent'),
+              ('Computing quantum gradients',
+               3,
+               None,
+               'computing-quantum-gradients'),
               ('A smarter way of doing this',
                2,
                None,
@@ -80,11 +92,7 @@ div.toc p,a {
               ('Two-qubit system and the VQE',
                2,
                None,
-               'two-qubit-system-and-the-vqe'),
-              ('Computing quantum gradients',
-               2,
-               None,
-               'computing-quantum-gradients')]}
+               'two-qubit-system-and-the-vqe')]}
 end of tocinfo -->
 
 <body>
@@ -122,7 +130,7 @@ MathJax.Hub.Config({
 </center>
 <br>
 <center>
-<h4>Apr 1, 2023</h4>
+<h4>Apr 2, 2023</h4>
 </center> <!-- date -->
 <br>
 
@@ -134,7 +142,10 @@ MathJax.Hub.Config({
 <p>
 <ol>
  <li> Reminder on basics of the VQE method</li>
- <li> Simulating efficiently Hamiltonians on quantum computers with the VQE method</li>
+ <li> Simulating efficiently Hamiltonians on quantum computers with the VQE method
+<ol type="a"></li>
+   <li> Discussions of various gradient descent approaches</li>
+</ol>
  <li> <a href="https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub" target="_blank">VQE review article</a></li>
  <li> <a href="https://youtu.be/" target="_blank">Video of lecture TBA</a></li>
 </ol>
@@ -440,8 +451,146 @@ angles, a better practice is to select random values for these.
 </p>
 
 <p>Let us now implement a classical gradient descent to the computation of the energies. 
-Use <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" target="_blank"><tt>https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331</tt></a> as a guideline to calculate gradients of the Hamiltonian.
+We will follow closely  <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" target="_blank"><tt>https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331</tt></a> in order to calculate gradients of the Hamiltonian.
 </p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="gradient-descent-and-calculations-of-gradients">Gradient descent and calculations of gradients </h2>
+<h3 id="basics-of-gradient-descent-and-stochastic-gradient-descent">Basics of gradient descent and stochastic gradient descent </h3>
+<h3 id="computing-quantum-gradients">Computing quantum gradients </h3>
+
+$$
+\begin{equation}
+\vc(\theta) \coloneqq \expval{\hat{B}} = \bra{0} U^{\dagger}(\theta) \hat{B} U(\theta) \ket{0}.
+\label{_auto3}
+\end{equation}
+$$
+
+
+$$
+\begin{equation}
+    \quad \qquad \nabla \func(x) \approx (\func(x +\Delta x/2) -\func(x -\Delta x/2) )/\Delta x,
+\label{_auto4}
+\end{equation}
+$$
+
+
+$$
+\begin{equation}
+  \label{Eq:der_of_exp}
+  \partial_\mu \vc = \partial_{\mu} \bra{\psi} \G^{\dagger} \hat{Q} \G\ket{\psi}
+  = \bra{\psi} \G^{\dagger}  \hat{Q}  (\partial_{\mu}\G) \ket{\psi} +\hc,
+\end{equation}
+$$
+
+$$
+\begin{align}
+  \bra{\psi}B^{\dagger} \hat{Q} C  \ket{\psi} +\hc\notag
+\label{_auto5}\\
+  \begin{split}
+    = \frac{1}{2}\big(&
+    \bra{\psi} (B + C)^{\dagger} \hat{Q} (B + C) \ket{\psi}
+\label{_auto6}\\
+    -&\bra{\psi}(B - C)^{\dagger}  \hat{Q} (B - C) \ket{\psi}
+  \big).
+\end{split}
+\label{_auto7}
+\end{align}
+$$
+
+
+$$
+\begin{equation}
+ \partial_{\mu} \G = -i G \e^{-i \mu G}.
+\label{_auto8}
+\end{equation}
+$$
+
+
+$$
+\begin{align}
+  \partial_{\mu} \vc
+%  &= \bra{\psi} \G^{\dagger} \, \hat{Q} \, (-iG) \G \ket{\psi} +\hc ,
+\label{_auto9}\\
+%  &= r \bra{\psi'}  \hat{Q} \, (-ir^{-1}G) \ket{\psi'} +\hc
+   &= \bra{\psi'}  \hat{Q} \, (-iG) \ket{\psi'} +\hc ,
+\label{_auto10}
+\end{align}
+$$
+
+$$
+\begin{equation}
+  \begin{split}
+    \partial_{\mu} \vc = \frac{r}{2}\big(
+    &\bra{\psi'} (\I -ir^{-1}G)^{\dagger} \hat{Q} (\I -ir^{-1}G) \ket{\psi'}\\
+    -&\bra{\psi'}(\I +ir^{-1}G)^{\dagger}  \hat{Q} (\I +ir^{-1}G) \ket{\psi'}
+    \big).
+  \end{split}
+\label{_auto11}
+\end{equation}
+$$
+
+
+$$
+\begin{equation}
+  \G\left(\frac{\pi}{4r}\right) = \frac{1}{\sqrt{2}}(\I - i r^{-1} G).
+\label{_auto12}
+\end{equation}
+$$
+
+
+$$
+\begin{align}
+\partial_{\mu} \vc
+&=
+r \big(\bra{\psi} \G^\dagger(\mu +s) \hat{Q} \G(\mu +s) \ket{\psi}
+\label{_auto13}\\
+\notag
+& \quad -\bra{\psi} \G^{\dagger}(\mu -s) \hat{Q}  \G(\mu -s) \ket{\psi}\big)
+\label{_auto14}\\
+\label{eq:parameter_shift_rule2}
+&= r \left(f(\mu+s) -f(\mu-s)\right).
+\end{align}
+$$
+
+$$
+\begin{align*}
+  \text{ExpW}(\mu, \delta) &= \exp \left(- i \mu \left( \cos (\delta) \sigma_x + \sin(\delta)\sigma_y\right) \right),\\
+  \text{ExpZ}(\mu) &= \exp \left(- i \mu \sigma_z \right),\\
+  \text{Exp11}(\mu) &= \exp \left(- i \mu \ketbra{11}{11}  \right) .
+\end{align*}
+$$
+
+
+$$
+\begin{equation}
+  \partial_{\mu}\G = \frac{\alpha}{2} ((A_1 + A_1^{\dagger})  + i(A_2 + A_2^{\dagger}))
+\label{_auto15}
+\end{equation}
+$$
+
+<p>with real \( \alpha \).\footnote{
+  If \( \alpha \) contains a renormalisation so that \( |\G| \leq 1 \), and
+  \( \G = \G_{\mathrm{re}} + i \G_{\mathrm{im}} \) we can set
+  \( A_1 = \G_{\mathrm{re}} + i \sqrt{\I - \G_{\mathrm{re}}^2} \) and
+  \( A_2 = \G_{\mathrm{im}} + i \sqrt{\I - \G_{\mathrm{im}}^2} \).}
+\( A_1 \) and \( A_2 \) in turn can be implemented as quantum circuits.
+</p>
+$$
+\begin{equation}
+  \partial_{\mu}\G = \sum_{k=1}^K \alpha_k A_k,
+\label{_auto16}
+\end{equation}
+$$
+
+<p>for real \( \alpha_k \) and unitary \( A_k \). The derivative becomes</p>
+$$
+\begin{equation}
+  \partial_{\mu} \vc  = \sum_{k=1}^K \alpha_k  \left( \bra{\psi}\G^{\dagger} \hat{Q} A_k  \ket{\psi} +\hc \right).
+\label{_auto17}
+\end{equation}
+$$
+
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="a-smarter-way-of-doing-this">A smarter way of doing this </h2>
@@ -605,141 +754,6 @@ $$
 <p>where the coefficients \( \alpha_{ij} \) are the eigenvector coefficients
 resulting from the solution of the above eigenvalue problem.
 </p>
-
-<p><b>To do:</b> Set up codes for this using gradient descent and perform a series of measumerents</p>
-<h2 id="computing-quantum-gradients">Computing quantum gradients </h2>
-
-$$
-\begin{equation}
-\vc(\theta) \coloneqq \expval{\hat{B}} = \bra{0} U^{\dagger}(\theta) \hat{B} U(\theta) \ket{0}.
-\label{_auto3}
-\end{equation}
-$$
-
-
-$$
-\begin{equation}
-    \quad \qquad \nabla \func(x) \approx (\func(x +\Delta x/2) -\func(x -\Delta x/2) )/\Delta x,
-\label{_auto4}
-\end{equation}
-$$
-
-
-$$
-\begin{equation}
-  \label{Eq:der_of_exp}
-  \partial_\mu \vc = \partial_{\mu} \bra{\psi} \G^{\dagger} \hat{Q} \G\ket{\psi}
-  = \bra{\psi} \G^{\dagger}  \hat{Q}  (\partial_{\mu}\G) \ket{\psi} +\hc,
-\end{equation}
-$$
-
-$$
-\begin{align}
-  \bra{\psi}B^{\dagger} \hat{Q} C  \ket{\psi} +\hc\notag
-\label{_auto5}\\
-  \begin{split}
-    = \frac{1}{2}\big(&
-    \bra{\psi} (B + C)^{\dagger} \hat{Q} (B + C) \ket{\psi}
-\label{_auto6}\\
-    -&\bra{\psi}(B - C)^{\dagger}  \hat{Q} (B - C) \ket{\psi}
-  \big).
-\end{split}
-\label{_auto7}
-\end{align}
-$$
-
-
-$$
-\begin{equation}
- \partial_{\mu} \G = -i G \e^{-i \mu G}.
-\label{_auto8}
-\end{equation}
-$$
-
-
-$$
-\begin{align}
-  \partial_{\mu} \vc
-%  &= \bra{\psi} \G^{\dagger} \, \hat{Q} \, (-iG) \G \ket{\psi} +\hc ,
-\label{_auto9}\\
-%  &= r \bra{\psi'}  \hat{Q} \, (-ir^{-1}G) \ket{\psi'} +\hc
-   &= \bra{\psi'}  \hat{Q} \, (-iG) \ket{\psi'} +\hc ,
-\label{_auto10}
-\end{align}
-$$
-
-$$
-\begin{equation}
-  \begin{split}
-    \partial_{\mu} \vc = \frac{r}{2}\big(
-    &\bra{\psi'} (\I -ir^{-1}G)^{\dagger} \hat{Q} (\I -ir^{-1}G) \ket{\psi'}\\
-    -&\bra{\psi'}(\I +ir^{-1}G)^{\dagger}  \hat{Q} (\I +ir^{-1}G) \ket{\psi'}
-    \big).
-  \end{split}
-\label{_auto11}
-\end{equation}
-$$
-
-
-$$
-\begin{equation}
-  \G\left(\frac{\pi}{4r}\right) = \frac{1}{\sqrt{2}}(\I - i r^{-1} G).
-\label{_auto12}
-\end{equation}
-$$
-
-
-$$
-\begin{align}
-\partial_{\mu} \vc
-&=
-r \big(\bra{\psi} \G^\dagger(\mu +s) \hat{Q} \G(\mu +s) \ket{\psi}
-\label{_auto13}\\
-\notag
-& \quad -\bra{\psi} \G^{\dagger}(\mu -s) \hat{Q}  \G(\mu -s) \ket{\psi}\big)
-\label{_auto14}\\
-\label{eq:parameter_shift_rule2}
-&= r \left(f(\mu+s) -f(\mu-s)\right).
-\end{align}
-$$
-
-$$
-\begin{align*}
-  \text{ExpW}(\mu, \delta) &= \exp \left(- i \mu \left( \cos (\delta) \sigma_x + \sin(\delta)\sigma_y\right) \right),\\
-  \text{ExpZ}(\mu) &= \exp \left(- i \mu \sigma_z \right),\\
-  \text{Exp11}(\mu) &= \exp \left(- i \mu \ketbra{11}{11}  \right) .
-\end{align*}
-$$
-
-
-$$
-\begin{equation}
-  \partial_{\mu}\G = \frac{\alpha}{2} ((A_1 + A_1^{\dagger})  + i(A_2 + A_2^{\dagger}))
-\label{_auto15}
-\end{equation}
-$$
-
-<p>with real \( \alpha \).\footnote{
-  If \( \alpha \) contains a renormalisation so that \( |\G| \leq 1 \), and
-  \( \G = \G_{\mathrm{re}} + i \G_{\mathrm{im}} \) we can set
-  \( A_1 = \G_{\mathrm{re}} + i \sqrt{\I - \G_{\mathrm{re}}^2} \) and
-  \( A_2 = \G_{\mathrm{im}} + i \sqrt{\I - \G_{\mathrm{im}}^2} \).}
-\( A_1 \) and \( A_2 \) in turn can be implemented as quantum circuits.
-</p>
-$$
-\begin{equation}
-  \partial_{\mu}\G = \sum_{k=1}^K \alpha_k A_k,
-\label{_auto16}
-\end{equation}
-$$
-
-<p>for real \( \alpha_k \) and unitary \( A_k \). The derivative becomes</p>
-$$
-\begin{equation}
-  \partial_{\mu} \vc  = \sum_{k=1}^K \alpha_k  \left( \bra{\psi}\G^{\dagger} \hat{Q} A_k  \ket{\psi} +\hc \right).
-\label{_auto17}
-\end{equation}
-$$
 
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">
