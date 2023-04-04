@@ -54,10 +54,10 @@ doconce format html week11.do.txt --html_style=bootstrap --pygments_html_style=d
                3,
                None,
                'basics-of-gradient-descent-and-stochastic-gradient-descent'),
-              ('Computing quantum gradients',
+              ('Computing quantum gradients in a smarter way',
                3,
                None,
-               'computing-quantum-gradients'),
+               'computing-quantum-gradients-in-a-smarter-way'),
               ('A smarter way of doing this',
                2,
                None,
@@ -106,7 +106,7 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#implementing-the-vqe" style="font-size: 80%;"><b>Implementing the VQE</b></a></li>
      <!-- navigation toc: --> <li><a href="#gradient-descent-and-calculations-of-gradients" style="font-size: 80%;"><b>Gradient descent and calculations of gradients</b></a></li>
      <!-- navigation toc: --> <li><a href="#basics-of-gradient-descent-and-stochastic-gradient-descent" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Basics of gradient descent and stochastic gradient descent</a></li>
-     <!-- navigation toc: --> <li><a href="#computing-quantum-gradients" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Computing quantum gradients</a></li>
+     <!-- navigation toc: --> <li><a href="#computing-quantum-gradients-in-a-smarter-way" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Computing quantum gradients in a smarter way</a></li>
      <!-- navigation toc: --> <li><a href="#a-smarter-way-of-doing-this" style="font-size: 80%;"><b>A smarter way of doing this</b></a></li>
      <!-- navigation toc: --> <li><a href="#two-qubit-system-and-the-vqe" style="font-size: 80%;"><b>Two-qubit system and the VQE</b></a></li>
 
@@ -456,9 +456,8 @@ ExpectationValues <span style="color: #666666">=</span> np<span style="color: #6
 </div>
 
 <p>Clearly, this is not the very best way of proceeding. Rather, here we
-would compute the gradient and thereby find the minimum as function of
-the angles \( \theta \) and \( \phi \). Furthermore, in sertting up the
-angles, a better practice is to select random values for these.
+could try to find the optimal values for the parameters \( \theta \) and \( \phi \) through computation of their respective  gradients and thereby find the minimum as function of
+the optimal angles \( \hat{\theta} \) and \( \hat{\phi} \). 
 </p>
 
 <p>Let us now implement a classical gradient descent to the computation of the energies. 
@@ -468,7 +467,7 @@ We will follow closely  <a href="https://journals.aps.org/pra/abstract/10.1103/P
 <!-- !split -->
 <h2 id="gradient-descent-and-calculations-of-gradients" class="anchor">Gradient descent and calculations of gradients </h2>
 
-<p>In order to optimize the VQE anstaz, we need to compute derivatives
+<p>In order to optimize the VQE ansatz, we need to compute derivatives
 with respect to the variational parameters.  Here we develop first a
 simpler approach tailored to the one-qubit case. For this particular
 case, we have defined an ansatz in terms of the Pauli rotation
@@ -505,9 +504,14 @@ $$
 \frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma_}y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
 $$
 
-<p>We will rewrite the expectation value </p>
+<p>This means that we have to calculate two additional expectation values
+in addition to the standard expectation value for the Hamiltonian.  In
+our first attempt, we will thus just compute these expectation values
+in a brute force way, perforaming the various matrix-matrix and
+matrix-vector multiplications. Thereafter we will try to rewrite this in a smarter way.
+</p>
 <h3 id="basics-of-gradient-descent-and-stochastic-gradient-descent" class="anchor">Basics of gradient descent and stochastic gradient descent </h3>
-<h3 id="computing-quantum-gradients" class="anchor">Computing quantum gradients </h3>
+<h3 id="computing-quantum-gradients-in-a-smarter-way" class="anchor">Computing quantum gradients in a smarter way </h3>
 
 $$
 \begin{equation}
