@@ -51,11 +51,11 @@ doconce format html week11.do.txt --html_style=bootstrap --pygments_html_style=d
                None,
                'gradient-descent-and-calculations-of-gradients'),
               ('Basics of gradient descent and stochastic gradient descent',
-               3,
+               2,
                None,
                'basics-of-gradient-descent-and-stochastic-gradient-descent'),
               ('Computing quantum gradients in a smarter way',
-               3,
+               2,
                None,
                'computing-quantum-gradients-in-a-smarter-way'),
               ('A smarter way of doing this',
@@ -100,15 +100,15 @@ MathJax.Hub.Config({
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
         <ul class="dropdown-menu">
-     <!-- navigation toc: --> <li><a href="#plans-for-the-week-of-april-17-21" style="font-size: 80%;"><b>Plans for the week of April 17-21</b></a></li>
-     <!-- navigation toc: --> <li><a href="#vqe-and-efficient-computations-of-gradients" style="font-size: 80%;"><b>VQE and efficient computations of gradients</b></a></li>
-     <!-- navigation toc: --> <li><a href="#setting-up-the-matrix" style="font-size: 80%;"><b>Setting up the matrix</b></a></li>
-     <!-- navigation toc: --> <li><a href="#implementing-the-vqe" style="font-size: 80%;"><b>Implementing the VQE</b></a></li>
-     <!-- navigation toc: --> <li><a href="#gradient-descent-and-calculations-of-gradients" style="font-size: 80%;"><b>Gradient descent and calculations of gradients</b></a></li>
-     <!-- navigation toc: --> <li><a href="#basics-of-gradient-descent-and-stochastic-gradient-descent" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Basics of gradient descent and stochastic gradient descent</a></li>
-     <!-- navigation toc: --> <li><a href="#computing-quantum-gradients-in-a-smarter-way" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Computing quantum gradients in a smarter way</a></li>
-     <!-- navigation toc: --> <li><a href="#a-smarter-way-of-doing-this" style="font-size: 80%;"><b>A smarter way of doing this</b></a></li>
-     <!-- navigation toc: --> <li><a href="#two-qubit-system-and-the-vqe" style="font-size: 80%;"><b>Two-qubit system and the VQE</b></a></li>
+     <!-- navigation toc: --> <li><a href="#plans-for-the-week-of-april-17-21" style="font-size: 80%;">Plans for the week of April 17-21</a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-and-efficient-computations-of-gradients" style="font-size: 80%;">VQE and efficient computations of gradients</a></li>
+     <!-- navigation toc: --> <li><a href="#setting-up-the-matrix" style="font-size: 80%;">Setting up the matrix</a></li>
+     <!-- navigation toc: --> <li><a href="#implementing-the-vqe" style="font-size: 80%;">Implementing the VQE</a></li>
+     <!-- navigation toc: --> <li><a href="#gradient-descent-and-calculations-of-gradients" style="font-size: 80%;">Gradient descent and calculations of gradients</a></li>
+     <!-- navigation toc: --> <li><a href="#basics-of-gradient-descent-and-stochastic-gradient-descent" style="font-size: 80%;">Basics of gradient descent and stochastic gradient descent</a></li>
+     <!-- navigation toc: --> <li><a href="#computing-quantum-gradients-in-a-smarter-way" style="font-size: 80%;">Computing quantum gradients in a smarter way</a></li>
+     <!-- navigation toc: --> <li><a href="#a-smarter-way-of-doing-this" style="font-size: 80%;">A smarter way of doing this</a></li>
+     <!-- navigation toc: --> <li><a href="#two-qubit-system-and-the-vqe" style="font-size: 80%;">Two-qubit system and the VQE</a></li>
 
         </ul>
       </li>
@@ -137,7 +137,7 @@ MathJax.Hub.Config({
 </center>
 <br>
 <center>
-<h4>Apr 4, 2023</h4>
+<h4>Apr 6, 2023</h4>
 </center> <!-- date -->
 <br>
 
@@ -456,11 +456,13 @@ ExpectationValues <span style="color: #666666">=</span> np<span style="color: #6
 </div>
 
 <p>Clearly, this is not the very best way of proceeding. Rather, here we
-could try to find the optimal values for the parameters \( \theta \) and \( \phi \) through computation of their respective  gradients and thereby find the minimum as function of
-the optimal angles \( \hat{\theta} \) and \( \hat{\phi} \). 
+could try to find the optimal values for the parameters \( \theta \) and
+\( \phi \) through computation of their respective gradients and thereby
+find the minimum as function of the optimal angles \( \hat{\theta} \) and
+\( \hat{\phi} \).
 </p>
 
-<p>Let us now implement a classical gradient descent to the computation of the energies. 
+<p>Let us now implement a classical gradient descent algorithm to the computation of the energies. 
 We will follow closely  <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" target="_self"><tt>https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331</tt></a> in order to calculate gradients of the Hamiltonian.
 </p>
 
@@ -496,12 +498,12 @@ Hamiltonian in terms of the angles \( \theta \) and \( \phi \). We have two
 derivatives 
 </p>
 $$
-\frac{\partial}{\partial \theta}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_x\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c},
+\frac{\partial}{\partial \theta}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \theta}\left[\langle\boldsymbol{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_x\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c},
 $$
 
 <p>and</p>
 $$
-\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
+\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \phy}\left[\langle\boldsymbol{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
 $$
 
 <p>This means that we have to calculate two additional expectation values
@@ -514,10 +516,15 @@ rewrite the above derivatives in a smarter way, see <a href="https://journals.ap
 Maria Schuld et
 al</a>.
 </p>
-<h3 id="basics-of-gradient-descent-and-stochastic-gradient-descent" class="anchor">Basics of gradient descent and stochastic gradient descent </h3>
+<h2 id="basics-of-gradient-descent-and-stochastic-gradient-descent" class="anchor">Basics of gradient descent and stochastic gradient descent </h2>
 
-<p>In order to implement the above equations, we need to remind the reader about basic elements of various optimization approaches. Our main focus is here </p>
-<h3 id="computing-quantum-gradients-in-a-smarter-way" class="anchor">Computing quantum gradients in a smarter way </h3>
+<p>In order to implement the above equations, we need to remind the
+reader about basic elements of various optimization approaches. Our
+main focus here will be various gradient descent approaches, with and
+without momentum and various approaches for approximating the second
+derivatives via adaptive methods.
+</p>
+<h2 id="computing-quantum-gradients-in-a-smarter-way" class="anchor">Computing quantum gradients in a smarter way </h2>
 
 $$
 \begin{equation}
