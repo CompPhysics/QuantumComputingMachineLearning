@@ -105,6 +105,7 @@ and project 1
 
 
 ## April 17-21, 2023. TBA
+- Implementing VQE efficiently and studies of the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
 ## April 24-28, 2023. TBA
