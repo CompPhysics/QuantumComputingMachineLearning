@@ -311,124 +311,23 @@ main focus here will be various gradient descent approaches, with and
 without momentum and various approaches for approximating the second
 derivatives via adaptive methods.
 
+The material here is covered by the lectures from "FYS-STK4155 on gradient optimization":"https://github.com/CompPhysics/MachineLearning/blob/master/doc/pub/week39/ipynb/week39.ipynb".
 
+We will repeat some of the basic ingredients from these lectures.
 
 
 
 
 ===== Computing quantum gradients in a smarter way =====
 
-!bt
-\begin{equation}
-\bm(\theta) \coloneqq \expval{\hat{B}} = \langle 0 \vert U^{\dagger}(\theta) \hat{B} U(\theta) \vert 0}.
-\end{equation}
-!et
-
-!bt
-\begin{equation}
-    \quad \qquad \nabla \func(x) \approx (\func(x +\Delta x/2) -\func(x -\Delta x/2) )/\Delta x,
-  \end{equation}
-!et
-
-!bt
-\begin{equation}
-  \partial_\mu \vc = \partial_{\mu} \langle\psi\vert \G^{\dagger} \hat{Q} \G\vert \psi\rangle
-  = \langle \psi\vert \G^{\dagger}  \hat{Q}  (\partial_{\mu}\G) \vert \psi\rangle +\hc,
-\end{equation}
-!et
-!bt
-\begin{align}
-  \langle \psi}B^{\dagger} \hat{Q} C  \vert \psi} +\hc\notag\\
-  \begin{split}
-    = \frac{1}{2}\big(&
-    \langle \psi} (B + C)^{\dagger} \hat{Q} (B + C) \vert \psi}\\
-    -&\langle \psi}(B - C)^{\dagger}  \hat{Q} (B - C) \vert \psi}
-  \big).
-\end{split}
-\end{align}
-!et
-
-!bt
-\begin{equation}
- \partial_{\mu} \G = -i G \e^{-i \mu G}.
-\end{equation}
-!et
-
-!bt
-\begin{align}
-  \partial_{\mu} \vc
-%  &= \langle \psi} \G^{\dagger} \, \hat{Q} \, (-iG) \G \vert \psi} +\hc ,\\
-%  &= r \langle \psi'}  \hat{Q} \, (-ir^{-1}G) \vert \psi'} +\hc
-   &= \langle \psi'}  \hat{Q} \, (-iG) \vert \psi'} +\hc ,
-\end{align}
-!et
-!bt
-\begin{equation}
-  \begin{split}
-    \partial_{\mu} \vc = \frac{r}{2}\big(
-    &\langle \psi'} (\I -ir^{-1}G)^{\dagger} \hat{Q} (\I -ir^{-1}G) \vert \psi'}\\
-    -&\langle \psi'}(\I +ir^{-1}G)^{\dagger}  \hat{Q} (\I +ir^{-1}G) \vert \psi'}
-    \big).
-  \end{split}
-\end{equation}
-!et
-
-!bt
-\begin{equation}
-  \G\left(\frac{\pi}{4r}\right) = \frac{1}{\sqrt{2}}(\I - i r^{-1} G).
-\end{equation}
-!et
-
-
-!bt
-\begin{align}
-\partial_{\mu} \vc
-&=
-r \big(\langle \psi} \G^\dagger(\mu +s) \hat{Q} \G(\mu +s) \vert \psi}\\
-\notag
-& \quad -\langle \psi} \G^{\dagger}(\mu -s) \hat{Q}  \G(\mu -s) \vert \psi}\big)\\
-\label{eq:parameter_shift_rule2}
-&= r \left(f(\mu+s) -f(\mu-s)\right).
-\end{align}
-!et
-!bt
-\begin{align*}
-  \text{ExpW}(\mu, \delta) &= \exp \left(- i \mu \left( \cos (\delta) \sigma_x + \sin(\delta)\sigma_y\right) \right),\\
-  \text{ExpZ}(\mu) &= \exp \left(- i \mu \sigma_z \right),\\
-  \text{Exp11}(\mu) &= \exp \left(- i \mu \ketbra{11}{11}  \right) .
-\end{align*}
-!et
-
-!bt
-\begin{equation}
-  \partial_{\mu}\G = \frac{\alpha}{2} ((A_1 + A_1^{\dagger})  + i(A_2 + A_2^{\dagger}))
-\end{equation}
-!et
-with real $\alpha$.\footnote{
-  If $\alpha$ contains a renormalisation so that $|\G| \leq 1$, and
-  $\G = \G_{\mathrm{re}} + i \G_{\mathrm{im}}$ we can set
-  $A_1 = \G_{\mathrm{re}} + i \sqrt{\I - \G_{\mathrm{re}}^2}$ and
-  $A_2 = \G_{\mathrm{im}} + i \sqrt{\I - \G_{\mathrm{im}}^2}$.}
-$A_1$ and $A_2$ in turn can be implemented as quantum circuits.
-!bt
-\begin{equation}
-  \partial_{\mu}\G = \sum_{k=1}^K \alpha_k A_k,
-\end{equation}
-!et
-for real $\alpha_k$ and unitary $A_k$. The derivative becomes
-!bt
-\begin{equation}
-  \partial_{\mu} \vc  = \sum_{k=1}^K \alpha_k  \left( \langle \psi}\G^{\dagger} \hat{Q} A_k  \vert \psi} +\hc \right).
-\end{equation}
-!et
-
+This material will added and is based on "the article of Schuld et al.":"https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331".
 
 
 !split
 ===== A smarter way of doing this =====
 
 The above approach means that we are setting up several matrix-matrix
-amd matrix-vector multiplications. Although straight forward it is not
+and matrix-vector multiplications. Although straight forward it is not
 the most efficient way of doing this, in particular in case the
 matrices become large (and sparse). But there are some more important
 issues.
