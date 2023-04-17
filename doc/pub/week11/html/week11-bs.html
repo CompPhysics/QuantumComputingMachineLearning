@@ -66,7 +66,17 @@ doconce format html week11.do.txt --html_style=bootstrap --pygments_html_style=d
               ('Two-qubit system and the VQE',
                2,
                None,
-               'two-qubit-system-and-the-vqe')]}
+               'two-qubit-system-and-the-vqe'),
+              ('Switching to Qiskit (notes developed by Stian Bilek)',
+               2,
+               None,
+               'switching-to-qiskit-notes-developed-by-stian-bilek'),
+              ('Moving to the Lipkin model',
+               2,
+               None,
+               'moving-to-the-lipkin-model'),
+              ('VQE method', 3, None, 'vqe-method'),
+              ('VQE method using Qiskit', 3, None, 'vqe-method-using-qiskit')]}
 end of tocinfo -->
 
 <body>
@@ -101,16 +111,20 @@ MathJax.Hub.Config({
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
         <ul class="dropdown-menu">
-     <!-- navigation toc: --> <li><a href="#plans-for-the-week-of-april-17-21" style="font-size: 80%;">Plans for the week of April 17-21</a></li>
-     <!-- navigation toc: --> <li><a href="#vqe-overview" style="font-size: 80%;">VQE overview</a></li>
-     <!-- navigation toc: --> <li><a href="#vqe-and-efficient-computations-of-gradients" style="font-size: 80%;">VQE and efficient computations of gradients</a></li>
-     <!-- navigation toc: --> <li><a href="#setting-up-the-matrix" style="font-size: 80%;">Setting up the matrix</a></li>
-     <!-- navigation toc: --> <li><a href="#implementing-the-vqe" style="font-size: 80%;">Implementing the VQE</a></li>
-     <!-- navigation toc: --> <li><a href="#gradient-descent-and-calculations-of-gradients" style="font-size: 80%;">Gradient descent and calculations of gradients</a></li>
-     <!-- navigation toc: --> <li><a href="#basics-of-gradient-descent-and-stochastic-gradient-descent" style="font-size: 80%;">Basics of gradient descent and stochastic gradient descent</a></li>
-     <!-- navigation toc: --> <li><a href="#computing-quantum-gradients-in-a-smarter-way" style="font-size: 80%;">Computing quantum gradients in a smarter way</a></li>
-     <!-- navigation toc: --> <li><a href="#a-smarter-way-of-doing-this" style="font-size: 80%;">A smarter way of doing this</a></li>
-     <!-- navigation toc: --> <li><a href="#two-qubit-system-and-the-vqe" style="font-size: 80%;">Two-qubit system and the VQE</a></li>
+     <!-- navigation toc: --> <li><a href="#plans-for-the-week-of-april-17-21" style="font-size: 80%;"><b>Plans for the week of April 17-21</b></a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-overview" style="font-size: 80%;"><b>VQE overview</b></a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-and-efficient-computations-of-gradients" style="font-size: 80%;"><b>VQE and efficient computations of gradients</b></a></li>
+     <!-- navigation toc: --> <li><a href="#setting-up-the-matrix" style="font-size: 80%;"><b>Setting up the matrix</b></a></li>
+     <!-- navigation toc: --> <li><a href="#implementing-the-vqe" style="font-size: 80%;"><b>Implementing the VQE</b></a></li>
+     <!-- navigation toc: --> <li><a href="#gradient-descent-and-calculations-of-gradients" style="font-size: 80%;"><b>Gradient descent and calculations of gradients</b></a></li>
+     <!-- navigation toc: --> <li><a href="#basics-of-gradient-descent-and-stochastic-gradient-descent" style="font-size: 80%;"><b>Basics of gradient descent and stochastic gradient descent</b></a></li>
+     <!-- navigation toc: --> <li><a href="#computing-quantum-gradients-in-a-smarter-way" style="font-size: 80%;"><b>Computing quantum gradients in a smarter way</b></a></li>
+     <!-- navigation toc: --> <li><a href="#a-smarter-way-of-doing-this" style="font-size: 80%;"><b>A smarter way of doing this</b></a></li>
+     <!-- navigation toc: --> <li><a href="#two-qubit-system-and-the-vqe" style="font-size: 80%;"><b>Two-qubit system and the VQE</b></a></li>
+     <!-- navigation toc: --> <li><a href="#switching-to-qiskit-notes-developed-by-stian-bilek" style="font-size: 80%;"><b>Switching to Qiskit (notes developed by Stian Bilek)</b></a></li>
+     <!-- navigation toc: --> <li><a href="#moving-to-the-lipkin-model" style="font-size: 80%;"><b>Moving to the Lipkin model</b></a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-method" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;VQE method</a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-method-using-qiskit" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;VQE method using Qiskit</a></li>
 
         </ul>
       </li>
@@ -517,7 +531,7 @@ $$
 
 <p>and</p>
 $$
-\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \phy}\left[\langle\boldsymbol{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
+\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \phi}\left[\langle\boldsymbol{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
 $$
 
 <p>This means that we have to calculate two additional expectation values
@@ -696,18 +710,886 @@ $$
 		       H_x & 0 & 0 & \epsilon_{11} +H_z \end{bmatrix}.
 $$
 
-<p>The four eigenstates of the above Hamiltonian matrix can in turn be used to
-define density matrices. As an example, the density matrix of the
-first eigenstate (lowest energy \( E_0 \)) \( \Psi_0 \) is
+
+<!-- !split -->
+<h2 id="switching-to-qiskit-notes-developed-by-stian-bilek" class="anchor">Switching to Qiskit (notes developed by Stian Bilek) </h2>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qk</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">scipy.optimize</span> <span style="color: #008000; font-weight: bold">import</span> minimize
+
+
+<span style="color: #408080; font-style: italic"># Initialize registers and circuit</span>
+n_qubits <span style="color: #666666">=</span> <span style="color: #666666">1</span> <span style="color: #408080; font-style: italic">#Number of qubits</span>
+n_cbits <span style="color: #666666">=</span> <span style="color: #666666">1</span> <span style="color: #408080; font-style: italic">#Number of classical bits (the number of qubits you want to measure at the end of the circuit)</span>
+qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits) <span style="color: #408080; font-style: italic">#Create a quantum register</span>
+creg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>ClassicalRegister(n_cbits) <span style="color: #408080; font-style: italic">#Create a classical register</span>
+circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg,creg) <span style="color: #408080; font-style: italic">#Create your quantum circuit</span>
+circuit<span style="color: #666666">.</span>draw() <span style="color: #408080; font-style: italic">#Draw circuit. It is empty</span>
+<span style="color: #408080; font-style: italic"># Perform operations on qubit</span>
+circuit<span style="color: #666666">.</span>x(qreg[<span style="color: #666666">0</span>]) <span style="color: #408080; font-style: italic">#Applies a Pauli X gate to the first qubit in the quantum register</span>
+circuit<span style="color: #666666">.</span>draw()
+<span style="color: #408080; font-style: italic"># Chose a qubit to measure and encode the results to a classical bit</span>
+<span style="color: #408080; font-style: italic">#Measure the first qubit in the quantum register</span>
+<span style="color: #408080; font-style: italic">#and encode the results to the first qubit in the classical register</span>
+circuit<span style="color: #666666">.</span>measure(qreg[<span style="color: #666666">0</span>],creg[<span style="color: #666666">0</span>])
+circuit<span style="color: #666666">.</span>draw()
+<span style="color: #408080; font-style: italic"># Execute circuit</span>
+
+backend <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>Aer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;qasm_simulator&#39;</span>) 
+<span style="color: #408080; font-style: italic">#This is the device you want to use. It is an ideal simulation of a quantum device</span>
+
+
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>) <span style="color: #408080; font-style: italic">#Run the circuit 1000 times</span>
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+<span style="color: #008000">print</span>(counts)
+circuit<span style="color: #666666">.</span>clear()
+circuit<span style="color: #666666">.</span>draw()
+
+circuit<span style="color: #666666">.</span>h(qreg[<span style="color: #666666">0</span>]) <span style="color: #408080; font-style: italic">#Apply a Hadamard gate to the first qubit of the quantum register</span>
+circuit<span style="color: #666666">.</span>measure(qreg,creg)
+<span style="color: #008000">print</span>(circuit<span style="color: #666666">.</span>draw())
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>)
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+<span style="color: #008000">print</span>(counts)
+circuit<span style="color: #666666">.</span>clear()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Create a two-qubit circuit and set up a Bell state</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">n_qubits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+n_cbits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+creg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>ClassicalRegister(n_cbits)
+circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg,creg)
+circuit<span style="color: #666666">.</span>draw()
+circuit<span style="color: #666666">.</span>h(qreg[<span style="color: #666666">0</span>])
+circuit<span style="color: #666666">.</span>cx(qreg[<span style="color: #666666">0</span>],qreg[<span style="color: #666666">1</span>]) 
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>This is a controlled operation. Apply a Pauli \( X \) gate to the second qubit (qreg[1]) if the first qubit (qreg[0])
+is in the \( |1\rangle \) state. Else do nothing
+</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">circuit<span style="color: #666666">.</span>draw()
+circuit<span style="color: #666666">.</span>measure(qreg,creg)
+circuit<span style="color: #666666">.</span>draw()
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>)
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+<span style="color: #008000">print</span>(counts)
+circuit<span style="color: #666666">.</span>clear()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Apply rotation to qubit</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">/3</span>
+circuit<span style="color: #666666">.</span>rx(theta, qreg[<span style="color: #666666">0</span>]) <span style="color: #408080; font-style: italic">#R_x(theta) rotation on the first qubit (qreg[0])</span>
+circuit<span style="color: #666666">.</span>measure(qreg,creg)
+<span style="color: #008000">print</span>(circuit<span style="color: #666666">.</span>draw())
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>)
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+circuit<span style="color: #666666">.</span>clear()
+<span style="color: #008000">print</span>(counts)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Find the lowest eigenvalue of $$ H = c_1 Z_0 + c_2 Z_1 + c_3 X_0 Y_1 $$ 
+We will use $$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi> $$
+</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">I <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #666666">2</span>)
+X <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>],[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>]])
+Y <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0</span>,<span style="color: #666666">-1</span>j],[<span style="color: #666666">1</span>j,<span style="color: #666666">0</span>]])
+Z <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>],[<span style="color: #666666">0</span>,<span style="color: #666666">-1</span>]])
+H <span style="color: #666666">=</span> np<span style="color: #666666">.</span>kron(Z,I) <span style="color: #666666">+</span> np<span style="color: #666666">.</span>kron(I,Z) <span style="color: #666666">+</span> np<span style="color: #666666">.</span>kron(X,Y)
+eigvals,eigvecs <span style="color: #666666">=</span> np<span style="color: #666666">.</span>linalg<span style="color: #666666">.</span>eigh(H)
+<span style="color: #008000">print</span>(eigvals[<span style="color: #666666">0</span>])
+
+c_1 <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+c_2 <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+c_3 <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+
+h_1 <span style="color: #666666">=</span> [c_1,[<span style="color: #666666">0</span>],[<span style="color: #BA2121">&#39;z&#39;</span>]]
+h_2 <span style="color: #666666">=</span> [c_2,[<span style="color: #666666">1</span>],[<span style="color: #BA2121">&#39;z&#39;</span>]]
+h_3 <span style="color: #666666">=</span> [c_3,[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>],[<span style="color: #BA2121">&#39;x&#39;</span>,<span style="color: #BA2121">&#39;x&#39;</span>]]
+H <span style="color: #666666">=</span> [h_1,h_2,h_3]
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Create ansatz</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">ansatz</span>(theta,n_qubits):
+    qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+    circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg)
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits):
+        circuit<span style="color: #666666">.</span>ry(theta[i],qreg[i])
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits<span style="color: #666666">-1</span>):
+        circuit<span style="color: #666666">.</span>cx(qreg[i],qreg[i<span style="color: #666666">+1</span>])
+    <span style="color: #008000; font-weight: bold">return</span>(circuit)
+qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg)
+circuit<span style="color: #666666">.</span>h(qreg[:<span style="color: #666666">2</span>])
+<span style="color: #008000">print</span>(<span style="color: #BA2121">&#39;Before ansatz&#39;</span>)
+<span style="color: #008000">print</span>(circuit<span style="color: #666666">.</span>draw())
+theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">2</span>)
+n_qubits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+circuit <span style="color: #666666">=</span> circuit<span style="color: #666666">.</span>compose(ansatz(theta,n_qubits))
+<span style="color: #008000">print</span>(<span style="color: #BA2121">&#39;After ansatz&#39;</span>)
+circuit<span style="color: #666666">.</span>draw()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Change measurement basis</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">basis_change</span>(h_i,n_qubits):
+    qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+    circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg)
+    
+    <span style="color: #008000; font-weight: bold">for</span> qubit,operator <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">zip</span>(h_i[<span style="color: #666666">1</span>],h_i[<span style="color: #666666">2</span>]):
+        <span style="color: #008000; font-weight: bold">if</span> operator <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;x&#39;</span>:
+            circuit<span style="color: #666666">.</span>h(qreg[qubit])
+        <span style="color: #008000; font-weight: bold">if</span> operator <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;y&#39;</span>:
+            circuit<span style="color: #666666">.</span>sdg(qreg[qubit])
+            circuit<span style="color: #666666">.</span>h(qreg[qubit])
+    <span style="color: #008000; font-weight: bold">return</span>(circuit)
+n_qubits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg)
+theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(n_qubits)
+circuit <span style="color: #666666">=</span> circuit<span style="color: #666666">.</span>compose(ansatz(theta,n_qubits))
+<span style="color: #008000">print</span>(<span style="color: #BA2121">&#39;Ansatz circuit&#39;</span>)
+circuit<span style="color: #666666">.</span>draw()
+circuit <span style="color: #666666">=</span> circuit<span style="color: #666666">.</span>compose(basis_change(H[<span style="color: #666666">2</span>],n_qubits))
+<span style="color: #008000">print</span>(<span style="color: #BA2121">&#39;After basis transformation:&#39;</span>)
+<span style="color: #008000">print</span>(circuit<span style="color: #666666">.</span>draw())
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Get energy for given rotational parameters, theta</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">get_energy</span>(theta):
+    n_qubits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+    qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+    circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg)
+    circuit <span style="color: #666666">=</span> circuit<span style="color: #666666">.</span>compose(ansatz(theta,n_qubits))
+    circuit_list <span style="color: #666666">=</span> []
+    <span style="color: #008000; font-weight: bold">for</span> idx,h_i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>(H):
+        basis_change_circuit <span style="color: #666666">=</span> basis_change(h_i,n_qubits)
+        new_circuit <span style="color: #666666">=</span> circuit<span style="color: #666666">.</span>compose(basis_change_circuit)
+        creg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>ClassicalRegister(<span style="color: #008000">len</span>(h_i[<span style="color: #666666">1</span>]))
+        new_circuit<span style="color: #666666">.</span>add_register(creg)
+        new_circuit<span style="color: #666666">.</span>measure(qreg[h_i[<span style="color: #666666">1</span>]],creg)
+        circuit_list<span style="color: #666666">.</span>append(new_circuit)
+    shots <span style="color: #666666">=</span> <span style="color: #666666">10000</span>
+    job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit_list,shots<span style="color: #666666">=</span>shots)
+    E <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(<span style="color: #008000">len</span>(circuit_list))
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">len</span>(circuit_list)):
+        result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+        counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts(i)
+        <span style="color: #008000; font-weight: bold">for</span> key,value <span style="color: #AA22FF; font-weight: bold">in</span> counts<span style="color: #666666">.</span>items():
+            e <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+            <span style="color: #008000; font-weight: bold">for</span> bit <span style="color: #AA22FF; font-weight: bold">in</span> key:
+                <span style="color: #008000; font-weight: bold">if</span> bit <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;0&#39;</span>:
+                    e <span style="color: #666666">*=</span> <span style="color: #666666">1</span>
+                <span style="color: #008000; font-weight: bold">if</span> bit <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;1&#39;</span>:
+                    e <span style="color: #666666">*=</span> <span style="color: #666666">-1</span>
+            E[i] <span style="color: #666666">+=</span> e<span style="color: #666666">*</span>value
+        E[i] <span style="color: #666666">*=</span> H[i][<span style="color: #666666">0</span>]
+    E <span style="color: #666666">/=</span> shots
+    <span style="color: #008000; font-weight: bold">return</span>(np<span style="color: #666666">.</span>sum(E))
+
+theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">2</span>)
+get_energy(theta)
+    
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Minimize energy with Scipy</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">2</span>)
+res <span style="color: #666666">=</span> minimize(get_energy, theta, method<span style="color: #666666">=</span><span style="color: #BA2121">&#39;Powell&#39;</span>,tol<span style="color: #666666">=1e-12</span>)
+get_energy(res<span style="color: #666666">.</span>x)
+
+
+<span style="color: #408080; font-style: italic"># ## We might need a more flexible ansatz</span>
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">ansatz</span>(theta,n_qubits):
+    qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+    circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg)
+    idx <span style="color: #666666">=</span> <span style="color: #666666">0</span>
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits):
+        circuit<span style="color: #666666">.</span>ry(theta[idx],qreg[i])
+        idx <span style="color: #666666">+=</span> <span style="color: #666666">1</span>
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits<span style="color: #666666">-1</span>):
+        circuit<span style="color: #666666">.</span>cx(qreg[i],qreg[i<span style="color: #666666">+1</span>])
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits):
+        circuit<span style="color: #666666">.</span>rx(theta[idx],qreg[i])
+        idx <span style="color: #666666">+=</span> <span style="color: #666666">1</span>
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits<span style="color: #666666">-1</span>):
+        circuit<span style="color: #666666">.</span>cx(qreg[i],qreg[i<span style="color: #666666">+1</span>])
+    <span style="color: #008000; font-weight: bold">return</span>(circuit)
+theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">4</span>)
+res <span style="color: #666666">=</span> minimize(get_energy, theta, method<span style="color: #666666">=</span><span style="color: #BA2121">&#39;Powell&#39;</span>,tol<span style="color: #666666">=1e-16</span>)
+get_energy(res<span style="color: #666666">.</span>x)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Then we minimize energy with gradient descent</p>
+$$
+\frac{\partial E (\theta_1,\dots,\theta_i,\dots,\theta_p)}{\partial \theta_i} = \frac{E(\theta_1,\dots,\theta_i + \pi/2,\dots, \theta_p) - E(\theta_1,\dots, \theta_i - \pi/2,\dots, \theta_p}{2}.
+$$
+
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">epochs <span style="color: #666666">=</span> <span style="color: #666666">200</span>
+theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">4</span>)
+<span style="color: #008000; font-weight: bold">for</span> epoch <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(epochs):
+    <span style="color: #008000">print</span>(epoch,get_energy(theta))
+    grad <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros_like(theta)
+    <span style="color: #008000; font-weight: bold">for</span> idx <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(theta<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>]):
+        theta_temp <span style="color: #666666">=</span> theta<span style="color: #666666">.</span>copy()
+        theta_temp[idx] <span style="color: #666666">+=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">/2</span>
+        E_plus <span style="color: #666666">=</span> get_energy(theta_temp)
+        theta_temp[idx] <span style="color: #666666">-=</span> np<span style="color: #666666">.</span>pi
+        E_minus <span style="color: #666666">=</span> get_energy(theta_temp)
+        grad[idx] <span style="color: #666666">=</span> (E_plus <span style="color: #666666">-</span> E_minus)<span style="color: #666666">/2</span>
+    theta <span style="color: #666666">-=</span> <span style="color: #666666">0.1*</span>grad
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split -->
+<h2 id="moving-to-the-lipkin-model" class="anchor">Moving to the Lipkin model </h2>
+
+<p>To construct an efficient ansatz, we must determine the subspace
+within which the Hamiltonian lives. To begin, note that particles are
+only ever moved between energy levels in pairs. This implies that all
+possible states have a Hamming weight of constant parity (odd or
+even); this is the same as the signature \( r \) being conserved. Further,
+note that the Hamiltonian's coefficients (\( \epsilon \) and \( V \)) are
+state independent (do not depend on the indices \( n \) or \( m \)) as the
+states labeled by these indices are degenerate and thus have the same
+energy level. Thus, the Hamiltonian treats all states with the same
+number of excited particles (Hamming weight of the state) as the
+same. Therefore, the following ansatz forms exactly cover the subspace
+within which the \( N \)-degenerate Hamiltonian explores:
 </p>
 
 $$
-\rho_0=\left(\alpha_{00}\vert 00 \rangle\langle 00\vert+\alpha_{10}\vert 10 \rangle\langle 10\vert+\alpha_{01}\vert 01 \rangle\langle 01\vert+\alpha_{11}\vert 11 \rangle\langle 11\vert\right),
+\begin{align}
+\vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
+\label{_auto3}\\
+\vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
+\label{_auto4}
+\end{align}
 $$
 
-<p>where the coefficients \( \alpha_{ij} \) are the eigenvector coefficients
-resulting from the solution of the above eigenvalue problem.
+<p>Here \( \vert D^n_k\rangle \) represents a Dicke state which is defined as equal superposition of all \( n \)-qubit states with Hamming weight \( k \). That is</p>
+
+$$
+\begin{align}
+\vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
+\label{_auto5}
+\end{align}
+$$
+
+<p>where \( h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\} \). There are two ways we can think of to prepare such ansatz: The first is to prepare them exactly as it is known how to deterministically prepare Dicke states with linear depth. The reference provides an algorithm for preparing a set of gates \( U^n_k \) that prepares a Dicke state from a product state of Hamming weight \( k \); that is</p>
+$$
+\begin{align}
+U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
+\label{_auto6}
+\end{align}
+$$
+
+<p>It then describes how to one can create an arbitrary superposition of
+Dicke states, which we modify here to restrict ourselves to a Hamming
+weight of constant parity. The circuit to construct such a state (for
+the \( k=6 \) case, as an example) is given below
 </p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">qiskit</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.visualization</span> <span style="color: #008000; font-weight: bold">import</span> circuit_drawer
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.quantum_info</span> <span style="color: #008000; font-weight: bold">import</span> Statevector
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">import</span> figure
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">import</span> QuantumRegister, QuantumCircuit, ClassicalRegister, Aer, assemble
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.providers.aer.noise</span> <span style="color: #008000; font-weight: bold">import</span> NoiseModel
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pylatexenc</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.algorithms</span> <span style="color: #008000; font-weight: bold">import</span> VQE
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.utils</span> <span style="color: #008000; font-weight: bold">import</span> QuantumInstance
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.opflow</span> <span style="color: #008000; font-weight: bold">import</span> X, Z, I, Y
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.circuit</span> <span style="color: #008000; font-weight: bold">import</span> Parameter
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.algorithms.optimizers</span> <span style="color: #008000; font-weight: bold">import</span> ADAM
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.opflow</span> <span style="color: #008000; font-weight: bold">import</span> AerPauliExpectation
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">import</span> IBMQ
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">cmath</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">scipy.sparse</span> <span style="color: #008000; font-weight: bold">import</span> diags
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy.linalg</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">LA</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">IPython.display</span> <span style="color: #008000; font-weight: bold">import</span> Image
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">warnings</span>
+warnings<span style="color: #666666">.</span>filterwarnings(<span style="color: #BA2121">&#39;ignore&#39;</span>)
+pi<span style="color: #666666">=</span>np<span style="color: #666666">.</span>pi
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic">#function that sorts eigenvalues with its eigenvectors in accending order</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">eigen</span>(A):
+    eigenValues, eigenVectors <span style="color: #666666">=</span> LA<span style="color: #666666">.</span>eig(A)
+    idx <span style="color: #666666">=</span> np<span style="color: #666666">.</span>argsort(eigenValues)
+    eigenValues <span style="color: #666666">=</span> eigenValues[idx]
+    eigenVectors <span style="color: #666666">=</span> eigenVectors[:,idx]
+    <span style="color: #008000; font-weight: bold">return</span> (eigenValues, eigenVectors) 
+
+<span style="color: #408080; font-style: italic">#one body expectation value</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">one_body</span>(E,N):
+  k <span style="color: #666666">=</span> N<span style="color: #666666">/2</span>
+  m <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">-</span>k,k<span style="color: #666666">+1</span>,<span style="color: #666666">1</span>) <span style="color: #408080; font-style: italic"># Since the collective space is Omega+1</span>
+  <span style="color: #008000; font-weight: bold">return</span> E<span style="color: #666666">*</span>np<span style="color: #666666">.</span>diag(m) <span style="color: #408080; font-style: italic">#return a matrix where its diagonal elemens are epsilon*K_0</span>
+
+<span style="color: #408080; font-style: italic">#two body expectation value</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">two_body</span>(V,N):
+  k <span style="color: #666666">=</span> N<span style="color: #666666">/2</span>
+  m <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">-</span>k,k<span style="color: #666666">+1</span>,<span style="color: #666666">1</span>)
+  left <span style="color: #666666">=</span>np<span style="color: #666666">.</span>zeros(<span style="color: #008000">len</span>(m)<span style="color: #666666">-2</span>,dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+  right <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(<span style="color: #008000">len</span>(m)<span style="color: #666666">-2</span>,dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+  diag <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(<span style="color: #008000">len</span>(m),dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+  <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">len</span>(left)):
+    CG <span style="color: #666666">=</span> cmath<span style="color: #666666">.</span>sqrt(k<span style="color: #666666">*</span>(k<span style="color: #666666">+1</span>)<span style="color: #666666">-</span>(m[i]<span style="color: #666666">+2</span>)<span style="color: #666666">*</span>(m[i]<span style="color: #666666">+1</span>))<span style="color: #666666">*</span>cmath<span style="color: #666666">.</span>sqrt(k<span style="color: #666666">*</span>(k<span style="color: #666666">+1</span>)<span style="color: #666666">-</span>m[i]<span style="color: #666666">*</span>(m[i]<span style="color: #666666">+1</span>)) <span style="color: #408080; font-style: italic">#calculate Clebsch-Gordan Coefficients </span>
+    left[i] <span style="color: #666666">=</span> CG
+    right[i] <span style="color: #666666">=</span> CG
+  k <span style="color: #666666">=</span> [left,diag,right]
+  offset <span style="color: #666666">=</span> [<span style="color: #666666">-2</span>,<span style="color: #666666">0</span>,<span style="color: #666666">2</span>]
+  <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">-0.5*</span>V<span style="color: #666666">*</span>diags(k,offset)<span style="color: #666666">.</span>toarray() <span style="color: #408080; font-style: italic">#return a matrix where its off digonal elements are (1/2)V(K^2_+ + K^2_-)</span>
+
+<span style="color: #408080; font-style: italic">#full expectation value</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">quasi_spin</span>(E,V,N):
+  ob <span style="color: #666666">=</span> one_body(E,N)
+  tb <span style="color: #666666">=</span> two_body(V,N)
+  H <span style="color: #666666">=</span> ob<span style="color: #666666">+</span>tb 
+  e,v <span style="color: #666666">=</span> eigen(H) <span style="color: #408080; font-style: italic"># find the eigenvalues of the Hamiltonian</span>
+  <span style="color: #008000; font-weight: bold">return</span> e,H
+
+<span style="color: #408080; font-style: italic">#converts chi to V</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">Vp</span>(E,omega,chi):
+  <span style="color: #008000; font-weight: bold">return</span> (chi<span style="color: #666666">*</span>E)<span style="color: #666666">/</span>(omega<span style="color: #666666">-1</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic">#parameters</span>
+E <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+chi <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">0</span>,<span style="color: #666666">2.1</span>,<span style="color: #666666">0.1</span>)
+omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+
+EV0 <span style="color: #666666">=</span> []
+EV1 <span style="color: #666666">=</span> []
+EV2 <span style="color: #666666">=</span> []
+Ham <span style="color: #666666">=</span> []
+<span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> chi:
+  v <span style="color: #666666">=</span> Vp(E,omega,i)
+  EigenV,H <span style="color: #666666">=</span> quasi_spin(E,v,omega) <span style="color: #408080; font-style: italic">#return eigenvalues and Hamiltonian</span>
+  Ham<span style="color: #666666">.</span>append(H)
+  EV0<span style="color: #666666">.</span>append(EigenV[<span style="color: #666666">0</span>])
+  EV1<span style="color: #666666">.</span>append(EigenV[<span style="color: #666666">1</span>])
+  EV2<span style="color: #666666">.</span>append(EigenV[<span style="color: #666666">2</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">matrix <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame(Ham[<span style="color: #666666">5</span>]<span style="color: #666666">.</span>real)
+<span style="color: #008000">print</span>(<span style="color: #BA2121">&#39;Hamiltonian matrix&#39;</span>)
+matrix<span style="color: #666666">.</span>head()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">plt<span style="color: #666666">.</span>plot(chi,EV0)
+plt<span style="color: #666666">.</span>plot(chi,EV1)
+plt<span style="color: #666666">.</span>plot(chi,EV2)
+plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$\chi$&#39;</span>)
+plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;Energy&#39;</span>)
+plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;$\Omega=2$ exact Lipkin Model&#39;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">LM_circuit</span>():
+    theta <span style="color: #666666">=</span> Parameter(<span style="color: #BA2121">&#39;theta&#39;</span>)
+    QC <span style="color: #666666">=</span> QuantumCircuit(<span style="color: #666666">2</span>)
+    QC<span style="color: #666666">.</span>ry(<span style="color: #666666">2*</span>(theta<span style="color: #666666">-</span>np<span style="color: #666666">.</span>pi<span style="color: #666666">/2</span>),<span style="color: #666666">0</span>)
+    QC<span style="color: #666666">.</span>cnot(<span style="color: #666666">0</span>,<span style="color: #666666">1</span>)
+    <span style="color: #008000; font-weight: bold">return</span> QC
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">QC <span style="color: #666666">=</span> LM_circuit()
+QC<span style="color: #666666">.</span>draw(output<span style="color: #666666">=</span><span style="color: #BA2121">&#39;mpl&#39;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3 id="vqe-method" class="anchor">VQE method </h3>
+
+<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
+<ul>
+<li> Quantum circuit
+<ol type="a"></li>
+ <li> Optimizer</li>
+ <li> Quantum instance (i.e. which backend). Here we will be using the "qasm_simulator"</li> 
+ <li> Initial point (i.e. \( \theta \) search space)</li>
+ <li> Hamiltonian/measurement basis</li>
+</ol>
+</ul>
+<p>To define the Hamiltonian, we will use the Qiskit Pauli operator functions
+I,Z,X,Y.  In this method, for a given \( \chi \), we will do a search over
+\( \theta \) from \( -\frac{\pi}{2} \) to \( \frac{\pi}{2} \) and picking out the
+minimum energy value
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic">#sim1 min example</span>
+sim <span style="color: #666666">=</span> Aer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;qasm_simulator&#39;</span>)
+adam <span style="color: #666666">=</span>qiskit<span style="color: #666666">.</span>algorithms<span style="color: #666666">.</span>optimizers<span style="color: #666666">.</span>ADAM(maxiter<span style="color: #666666">=10000</span>) <span style="color: #408080; font-style: italic">#optimizer for VQE</span>
+epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+chi2 <span style="color: #666666">=</span> [<span style="color: #666666">0.5</span>,<span style="color: #666666">1</span>]
+
+t <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">-</span>pi<span style="color: #666666">/2</span>,pi<span style="color: #666666">/2</span>,<span style="color: #666666">0.05</span>) <span style="color: #408080; font-style: italic">#0.1 step size finishs pretty fast</span>
+energy <span style="color: #666666">=</span> []
+<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi2:
+    ev <span style="color: #666666">=</span> []
+    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">len</span>(t)):
+        H <span style="color: #666666">=</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( Z <span style="color: #666666">^</span> I ) <span style="color: #666666">+</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( I <span style="color: #666666">^</span> Z ) <span style="color: #666666">-0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( X <span style="color: #666666">^</span> X ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( Y <span style="color: #666666">^</span> Y )
+        vqe <span style="color: #666666">=</span> VQE(ansatz<span style="color: #666666">=</span>LM_circuit(),optimizer<span style="color: #666666">=</span>adam,initial_point<span style="color: #666666">=</span>[t[i]],quantum_instance<span style="color: #666666">=</span>sim,expectation<span style="color: #666666">=</span>AerPauliExpectation())
+        result <span style="color: #666666">=</span> vqe<span style="color: #666666">.</span>compute_minimum_eigenvalue(H)
+        ev<span style="color: #666666">.</span>append(result<span style="color: #666666">.</span>eigenvalue)
+    energy<span style="color: #666666">.</span>append(ev)
+
+
+plt<span style="color: #666666">.</span>plot(t,energy[<span style="color: #666666">0</span>],label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$\chi=0.5$&#39;</span>)
+plt<span style="color: #666666">.</span>plot(t,energy[<span style="color: #666666">1</span>],label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$\chi=1$&#39;</span>)
+plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$</span><span style="color: #BB6622; font-weight: bold">\\</span><span style="color: #BA2121">theta$&#39;</span>)
+plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;Ground State Energy&#39;</span>)
+plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{g.s}</span><span style="color: #BA2121">$ vs. $</span><span style="color: #BB6622; font-weight: bold">\\</span><span style="color: #BA2121">theta$&#39;</span>)
+plt<span style="color: #666666">.</span>legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+chi3 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">0</span>,<span style="color: #666666">2.1</span>,<span style="color: #666666">0.1</span>)
+t <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">-</span>pi<span style="color: #666666">/2</span>,pi<span style="color: #666666">/2</span>,<span style="color: #666666">0.1</span>)
+adam <span style="color: #666666">=</span>qiskit<span style="color: #666666">.</span>algorithms<span style="color: #666666">.</span>optimizers<span style="color: #666666">.</span>ADAM(maxiter<span style="color: #666666">=10000</span>)
+LM_sim <span style="color: #666666">=</span> []
+<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi3:
+    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
+    ev <span style="color: #666666">=</span> []
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">len</span>(t)):
+        H <span style="color: #666666">=</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( Z <span style="color: #666666">^</span> I ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( I <span style="color: #666666">^</span> Z ) <span style="color: #666666">-0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( X <span style="color: #666666">^</span> X ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( Y <span style="color: #666666">^</span> Y )
+        vqe <span style="color: #666666">=</span> VQE(ansatz<span style="color: #666666">=</span>LM_circuit(),optimizer<span style="color: #666666">=</span>adam,initial_point<span style="color: #666666">=</span>[t[i]],quantum_instance<span style="color: #666666">=</span>sim,expectation<span style="color: #666666">=</span>AerPauliExpectation())
+        result <span style="color: #666666">=</span> vqe<span style="color: #666666">.</span>compute_minimum_eigenvalue(H)
+
+        ev<span style="color: #666666">.</span>append(result<span style="color: #666666">.</span>eigenvalue)
+    LM_sim<span style="color: #666666">.</span>append(<span style="color: #008000">min</span>(ev))
+
+plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(exact),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{exact}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;b&#39;</span>)
+plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(HF),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{HF}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;g&#39;</span>)
+plt<span style="color: #666666">.</span>scatter(chi3,LM_sim,label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;QC sim&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;cyan&#39;</span>)
+plt<span style="color: #666666">.</span>axvline(<span style="color: #666666">1</span>, color <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;k&#39;</span>, linestyle<span style="color: #666666">=</span><span style="color: #BA2121">&#39;--&#39;</span>)
+plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{g.s}</span><span style="color: #BA2121">$&#39;</span>)
+plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$\chi$&#39;</span>)
+plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">f&#39;$\Omega=2$&#39;</span>)
+plt<span style="color: #666666">.</span>legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3 id="vqe-method-using-qiskit" class="anchor">VQE method using Qiskit </h3>
+
+<p>For this method, we will be using Qiskit's VQE function, where we specifiy </p>
+<ol>
+<li> Quantum circuit</li>
+<li> Optimizer</li>
+<li> Quantum instance (i.e. which backend). Here we will be using the "statevector_simulator"</li> 
+<li> Hamiltonian/measurement basis</li>
+</ol>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">epsilon <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+omega <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+chi5 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>arange(<span style="color: #666666">0</span>,<span style="color: #666666">2.1</span>,<span style="color: #666666">0.1</span>)
+adam <span style="color: #666666">=</span>qiskit<span style="color: #666666">.</span>algorithms<span style="color: #666666">.</span>optimizers<span style="color: #666666">.</span>ADAM(maxiter<span style="color: #666666">=10000</span>)
+LM_sim <span style="color: #666666">=</span> []
+<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> chi5:
+    v <span style="color: #666666">=</span> Vp(epsilon,omega,x)
+    H <span style="color: #666666">=</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( Z <span style="color: #666666">^</span> I ) <span style="color: #666666">+0.5</span> <span style="color: #666666">*</span> epsilon <span style="color: #666666">*</span> ( I <span style="color: #666666">^</span> Z )<span style="color: #666666">-0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( X <span style="color: #666666">^</span> X ) <span style="color: #666666">+</span> <span style="color: #666666">0.5</span> <span style="color: #666666">*</span> v <span style="color: #666666">*</span> ( Y <span style="color: #666666">^</span> Y )
+    vec <span style="color: #666666">=</span> Aer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;statevector_simulator&#39;</span>)
+    vqe <span style="color: #666666">=</span> VQE(ansatz<span style="color: #666666">=</span>LM_circuit(),optimizer<span style="color: #666666">=</span>adam,quantum_instance<span style="color: #666666">=</span>vec,expectation<span style="color: #666666">=</span>AerPauliExpectation())
+    result <span style="color: #666666">=</span> vqe<span style="color: #666666">.</span>compute_minimum_eigenvalue(H)
+    LM_sim<span style="color: #666666">.</span>append(result<span style="color: #666666">.</span>eigenvalue)
+
+
+plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(exact),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{exact}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;b&#39;</span>)
+plt<span style="color: #666666">.</span>plot(chi,np<span style="color: #666666">.</span>array(HF),label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{HF}</span><span style="color: #BA2121">$&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;g&#39;</span>)
+plt<span style="color: #666666">.</span>scatter(chi5,LM_sim,label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;QC state vec&#39;</span>,color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;cyan&#39;</span>)
+plt<span style="color: #666666">.</span>axvline(<span style="color: #666666">1</span>, color <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;k&#39;</span>, linestyle<span style="color: #666666">=</span><span style="color: #BA2121">&#39;--&#39;</span>)
+plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&#39;$E_</span><span style="color: #BB6688; font-weight: bold">{g.s}</span><span style="color: #BA2121">$&#39;</span>)
+plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&#39;$\chi$&#39;</span>)
+plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&#39;$\Omega=2$&#39;</span>)
+plt<span style="color: #666666">.</span>legend()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->
