@@ -101,12 +101,14 @@ and project 1
   - See also VQE review article at https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 - Video of lecture at https://youtu.be/JT5bjAQyS4k
-  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch27.pdf    
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch27.pdf    
 
 
 ## April 17-21, 2023. TBA
 - Implementing VQE efficiently and studies of the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
+- Video of lecture at https://youtu.be/lTB5I1vkdlw
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesApril17.pdf    
 
 ## April 24-28, 2023. TBA
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
