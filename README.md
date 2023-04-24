@@ -114,7 +114,7 @@ and project 1
 - Wrapping up material on VQE
 - Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
-- Video of lecture at TBA
+- Video of lecture at https://youtu.be/5bgNXjaP8y4
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesApril24.pdf    
 - Reading suggestion: Hundt sections 6.2-6.4
 
