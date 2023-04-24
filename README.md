@@ -112,9 +112,16 @@ and project 1
 
 ## April 24-28, 2023. VQE and project discussion, introducing Quantum Fourier Transforms
 - Wrapping up material on VQE
-- Discussion of Quantum Fourier Transforms
+- Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
+- Video of lecture at TBA
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesApril24.pdf    
+- Reading suggestion: Hundt sections 6.2-6.4
+
 
 ## May 8-12, 2023. Last session and summary of course
+- Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13
-
+- Video of lecture at TBA
+- Reading suggestion: Hundt sections 6.2-6.4
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMay8.pdf    
