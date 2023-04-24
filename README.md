@@ -104,17 +104,17 @@ and project 1
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMarch27.pdf    
 
 
-## April 17-21, 2023. TBA
+## April 17-21, 2023. VQE and project discussion
 - Implementing VQE efficiently and studies of the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 - Video of lecture at https://youtu.be/lTB5I1vkdlw
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesApril17.pdf    
 
-## April 24-28, 2023. TBA
+## April 24-28, 2023. VQE and project discussion, introducing Quantum Fourier Transforms
+- Wrapping up material on VQE
+- Discussion of Quantum Fourier Transforms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
 
-## May 8-12, 2023. TBA
+## May 8-12, 2023. Last session and summary of course
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13
 
-## May 15-19, 2023. Last session
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14
