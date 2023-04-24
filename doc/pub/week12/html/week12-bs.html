@@ -39,7 +39,15 @@ doconce format html week12.do.txt --html_style=bootstrap --pygments_html_style=d
  'sections': [('Quantum Fourier Transform  (QFT)',
                2,
                None,
-               'quantum-fourier-transform-qft')]}
+               'quantum-fourier-transform-qft'),
+              ('VQE code for the one-qubit case',
+               2,
+               None,
+               'vqe-code-for-the-one-qubit-case'),
+              ('Quantum Fourier Transforms',
+               2,
+               None,
+               'quantum-fourier-transforms')]}
 end of tocinfo -->
 
 <body>
@@ -59,6 +67,8 @@ end of tocinfo -->
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
         <ul class="dropdown-menu">
      <!-- navigation toc: --> <li><a href="#quantum-fourier-transform-qft" style="font-size: 80%;">Quantum Fourier Transform  (QFT)</a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-code-for-the-one-qubit-case" style="font-size: 80%;">VQE code for the one-qubit case</a></li>
+     <!-- navigation toc: --> <li><a href="#quantum-fourier-transforms" style="font-size: 80%;">Quantum Fourier Transforms</a></li>
 
         </ul>
       </li>
@@ -101,13 +111,114 @@ end of tocinfo -->
 <div class="panel-body">
 <!-- subsequent paragraphs come in larger fonts, so start with a paragraph -->
 <ol>
-<li> Summary of VQE with code examples for one-qubit and two-qubit systems</li>
+<li> Summary of VQE with code examples for one-qubit and two-qubit systems, see also lectures from last week</li>
 <li> Quantum Fourier transforms</li>
 </ol>
 <p><b>Reading suggestion:</b> Hundt section 6.2 on QFT</p>
 </div>
 </div>
 
+
+<!-- !split -->
+<h2 id="vqe-code-for-the-one-qubit-case" class="anchor">VQE code for the one-qubit case </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">from</span>  <span style="color: #0000FF; font-weight: bold">matplotlib</span> <span style="color: #008000; font-weight: bold">import</span> pyplot <span style="color: #008000; font-weight: bold">as</span> plt
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">scipy.optimize</span> <span style="color: #008000; font-weight: bold">import</span> minimize
+dim <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+Hamiltonian <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros((dim,dim))
+e0 <span style="color: #666666">=</span> <span style="color: #666666">0.0</span>
+e1 <span style="color: #666666">=</span> <span style="color: #666666">4.0</span>
+Xnondiag <span style="color: #666666">=</span> <span style="color: #666666">0.20</span>
+Xdiag <span style="color: #666666">=</span> <span style="color: #666666">3.0</span>
+Eigenvalue <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(dim)
+<span style="color: #408080; font-style: italic"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #666666">0</span>,<span style="color: #666666">0</span>] <span style="color: #666666">=</span> Xdiag<span style="color: #666666">+</span>e0
+Hamiltonian[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>] <span style="color: #666666">=</span> Xnondiag
+Hamiltonian[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>] <span style="color: #666666">=</span> Hamiltonian[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>]
+Hamiltonian[<span style="color: #666666">1</span>,<span style="color: #666666">1</span>] <span style="color: #666666">=</span> e1<span style="color: #666666">-</span>Xdiag
+<span style="color: #408080; font-style: italic"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors <span style="color: #666666">=</span> np<span style="color: #666666">.</span>linalg<span style="color: #666666">.</span>eig(Hamiltonian)
+permute <span style="color: #666666">=</span> EigValues<span style="color: #666666">.</span>argsort()
+EigValues <span style="color: #666666">=</span> EigValues[permute]
+<span style="color: #408080; font-style: italic"># print only the lowest eigenvalue</span>
+<span style="color: #008000">print</span>(EigValues[<span style="color: #666666">0</span>])
+
+<span style="color: #408080; font-style: italic"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
+X <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>],[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>]])
+Y <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0</span>,<span style="color: #666666">-1</span>j],[<span style="color: #666666">1</span>j,<span style="color: #666666">0</span>]])
+Z <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>],[<span style="color: #666666">0</span>,<span style="color: #666666">-1</span>]])
+<span style="color: #408080; font-style: italic"># identity matrix</span>
+I <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>,<span style="color: #666666">0</span>],[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>]])
+
+epsilon <span style="color: #666666">=</span> (e0<span style="color: #666666">+</span>e1)<span style="color: #666666">*0.5</span>; omega <span style="color: #666666">=</span> (e0<span style="color: #666666">-</span>e1)<span style="color: #666666">*0.5</span>
+c <span style="color: #666666">=</span> <span style="color: #666666">0.0</span>; omega_z<span style="color: #666666">=</span>Xdiag; omega_x <span style="color: #666666">=</span> Xnondiag
+Hamiltonian <span style="color: #666666">=</span> (epsilon<span style="color: #666666">+</span>c)<span style="color: #666666">*</span>I<span style="color: #666666">+</span>(omega_z<span style="color: #666666">+</span>omega)<span style="color: #666666">*</span>Z<span style="color: #666666">+</span>omega_x<span style="color: #666666">*</span>X
+EigValues, EigVectors <span style="color: #666666">=</span> np<span style="color: #666666">.</span>linalg<span style="color: #666666">.</span>eig(Hamiltonian)
+permute <span style="color: #666666">=</span> EigValues<span style="color: #666666">.</span>argsort()
+EigValues <span style="color: #666666">=</span> EigValues[permute]
+<span style="color: #408080; font-style: italic"># print only the lowest eigenvalue</span>
+<span style="color: #008000">print</span>(EigValues[<span style="color: #666666">0</span>])
+
+<span style="color: #408080; font-style: italic"># define the rotation matrices</span>
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">Rx</span>(theta):
+    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>cos(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(theta<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>X
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">Ry</span>(phi):
+    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>cos(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>I<span style="color: #666666">-1</span>j<span style="color: #666666">*</span>np<span style="color: #666666">.</span>sin(phi<span style="color: #666666">*0.5</span>)<span style="color: #666666">*</span>Y
+
+<span style="color: #408080; font-style: italic">#define basis states</span>
+basis0 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1</span>,<span style="color: #666666">0</span>])
+basis1 <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">0</span>,<span style="color: #666666">1</span>])
+
+<span style="color: #408080; font-style: italic"># Computing the expectation value of the energy </span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">Energy</span>(theta,phi):
+    Basis <span style="color: #666666">=</span> Ry(phi) <span style="color: #666666">@</span> Rx(theta) <span style="color: #666666">@</span> basis0
+    energy <span style="color: #666666">=</span> Basis<span style="color: #666666">.</span>conj()<span style="color: #666666">.</span>T <span style="color: #666666">@</span> Hamiltonian <span style="color: #666666">@</span> Basis
+    <span style="color: #008000; font-weight: bold">return</span> energy
+
+
+<span style="color: #408080; font-style: italic"># Set up iteration using gradient descent method</span>
+eta <span style="color: #666666">=</span> <span style="color: #666666">0.1</span>
+Niterations <span style="color: #666666">=</span> <span style="color: #666666">100</span>
+<span style="color: #408080; font-style: italic"># Random angles using uniform distribution</span>
+theta <span style="color: #666666">=</span> <span style="color: #666666">2*</span>np<span style="color: #666666">.</span>pi<span style="color: #666666">*</span>np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>rand()
+phi <span style="color: #666666">=</span> <span style="color: #666666">2*</span>np<span style="color: #666666">.</span>pi<span style="color: #666666">*</span>np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>rand()
+pi2 <span style="color: #666666">=</span> <span style="color: #666666">0.5*</span>np<span style="color: #666666">.</span>pi
+<span style="color: #008000; font-weight: bold">for</span> <span style="color: #008000">iter</span> <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(Niterations):
+    thetagradient <span style="color: #666666">=</span> <span style="color: #666666">0.5*</span>(Energy(theta<span style="color: #666666">+</span>pi2,phi)<span style="color: #666666">-</span>Energy(theta<span style="color: #666666">-</span>pi2,phi))
+    phigradient <span style="color: #666666">=</span> <span style="color: #666666">0.5*</span>(Energy(theta,phi<span style="color: #666666">+</span>pi2)<span style="color: #666666">-</span>Energy(theta,phi<span style="color: #666666">-</span>pi2))
+    theta <span style="color: #666666">-=</span> eta<span style="color: #666666">*</span>thetagradient
+    phi <span style="color: #666666">-=</span> eta<span style="color: #666666">*</span>phigradient
+<span style="color: #008000">print</span>(Energy(theta,phi))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>We see that we get the exact energy. However, this approach relies on tuning the so-called learning rate. This example can easily be extended to more than one qubit. For each qubit we add we get two additional variational parameters (our angles). In our project we stay with this simpler approach.</p>
+
+<!-- !split -->
+<h2 id="quantum-fourier-transforms" class="anchor">Quantum Fourier Transforms </h2>
+
+<p>See whiteboard notes for April 24. </p>
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->
 <!-- include javascript, jQuery *first* -->
