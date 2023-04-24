@@ -184,7 +184,7 @@ MathJax.Hub.Config({
 </center>
 <br>
 <center>
-<h4>Apr 23, 2023</h4>
+<h4>Apr 24, 2023</h4>
 </center> <!-- date -->
 <br>
 <h2 id="plans-for-the-week-of-april-17-21">Plans for the week of April 17-21 </h2>
@@ -2233,7 +2233,96 @@ efficient implementations of gradient methods to the derivatives of
 the Hamiltonian expectation values.
 </p>
 
-<p>The code here contains several functions. We start first with the one-qubit case and move later to a two-qubit case.</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span>  <span style="color: #008b45; text-decoration: underline">matplotlib</span> <span style="color: #8B008B; font-weight: bold">import</span> pyplot <span style="color: #8B008B; font-weight: bold">as</span> plt
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">scipy.optimize</span> <span style="color: #8B008B; font-weight: bold">import</span> minimize
+dim = <span style="color: #B452CD">2</span>
+Hamiltonian = np.zeros((dim,dim))
+e0 = <span style="color: #B452CD">0.0</span>
+e1 = <span style="color: #B452CD">4.0</span>
+Xnondiag = <span style="color: #B452CD">0.20</span>
+Xdiag = <span style="color: #B452CD">3.0</span>
+Eigenvalue = np.zeros(dim)
+<span style="color: #228B22"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>] = Xdiag+e0
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>] = Xnondiag
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>] = Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">1</span>] = e1-Xdiag
+<span style="color: #228B22"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+
+<span style="color: #228B22"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
+X = np.array([[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>]])
+Y = np.array([[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>j],[<span style="color: #B452CD">1</span>j,<span style="color: #B452CD">0</span>]])
+Z = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>]])
+<span style="color: #228B22"># identity matrix</span>
+I = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]])
+
+epsilon = (e0+e1)*<span style="color: #B452CD">0.5</span>; omega = (e0-e1)*<span style="color: #B452CD">0.5</span>
+c = <span style="color: #B452CD">0.0</span>; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+
+<span style="color: #228B22"># define the rotation matrices</span>
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Rx</span>(theta):
+    <span style="color: #8B008B; font-weight: bold">return</span> np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Ry</span>(phi):
+    <span style="color: #8B008B; font-weight: bold">return</span> np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+
+<span style="color: #228B22">#define basis states</span>
+basis0 = np.array([<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>])
+basis1 = np.array([<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
+
+<span style="color: #228B22"># Computing the expectation value of the energy </span>
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Energy</span>(theta,phi):
+    Basis = Ry(phi) @ Rx(theta) @ basis0
+    energy = Basis.conj().T @ Hamiltonian @ Basis
+    <span style="color: #8B008B; font-weight: bold">return</span> energy
+
+
+<span style="color: #228B22"># Set up iteration using gradient descent method</span>
+eta = <span style="color: #B452CD">0.1</span>
+Niterations = <span style="color: #B452CD">100</span>
+<span style="color: #228B22"># Random angles using uniform distribution</span>
+theta = <span style="color: #B452CD">2</span>*np.pi*np.random.rand()
+phi = <span style="color: #B452CD">2</span>*np.pi*np.random.rand()
+pi2 = <span style="color: #B452CD">0.5</span>*np.pi
+<span style="color: #8B008B; font-weight: bold">for</span> <span style="color: #658b00">iter</span> <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(Niterations):
+    thetagradient = <span style="color: #B452CD">0.5</span>*(Energy(theta+pi2,phi)-Energy(theta-pi2,phi))
+    phigradient = <span style="color: #B452CD">0.5</span>*(Energy(theta,phi+pi2)-Energy(theta,phi-pi2))
+    theta -= eta*thetagradient
+    phi -= eta*phigradient
+<span style="color: #658b00">print</span>(Energy(theta,phi))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <h2 id="a-smarter-way-of-doing-this">A smarter way of doing this </h2>
 
 <p>The above approach means that we are setting up several matrix-matrix

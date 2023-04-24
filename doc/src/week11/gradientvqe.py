@@ -36,66 +36,34 @@ EigValues = EigValues[permute]
 # print only the lowest eigenvalue
 print(EigValues[0])
 
-# define also the rotation matrices
-# Define angles theta and phi
-theta = 0.5*np.pi; phi = 0.2*np.pi
-Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
-Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+# define the rotation matrices
+
+def Rx(theta):
+    return np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
+def Ry(phi):
+    return np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+
 #define basis states
 basis0 = np.array([1,0])
 basis1 = np.array([0,1])
 
-NewBasis = Ry @ Rx @ basis0
-# Compute the expectation value
-Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
-print(Energy)
-
-# Computing the derivative of the energy and the energy 
-def EnergyDerivative(x0):
-    theta = x0[0]
-    phi = x0[1]
-    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
-    Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
-    Basis = Ry @ Rx @ basis0
-    XX = -1j*0.5*X; YY = -1j*0.5*Y
-    d1 = (Basis.conj().T @ Hamiltonian @ XX @ Basis)#+(Basis.conj().T @ Hamiltonian @ XX @ Basis).conj()
-    EDerivative[0] = d1
-    d2 = (Basis.conj().T @ Hamiltonian @ YY @ Basis)#+(Basis.conj().T @ Hamiltonian @ YY @ Basis).conj()
-    EDerivative[1] = d2
-    
-    return EDerivative
-
-
 # Computing the expectation value of the energy 
-def Energy(x0):
-    theta = x0[0]
-    phi = x0[1]
-    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
-    Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
-    Basis = Ry @ Rx @ basis0
+def Energy(theta,phi):
+    Basis = Ry(phi) @ Rx(theta) @ basis0
     energy = Basis.conj().T @ Hamiltonian @ Basis
     return energy
 
 
-
 # Set up iteration using gradient descent method
-Energy = 0
-EDerivative = np.zeros(2,dtype=np.complex_)
-eta = 0.001
+eta = 0.1
 Niterations = 100
-x0 = np.array([0.5*np.pi,0.2*np.pi])
+# Random angles using uniform distribution
+theta = 2*np.pi*np.random.rand()
+phi = 2*np.pi*np.random.rand()
+pi2 = 0.5*np.pi
 for iter in range(Niterations):
-    EDerivative = EnergyDerivative(x0) 
-    thetagradient = EDerivative[0]
-    phigradient = EDerivative[1]
+    thetagradient = 0.5*(Energy(theta+pi2,phi)-Energy(theta-pi2,phi))
+    phigradient = 0.5*(Energy(theta,phi+pi2)-Energy(theta,phi-pi2))
     theta -= eta*thetagradient
     phi -= eta*phigradient
-    x0 = np.array([theta,phi])
-    print(EDerivative)
-#print(Energy(x0))
-
-"""
-# Using Broydens method
-res = minimize(Energy, x0, method='BFGS', jac=EnergyDerivative, options={'gtol': 1e-4,'disp': True})
-print(res.x)
-"""
+print(Energy(theta,phi))
