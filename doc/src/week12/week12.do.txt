@@ -97,17 +97,151 @@ extended to more than one qubit. For each qubit we add we get two
 additional variational parameters (our angles). In our project we stay
 with this simpler approach.
 
+
 !split
-===== Quantum Fourier Transforms =====
+===== Fourier transforms =====
 
-"See whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesApril24.pdf"
+The Fourier Transform (FT) is one of the most useful mathematical tools in modern science and engineering. It is used, amongst many other things, to:
 
-he Fourier Transform (FT) is one of the most useful mathematical tools in modern science and engineering. It is used, amongst many other things, to:
-remove noise from data
-examine the properties of crystals
-produce holograms
-The FT is especially useful when we have something with underlying
-periodicity: imagine a sine wave with a bit of high-frequency noise
 
-FT allows us to extract the underlying periodic behaviour of a function • Mathematically, the DFT is written as
-• Period finding is the basis for Shor’s factoring algorithm, and wewill use the QFT in this important application of quantum computing
+
+!split
+=====  Discrete Fourier transforms =====
+
+
+
+If one has several driving forces, $F(t)=\sum_n F_n(t)$, one can find
+the particular solution to each $F_n$, $x_{pn}(t)$, and the particular
+solution for the entire driving force is
+
+!bt
+\begin{equation}
+x_p(t)=\sum_nx_{pn}(t).
+\end{equation}
+!et
+
+This is known as the principal of superposition. It only applies when
+the homogenous equation is linear. If there were an anharmonic term
+such as $x^3$ in the homogenous equation, then when one summed various
+solutions, $x=(\sum_n x_n)^2$, one would get cross
+terms. Superposition is especially useful when $F(t)$ can be written
+as a sum of sinusoidal terms, because the solutions for each
+sinusoidal (sine or cosine)  term is analytic, as we saw above.
+
+Driving forces are often periodic, even when they are not
+sinusoidal. Periodicity implies that for some time $\tau$
+
+!bt
+\begin{eqnarray}
+F(t+\tau)=F(t). 
+\end{eqnarray}
+!et
+
+One example of a non-sinusoidal periodic force is a square wave. Many
+components in electric circuits are non-linear, e.g. diodes, which
+makes many wave forms non-sinusoidal even when the circuits are being
+driven by purely sinusoidal sources.
+
+The code here shows a typical example of such a square wave generated
+using the functionality included in the _scipy_ Python package. We
+have used a period of $\tau=0.2$.
+
+!bc pycod
+import numpy as np
+import math
+from scipy import signal
+import matplotlib.pyplot as plt
+
+# number of points                                                                                       
+n = 500
+# start and final times                                                                                  
+t0 = 0.0
+tn = 1.0
+# Period                                                                                                 
+t = np.linspace(t0, tn, n, endpoint=False)
+SqrSignal = np.zeros(n)
+SqrSignal = 1.0+signal.square(2*np.pi*5*t)
+plt.plot(t, SqrSignal)
+plt.ylim(-0.5, 2.5)
+plt.show()
+!ec
+
+
+For the sinusoidal example studied in the previous week the
+period is $\tau=2\pi/\omega$. However, higher harmonics can also
+satisfy the periodicity requirement. In general, any force that
+satisfies the periodicity requirement can be expressed as a sum over
+harmonics,
+
+!bt
+\begin{equation}
+F(t)=\frac{f_0}{2}+\sum_{n>0} f_n\cos(2n\pi t/\tau)+g_n\sin(2n\pi t/\tau).
+\end{equation}
+!et
+
+The code here visualizes the various approximations given by
+Fourier series compared with a square wave with period $T=0.2$, witth
+$0.1$ and max value $F=2$. We see that when we increase the number of
+components in the Fourier series, the Fourier series approximation gets closes and closes to the square wave signal.
+
+!bc pycod
+import numpy as np
+import math
+from scipy import signal
+import matplotlib.pyplot as plt
+
+# number of points                                                                                       
+n = 500
+# start and final times                                                                                  
+t0 = 0.0
+tn = 1.0
+# Period                                                                                                 
+T =0.2
+# Max value of square signal                                                                             
+Fmax= 2.0
+# Width of signal                                                                                        
+Width = 0.1
+t = np.linspace(t0, tn, n, endpoint=False)
+SqrSignal = np.zeros(n)
+FourierSeriesSignal = np.zeros(n)
+SqrSignal = 1.0+signal.square(2*np.pi*5*t+np.pi*Width/T)
+a0 = Fmax*Width/T
+FourierSeriesSignal = a0
+Factor = 2.0*Fmax/np.pi
+for i in range(1,500):
+    FourierSeriesSignal += Factor/(i)*np.sin(np.pi*i*Width/T)*np.cos(i*t*2*np.pi/T)
+plt.plot(t, SqrSignal)
+plt.plot(t, FourierSeriesSignal)
+plt.ylim(-0.5, 2.5)
+plt.show()
+!ec
+
+=== Discrete Fourier Transformations ===
+
+Consider two sets of complex numbers $x_k$ and $y_k$ with
+$k=0,1,\dots,n-1$ entries. The discrete Fourier transform is defined
+as
+
+!bt
+\[
+y_k = \frac{1}{\sqrt{n-1}} \sum_{j=0}^{n-1} \exp{(\frac{2\pi\imath jk}{n})} x_j.
+\]
+!et
+As an example, assume $x_0=1$ and $x_1=1$. We can then use the above expression to find $y_0$ and $y_1$.
+
+With the above formula we get then
+!bt
+\[
+y_0 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 0\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2)=\frac{3}{\sqrt{2}},
+\]
+!et
+and
+!bt
+\[
+y_1 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}},
+\]
+!et
+ We can rewrite this in terms of the following matrix-vector operation
+
+!split
+=====  Quantum Fourier Transforms =====
