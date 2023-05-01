@@ -80,8 +80,8 @@ def Energy(theta,phi):
 eta = 0.1
 Niterations = 100
 # Random angles using uniform distribution
-theta = 2*np.pi*np.random.rand()
-phi = 2*np.pi*np.random.rand()
+theta = np.pi*np.random.rand()
+phi = np.pi*np.random.rand()
 pi2 = 0.5*np.pi
 for iter in range(Niterations):
     thetagradient = 0.5*(Energy(theta+pi2,phi)-Energy(theta-pi2,phi))
@@ -98,57 +98,16 @@ additional variational parameters (our angles). In our project we stay
 with this simpler approach.
 
 
-!split
-===== Fourier transforms =====
-
-The Fourier Transform (FT) is one of the most useful mathematical tools in modern science and engineering. It is used, amongst many other things, to:
-
-
-
-
-=== Discrete Fourier Transformations ===
-
-Consider two sets of complex numbers $x_k$ and $y_k$ with
-$k=0,1,\dots,n-1$ entries. The discrete Fourier transform is defined
-as
-
-!bt
-\[
-y_k = \frac{1}{\sqrt{n-1}} \sum_{j=0}^{n-1} \exp{(\frac{2\pi\imath jk}{n})} x_j.
-\]
-!et
-As an example, assume $x_0=1$ and $x_1=1$. We can then use the above expression to find $y_0$ and $y_1$.
-
-With the above formula we get then
-!bt
-\[
-y_0 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 0\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2)=\frac{3}{\sqrt{2}},
-\]
-!et
-and
-!bt
-\[
-y_1 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}},
-\]
-!et
- We can rewrite this in terms of the following matrix-vector operation
 
 !split
-=====  Quantum Fourier Transforms =====
+===== Principle of Superposition and Periodic Forces and Fourier Transforms =====
 
+The Fourier Transform (FT) is one of the most useful mathematical
+tools in modern science and engineering. It is used in a variety of
+applications, spanning from the solution of ordinary and partial
+differential equations to quantum computing.
 
-
-!split
-===== Plans for the week of May 8-12 =====
-
-!bblock 
-  o Quantum Fourier transforms
-  o Quantum Phase Estimation algorithm
-  o Reading suggestion: Hundt section 6.2-6.4
-!eblock
-
-!split
-===== Principle of Superposition and Periodic Forces (Fourier Transforms) =====
+We revisit first some basic mathematical properties of Fourier transforms.
 
 For problems with so-called harmonic oscillations, given by for example the following differential equation
 !bt
@@ -156,7 +115,8 @@ For problems with so-called harmonic oscillations, given by for example the foll
 m\frac{d^2x}{dt^2}+\eta\frac{dx}{dt}+x(t)=F(t),
 \]
 !et
-where $F(t)$ is an applied external force acting on the system (often called a driving force), one can use the theory of Fourier transformations to find the solutions of this type of equations.
+where $F(t)$ is an applied external force acting on the system (often called a driving force),
+one can use the theory of Fourier transformations to find the solutions of this type of equations.
 
 If one has several driving forces, $F(t)=\sum_n F_n(t)$, one can find
 the particular solution to each $F_n$, $x_{pn}(t)$, and the particular
@@ -167,9 +127,6 @@ solution for the entire driving force is then given by a series like
 x_p(t)=\sum_nx_{pn}(t).
 \end{equation}
 !et
-
-!split
-===== Principle of Superposition =====
 
 This is known as the principle of superposition. It only applies when
 the homogenous equation is linear. If there were an anharmonic term
@@ -193,10 +150,10 @@ components in electric circuits are non-linear, e.g. diodes, which
 makes many wave forms non-sinusoidal even when the circuits are being
 driven by purely sinusoidal sources.
 
-!split
-===== Simple Code Example =====
 
-The code here shows a typical example of such a square wave generated using the functionality included in the _scipy_ Python package. We have used a period of $\tau=0.2$.
+The code here shows a typical example of such a square wave generated
+using the functionality included in the _scipy_ Python package. We
+have used a period of $\tau=0.2$.
 
 !bc pycod
 import numpy as np
@@ -219,20 +176,16 @@ plt.show()
 !ec
 
 
-For the sinusoidal example the
-period is $\tau=2\pi/\omega$. However, higher harmonics can also
-satisfy the periodicity requirement. In general, any force that
-satisfies the periodicity requirement can be expressed as a sum over
-harmonics,
+For the sinusoidal example the period is $\tau=2\pi/\omega$. However,
+higher harmonics can also satisfy the periodicity requirement. In
+general, any force that satisfies the periodicity requirement can be
+expressed as a sum over harmonics,
 
 !bt
 \begin{equation}
 F(t)=\frac{f_0}{2}+\sum_{n>0} f_n\cos(2n\pi t/\tau)+g_n\sin(2n\pi t/\tau).
 \end{equation}
 !et
-
-!split
-===== Wrapping up Fourier transforms =====
 
 We can write down the answer for
 $x_{pn}(t)$, by substituting $f_n/m$ or $g_n/m$ for $F_0/m$. By
@@ -366,5 +319,48 @@ plt.plot(t, FourierSeriesSignal)
 plt.ylim(-0.5, 2.5)
 plt.show()
 !ec
+
+
+=== Discrete Fourier Transformations ===
+
+Consider two sets of complex numbers $x_k$ and $y_k$ with
+$k=0,1,\dots,n-1$ entries. The discrete Fourier transform is defined
+as
+
+!bt
+\[
+y_k = \frac{1}{\sqrt{n-1}} \sum_{j=0}^{n-1} \exp{(\frac{2\pi\imath jk}{n})} x_j.
+\]
+!et
+As an example, assume $x_0=1$ and $x_1=1$. We can then use the above expression to find $y_0$ and $y_1$.
+
+With the above formula we get then
+!bt
+\[
+y_0 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 0\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2)=\frac{3}{\sqrt{2}},
+\]
+!et
+and
+!bt
+\[
+y_1 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}},
+\]
+!et
+ We can rewrite this in terms of the following matrix-vector operation
+
+!split
+=====  Quantum Fourier Transforms =====
+
+
+
+!split
+===== Plans for the week of May 8-12 =====
+
+!bblock 
+  o Quantum Fourier transforms
+  o Quantum Phase Estimation algorithm
+  o Reading suggestion: Hundt section 6.2-6.4
+!eblock
+
 
 
