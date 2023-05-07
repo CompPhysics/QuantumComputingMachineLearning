@@ -118,6 +118,7 @@ and project 1
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesApril24.pdf    
 - Reading suggestion: Hundt sections 6.2-6.4
 
+## May 1-5, 2023. Public holiday, no lecture on May 1
 
 ## May 8-12, 2023. Quantum Fourier transforms
 - Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
@@ -125,8 +126,9 @@ and project 1
 - Video of lecture at TBA
 - Reading suggestion: Hundt sections 6.2-6.4
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMay8.pdf
+- Lecture moved to Friday
 
-## May 8-12, 2023. Last session and summary of course
+## May 15-19, 2023. Last session and summary of course
 - Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14
 - Video of lecture at TBA
