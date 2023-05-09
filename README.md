@@ -132,4 +132,7 @@ and project 1
 - Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14
 - Video of lecture at TBA
-- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMay15.pdf    
+- Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMay15.pdf
+
+## May 22-26, 2023. Project work and discussion
+- Discussion of project if there is interest
