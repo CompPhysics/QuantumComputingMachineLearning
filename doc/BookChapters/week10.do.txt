@@ -1,0 +1,689 @@
+TITLE: March 27-31, 2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo & Department of Physics and Astronomy and Facility for Rare Isotope Beams, Michigan State University
+DATE: Week of March 27-31
+
+
+!split
+===== Plans for the week of March 27-31 =====
+
+!bblock 
+  o Reminder on basics of the VQE method
+  o Simulating Hamiltonian systems, from simple $2\times 2$ matrices to the Lipkin model and discussion of the project
+  o Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1
+  o "VQE review article":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
+  o "Video of lecture":"https://youtu.be/JT5bjAQyS4k"
+!eblock
+
+
+!split
+===== Implementing the  VQE method, one qubit system =====
+
+We start with a simple $2\times 2$ Hamiltonian matrix expressed in
+terms of Pauli $X$ and $Z$ matrices, as discussed in the project text.
+
+We define a  symmetric matrix  $H\in {\mathbb{R}}^{2\times 2}$
+!bt
+\[
+H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
+\end{bmatrix},
+\]
+!et
+We  let $H = H_0 + H_I$, where
+!bt
+\[
+H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
+\]
+!et
+is a diagonal matrix. Similarly,
+!bt
+\[
+H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
+\]
+!et
+where $V_{ij}$ represent various interaction matrix elements.
+We can view $H_0$ as the non-interacting solution
+!bt
+\begin{equation}
+       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
+\end{equation}
+!et
+and
+!bt
+\begin{equation}
+       H_0\vert 1\rangle =E_2\vert 1\rangle,
+\end{equation}
+!et
+where we have defined the orthogonal computational one-qubit basis states $\vert 0\rangle$ and $\vert 1\rangle$.
+
+
+We rewrite $H$ (and $H_0$ and $H_I$)  via Pauli matrices
+!bt
+\[
+H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
+  + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
+\]
+!et
+and
+!bt
+\[
+H_I = c \bm{I} +\omega_z\sigma_z + \omega_x\sigma_x,
+\]
+!et
+with $c = (V_{11}+V_{22})/2$, $\omega_z = (V_{11}-V_{22})/2$ and $\omega_x = V_{12}=V_{21}$.
+We let our Hamiltonian depend linearly on a strength parameter $\lambda$
+
+!bt
+\[
+H=H_0+\lambda H_\mathrm{I},
+\]
+!et
+
+with $\lambda \in [0,1]$, where the limits $\lambda=0$ and $\lambda=1$
+represent the non-interacting (or unperturbed) and fully interacting
+system, respectively.  The model is an eigenvalue problem with only
+two available states.
+
+Here we set the parameters $E_1=0$,
+$E_2=4$, $V_{11}=-V_{22}=3$ and $V_{12}=V_{21}=0.2$.
+
+The non-interacting solutions represent our computational basis.
+Pertinent to our choice of parameters, is that at $\lambda\geq 2/3$,
+the lowest eigenstate is dominated by $\vert 1\rangle$ while the upper
+is $\vert 0 \rangle$. At $\lambda=1$ the $\vert 0 \rangle$ mixing of
+the lowest eigenvalue is $1\%$ while for $\lambda\leq 2/3$ we have a
+$\vert 0 \rangle$ component of more than $90\%$.  The character of the
+eigenvectors has therefore been interchanged when passing $z=2/3$. The
+value of the parameter $V_{12}$ represents the strength of the coupling
+between the two states.
+
+!split
+=====  Setting up the matrix =====
+
+!bc pycod
+from  matplotlib import pyplot as plt
+import numpy as np
+dim = 2
+Hamiltonian = np.zeros((dim,dim))
+e0 = 0.0
+e1 = 4.0
+Xnondiag = 0.20
+Xdiag = 3.0
+Eigenvalue = np.zeros(dim)
+# setting up the Hamiltonian
+Hamiltonian[0,0] = Xdiag+e0
+Hamiltonian[0,1] = Xnondiag
+Hamiltonian[1,0] = Hamiltonian[0,1]
+Hamiltonian[1,1] = e1-Xdiag
+# diagonalize and obtain eigenvalues, not necessarily sorted
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+# print only the lowest eigenvalue
+print(EigValues[0])
+!ec
+
+Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
+
+!bc pycod
+# Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
+X = np.array([[0,1],[1,0]])
+Y = np.array([[0,-1j],[1j,0]])
+Z = np.array([[1,0],[0,-1]])
+# identity matrix
+I = np.array([[1,0],[0,1]])
+
+epsilon = (e0+e1)*0.5; omega = (e0-e1)*0.5
+c = 0.0; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+# print only the lowest eigenvalue
+print(EigValues[0])
+!ec
+
+
+
+!split
+===== Implementing the VQE =====
+
+For a one-qubit system we can reach every point on the Bloch sphere
+(as discussed earlier) with a rotation about the $x$-axis and the
+$y$-axis.
+
+We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state $\vert \psi\rangle$
+!bt
+\[
+\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
+\]
+!et
+
+We can produce multiple ansatzes for the new state in terms of the
+angles $\theta$ and $\phi$.  With these ansatzes we can in turn
+calculate the expectation value of the above Hamiltonian, now
+rewritten in terms of various Pauli matrices (and thereby gates), that is compute
+
+!bt
+\[
+\langle \psi \vert (c+\mathcal{E})\bm{I} + (\Omega+\omega_z)\bm{\sigma}_z + \omega_x\bm{\sigma}_x\vert \psi \rangle.
+\]
+!et
+
+We can now set up a series of ansatzes for $\vert \psi \rangle$ as
+function of the angles $\theta$ and $\phi$ and find thereafter the
+variational minimum using for example a gradient descent method.
+
+To do so, we need to remind ourselves about the mathematical expressions for
+the rotational matrices/operators.
+
+!bt
+\[
+R_x(\theta)=\cos{\frac{\theta}{2}}\bm{I}-\imath \sin{\frac{\theta}{2}}\bm{\sigma}_x,
+\]
+!et
+
+and
+
+!bt
+\[
+R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma}_y.
+\]
+!et
+
+
+!bc pycod
+# define the rotation matrices
+# Define angles theta and phi
+theta = 0.5*np.pi; phi = 0.2*np.pi
+Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
+Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+#define basis states
+basis0 = np.array([1,0])
+basis1 = np.array([0,1])
+
+NewBasis = Ry @ Rx @ basis0
+print(NewBasis)
+# Compute the expectation value
+#Note hermitian conjugation
+Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+print(Energy)
+!ec
+Not an impressive results. We set up now a loop over many angles $\theta$ and $\phi$ and compute the energies
+!bc pycod
+# define a number of angles
+n = 20
+angle = np.arange(0,180,10)
+n = np.size(angle)
+ExpectationValues = np.zeros((n,n))
+for i in range (n):
+    theta = np.pi*angle[i]/180.0
+    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
+    for j in range (n):
+        phi = np.pi*angle[j]/180.0
+        Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+        NewBasis = Ry @ Rx @ basis0
+        Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+        Edifference=abs(np.real(EigValues[0]-Energy))
+        ExpectationValues[i,j]=Edifference
+
+print(np.min(ExpectationValues))
+!ec
+
+Clearly, this is not the very best way of proceeding. Rather, here we
+would compute the gradient and thereby find the minimum as function of
+the angles $\theta$ and $\phi$. Furthermore, in sertting up the
+angles, a better practice is to select random values for these.
+
+For the lectures of April 17-21, we will
+add code example using gradient descent for the one- and two-qubit case. We will follow
+URL:"https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" as a guideline to calculate gradients of the Hamiltonian.
+
+
+!split
+===== A smarter way of doing this =====
+
+The above approach means that we are setting up several matrix-matrix
+amd matrix-vector multiplications. Although straight forward it is not
+the most efficient way of doing this, in particular in case the
+matrices become large (and sparse). But there are some more important
+issues.
+
+In a physical realization of these systems we cannot just multiply the
+state with the Hamiltonian. When performing a measurement we can only
+measure in one particular direction. For the computational basis
+states which we have, $\vert 0\rangle$ and $\vert 1\rangle$, we have
+to measure along the bases of the Pauli matrices and reconstruct the
+eigenvalues from these measurements.
+
+From our earlier discussions we know that the Pauli $Z$ matrix has the above basis states as eigen states through
+
+!bt
+\[
+\bm{\sigma}_z\vert 0 \rangle = \bm{Z}\vert 0 \rangle=+1\vert 0 \rangle,
+\]
+!et
+and
+!bt
+\[
+\bm{\sigma}_z\vert 1 \rangle = \bm{Z}\vert 1 \rangle=-1\vert 1 \rangle,
+\]
+!et
+with eigenvalue $-1$.
+
+For the Pauli $X$ matrix on the other hand we have
+!bt
+\[
+\bm{\sigma}_x\vert 0 \rangle = \bm{X}\vert 0 \rangle=+1\vert 1 \rangle,
+\]
+!et
+and
+!bt
+\[
+\bm{\sigma}_x\vert 1 \rangle = \bm{X}\vert 1 \rangle=-1\vert 0 \rangle,
+\]
+!et
+
+with eigenvalues $1$ in both cases. The latter two equations tell us
+that the computational basis we have chosen, and in which we will
+prepare our states, is not an eigenbasis of the $\sigma_x$ matrix.
+
+We will thus try to rewrite the Pauli $X$ matrix in terms of a Pauli $Z$ matrix. Fortunately this can be done using the Hadamard matrix twice, that is
+
+!bt
+\[
+\bm{X}=\bm{\sigma}_x=\bm{H}\bm{Z}\bm{H}.
+\]
+!et
+
+The Pauli $Y$ matrix can be written as
+
+!bt
+\[
+\bm{Y}=\bm{\sigma}_y=\bm{H}\bm{S}^{\dagger}\bm{Z}\bm{H}\bm{S},
+\]
+!et
+
+where $S$ is the phase matrix
+!bt
+\[
+S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
+\]
+!et
+
+
+
+
+From here and on we will denote the Pauli matrices by $X$, $Y$ and $Z$ and we can write the expectation value of the Hamiltonian as
+!bt
+\[
+\langle \psi \vert (c+\mathcal{E})\bm{I} + (\Omega+\omega_z)\bm{Z} + \omega_x\bm{H}\bm{Z}\bm{H}\vert \psi \rangle,
+\]
+!et
+which we can rewrite as
+!bt
+\[
+(c+\mathcal{E})\langle \psi \vert \bm{I}\vert \psi \rangle+(\Omega+\omega_z)\langle \psi \vert \bm{Z}\vert \psi \rangle+\omega_x\langle \psi \bm{H}\vert \bm{Z}\vert\bm{H}\psi \rangle.
+\]
+!et
+
+The first and second term are to easy to perform a measurement on since we we just need to compute
+$\langle \psi\vert \bm{I}\vert \psi\rangle$ and $\langle \psi\vert \bm{Z}\vert \psi\rangle$.
+For the final term we need just to add the action of the Hadamard matrix and we are done.
+
+
+
+!split
+===== Two-qubit system and the VQE =====
+
+
+We extend now the system  to a two-qubit system with the following computational
+basis states and Hamiltonian matrix written out in terms of Pauli spin
+matrices.
+
+This system can be thought of as composed of two subsystems
+$A$ and $B$. Each subsystem has computational basis states
+
+!bt
+\[
+\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
+\]
+!et
+The subsystems could represent single particles or composite many-particle systems of a given symmetry.
+This leads to the many-body computational basis states
+
+!bt
+\[
+\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
+\]
+!et
+and finally
+!bt
+\[
+\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+\]
+!et
+
+These computational basis states define also the eigenstates of the non-interacting  Hamiltonian
+!bt
+\[
+H_0\vert 00 \rangle = \epsilon_{00}\vert 00 \rangle,
+\]
+!et
+!bt
+\[
+H_0\vert 10 \rangle = \epsilon_{10}\vert 10 \rangle,
+\]
+!et
+!bt
+\[
+H_0\vert 01 \rangle = \epsilon_{01}\vert 01 \rangle,
+\]
+!et
+and
+!bt
+\[
+H_0\vert 11 \rangle = \epsilon_{11}\vert 11 \rangle.
+\]
+!et
+The interacting part of the Hamiltonian $H_{\mathrm{I}}$ is given by the tensor product of two $\sigma_x$ and $\sigma_z$  matrices, respectively, that is
+!bt
+\[
+H_{\mathrm{I}}=H_x\sigma_x\otimes\sigma_x+H_z\sigma_z\otimes\sigma_z,
+\]
+!et
+where $H_x$ and $H_z$ are interaction strength parameters. Our final Hamiltonian matrix is given by
+!bt
+\[
+\bm{H}=\begin{bmatrix} \epsilon_{00}+H_z & 0 & 0 & H_x \\
+                       0  & \epsilon_{10}-H_z & H_x & 0 \\
+		       0 & H_x & \epsilon_{01}-H_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{11} +H_z \end{bmatrix}.
+\] 
+!et
+
+The four eigenstates of the above Hamiltonian matrix can in turn be used to
+define density matrices. As an example, the density matrix of the
+first eigenstate (lowest energy $E_0$) $\Psi_0$ is
+
+!bt
+\[
+\rho_0=\left(\alpha_{00}\vert 00 \rangle\langle 00\vert+\alpha_{10}\vert 10 \rangle\langle 10\vert+\alpha_{01}\vert 01 \rangle\langle 01\vert+\alpha_{11}\vert 11 \rangle\langle 11\vert\right),
+\]
+!et
+
+where the coefficients $\alpha_{ij}$ are the eigenvector coefficients
+resulting from the solution of the above eigenvalue problem.
+
+
+
+!split
+===== Switching to Qiskit (notes developed by Stian Bilek) =====
+!bc pycod
+import numpy as np
+import qiskit as qk
+from scipy.optimize import minimize
+
+
+# Initialize registers and circuit
+n_qubits = 1 #Number of qubits
+n_cbits = 1 #Number of classical bits (the number of qubits you want to measure at the end of the circuit)
+qreg = qk.QuantumRegister(n_qubits) #Create a quantum register
+creg = qk.ClassicalRegister(n_cbits) #Create a classical register
+circuit = qk.QuantumCircuit(qreg,creg) #Create your quantum circuit
+circuit.draw() #Draw circuit. It is empty
+# Perform operations on qubit
+circuit.x(qreg[0]) #Applies a Pauli X gate to the first qubit in the quantum register
+circuit.draw()
+# Chose a qubit to measure and encode the results to a classical bit
+#Measure the first qubit in the quantum register
+#and encode the results to the first qubit in the classical register
+circuit.measure(qreg[0],creg[0])
+circuit.draw()
+# Execute circuit
+
+backend = qk.Aer.get_backend('qasm_simulator') 
+#This is the device you want to use. It is an ideal simulation of a quantum device
+
+
+job = backend.run(circuit,shots=1000) #Run the circuit 1000 times
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+circuit.draw()
+
+circuit.h(qreg[0]) #Apply a Hadamard gate to the first qubit of the quantum register
+circuit.measure(qreg,creg)
+print(circuit.draw())
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+Create a two-qubit circuit and set up a Bell state
+!bc pycod
+n_qubits = 2
+n_cbits = 2
+qreg = qk.QuantumRegister(n_qubits)
+creg = qk.ClassicalRegister(n_cbits)
+circuit = qk.QuantumCircuit(qreg,creg)
+circuit.draw()
+circuit.h(qreg[0])
+circuit.cx(qreg[0],qreg[1]) 
+!ec
+This is a controlled operation. Apply a Pauli $X$ gate to the second qubit (qreg[1]) if the first qubit (qreg[0])
+is in the $|1\rangle$ state. Else do nothing
+!bc pycod
+circuit.draw()
+circuit.measure(qreg,creg)
+circuit.draw()
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+Apply rotation to qubit
+!bc pycod
+theta = np.pi/3
+circuit.rx(theta, qreg[0]) #R_x(theta) rotation on the first qubit (qreg[0])
+circuit.measure(qreg,creg)
+print(circuit.draw())
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+circuit.clear()
+print(counts)
+!ec
+
+Find the lowest eigenvalue of $$ H = c_1 Z_0 + c_2 Z_1 + c_3 X_0 Y_1 $$ 
+We will use $$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi> $$
+!bc pycod
+I = np.eye(2)
+X = np.array([[0,1],[1,0]])
+Y = np.array([[0,-1j],[1j,0]])
+Z = np.array([[1,0],[0,-1]])
+H = np.kron(Z,I) + np.kron(I,Z) + np.kron(X,Y)
+eigvals,eigvecs = np.linalg.eigh(H)
+print(eigvals[0])
+
+c_1 = 1
+c_2 = 1
+c_3 = 1
+
+h_1 = [c_1,[0],['z']]
+h_2 = [c_2,[1],['z']]
+h_3 = [c_3,[0,1],['x','x']]
+H = [h_1,h_2,h_3]
+!ec
+Create ansatz
+!bc pycod
+def ansatz(theta,n_qubits):
+    qreg = qk.QuantumRegister(n_qubits)
+    circuit = qk.QuantumCircuit(qreg)
+    for i in range(n_qubits):
+        circuit.ry(theta[i],qreg[i])
+    for i in range(n_qubits-1):
+        circuit.cx(qreg[i],qreg[i+1])
+    return(circuit)
+qreg = qk.QuantumRegister(n_qubits)
+circuit = qk.QuantumCircuit(qreg)
+circuit.h(qreg[:2])
+print('Before ansatz')
+print(circuit.draw())
+theta = np.random.randn(2)
+n_qubits = 2
+circuit = circuit.compose(ansatz(theta,n_qubits))
+print('After ansatz')
+circuit.draw()
+!ec
+
+Change measurement basis
+!bc pycod
+def basis_change(h_i,n_qubits):
+    qreg = qk.QuantumRegister(n_qubits)
+    circuit = qk.QuantumCircuit(qreg)
+    
+    for qubit,operator in zip(h_i[1],h_i[2]):
+        if operator == 'x':
+            circuit.h(qreg[qubit])
+        if operator == 'y':
+            circuit.sdg(qreg[qubit])
+            circuit.h(qreg[qubit])
+    return(circuit)
+n_qubits = 2
+qreg = qk.QuantumRegister(n_qubits)
+circuit = qk.QuantumCircuit(qreg)
+theta = np.random.randn(n_qubits)
+circuit = circuit.compose(ansatz(theta,n_qubits))
+print('Ansatz circuit')
+circuit.draw()
+circuit = circuit.compose(basis_change(H[2],n_qubits))
+print('After basis transformation:')
+print(circuit.draw())
+!ec
+        
+
+
+Get energy for given rotational parameters, theta
+
+!bc pycod
+def get_energy(theta):
+    n_qubits = 2
+    qreg = qk.QuantumRegister(n_qubits)
+    circuit = qk.QuantumCircuit(qreg)
+    circuit = circuit.compose(ansatz(theta,n_qubits))
+    circuit_list = []
+    for idx,h_i in enumerate(H):
+        basis_change_circuit = basis_change(h_i,n_qubits)
+        new_circuit = circuit.compose(basis_change_circuit)
+        creg = qk.ClassicalRegister(len(h_i[1]))
+        new_circuit.add_register(creg)
+        new_circuit.measure(qreg[h_i[1]],creg)
+        circuit_list.append(new_circuit)
+    shots = 10000
+    job = backend.run(circuit_list,shots=shots)
+    E = np.zeros(len(circuit_list))
+    for i in range(len(circuit_list)):
+        result = job.result()
+        counts = result.get_counts(i)
+        for key,value in counts.items():
+            e = 1
+            for bit in key:
+                if bit == '0':
+                    e *= 1
+                if bit == '1':
+                    e *= -1
+            E[i] += e*value
+        E[i] *= H[i][0]
+    E /= shots
+    return(np.sum(E))
+
+theta = np.random.randn(2)
+get_energy(theta)
+    
+!ec
+
+Minimize energy with Scipy
+
+
+!bc pycod
+theta = np.random.randn(2)
+res = minimize(get_energy, theta, method='Powell',tol=1e-12)
+get_energy(res.x)
+
+
+# ## We might need a more flexible ansatz
+
+def ansatz(theta,n_qubits):
+    qreg = qk.QuantumRegister(n_qubits)
+    circuit = qk.QuantumCircuit(qreg)
+    idx = 0
+    for i in range(n_qubits):
+        circuit.ry(theta[idx],qreg[i])
+        idx += 1
+    for i in range(n_qubits-1):
+        circuit.cx(qreg[i],qreg[i+1])
+    for i in range(n_qubits):
+        circuit.rx(theta[idx],qreg[i])
+        idx += 1
+    for i in range(n_qubits-1):
+        circuit.cx(qreg[i],qreg[i+1])
+    return(circuit)
+theta = np.random.randn(4)
+res = minimize(get_energy, theta, method='Powell',tol=1e-16)
+get_energy(res.x)
+!ec
+
+Then we minimize energy with gradient descent
+!bt
+\[
+\frac{\partial E (\theta_1,\dots,\theta_i,\dots,\theta_p)}{\partial \theta_i} = \frac{E(\theta_1,\dots,\theta_i + \pi/2,\dots, \theta_p) - E(\theta_1,\dots, \theta_i - \pi/2,\dots, \theta_p}{2}.
+\]
+!et
+
+
+!bc pycod
+epochs = 200
+theta = np.random.randn(4)
+for epoch in range(epochs):
+    print(epoch,get_energy(theta))
+    grad = np.zeros_like(theta)
+    for idx in range(theta.shape[0]):
+        theta_temp = theta.copy()
+        theta_temp[idx] += np.pi/2
+        E_plus = get_energy(theta_temp)
+        theta_temp[idx] -= np.pi
+        E_minus = get_energy(theta_temp)
+        grad[idx] = (E_plus - E_minus)/2
+    theta -= 0.1*grad
+!ec
+
+
+
+
+
+!split
+===== Plans for the week of April 17-21 =====
+
+!bblock 
+  o Reminder on basics of the VQE method
+  o Simulating efficiently Hamiltonians on quantum computers with the VQE method and gradient descent to optimize the state function ansatz
+  o "Reading suggestion, VQE review article":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
+!eblock
+
