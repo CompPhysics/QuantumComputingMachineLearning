@@ -129,7 +129,7 @@ and project 1
 - Lecture moved to Friday
 
 ## May 15-19, 2023. Last session and summary of course
-- Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
+- Discussion of final project and summary of course
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14
 - Video of lecture at TBA
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesMay15.pdf
