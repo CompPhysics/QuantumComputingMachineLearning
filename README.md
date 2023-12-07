@@ -6,7 +6,7 @@
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
 
 
-### Time: Each Monday at 1215pm-2pm CET (The sessions will be recorded)
+### Time: Each Wednesday at 215pm-4pm CET (The sessions will be recorded)
 -Permanent Zoom link for the whole semester:
  - https://msu.zoom.us/j/6424997467?pwd=ZW5jSGtEeHJxM0dqd0draXlWY29FQT09
  - Meeting ID: 642 499 7467
@@ -32,13 +32,13 @@
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 3
 
-## January 29-February 4, 2024. Density matrices and Measurements
+## January 29-February 2, 2024. Density matrices and Measurements
   - Spectral decomposition and measurements
   - Density matrices
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapters 2 and 3
 
-## February 13-17, 2024. Entanglement and entropies
+## February 5-9, 2024. Entanglement and entropies
   - More on density matrices and measurements
   - Entanglement and Schmidt decomposition 
   - Start discussion of Entropies
@@ -46,14 +46,14 @@
   - _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
 
 
-## February 20-24, 2024. 
+## February 12-16, 2024. 
   - Review of Schmidt decomposition and entanglement from last week, see jupyter-notebook at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week4/ipynb/week4.ipynb"
   - More on entanglement
   - Entropy and traces of density matrices
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, section 2.3 and chapter 4  
 
-## February 27-March 3, 2024. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
+## February 19-23, 2024. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
   - Quantum Fourier Transforms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
