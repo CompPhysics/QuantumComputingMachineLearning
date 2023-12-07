@@ -14,7 +14,7 @@
 
 
 
-## January 23-27, 2023. Overview of first week, Basic Notions of Quantum Mechanics
+## January 15-19, 2024. Overview of first week, Basic Notions of Quantum Mechanics
 - Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
   - Definitions
   - Mathematical notation, Hilbert spaces and operators
@@ -27,7 +27,7 @@
 - Video of lecture at https://youtu.be/ktZSFYIoNVM
 - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2023/NotesJanuary23.pdf
 
-## January 30 - February 3, 2023. Composite Systems and Tensor Products
+## January 22 - January 26, 2024. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
   - Simple Hamiltonians and other operators
   - States and Observables for Composite systems
