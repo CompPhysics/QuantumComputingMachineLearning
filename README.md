@@ -22,7 +22,6 @@
   - States in Hilbert Space, pure and mixed states
   - Operators and gates
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
 ## January 22 - January 26, 2024. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
@@ -41,65 +40,56 @@
 ## February 5-9, 2024. Entanglement and entropies
   - More on density matrices and measurements
   - Entanglement and Schmidt decomposition 
-  - Start discussion of Entropies
+  - Review of Schmidt decomposition and entanglement 
+
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
   - _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
 
-
 ## February 12-16, 2024. 
-  - Review of Schmidt decomposition and entanglement from last week, see jupyter-notebook at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week4/ipynb/week4.ipynb"
-  - More on entanglement
-  - Entropy and traces of density matrices
+  - Entropy and density matrices
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, section 2.3 and chapter 4  
+
 
 ## February 19-23, 2024. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
   - Quantum Fourier Transforms
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
-##  March 6-10, 2024. Algorithms for solving quantum mechanical problems.
+##  February 26-March 1, 2024. Algorithms for solving quantum mechanical problems.
   - Introduction of Hamiltonians to study, the Lipkin model
   - Quantum Phase estimation algorithm
   - VQE, Variational Quantum Eigensolver
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
-##  March 13-17, 2024. Solving quantum mechanical problems
+##  March 4-8, 2024. Solving quantum mechanical problems
   - Analyzing the solution of eigenvalue problems using the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
-## March 20-24, 2024. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model and 
+## March 11-15-24, 2024. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model and 
 and project 1
   - VQE and Qiskit
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
-## March 27-31, 2024. VQE and project discussion
+## March 18-24, 2024. VQE 
   - Solving eigenvalue problems with and without Qiskit.
   - Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1
   - See also VQE review article at https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-## April 17-21, 2024. VQE and project discussion
+## April 4-8, 2024. VQE 
 - Implementing VQE efficiently and studies of the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
-## April 24-28, 2024. VQE and project discussion, introducing Quantum Fourier Transforms
-- Wrapping up material on VQE
-- Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
-- Reading suggestion: Hundt sections 6.2-6.4
+## April 11-15, 2024. TBA
 
-## May 1-5, 2024. Public holiday, no lecture on May 1
+## April 18-24, 2024. TBA
 
-## May 8-12, 2024. Quantum Fourier transforms
-- Discussion of Quantum Fourier Transforms and Quantum Phase estimation algorithms
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13
-- Video of lecture at TBA
-- Reading suggestion: Hundt sections 6.2-6.4
+## April 29-May 3, 2024. No lecture, public holiday
 
-## May 15-19, 2024. Last session and summary of course
-- Discussion of final project and summary of course
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14
+## May 6-10, 2024. TBA
+
+
+
