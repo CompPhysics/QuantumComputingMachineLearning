@@ -13,7 +13,6 @@
  - Passcode: FYS4411
 
 
-
 ## January 15-19, 2024. Overview of first week, Basic Notions of Quantum Mechanics
 - Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
   - Definitions
@@ -21,20 +20,20 @@
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-
+  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
 ## January 22 - January 26, 2024. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
   - Simple Hamiltonians and other operators
   - States and Observables for Composite systems
   - Quantum operations, circuits and gates
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 3
+  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
 
 ## January 29-February 2, 2024. Density matrices and Measurements
   - Spectral decomposition and measurements
   - Density matrices
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapters 2 and 3
+  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
 
 ## February 5-9, 2024. Entanglement and entropies
   - More on density matrices and measurements
@@ -42,7 +41,7 @@
   - Review of Schmidt decomposition and entanglement 
 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-  - _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, chapter 4
+  - _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, xxx
 
 ## February 12-16, 2024. 
   - Entropy and density matrices
@@ -86,7 +85,7 @@ and project 1
 
 ## April 18-24, 2024. TBA
 
-## April 29-May 3, 2024. No lecture, public holiday
+## April 29-May 3, 2024. TBA
 
 ## May 6-10, 2024. TBA
 
