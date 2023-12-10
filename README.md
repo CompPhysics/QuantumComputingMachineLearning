@@ -20,14 +20,13 @@
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
-  - Operators and gates
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
 
 ## January 22 - January 26, 2024. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
   - Simple Hamiltonians and other operators
   - States and Observables for Composite systems
-  - Quantum operations
+  - Quantum operations, circuits and gates
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 3
 
