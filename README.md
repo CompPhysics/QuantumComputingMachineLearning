@@ -1,5 +1,7 @@
 # Quantum Computing and Quantum Machine Learning 
 
+![alt text](https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/main/doc/images/qc.png?raw=true)
+
 ### Recommended textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
