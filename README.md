@@ -16,13 +16,13 @@
 
 
 ## January 15-19, 2024. Overview of first week, Basic Notions of Quantum Mechanics
-- Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems and more
+- Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems
   - Definitions
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
+  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 ## January 22 - January 26, 2024. Composite Systems and Tensor Products
   - Tensor products of Hilbert Spaces and definition of Computational Basis
   - Simple Hamiltonians and other operators
