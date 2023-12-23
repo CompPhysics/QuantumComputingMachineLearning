@@ -29,7 +29,7 @@
   - States and Observables for Composite systems
   - Quantum operations, circuits and gates
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
+  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
 ## January 29-February 2, 2024. Density matrices and Measurements
   - Spectral decomposition and measurements
