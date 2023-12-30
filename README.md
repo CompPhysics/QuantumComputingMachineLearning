@@ -67,29 +67,28 @@
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
-## March 11-15-24, 2024. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model and 
-and project 1
+## March 11-15-24, 2024. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
   - VQE and Qiskit
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
-## March 18-24, 2024. VQE 
+## March 18-22, 2024. VQE 
   - Solving eigenvalue problems with and without Qiskit.
   - Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1
   - See also VQE review article at https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-## April 4-8, 2024. VQE 
+## April 1-5, 2024, VQE 
 - Implementing VQE efficiently and studies of the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
-## April 11-15, 2024. TBA
+## April 8-16, 2024, TBA
 
-## April 18-24, 2024. TBA
+## April 15-19, 2024, TBA
 
-## April 29-May 3, 2024. TBA
-
-## May 6-10, 2024. TBA
+## April 22-26, 2024, TBA
+## April 29-May 3, TBA
+## May 6-10, TBA
 
 
 
