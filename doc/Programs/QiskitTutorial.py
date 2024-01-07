@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
+# %%
 
-# In[1]:
+# %%
 
 
 import numpy as np
@@ -11,7 +12,7 @@ from scipy.optimize import minimize
 
 # # Initialize registers and circuit
 
-# In[2]:
+# %%
 
 
 n_qubits = 1 #Number of qubits
@@ -21,7 +22,7 @@ creg = qk.ClassicalRegister(n_cbits) #Create a classical register
 circuit = qk.QuantumCircuit(qreg,creg) #Create your quantum circuit
 
 
-# In[3]:
+# %%
 
 
 circuit.draw() #Draw circuit. It is empty
@@ -29,7 +30,7 @@ circuit.draw() #Draw circuit. It is empty
 
 # # Perform operations on qubit
 
-# In[4]:
+# %%
 
 
 circuit.x(qreg[0]) #Applies a Pauli X gate to the first qubit in the quantum register
@@ -38,7 +39,7 @@ circuit.draw()
 
 # # Chose a qubit to measure and encode the results to a classical bit
 
-# In[5]:
+# %%
 
 
 #Measure the first qubit in the quantum register
@@ -49,7 +50,7 @@ circuit.draw()
 
 # # Execute circuit
 
-# In[6]:
+# %%
 
 
 backend = qk.Aer.get_backend('qasm_simulator') 
@@ -64,7 +65,7 @@ circuit.clear()
 circuit.draw()
 
 
-# In[7]:
+# %%
 
 
 circuit.h(qreg[0]) #Apply a Hadamard gate to the first qubit of the quantum register
@@ -72,7 +73,7 @@ circuit.measure(qreg,creg)
 print(circuit.draw())
 
 
-# In[8]:
+# %%
 
 
 job = backend.run(circuit,shots=1000)
@@ -84,7 +85,7 @@ circuit.clear()
 
 # # Create a two-qubit circuit and set up a Bell state
 
-# In[9]:
+# %%
 
 
 n_qubits = 2
@@ -95,7 +96,7 @@ circuit = qk.QuantumCircuit(qreg,creg)
 circuit.draw()
 
 
-# In[10]:
+# %%
 
 
 circuit.h(qreg[0])
@@ -106,14 +107,14 @@ circuit.cx(qreg[0],qreg[1])
 circuit.draw()
 
 
-# In[11]:
+# %%
 
 
 circuit.measure(qreg,creg)
 circuit.draw()
 
 
-# In[12]:
+# %%
 
 
 job = backend.run(circuit,shots=1000)
@@ -125,7 +126,7 @@ circuit.clear()
 
 # # Apply rotation to qubit
 
-# In[13]:
+# %%
 
 
 theta = np.pi/3
@@ -142,7 +143,7 @@ print(counts)
 # # Find the lowest eigenvalue of $$ H = c_1 Z_0 + c_2 Z_1 + c_3 X_0 Y_1 $$ 
 # # We will use $$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi> $$
 
-# In[14]:
+# %%
 
 
 I = np.eye(2)
@@ -154,7 +155,7 @@ eigvals,eigvecs = np.linalg.eigh(H)
 print(eigvals[0])
 
 
-# In[15]:
+# %%
 
 
 c_1 = 1
@@ -168,7 +169,7 @@ H = [h_1,h_2,h_3]
 H
 
 
-# In[16]:
+# %%
 
 
 H[0]
@@ -176,7 +177,7 @@ H[0]
 
 # # Create ansatz
 
-# In[17]:
+# %%
 
 
 def ansatz(theta,n_qubits):
@@ -201,7 +202,7 @@ circuit.draw()
 
 # # Change measurement basis
 
-# In[18]:
+# %%
 
 
 def basis_change(h_i,n_qubits):
@@ -231,7 +232,7 @@ print(circuit.draw())
 
 # # Get energy for given rotational parameters, theta
 
-# In[19]:
+# %%
 
 
 def get_energy(theta):
@@ -272,7 +273,7 @@ get_energy(theta)
 
 # # Minimize energy with Scipy
 
-# In[20]:
+# %%
 
 
 theta = np.random.randn(2)
@@ -282,7 +283,7 @@ get_energy(res.x)
 
 # ## We might need a more flexible ansatz
 
-# In[22]:
+# %%
 
 
 def ansatz(theta,n_qubits):
@@ -308,7 +309,7 @@ get_energy(res.x)
 # # Minimize energy with gradient descent
 # # $$ \frac{\partial E (\theta_1,\dots,\theta_i,\dots,\theta_p)}{\partial \theta_i} = \frac{E(\theta_1,\dots,\theta_i + \pi/2,\dots, \theta_p) - E(\theta_1,\dots, \theta_i - \pi/2,\dots, \theta_p}{2} $$
 
-# In[23]:
+# %%
 
 
 epochs = 200
@@ -326,8 +327,10 @@ for epoch in range(epochs):
     theta -= 0.1*grad
 
 
-# In[ ]:
+# %%
 
 
 
 
+
+# %%

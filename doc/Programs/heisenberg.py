@@ -71,3 +71,5 @@ if __name__=='__main__':
     plt.legend()
     #plt.title(r'Evolution of state $|110\rangle, |101\rangle, |011\rangle$ under $H_{XXX}$')
     plt.show()
+
+
