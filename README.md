@@ -21,6 +21,7 @@
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
+  - Link to video of lecture https://youtu.be/YRobDADb63E
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 ## January 22 - January 26, 2024. Composite Systems and Tensor Products
