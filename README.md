@@ -29,7 +29,9 @@
   - Tensor products of Hilbert Spaces and definition of Computational Basis
   - Simple Hamiltonians and other operators
   - States and Observables for Composite systems
-  - Quantum operations, circuits and gates
+  - Video of lecture at https://youtu.be/E1dhiboQHis
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary24.pdf
+  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
