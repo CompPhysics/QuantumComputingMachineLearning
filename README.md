@@ -25,19 +25,21 @@
   - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary17.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
+
 ## January 22 - January 26, 2024. Composite Systems and Tensor Products
-  - Tensor products of Hilbert Spaces and definition of Computational Basis
+  - Spectral decomposition and measurements
+  - Density matrices
   - Simple Hamiltonians and other operators
-  - States and Observables for Composite systems
   - Video of lecture at https://youtu.be/E1dhiboQHis
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary24.pdf
-  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
 ## January 29-February 2, 2024. Density matrices and Measurements
   - Spectral decomposition and measurements
   - Density matrices
+  - Entanglement and Schmidt decomposition
+  - Entropies  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
 
