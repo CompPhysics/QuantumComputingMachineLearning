@@ -39,7 +39,9 @@
   - Spectral decomposition and measurements
   - Density matrices
   - Entanglement and Schmidt decomposition
-  - Entropies  
+  - Entropies
+  - Video of lecture at https://youtu.be/6v5iqPmQIFM
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary31.pdf  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
 
