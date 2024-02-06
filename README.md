@@ -46,12 +46,12 @@
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
 
 ## February 5-9, 2024. Entanglement and entropies
-  - More on density matrices and measurements
   - Entanglement and Schmidt decomposition 
-  - Review of Schmidt decomposition and entanglement 
+  - Entropy as a measurement of entanglement
+  - Introduction to gates and calculations
 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-  - _Reading recommendation_: Scherrer, Mathematics of Quantum Computations, xxx
+  - _Reading recommendation_: Hundt, chapter 2 and 3
 
 ## February 12-16, 2024. 
   - Entropy and density matrices
