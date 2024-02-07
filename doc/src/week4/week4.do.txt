@@ -946,11 +946,134 @@ and has the following matrix form
 !et
 
 
-
+!split
+===== Plans next week =====
 !bblock Lecture next week we discuss simple algorithms and quantum circuits
   o Defining one-, two-	and three-qubit	gates
   o Setting up quantum circuits	and simple algorithms
 !eblock
+
+
+
+!split
+===== Introduction to "Qiskit":"https://qiskit.org/" =====
+
+This part is best seen using the jupyter-notebook
+
+!bc pycod
+#!/usr/bin/env python
+# coding: utf-8
+import numpy as np
+import qiskit as qk
+from scipy.optimize import minimize
+
+
+# # Initialize registers and circuit
+
+n_qubits = 1 #Number of qubits
+n_cbits = 1 #Number of classical bits (the number of qubits you want to measure at the end of the circuit)
+qreg = qk.QuantumRegister(n_qubits) #Create a quantum register
+creg = qk.ClassicalRegister(n_cbits) #Create a classical register
+circuit = qk.QuantumCircuit(qreg,creg) #Create your quantum circuit
+
+
+circuit.draw() #Draw circuit. It is empty
+!ec
+
+Thereafter we perform operations on qubit
+
+!bc pycod 
+circuit.x(qreg[0]) #Applies a Pauli X gate to the first qubit in the quantum register
+circuit.draw()
+!ec
+
+and select  a qubit to measure and encode the results to a classical bit
+
+
+!bc pycod 
+#Measure the first qubit in the quantum register
+#and encode the results to the first qubit in the classical register
+circuit.measure(qreg[0],creg[0])
+circuit.draw()
+!ec
+
+Thereafter we execute the circuit
+
+
+!bc pycod 
+backend = qk.Aer.get_backend('qasm_simulator') 
+#This is the device you want to use. It is an ideal simulation of a quantum device
+
+
+job = backend.run(circuit,shots=1000) #Run the circuit 1000 times
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+circuit.draw()
+
+
+circuit.h(qreg[0]) #Apply a Hadamard gate to the first qubit of the quantum register
+circuit.measure(qreg,creg)
+print(circuit.draw())
+
+
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+Now we create a two-qubit circuit and set up a Bell state
+
+
+!bc pycod 
+n_qubits = 2
+n_cbits = 2
+qreg = qk.QuantumRegister(n_qubits)
+creg = qk.ClassicalRegister(n_cbits)
+circuit = qk.QuantumCircuit(qreg,creg)
+circuit.draw()
+
+
+
+circuit.h(qreg[0])
+circuit.cx(qreg[0],qreg[1]) 
+#This is a controlled operation. Apply a Pauli X gate to the second qubit (qreg[1]) if the first qubit (qreg[0])
+#is in the |1> state. Else do nothing
+
+circuit.draw()
+
+circuit.measure(qreg,creg)
+circuit.draw()
+!ec
+
+
+
+!bc pycod 
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+We apply a rotation to a qubit
+
+!bc pycod 
+theta = np.pi/3
+circuit.rx(theta, qreg[0]) #R_x(theta) rotation on the first qubit (qreg[0])
+circuit.measure(qreg,creg)
+print(circuit.draw())
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+circuit.clear()
+print(counts)
+!ec
+
+
 
 
 

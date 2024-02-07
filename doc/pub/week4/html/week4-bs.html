@@ -119,7 +119,12 @@ doconce format html week4.do.txt --html_style=bootstrap --pygments_html_style=de
               ('Control qubit', 2, None, 'control-qubit'),
               ('In matrix form', 2, None, 'in-matrix-form'),
               ('CNOT gate', 2, None, 'cnot-gate'),
-              ('Swap gate', 2, None, 'swap-gate')]}
+              ('Swap gate', 2, None, 'swap-gate'),
+              ('Plans next week', 2, None, 'plans-next-week'),
+              ('Introduction to "Qiskit":"https://qiskit.org/"',
+               2,
+               None,
+               'introduction-to-qiskit-https-qiskit-org')]}
 end of tocinfo -->
 
 <body>
@@ -195,6 +200,8 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#in-matrix-form" style="font-size: 80%;">In matrix form</a></li>
      <!-- navigation toc: --> <li><a href="#cnot-gate" style="font-size: 80%;">CNOT gate</a></li>
      <!-- navigation toc: --> <li><a href="#swap-gate" style="font-size: 80%;">Swap gate</a></li>
+     <!-- navigation toc: --> <li><a href="#plans-next-week" style="font-size: 80%;">Plans next week</a></li>
+     <!-- navigation toc: --> <li><a href="#introduction-to-qiskit-https-qiskit-org" style="font-size: 80%;">Introduction to "Qiskit":"https://qiskit.org/"</a></li>
 
         </ul>
       </li>
@@ -1178,6 +1185,8 @@ $$
 $$
 
 
+<!-- !split -->
+<h2 id="plans-next-week" class="anchor">Plans next week </h2>
 <div class="panel panel-default">
 <div class="panel-body">
 <!-- subsequent paragraphs come in larger fonts, so start with a paragraph -->
@@ -1186,6 +1195,250 @@ $$
  <li> Setting up quantum circuits	and simple algorithms</li>
 </ol>
 </div>
+</div>
+
+
+<!-- !split -->
+<h2 id="introduction-to-qiskit-https-qiskit-org" class="anchor">Introduction to <a href="https://qiskit.org/" target="_self">Qiskit</a> </h2>
+
+<p>This part is best seen using the jupyter-notebook</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic">#!/usr/bin/env python</span>
+<span style="color: #408080; font-style: italic"># coding: utf-8</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qk</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">scipy.optimize</span> <span style="color: #008000; font-weight: bold">import</span> minimize
+
+
+<span style="color: #408080; font-style: italic"># # Initialize registers and circuit</span>
+
+n_qubits <span style="color: #666666">=</span> <span style="color: #666666">1</span> <span style="color: #408080; font-style: italic">#Number of qubits</span>
+n_cbits <span style="color: #666666">=</span> <span style="color: #666666">1</span> <span style="color: #408080; font-style: italic">#Number of classical bits (the number of qubits you want to measure at the end of the circuit)</span>
+qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits) <span style="color: #408080; font-style: italic">#Create a quantum register</span>
+creg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>ClassicalRegister(n_cbits) <span style="color: #408080; font-style: italic">#Create a classical register</span>
+circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg,creg) <span style="color: #408080; font-style: italic">#Create your quantum circuit</span>
+
+
+circuit<span style="color: #666666">.</span>draw() <span style="color: #408080; font-style: italic">#Draw circuit. It is empty</span>
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Thereafter we perform operations on qubit</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">circuit<span style="color: #666666">.</span>x(qreg[<span style="color: #666666">0</span>]) <span style="color: #408080; font-style: italic">#Applies a Pauli X gate to the first qubit in the quantum register</span>
+circuit<span style="color: #666666">.</span>draw()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>and select  a qubit to measure and encode the results to a classical bit</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic">#Measure the first qubit in the quantum register</span>
+<span style="color: #408080; font-style: italic">#and encode the results to the first qubit in the classical register</span>
+circuit<span style="color: #666666">.</span>measure(qreg[<span style="color: #666666">0</span>],creg[<span style="color: #666666">0</span>])
+circuit<span style="color: #666666">.</span>draw()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Thereafter we execute the circuit</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">backend <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>Aer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;qasm_simulator&#39;</span>) 
+<span style="color: #408080; font-style: italic">#This is the device you want to use. It is an ideal simulation of a quantum device</span>
+
+
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>) <span style="color: #408080; font-style: italic">#Run the circuit 1000 times</span>
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+<span style="color: #008000">print</span>(counts)
+circuit<span style="color: #666666">.</span>clear()
+circuit<span style="color: #666666">.</span>draw()
+
+
+circuit<span style="color: #666666">.</span>h(qreg[<span style="color: #666666">0</span>]) <span style="color: #408080; font-style: italic">#Apply a Hadamard gate to the first qubit of the quantum register</span>
+circuit<span style="color: #666666">.</span>measure(qreg,creg)
+<span style="color: #008000">print</span>(circuit<span style="color: #666666">.</span>draw())
+
+
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>)
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+<span style="color: #008000">print</span>(counts)
+circuit<span style="color: #666666">.</span>clear()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Now we create a two-qubit circuit and set up a Bell state</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">n_qubits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+n_cbits <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+qreg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
+creg <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>ClassicalRegister(n_cbits)
+circuit <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qreg,creg)
+circuit<span style="color: #666666">.</span>draw()
+
+
+
+circuit<span style="color: #666666">.</span>h(qreg[<span style="color: #666666">0</span>])
+circuit<span style="color: #666666">.</span>cx(qreg[<span style="color: #666666">0</span>],qreg[<span style="color: #666666">1</span>]) 
+<span style="color: #408080; font-style: italic">#This is a controlled operation. Apply a Pauli X gate to the second qubit (qreg[1]) if the first qubit (qreg[0])</span>
+<span style="color: #408080; font-style: italic">#is in the |1&gt; state. Else do nothing</span>
+
+circuit<span style="color: #666666">.</span>draw()
+
+circuit<span style="color: #666666">.</span>measure(qreg,creg)
+circuit<span style="color: #666666">.</span>draw()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>)
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+<span style="color: #008000">print</span>(counts)
+circuit<span style="color: #666666">.</span>clear()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>We apply a rotation to a qubit</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">theta <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi<span style="color: #666666">/3</span>
+circuit<span style="color: #666666">.</span>rx(theta, qreg[<span style="color: #666666">0</span>]) <span style="color: #408080; font-style: italic">#R_x(theta) rotation on the first qubit (qreg[0])</span>
+circuit<span style="color: #666666">.</span>measure(qreg,creg)
+<span style="color: #008000">print</span>(circuit<span style="color: #666666">.</span>draw())
+job <span style="color: #666666">=</span> backend<span style="color: #666666">.</span>run(circuit,shots<span style="color: #666666">=1000</span>)
+result <span style="color: #666666">=</span> job<span style="color: #666666">.</span>result()
+counts <span style="color: #666666">=</span> result<span style="color: #666666">.</span>get_counts()
+circuit<span style="color: #666666">.</span>clear()
+<span style="color: #008000">print</span>(counts)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 
