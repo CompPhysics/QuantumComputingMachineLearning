@@ -958,7 +958,20 @@ and has the following matrix form
 !split
 ===== Introduction to "Qiskit":"https://qiskit.org/" =====
 
-This part is best seen using the jupyter-notebook
+This part is best seen using the jupyter-notebook.
+
+
+For the installation
+!bc pycod
+pip install qiskit
+pip install qiskit-ibm-runtime
+!ec
+
+Documentation can be found at URL:"https://docs.quantum.ibm.com/api/qiskit "
+
+
+!split
+===== Simple code =====
 
 !bc pycod
 #!/usr/bin/env python
@@ -1074,10 +1087,138 @@ print(counts)
 !ec
 
 
+!split
+===== Exercises for next week and Bell states, developed by Keran =====
+
+!bc pycod
+import qiskit as qk
+from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from qiskit.visualization import plot_histogram
+from qiskit_aer import AerSimulator
+import matplotlib.pyplot as plt
+!ec
+
+Setting up a circuit
+
+!bc pycod
+qreg_q = QuantumRegister(2) # 2 qubits
+creg_c = ClassicalRegister(2) # 2 classical bits
+
+qc = QuantumCircuit(qreg_q, creg_c) # alternatively, circuit = QuantumCircuit(2, 2)
+
+qc.h(qreg_q[0]) # apply the hadamard gate to the first qubit (to the right)
+
+# apply the CNOT gate with the first qubit being the control qubit and the second qubit being the target qubit
+qc.cx(qreg_q[0], qreg_q[1]) 
 
 
+# measure the qubits, specify which qubit you want to measure
+qc.measure(qreg_q[0], creg_c[0])
+qc.measure(qreg_q[1], creg_c[1])
+!ec
+
+Next we will use an ideal(noiseless) simulator (AerSimulator) to run
+our circuit. We will use the qasm$\_$simulator backend. This simulator
+returns a result object which contains the counts, or number of times
+each qubit was measured in the zero state and the one state. We can
+then use the plot$\_$histogram function to see the result of our circuit.
+
+!bc pycod
+# Initialize a simulator
+simulator = AerSimulator()
+
+job = qk.execute(qc, simulator, shots=1000) # shots are the number of times the circuit is executed
+results = job.result().get_counts(qc) # Done! check out the results!
+print(results)
+!ec
+Is this what you expected? Visualise it!
+!bc pycod
+plot_histogram(results)
+!ec
+
+Now it's your turn to make create the other three bell states, which are
+
+$$ \vert \Phi_+\rangle = \frac{|00\rangle + |11\rangle}{\sqrt{2}} $$
+$$ \vert \Phi_-\rangle = \frac{|00\rangle - |11\rangle}{\sqrt{2}} $$
+$$ \vert \Psi_+\rangle = \frac{|01\rangle + |10\rangle}{\sqrt{2}} $$
+$$ \vert \Psi_-\rangle = \frac{|01\rangle - |10\rangle}{\sqrt{2}} $$
 
 
+!bc pycod
+# SOLUTIONS
+
+phi_plus = QuantumCircuit(2,2)
+phi_plus.h(0)
+phi_plus.cx(0,1)
+phi_plus.measure([0,1],[0,1])
+
+
+phi_minus = QuantumCircuit(2,2)
+phi_minus.h(0)
+phi_minus.cx(0,1)
+phi_minus.z(0) # you can flip 1 in this case too, but not both obviously
+phi_minus.measure([0,1],[0,1])
+
+
+psi_plus = QuantumCircuit(2,2)
+psi_plus.h(0)
+psi_plus.cx(0,1)
+psi_plus.x(0) 
+psi_plus.measure([0,1],[0,1])
+
+
+psi_minus = QuantumCircuit(2,2)
+psi_minus.h(0)
+psi_minus.cx(0,1)
+psi_minus.x(0)
+psi_minus.z(0)
+psi_minus.measure([0,1],[0,1])
+
+
+bell_states = [phi_plus, phi_minus, psi_plus, psi_minus]
+!ec
+Have a look at them side by side
+!bc pycod
+all_results = []
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+for i,state in enumerate(bell_states):
+    print(results)
+    job = qk.execute(state, simulator, shots=1000)
+    all_results.append(job.result().get_counts(state))
+    plot_histogram(all_results[-1], ax=axes[int(i/2),i%2])
+!ec
+
+How can you distinguish $|\Phi_+\rangle$ and $|\Phi_-\rangle$? (and
+similarly $|\Psi_+\rangle$ and $|\Psi_-\rangle$)
+
+You can play around with the gates at URL:"https://quantum.ibm.com/composer".
+We'll look at the example with $|\Phi_+\rangle$ and $|\Phi_-\rangle$.
+
+!bc pycod
+# Solution: change basis
+
+phi_plus = QuantumCircuit(2,2)
+phi_plus.h(0)
+phi_plus.cx(0,1)
+phi_plus.h(0)
+phi_plus.h(1)
+phi_plus.measure([0,1],[0,1])
+
+
+phi_minus = QuantumCircuit(2,2)
+phi_minus.h(0)
+phi_minus.cx(0,1)
+phi_minus.z(0) # you can flip 1 in this case too, but not both obviously
+phi_minus.h(0)
+phi_minus.h(1)
+phi_minus.measure([0,1],[0,1])
+
+for state in [phi_plus, phi_minus]:
+    job = qk.execute(state, simulator, shots=1000)
+    print(job.result().get_counts(state))
+    plot_histogram(job.result().get_counts(state))
+!ec
 
 
 
