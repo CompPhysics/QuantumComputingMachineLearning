@@ -49,7 +49,8 @@
   - Entanglement and Schmidt decomposition 
   - Entropy as a measurement of entanglement
   - Introduction to gates and calculations
-
+  - Video of lecture https://youtu.be/XP9z8z6ptWI
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary7.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
   - _Reading recommendation_: Hundt, chapter 2 and 3
 
