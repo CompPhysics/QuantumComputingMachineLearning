@@ -55,7 +55,10 @@
   - _Reading recommendation_: Hundt, chapter 2 and 3
 
 ## February 12-16, 2024. 
-  - Entropy and density matrices
+  - Quantum gates and circuits
+  - Developing our own codes for Bell states and comparing with qiskit
+  - Video of lecture at https://youtu.be/9XrDKgTQL6I
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary14.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
 
 
