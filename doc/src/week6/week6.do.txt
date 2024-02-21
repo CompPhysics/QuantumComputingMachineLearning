@@ -21,6 +21,41 @@ o For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 
 o The VQE algorithm is discussed in Hundt's section 6.11
 
 !split
+===== Gates and measurements =====
+
+This material is covered by whiteboard notes from lecture February 21. 
+The material will be updated later this week.
+
+
+!split
+===== The Qiskit material from last week =====
+
+!bc pycod
+# Install alternative provider package
+# pip install -q qiskit-ibm-provider
+# How to use it
+from qiskit_ibm_provider import IBMProvider
+
+api_token = 'Your token'
+
+# Load your IBM Quantum account
+IBMProvider.save_account(api_token, overwrite=True)  # This stores your credentials locally
+provider = IBMProvider()
+
+import qiskit as qk
+from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from qiskit.visualization import plot_histogram
+from qiskit_aer import AerSimulator
+
+import matplotlib.pyplot as plt
+# Then go ahead and use it like this with whatever backend, i.e. osaka with 127 qubits
+backend = provider.get_backend('ibm_osaka')
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+!ec
+
+!split
 ===== Variational Quantum Eigensolver =====
 
 One initial algorithm to estimate the eigenenergies of a quantum
@@ -31,11 +66,19 @@ $n$ qubits. It does this by applying powers of controlled unitary
 evolution operators to a quantum state that can be expanded in terms
 of the Hamiltonian's eigenvectors of interest. The eigenenergies are
 encoded into the complex phases in such a way that taking the inverse
-quantum Fourier transformation (see material on Quantum Fourier Transforms) of the states into which the
+quantum Fourier transformation (see Hundt sections 6.1-6.2) of the states into which the
 eigen-energies are encoded results in a measurement probability
 distribution that has peaks around the bit strings that represent a
 binary fraction which corresponds to the eigen-energies of the quantum
-state acted upon by the controlled unitary operators. While quantum
+state acted upon by the controlled unitary operators.
+
+
+
+
+!split
+===== The VQE =====
+
+While quantum
 phase estimation (QPE) is provably efficient, non-hybrid, and
 non-variational, the number of qubits and length of circuits required
 is too great for our NISQ era quantum computers. Thus, QPE is only
@@ -50,16 +93,26 @@ quantum computer and a classical computer. It is also variational,
 meaning that it relies, ultimately, on solving an optimization problem
 by varying parameters and thus is not as deterministic as QPE. The
 variational quantum eigensolver is based on the variational principle:
+
+
+
+!split
+===== Expectation value of Hamiltonian =====
+
 The expectation value of a Hamiltonian $H$ in a state
 $|\psi(\theta)\rangle$ parameterized by a set of angles $\theta$, is
 always greater than or equal to the minimum eigen-energy $E_0$. To see
 this, let $|n\rangle$ be the eigenstates of $H$, that is
 
 !bt
-\begin{align}
+\[
 H|n\rangle=E_n|n\rangle.
-\end{align}
+\]
 !et
+
+
+!split
+===== Expanding in the eigenstates =====
 
 We can then expand our state $|\psi(\theta)\rangle$ in terms of said eigenstates
 
@@ -83,6 +136,9 @@ which implies that we can minimize over the set of angles $\theta$ and arrive at
 \]
 !et
 
+!split
+===== Basic steps of the VQE algorithm =====
+
 Using this fact, the VQE algorithm can be broken down into the following steps
 o Prepare the variational state $|\psi(\theta)\rangle$ on a quantum computer.
 o Measure this circuit in various bases and send these measurements to a classical computer
@@ -95,12 +151,13 @@ characterize the ground state $|\phi(\theta_{\text{min}})\rangle$ and
 an estimate for the ground state energy
 $\langle\psi(\theta_{\text{min}})|H|\psi(\theta_{\text{min}})\rangle$.
 
+!split
 ===== Expectation values =====
 
 To execute the second step of VQE, we need to understand how
 expectation values of operators can be estimated via quantum computers
 by post-processing measurements of quantum circuits in different
-basis. To rotate bases, one uses the basis rotator $R_\sigma$ which is
+basis sets. To rotate bases, one uses the basis rotator $R_\sigma$ which is
 defined for each Pauli gate $\sigma$ to be
 
 !bt
@@ -121,7 +178,8 @@ I, & \text{if} \ \sigma = Z.
 \end{align}
 !et
 
-
+!split
+===== Measurements of eigenvalues of the Pauli operators =====
 We can show that these rotations allow us to measure the eigenvalues of the Pauli operators. The eigenvectors of the Pauli $X$ gate are
 !bt
 \[
@@ -141,6 +199,11 @@ and
 H\vert -\rangle = -1\vert 1\rangle.
 \]
 !et
+
+
+!split
+===== Single-qubit states =====
+
 Any single-qubit state can be written as a linear combination of these eigenvectors,
 !bt
 \[
@@ -150,7 +213,7 @@ Any single-qubit state can be written as a linear combination of these eigenvect
 We then have the following expectation value for the Pauli $X$ operator
 !bt
 \[
-\expval{X} = \bra{\psi} X \vert \psi\rangle = |\alpha|^2 - |\beta|^2.
+\langle \vert X\vert \rangle = \langle \psi\vert X \vert \psi\rangle = |\alpha|^2 - |\beta|^2.
 \]
 !et
 However, we can only measure the qubits in the computational basis. Applying the rotation in eq. (ref{eq:auto8}) to our state gives
@@ -160,6 +223,9 @@ H \vert \psi\rangle = \alpha \vert 0\rangle - \beta \vert 1\rangle.
 \]
 !et
 
+!split
+===== Interpretations =====
+
 This tells us that we are able to estimate $|\alpha|^2$ and
 $|\beta|^2$ (and hence the expectation value of the Pauli $X$
 operator) by using the rotation in eq. (ref{eq:auto8}) and measure the
@@ -167,6 +233,8 @@ resulting state in the computational basis. We can show this for the
 Pauli $Z$ and Pauli $Y$ similarly.
 
 
+!split
+===== Reminder on rotations =====
 
 Note the following identity of the basis rotator
 !bt
@@ -174,7 +242,13 @@ Note the following identity of the basis rotator
 R^\dagger_\sigma Z R_\sigma = \sigma,
 \]
 !et
-which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$. With this, we see that the expectation value of an arbitrary
+which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$.
+
+
+!split
+===== Arbitrary Pauli gate =====
+
+With this, we see that the expectation value of an arbitrary
 Pauli-gate $\sigma$ in the state $\vert\psi\rangle$ can be expressed as a linear combination of probabilities
 !bt
 \begin{align}
@@ -189,7 +263,13 @@ E_{\psi}(\sigma)
 
 where $\vert \phi\rangle=\vert R_\sigma\phi\rangle$ and
 $P(\vert \phi\rangle\to\vert x\rangle$ is the probability that the state
-$\vert \phi\rangle$ collapses to the state $\vert x\rangle$ when measured. This can
+$\vert \phi\rangle$ collapses to the state $\vert x\rangle$ when measured.
+
+
+!split
+===== Arbitrary string of Pauli operators =====
+
+This can
 be extended to any arbitrary Pauli string: consider the string of
 Pauli operators $P=\bigotimes_{p\in Q}\sigma_p$ which acts
 non-trivially on the set of qubits $Q$ which is a subset of the total
@@ -208,7 +288,15 @@ E_{\psi}\left(P\right)
 \left(\bigotimes_{p \in Q}Z_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)
 \left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
-\\
+\end{align}
+!et
+
+!split
+===== Which gives us =====
+
+!bt
+\begin{align}
+E_{\psi}\left(P\right)
 &=
 \langle \phi\vert
 \left(\bigotimes_{p \in Q}Z_p\right)
@@ -235,21 +323,25 @@ E_{\psi}\left(P\right)
 \sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
 \end{align}
 !et
+where $\vert \phi\rangle=\vert \bigotimes_{p\in Q}R_{\sigma_p}\psi\rangle$.
 
-where $\vert \phi\rangle=\vert \bigotimes_{p\in
-Q}R_{\sigma_p}\psi\rangle$. Finally, because the expectation value is
+!split
+===== Final observables =====
+
+Finally, because the expectation value is
 linear
 !bt
-\begin{align}
+\[
 E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
-\end{align}
+\]
 !et
 one can estimate any observable that can be written as a linear combination of Pauli-string terms. 
 
+!split
 ===== Measurement =====
 
 To estimate the probability $P(\vert \phi\rangle\to \vert x\rangle)$ from the
-previous section, one prepares the state $\vert \phi\rangle$ on a quantum
+previous results, one prepares the state $\vert \phi\rangle$ on a quantum
 computer and measures it, and then repeats this process (prepare and
 measure) several times. The probability $P(\vert \phi\rangle\to \vert x\rangle)$ is
 estimated to be the number of times that one measures the bit-string
@@ -258,20 +350,24 @@ is
 
 
 !bt
-\begin{align}
+\[
 P(\vert \phi\rangle\to \vert x\rangle\rangle \approx \sum_{m=1}^M\frac{x_m}{M},
-\end{align}
+\]
 !et
 where $x_m=1$
 if the result of measurement is $x$ and  $0$ if the result of measurement is not $x$.
+
+
+!split
+===== "Law of large numbers":"https://en.wikipedia.org/wiki/Law_of_large_numbers" aka Bernoulli's theorem =====
 
 By the law of large numbers the approximation approaches equality as
 $M$ goes to infinity
 
 !bt
-\begin{align}
+\[
 P(\vert \phi\rangle\to \vert x\rangle) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
-\end{align}
+\]
 !et
 
 As we obviously do not have infinite time nor infinite quantum
@@ -282,11 +378,6 @@ estimation subroutine within VQE requires $\mathcal{O}(1/\epsilon^2)$
 samples from circuits with depth $\mathcal{O}(1)$.
 
 
-
-!bblock Lecture next week we continue  the discussion of the VQE and introduction of the Lipkin model
-o Discussion of the project
-o VQE examples and discussion of results
-!eblock
 
 
 !split
@@ -302,6 +393,10 @@ H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
 \end{bmatrix},
 \]
 !et
+
+!split
+===== Rewriting the Hamiltonian =====
+
 We  let $H = H_0 + H_I$, where
 !bt
 \[
@@ -329,6 +424,8 @@ and
 !et
 where we have defined the orthogonal computational one-qubit basis states $\vert 0\rangle$ and $\vert 1\rangle$.
 
+!split
+===== Using Pauli matrices =====
 
 We rewrite $H$ (and $H_0$ and $H_I$)  via Pauli matrices
 !bt
@@ -357,6 +454,10 @@ represent the non-interacting (or unperturbed) and fully interacting
 system, respectively.  The model is an eigenvalue problem with only
 two available states.
 
+
+!split
+===== Selecting parameters =====
+
 Here we set the parameters $E_1=0$,
 $E_2=4$, $V_{11}=-V_{22}=3$ and $V_{12}=V_{21}=0.2$.
 
@@ -371,7 +472,7 @@ value of the parameter $V_{12}$ represents the strength of the coupling
 between the two states.
 
 !split
-=====  Setting up the matrix =====
+=====  Setting up the matrix  =====
 
 !bc pycod
 from  matplotlib import pyplot as plt
@@ -432,6 +533,10 @@ We can express this mathematically through the following operations (see whitebo
 \]
 !et
 
+
+!split
+===== Possible ansatzes =====
+
 We can produce multiple ansatzes for the new state in terms of the
 angles $\theta$ and $\phi$.  With these ansatzes we can in turn
 calculate the expectation value of the above Hamiltonian, now
@@ -446,6 +551,10 @@ rewritten in terms of various Pauli matrices (and thereby gates), that is comput
 We can now set up a series of ansatzes for $\vert \psi \rangle$ as
 function of the angles $\theta$ and $\phi$ and find thereafter the
 variational minimum using for example a gradient descent method.
+
+
+!split
+===== More on rotation operators =====
 
 To do so, we need to remind ourselves about the mathematical expressions for
 the rotational matrices/operators.
@@ -464,6 +573,8 @@ R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma}_y.
 \]
 !et
 
+!split
+===== Code example =====
 
 !bc pycod
 # define the rotation matrices
@@ -529,6 +640,9 @@ states which we have, $\vert 0\rangle$ and $\vert 1\rangle$, we have
 to measure along the bases of the Pauli matrices and reconstruct the
 eigenvalues from these measurements.
 
+!split
+===== Using the Pauli $Z$ matrix =====
+
 From our earlier discussions we know that the Pauli $Z$ matrix has the above basis states as eigen states through
 
 !bt
@@ -544,6 +658,8 @@ and
 !et
 with eigenvalue $-1$.
 
+!split
+===== The Pauli $X$ matrix =====
 For the Pauli $X$ matrix on the other hand we have
 !bt
 \[
@@ -560,6 +676,9 @@ and
 with eigenvalues $1$ in both cases. The latter two equations tell us
 that the computational basis we have chosen, and in which we will
 prepare our states, is not an eigenbasis of the $\sigma_x$ matrix.
+
+!split
+===== Rewriting in terms of Pauli $Z$ matrices =====
 
 We will thus try to rewrite the Pauli $X$ matrix in terms of a Pauli $Z$ matrix. Fortunately this can be done using the Hadamard matrix twice, that is
 
@@ -585,7 +704,8 @@ S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
 !et
 
 
-
+!split
+===== Rewriting the Hamiltonian =====
 
 From here and on we will denote the Pauli matrices by $X$, $Y$ and $Z$ and we can write the expectation value of the Hamiltonian as
 !bt
@@ -612,8 +732,9 @@ For the final term we need just to add the action of the Hadamard matrix and we 
 ===== Plans for the week of February 26-March 1 =====
 
 !bblock 
-  o Reminder on basics of the VQE method
+  o Reminder on basics of the VQE method and how to perform measurements for the simpler one- and two-qubit Hamiltonians
   o Simulating efficiently Hamiltonians on quantum computers with the VQE method and gradient descent to optimize the state function ansatz
+  o Introducing the Lipkin model
   o "Reading suggestion, VQE review article":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
 !eblock
 
