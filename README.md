@@ -64,7 +64,9 @@
 
 ## February 19-23, 2024. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
-  - Quantum Fourier Transforms
+  - Discussion of the VQE algorithm and discussions of project 1
+  - Video of lecture at https://youtu.be/PW1mOn3E4eQ
+  - Whiteboard	notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary21.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  February 26-March 1, 2024. Algorithms for solving quantum mechanical problems.
