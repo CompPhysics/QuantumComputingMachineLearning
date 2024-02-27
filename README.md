@@ -70,9 +70,8 @@
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  February 26-March 1, 2024. Algorithms for solving quantum mechanical problems.
-  - Introduction of Hamiltonians to study, the Lipkin model
-  - Quantum Phase estimation algorithm
-  - VQE, Variational Quantum Eigensolver
+  - VQE, Variational Quantum Eigensolver and discussion of codes
+  - Simulations of  of Hamiltonians and introducing the Lipkin model 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
