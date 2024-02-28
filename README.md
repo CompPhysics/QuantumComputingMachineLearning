@@ -73,6 +73,7 @@
   - VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one-qubit Hamiltonian
   - Discussion of project 1
+  - Video of lecture at https://youtu.be/sTf-WuA4hV8
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
