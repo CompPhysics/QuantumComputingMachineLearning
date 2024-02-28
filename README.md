@@ -71,28 +71,28 @@
 
 ##  February 26-March 1, 2024. Algorithms for solving quantum mechanical problems.
   - VQE, Variational Quantum Eigensolver and discussion of codes
-  - Simulations of  of Hamiltonians and introducing the Lipkin model 
+  - Simulations of  of Hamiltonians, focus on the one-qubit Hamiltonian
+  - Discussion of project 1
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
 ##  March 4-8, 2024. Solving quantum mechanical problems
-  - Analyzing the solution of eigenvalue problems using the Lipkin model
+  - Introducing the final Hamiltonian for project 1, the Lipkin model
+  - Analyzing the solution of eigenvalue problems and the VQE using the Lipkin model
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
 ## March 11-15-24, 2024. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
-  - VQE and Qiskit
+  - Work on project 1
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 18-22, 2024. VQE 
-  - Solving eigenvalue problems with and without Qiskit.
-  - Reading recommendation Hundt, Quantum Computing for Programmers, chapter 6, in particular section 6.1
-  - See also VQE review article at https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub
+  - Summary of project 1
+  - Quantum Fourier transforms and preparing for new topics and project 2
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-## April 1-5, 2024, VQE 
-- Implementing VQE efficiently and studies of the Lipkin model
+## April 1-5, 2024, TBA
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
 ## April 8-16, 2024, TBA
