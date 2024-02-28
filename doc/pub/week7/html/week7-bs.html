@@ -40,6 +40,15 @@ doconce format html week7.do.txt --html_style=bootstrap --pygments_html_style=de
                2,
                None,
                'plans-for-the-week-of-february-26-march-1'),
+              ('Meet the VQE', 2, None, 'meet-the-vqe'),
+              ('Basic idea', 2, None, 'basic-idea'),
+              ('VQE and quantum circuits', 2, None, 'vqe-and-quantum-circuits'),
+              ('Varying paramters', 2, None, 'varying-paramters'),
+              ('Constructing trial states',
+               2,
+               None,
+               'constructing-trial-states'),
+              ('Hybrid opeations', 2, None, 'hybrid-opeations'),
               ('Reminder on technicalities',
                2,
                None,
@@ -61,6 +70,9 @@ doconce format html week7.do.txt --html_style=bootstrap --pygments_html_style=de
               ('Collecting data', 2, None, 'collecting-data'),
               ('The VQE algoritm', 2, None, 'the-vqe-algoritm'),
               ('VQE overview', 2, None, 'vqe-overview'),
+              ('Ansatzes', 2, None, 'ansatzes'),
+              ('Preparing the states', 2, None, 'preparing-the-states'),
+              ('Rotations used', 2, None, 'rotations-used'),
               ('VQE and efficient computations of gradients',
                2,
                None,
@@ -156,6 +168,12 @@ MathJax.Hub.Config({
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
         <ul class="dropdown-menu">
      <!-- navigation toc: --> <li><a href="#plans-for-the-week-of-february-26-march-1" style="font-size: 80%;">Plans for the week of February 26-March 1</a></li>
+     <!-- navigation toc: --> <li><a href="#meet-the-vqe" style="font-size: 80%;">Meet the VQE</a></li>
+     <!-- navigation toc: --> <li><a href="#basic-idea" style="font-size: 80%;">Basic idea</a></li>
+     <!-- navigation toc: --> <li><a href="#vqe-and-quantum-circuits" style="font-size: 80%;">VQE and quantum circuits</a></li>
+     <!-- navigation toc: --> <li><a href="#varying-paramters" style="font-size: 80%;">Varying paramters</a></li>
+     <!-- navigation toc: --> <li><a href="#constructing-trial-states" style="font-size: 80%;">Constructing trial states</a></li>
+     <!-- navigation toc: --> <li><a href="#hybrid-opeations" style="font-size: 80%;">Hybrid opeations</a></li>
      <!-- navigation toc: --> <li><a href="#reminder-on-technicalities" style="font-size: 80%;">Reminder on technicalities</a></li>
      <!-- navigation toc: --> <li><a href="#pauli-x-reminder" style="font-size: 80%;">Pauli \( X \) reminder</a></li>
      <!-- navigation toc: --> <li><a href="#rewriting-the-pauli-x-matrix" style="font-size: 80%;">Rewriting the Pauli \( X \) matrix</a></li>
@@ -168,6 +186,9 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#collecting-data" style="font-size: 80%;">Collecting data</a></li>
      <!-- navigation toc: --> <li><a href="#the-vqe-algoritm" style="font-size: 80%;">The VQE algoritm</a></li>
      <!-- navigation toc: --> <li><a href="#vqe-overview" style="font-size: 80%;">VQE overview</a></li>
+     <!-- navigation toc: --> <li><a href="#ansatzes" style="font-size: 80%;">Ansatzes</a></li>
+     <!-- navigation toc: --> <li><a href="#preparing-the-states" style="font-size: 80%;">Preparing the states</a></li>
+     <!-- navigation toc: --> <li><a href="#rotations-used" style="font-size: 80%;">Rotations used</a></li>
      <!-- navigation toc: --> <li><a href="#vqe-and-efficient-computations-of-gradients" style="font-size: 80%;">VQE and efficient computations of gradients</a></li>
      <!-- navigation toc: --> <li><a href="#symmetric-matrix" style="font-size: 80%;">Symmetric matrix</a></li>
      <!-- navigation toc: --> <li><a href="#non-interacting-solution" style="font-size: 80%;">Non-interacting solution</a></li>
@@ -244,6 +265,95 @@ MathJax.Hub.Config({
 </div>
 </div>
 
+
+<!-- !split -->
+<h2 id="meet-the-vqe" class="anchor">Meet the VQE </h2>
+
+<p>The Variational quantum eigensolver (VQE) is a hybrid quantum-classical
+algorithm that finds the smallest eigenvalue (and corresponding
+eigenvector) of a given Hamiltonian. One of the main applications of
+the algorithm is finding ground state energy of quantum mechanical systems.
+It has a
+big advantage over the quantum phase estimation (QPE) algorithms, that also can be used
+for finding the ground state energy of a molecule. The main advantage
+is that VQE uses much smaller circuit depths (or gates) than
+QPE, what is very important for NISQ (Noisy Intermediate-Scale
+Quantum) era quantum computation. In the NISQ era (now!) we are
+working with qubits that are very noisy because they are not isolated
+from the environment well enough. Thus, there is small and finite time
+to work with qubits until they will be <em>spoiled</em>, because of the
+environment, imperfect gates and etc. This restriction gives a big
+advantage to those algorithms (like VQE) that are using small depth
+circuits.
+</p>
+
+<!-- !split -->
+<h2 id="basic-idea" class="anchor">Basic idea </h2>
+
+<p>The idea of the VQE algorithm is as follows. We have a Hamiltonian that can be expressed by the sum of tensor products of Pauli operators (Pauli terms):</p>
+
+$$
+H = 0.4 \cdot IX + 0.6 \cdot IZ + 0.8 \cdot XY.
+$$
+
+<p>For a given \( \left| \psi \right\rangle \) we want to measure the expectation value of the Hamiltonian:</p>
+
+$$
+\left\langle H \right\rangle = \left\langle \psi \right| H \left| \psi \right\rangle = 0.4 \cdot \left\langle \psi \right| IX \left| \psi \right\rangle + 0.6 \cdot \left\langle \psi \right| IZ \left| \psi \right\rangle + 0.8 \cdot \left\langle \psi \right| XY \left| \psi \right\rangle.
+$$
+
+
+<!-- !split -->
+<h2 id="vqe-and-quantum-circuits" class="anchor">VQE and quantum circuits </h2>
+
+<p>How one can see the \( \left\langle H \right\rangle \) expectation value
+could be computed by adding the expectation values of its parts (Pauli
+terms). The algorithm does exactly that. It constructs a quantum
+circuit for each Pauli term and computes the expectation value of the
+corresponding Pauli term. Then, the algorithm sums all calculated
+expectation values of Pauli terms and obtains the expectation value of
+\( H \). In this algorithm, we will do this routine of estimating the
+expectation value of \( H \) over and over again for different trial
+wavefunctions (ansatz states) \( \left| \psi \right\rangle \).
+</p>
+
+<!-- !split -->
+<h2 id="varying-paramters" class="anchor">Varying paramters </h2>
+
+<p>It is known that the eigenvector \( \left| \psi_g \right\rangle \) that
+minimizes the expectation value \( \left\langle H \right\rangle \)
+corresponds to the eigenvector of \( H \) that has the smallest
+eigenvalue. So, basically we can try all possible trial wavefunctions
+$\left| \psi \right\rangle$s to find the \( \left| \psi_g \right\rangle \)
+that has the smallest expectation value. Here the question is how we
+create those trial states?
+</p>
+
+<!-- !split -->
+<h2 id="constructing-trial-states" class="anchor">Constructing trial states </h2>
+
+<p>In the algorithm, the trial states are
+created from a parametrized circuit. By changing the parameters one
+obtains different wavefunctions (ansatz states). If your circuit
+with its parameters is good enough you will have access to the
+subspace of the states that includes the \( \left| \psi_g
+\right\rangle \). Otherwise, if the circuit will not have a possibility
+to generate our desired \( \left| \psi_g \right\rangle \) it will be
+impossible to find the right solution.
+</p>
+
+<!-- !split -->
+<h2 id="hybrid-opeations" class="anchor">Hybrid opeations </h2>
+
+<p>The parameters of the state preparation circuit are controlled by a
+classical computer. At each step, the classical computer will change
+the parameters by using some optimization method in order to create an
+ansatz state that will have a smaller expectation value then previous
+ansatz states had. This way the classical computer and the quantum
+computer are working together to archive the goal of the algorithm (to
+find the ground state energy). That's way, VQE is a quantum-classical
+hybrid algorithm.
+</p>
 
 <!-- !split -->
 <h2 id="reminder-on-technicalities" class="anchor">Reminder on technicalities </h2>
@@ -441,6 +551,69 @@ parameters are found.
 <p><img src="figures/vqe.png" width="700" align="bottom"></p>
 </center>
 <br/><br/>
+
+<!-- !split -->
+<h2 id="ansatzes" class="anchor">Ansatzes </h2>
+
+<p>Every possible qubit wavefunction \( \left| \psi \right\rangle \) can be presented as a vector: </p>
+$$
+\left| \psi \right\rangle = \begin{pmatrix}
+\cos{\left( \theta/2 \right)}\\
+e^{i \varphi} \cdot \sin{\left( \theta/2 \right)}
+\end{pmatrix},
+$$
+
+<p>where the numbers \( \theta \) and \( \varphi \) define a point on the unit
+three-dimensional sphere, the so-called  Bloch sphere.
+</p>
+
+<p>For a random one qubit Hamiltonian, a <em>good</em> quantum state preparation
+circuit should be able to generate all possible states in the Bloch
+sphere.
+</p>
+
+<!-- !split -->
+<h2 id="preparing-the-states" class="anchor">Preparing the states </h2>
+
+<p>Before quantum state preparation, our qubit is in the \( \vert 0\rangle \) state.
+This corresponds to the vertical position of
+the vector in the Bloch sphere. In order to generate any possible
+\( \left| \psi \right\rangle \) we will apply \( R_x(t_1) \) and \( R_y(t_2) \)
+gates on the \( \left| 0 \right\rangle \) initial state
+</p>
+$$
+R_y(t_2)R_x(t_1) \left| 0 \right\rangle = \left| \psi\right\rangle.
+$$
+
+<p>The rotation \( R_x(t_1) \)
+corresponds to the rotation in the Bloch
+sphere around the \( x \)-axis and \( R_y(t_2) \) the rotation around the \( y \)-axis.
+</p>
+
+<!-- !split -->
+<h2 id="rotations-used" class="anchor">Rotations used </h2>
+
+<p>With these two rotations, one can have access to any point in
+the Bloch sphere. Here we show the matrix forms of \( R_x(t_1) \) and
+\( R_y(t_2) \) gates:
+</p>
+
+$$
+R_x(t_1) = \begin{pmatrix}
+cos(\frac{t_1}{2}) & -i \cdot sin(\frac{t_1}{2})\\
+-i \cdot sin(\frac{t_1}{2}) & cos(\frac{t_1}{2})
+\end{pmatrix},
+\qquad
+R_y(t_2) = \begin{pmatrix}
+cos(\frac{t_2}{2}) & -sin(\frac{t_2}{2})\\
+sin(\frac{t_2}{2}) & cos(\frac{t_2}{2})
+\end{pmatrix}.
+$$
+
+<p>These two gates with there parameters (\( t_1 \) and \( t_2 \)) will generate
+for us the trial (ansatz) wavefunctions. The two parameters will be in
+control of the Classical Computer and its optimization model.
+</p>
 
 <!-- !split -->
 <h2 id="vqe-and-efficient-computations-of-gradients" class="anchor">VQE and efficient computations of gradients  </h2>
