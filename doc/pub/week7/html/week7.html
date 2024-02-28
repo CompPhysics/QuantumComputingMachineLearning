@@ -148,6 +148,12 @@ div.toc p,a {
                2,
                None,
                'reminder-on-technicalities'),
+              ('Pauli $X$ reminder', 2, None, 'pauli-x-reminder'),
+              ('Rewriting the Pauli $X$ matrix',
+               2,
+               None,
+               'rewriting-the-pauli-x-matrix'),
+              ('The Pauli $Y$ matrix', 2, None, 'the-pauli-y-matrix'),
               ('Rotations', 2, None, 'rotations'),
               ('Rayleigh-Ritz variational principle',
                2,
@@ -214,22 +220,11 @@ div.toc p,a {
                2,
                None,
                'a-smarter-way-of-doing-this'),
-              ('Using properties of Pauli matrices',
-               2,
-               None,
-               'using-properties-of-pauli-matrices'),
-              ('Pauli $X$ reminder', 2, None, 'pauli-x-reminder'),
-              ('Rewriting the Pauli $X$ matrix',
-               2,
-               None,
-               'rewriting-the-pauli-x-matrix'),
-              ('The Pauli $Y$ matrix', 2, None, 'the-pauli-y-matrix'),
               ('The code for the one qubit case (code developed by August '
                'Gude, 2023)',
                2,
                None,
-               'the-code-for-the-one-qubit-case-code-developed-by-august-gude-2023'),
-              ('Switching to Qiskit', 2, None, 'switching-to-qiskit')]}
+               'the-code-for-the-one-qubit-case-code-developed-by-august-gude-2023')]}
 end of tocinfo -->
 
 <body>
@@ -288,32 +283,74 @@ MathJax.Hub.Config({
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="reminder-on-technicalities">Reminder on technicalities </h2>
-<p>The most important operators are the Pauli matrices, often referred to the \( X,Y \) and \( Z \) gates</p>
+
+<p>From our earlier discussions we know that the Pauli \( Z \) matrix has the
+above basis states as eigen states through
+</p>
+
 $$
-\begin{align}
-    X = \begin{bmatrix}
-        0 & 1 
-\label{_auto1}\\
-        1 & 0
-    \end{bmatrix}, Y = \begin{bmatrix}
-        0 & -i 
-\label{_auto2}\\
-        i & 0
-    \end{bmatrix}, Z = \begin{bmatrix}
-        1 & 0 
-\label{_auto3}\\
-        0 & -1
-    \end{bmatrix}.
-\label{_auto4}
-\end{align}
+Z\vert 0 \rangle = \boldsymbol{Z}\vert 0 \rangle=+1\vert 0 \rangle,
 $$
 
-<p>Through the tensor product we can compose operators acting on multiple qubits.</p>
+<p>and</p>
+$$
+Z\vert 1 \rangle = \boldsymbol{Z}\vert 1 \rangle=-1\vert 1 \rangle,
+$$
+
+<p>with eigenvalue \( -1 \).</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="pauli-x-reminder">Pauli \( X \) reminder </h2>
+
+<p>For the Pauli \( X \) matrix on the other hand we have</p>
+$$
+\boldsymbol{\sigma}_x\vert 0 \rangle = \boldsymbol{X}\vert 0 \rangle=+1\vert 1 \rangle,
+$$
+
+<p>and</p>
+$$
+\boldsymbol{\sigma}_x\vert 1 \rangle = \boldsymbol{X}\vert 1 \rangle=-1\vert 0 \rangle,
+$$
+
+<p>with eigenvalues \( 1 \) in both cases. The latter two equations tell us
+that the computational basis we have chosen, and in which we will
+prepare our states, is not an eigenbasis of the \( \sigma_x \) matrix.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="rewriting-the-pauli-x-matrix">Rewriting the Pauli \( X \) matrix </h2>
+
+<p>We rewrite the Pauli \( X \) matrix in terms of a Pauli
+\( Z \) matrixcusing the Hadamard matrix
+twice, that is
+</p>
+
+$$
+\boldsymbol{X}=\boldsymbol{\sigma}_x=\boldsymbol{H}\boldsymbol{Z}\boldsymbol{H}.
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="the-pauli-y-matrix">The Pauli \( Y \) matrix </h2>
+
+<p>The Pauli \( Y \) matrix can be written as</p>
+
+$$
+\boldsymbol{Y}=\boldsymbol{\sigma}_y=\boldsymbol{H}\boldsymbol{S}^{\dagger}\boldsymbol{Z}\boldsymbol{H}\boldsymbol{S},
+$$
+
+<p>where \( S \) is the phase matrix</p>
+$$
+S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
+$$
+
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="rotations">Rotations </h2>
 
-<p>Another important set of gates are the \textit{rotation operators} \( R_x, R_y \) and \( R_z \). By application to a qbit, we can reach any point on the Bloch sphere by usage of all three once. They are expressed as</p>
+<p>Another important set of gates are the <b>rotation operators</b> \( R_x, R_y \) and \( R_z \).
+By application to a qubit, we can reach any point on the Bloch sphere by usage of all three once. They are expressed as
+</p>
 $$
 \begin{align*}
     \begin{split}
@@ -340,7 +377,7 @@ $$
 
 <p>The Rayleigh-Ritz variational principle states that for a given
 Hamiltonian \( H \), the expectation value of a trial state or
-just ansatz \( \vert x \rangle \) puts a lower bound on the ground state
+just ansatz \( \vert \psi \rangle \) puts a lower bound on the ground state
 energy \( E_0 \).
 </p>
 
@@ -354,7 +391,7 @@ $$
 
 <p>The ansatz is typically chosen to be a parameterized superposition of
 basis states that can be varied to improve the energy estimate,
-\( \vert \psi\rangle equiv \vert psi(\boldsymbol{\theta})\rangle \) where
+\( \vert \psi\rangle \equiv \vert psi(\boldsymbol{\theta})\rangle \) where
 \( \boldsymbol{\theta} = (\theta_1, \ldots, \theta_M) \) are the \( M \)
 optimization parameters.
 </p>
@@ -485,7 +522,7 @@ $$
 $$
 \begin{equation}
        H_0\vert 0 \rangle =E_1\vert 0 \rangle,
-\label{_auto5}
+\label{_auto1}
 \end{equation}
 $$
 
@@ -493,7 +530,7 @@ $$
 $$
 \begin{equation}
        H_0\vert 1\rangle =E_2\vert 1\rangle,
-\label{_auto6}
+\label{_auto2}
 \end{equation}
 $$
 
@@ -1075,67 +1112,6 @@ eigenvalues from these measurements.
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="using-properties-of-pauli-matrices">Using properties of Pauli matrices </h2>
-
-<p>From our earlier discussions we know that the Pauli \( Z \) matrix has the above basis states as eigen states through</p>
-
-$$
-Z\vert 0 \rangle = \boldsymbol{Z}\vert 0 \rangle=+1\vert 0 \rangle,
-$$
-
-<p>and</p>
-$$
-Z\vert 1 \rangle = \boldsymbol{Z}\vert 1 \rangle=-1\vert 1 \rangle,
-$$
-
-<p>with eigenvalue \( -1 \).</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="pauli-x-reminder">Pauli \( X \) reminder </h2>
-
-<p>For the Pauli \( X \) matrix on the other hand we have</p>
-$$
-\boldsymbol{\sigma}_x\vert 0 \rangle = \boldsymbol{X}\vert 0 \rangle=+1\vert 1 \rangle,
-$$
-
-<p>and</p>
-$$
-\boldsymbol{\sigma}_x\vert 1 \rangle = \boldsymbol{X}\vert 1 \rangle=-1\vert 0 \rangle,
-$$
-
-<p>with eigenvalues \( 1 \) in both cases. The latter two equations tell us
-that the computational basis we have chosen, and in which we will
-prepare our states, is not an eigenbasis of the \( \sigma_x \) matrix.
-</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="rewriting-the-pauli-x-matrix">Rewriting the Pauli \( X \) matrix </h2>
-
-<p>We rewrite the Pauli \( X \) matrix in terms of a Pauli
-\( Z \) matrixcusing the Hadamard matrix
-twice, that is
-</p>
-
-$$
-\boldsymbol{X}=\boldsymbol{\sigma}_x=\boldsymbol{H}\boldsymbol{Z}\boldsymbol{H}.
-$$
-
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="the-pauli-y-matrix">The Pauli \( Y \) matrix </h2>
-<p>The Pauli \( Y \) matrix can be written as</p>
-
-$$
-\boldsymbol{Y}=\boldsymbol{\sigma}_y=\boldsymbol{H}\boldsymbol{S}^{\dagger}\boldsymbol{Z}\boldsymbol{H}\boldsymbol{S},
-$$
-
-<p>where \( S \) is the phase matrix</p>
-$$
-S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
-$$
-
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="the-code-for-the-one-qubit-case-code-developed-by-august-gude-2023">The code for the one qubit case (code developed by August Gude, 2023) </h2>
 
 <!-- code=python (!bc pycod) typeset with pygments style "default" -->
@@ -1379,29 +1355,6 @@ axs<span style="color: #666666">.</span>set_xlabel(<span style="color: #BA2121">
 axs<span style="color: #666666">.</span>set_ylabel(<span style="color: #BA2121">&#39;Energy&#39;</span>)
 plt<span style="color: #666666">.</span>legend()
 plt<span style="color: #666666">.</span>show()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<h2 id="switching-to-qiskit">Switching to Qiskit  </h2>
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;">
 </pre>
 </div>
       </div>
