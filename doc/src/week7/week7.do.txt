@@ -22,7 +22,12 @@ eigenvector) of a given Hamiltonian. One of the main applications of
 the algorithm is finding ground state energy of quantum mechanical systems.
 It has a
 big advantage over the quantum phase estimation (QPE) algorithms, that also can be used
-for finding the ground state energy of a molecule. The main advantage
+for finding the ground state energy of a molecule.
+
+
+!split
+===== Main advantage =====
+The main advantage
 is that VQE uses much smaller circuit depths (or gates) than
 QPE, what is very important for NISQ (Noisy Intermediate-Scale
 Quantum) era quantum computation. In the NISQ era (now!) we are
@@ -111,13 +116,13 @@ above basis states as eigen states through
 
 !bt
 \[
-Z\vert 0 \rangle = \bm{Z}\vert 0 \rangle=+1\vert 0 \rangle,
+\bm{Z}\vert 0 \rangle=+1\vert 0 \rangle,
 \]
 !et
 and
 !bt
 \[
-Z\vert 1 \rangle = \bm{Z}\vert 1 \rangle=-1\vert 1 \rangle,
+\bm{Z}\vert 1 \rangle=-1\vert 1 \rangle,
 \]
 !et
 with eigenvalue $-1$.
@@ -128,13 +133,13 @@ with eigenvalue $-1$.
 For the Pauli $X$ matrix on the other hand we have
 !bt
 \[
-\bm{\sigma}_x\vert 0 \rangle = \bm{X}\vert 0 \rangle=+1\vert 1 \rangle,
+\bm{X}\vert 0 \rangle=+1\vert 1 \rangle,
 \]
 !et
 and
 !bt
 \[
-\bm{\sigma}_x\vert 1 \rangle = \bm{X}\vert 1 \rangle=-1\vert 0 \rangle,
+\bm{X}\vert 1 \rangle=-1\vert 0 \rangle,
 \]
 !et
 
@@ -532,6 +537,202 @@ EigValues = EigValues[permute]
 print(EigValues[0])
 !ec
 
+
+!split
+===== Measurements and computational basis =====
+
+We have seen how to rewrite the above $2\times 2$ eiegenvalue problem in terms of a Hamiltonian defined by Pauli $\bm{X}$ and $\bm{Z}$ matrices,
+and the identity matrix $\bm{I}$. Let us make this Hamiltonian that involves only one qubit somewhat more general
+!bt
+\[
+\left\langle H \right\rangle = \left\langle \psi \right| H \left| \psi \right\rangle = a \cdot \left\langle \psi \right| I \left| \psi \right\rangle + b \cdot \left\langle \psi \right| Z \left| \psi \right\rangle + c \cdot \left\langle \psi \right| X \left| \psi \right\rangle + d \cdot \left\langle \psi \right| Y \left| \psi \right\rangle.
+\]
+!et
+
+!split
+===== Expectation value of $\bm{I}$ =====
+
+For the $I$ operator the expectation value is always unity:
+
+!bt
+\[
+\left\langle \psi \right| \bm{I} \left| \psi \right\rangle = \left\langle \psi \right|\left| \psi \right\rangle = 1.
+\]
+!et
+Its contribution to the overall expectaction value is thus given by the constant $a$.
+
+!split
+===== The Pauli matrices =====
+
+For rest of the Pauli operators, we should make the following remark:
+every one qubit quantum state $\left| \psi \right\rangle$ can be
+represented via different sets of basis vectors:
+
+!bt
+\[
+\left| \psi \right\rangle = c_1^z \cdot \left| 0 \right\rangle + c_2^z \cdot \left| 1 \right\rangle = c_1^x \cdot \left| + \right\rangle + c_2^x \cdot \left| - \right\rangle = c_1^y \cdot \left| +i \right\rangle + c_2^y \cdot \left| -i \right\rangle.
+\]
+!et
+
+!split
+===== In more detail =====
+We have
+!bt
+\begin{align*}
+&\text{Z eigenvectors} \qquad
+\left| 0 \right\rangle = \begin{pmatrix}
+1\\
+0
+\end{pmatrix},
+&&\left| 1 \right\rangle = \begin{pmatrix}
+0\\
+1
+\end{pmatrix},
+\end{align*}
+!et
+!split
+===== For the other two matrices =====
+
+!bt
+\begin{align*}
+&\text{X eigenvectors} \qquad
+\left| + \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
+1\\
+1
+\end{pmatrix},
+&&\left| - \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
+1\\
+-1
+\end{pmatrix},
+\\
+&\text{Y eigenvectors} \qquad
+\left| +i \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
+1\\
+i
+\end{pmatrix}, 
+&&\left| -i \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
+1\\
+-i
+\end{pmatrix}.
+\end{align*}
+!et
+
+!split
+===== Analyzing these equations =====
+
+
+The first presented eigenvectors for each Pauli has an eigenvalue equal to $+1$: $Z \left| 0 \right\rangle = +1\left| 0 \right\rangle$, $X \left| + \right\rangle = +1\left| + \right\rangle$, $Y \left| +i \right\rangle = +1\left| +i \right\rangle$. And the second presented eigenvectors for each Pauli has an eigenvalue equal to $-1$: $Z \left| 1 \right\rangle = -1\left| 1 \right\rangle$, $X \left| - \right\rangle = -1\left| - \right\rangle$, $Y \left| -i \right\rangle = -1\left| -i \right\rangle$. Now, let's calculate the expectation values of these Pauli operators: 
+
+!bt
+\begin{align*}
+\left\langle \psi \right| Z \left| \psi \right\rangle &= \left( {c_1^z}^* \cdot \left\langle 0 \right| + {c_2^z}^* \cdot \left\langle 1 \right| \right) Z \left( c_1^z \cdot \left| 0 \right\rangle + c_2^z \cdot \left| 1 \right\rangle \right) = {\left| c_1^z \right|}^2 - {\left| c_2^z \right|}^2,
+\\
+\left\langle \psi \right| X \left| \psi \right\rangle &= \left( {c_1^x}^* \cdot \left\langle + \right| + {c_2^x}^* \cdot \left\langle - \right| \right) X \left( c_1^x \cdot \left| + \right\rangle + c_2^x \cdot \left| - \right\rangle \right) = {\left| c_1^x \right|}^2 - {\left| c_2^x \right|}^2,
+\\
+\left\langle \psi \right| Y \left| \psi \right\rangle &= \left( {c_1^y}^* \cdot \left\langle +i \right| + {c_2^y}^* \cdot \left\langle -i \right| \right) Y \left( c_1^y \cdot \left| +i \right\rangle + c_2^y \cdot \left| -i \right\rangle \right) = {\left| c_1^y \right|}^2 - {\left| c_2^y \right|}^2.
+\end{align*}
+!et
+
+!split
+===== Using the inner products =====
+Here we have taken into account that the inner product of orthonormal vectors is 0 (e.g. $\left\langle 0 \right| \left| 1 \right\rangle = 0$, $\left\langle + \right| \left| - \right\rangle = 0$, $\left\langle +i \right| \left| -i \right\rangle = 0$).
+
+
+But what are these $\left| c \right|^2$s? The ${\left| c_1^z
+\right|}^2$ and ${\left| c_2^z \right|}^2$ are by definition the
+probabilities that after Z basis measurement (measuring is it $\left|
+0 \right\rangle$ or is it $\left| 1 \right\rangle$) the quantum state
+$\left| \psi \right\rangle$ will become $\left| 0 \right\rangle$ or
+$\left| 1 \right\rangle$ respectively.
+
+!split
+===== Rethinking the basis =====
+
+In order to find that value, we should run our program with our trial
+$\left| \psi \right\rangle$ wavefunction and do $Z$ measurement on the
+qubit $N$ times (it is  named *shots* in the code).
+
+The probability
+of finding the qubit after measurment in $\left| 0 \right\rangle$
+state will be equal to ${\left| c_1^z \right|}^2 = \frac{n_0}{N}$,
+where $n_0$ is the number of the $\left| 0 \right\rangle$ state
+measurments. Similarly, ${\left| c_2^z \right|}^2 = \frac{n_1}{N}$,
+where $n_1$ is the number of the $\left| 1 \right\rangle$ state
+measurments.
+
+Thus, the final expectation value will be $\left\langle Z\right\rangle = \frac{n_0 - n_1}{N}$.
+
+
+!split
+===== Measurements =====
+
+For $\left\langle X \right\rangle = \frac{n_+ - n_-}{N}$ and
+$\left\langle Y \right\rangle = \frac{n_{+i} - n_{-i}}{N}$ the
+expectation value estimation procedure stays the same.
+
+Here $n_+$ and $n_-$ are numbers of measurements in X basis that
+corresponds to $\left| + \right\rangle$ or $\left| - \right\rangle$
+outcomes respectively. And $n_{+i}$ and $n_{-i}$ are numbers of
+measurements in $Y$ basis that corresponds to $\left| +i
+\right\rangle$ or $\left| -i \right\rangle$ outcomes respectively.
+
+
+!split
+===== Computational basis =====
+
+The difficulty comes from the fact that one may have the possibility
+to measure only in the $Z$ basis. To solve this difficulty we still do
+a $Z$ basis measurement, but, before that, we apply specific operators
+to the $\left| \psi \right\rangle$ state.
+
+We try to apply such an
+operator that after measuring the probability of $\left| 0
+\right\rangle$ outcome will be equal to the probability of $\left| +
+\right\rangle$ $\left( \left| +i \right\rangle \right)$ outcome.
+
+And the probability of $\left| 1 \right\rangle$ outcome will be equal to
+the probability of $\left| - \right\rangle$ $\left( \left| -i \right\rangle \right)$ outcome.
+
+!split
+===== Unitary transformation of $\bm{X}$ =====
+
+If we use the Hadamard gate
+!bt
+\[
+\bm{H} = \frac{1}{\sqrt{2}}\begin{pmatrix}
+1 & 1\\
+1 & -1
+\end{pmatrix},
+\]
+!et
+we can rewrite
+!bt
+\[
+\bm{X}=\bm{H}\bm{Z}\bm{H}.
+\]
+!et
+
+The Hadamard gate/matrix is a unitary matrix with the property that $\bm{H}^2=\bm{I}$.
+
+!split
+===== Generalizing =====
+
+For the one-qubit Hamiltonian we have toyed with till now, we can thus
+rewrite in an easy way the Hamiltonian so that we can perform
+measurements using our favorite computational basis.
+
+The transformation of the Pauli $\bm{X}$ matrix can be generalized, as
+we will see in more detail next week for the two-qubit Hamiltonian and
+the Lipkin model, to the following expression
+!bt
+\[
+{\cal P}=\bm{U}^{\dagger}\bm{M}\bm{U},
+\]
+!et
+where ${\cal P}$ represents some combination of the Pauli matrices and
+the identity matrix, $\bm{U}$ is a unitary matrix and $\bm{M}$
+represents the gate/matrix which performs the measurements, often
+represented by a Pauli $\bm{Z}$ gate/matrix.
 
 
 !split
