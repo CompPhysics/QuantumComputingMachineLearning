@@ -9,8 +9,8 @@ doconce format html week7-reveal.html week7-reveal reveal --html_slide_theme=bei
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="March 6-10, 2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories">
-<title>March 6-10, 2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</title>
+<meta name="description" content="February 26-March, 2024: Quantum Computing, Quantum Machine Learning and Quantum Information Theories">
+<title>February 26-March, 2024: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</title>
 
 <!-- reveal.js: https://lab.hakim.se/reveal-js/ -->
 
@@ -168,7 +168,7 @@ MathJax.Hub.Config({
 <section>
 <!-- ------------------- main content ---------------------- -->
 <center>
-<h1 style="text-align: center;">March 6-10, 2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</h1>
+<h1 style="text-align: center;">February 26-March, 2024: Quantum Computing, Quantum Machine Learning and Quantum Information Theories</h1>
 </center>  <!-- document title -->
 
 <!-- author(s): Morten Hjorth-Jensen -->
@@ -184,281 +184,792 @@ MathJax.Hub.Config({
 </center>
 <br>
 <center>
-<h4>March 6-10</h4>
+<h4>February 28</h4>
 </center> <!-- date -->
 <br>
 
 
 <center style="font-size:80%">
-<!-- copyright --> &copy; 1999-2023, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license
+<!-- copyright --> &copy; 1999-2024, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license
 </center>
 </section>
 
 <section>
-<h2 id="algorithms-for-solving-quantum-mechanical-problems-quantum-gates-and-circuits">Algorithms for solving quantum mechanical problems, quantum gates and circuits </h2>
+<h2 id="plans-for-the-week-of-february-26-march-1">Plans for the week of February 26-March 1 </h2>
 
 <div class="alert alert-block alert-block alert-text-normal">
 <b></b>
 <p>
 <ol>
- <p><li> Introduction to <a href="https://qiskit.org/" target="_blank">Qiskit</a></li>
- <p><li> Defining one-, two- and three-qubit gates</li>
- <p><li> Setting up quantum circuits and simple algorithms</li>
+ <p><li> Reminder on basics of the VQE method and how to perform measurements for the simpler one- and two-qubit Hamiltonians</li>
+ <p><li> Simulating efficiently Hamiltonians on quantum computers with the VQE method and gradient descent to optimize the state function ansatz</li>
+ <p><li> Introducing the Lipkin model</li>
+ <p><li> <a href="https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub" target="_blank">Reading suggestion, VQE review article</a></li>
 </ol>
 </div>
+</section>
 
-
-<ul>
-<p><li> <a href="https://youtu.be/uf9xwcl2IEE" target="_blank">Video of lecture</a></li>
-</ul>
-<p>
-<h2 id="quantum-gates-reminder-from-last-week">Quantum gates, reminder from last week </h2>
-<h2 id="introduction-to-qiskit-https-qiskit-org">Introduction to <a href="https://qiskit.org/" target="_blank">Qiskit</a> </h2>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22">#!/usr/bin/env python</span>
-<span style="color: #228B22"># coding: utf-8</span>
-<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
-<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">qiskit</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qk</span>
-<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">scipy.optimize</span> <span style="color: #8B008B; font-weight: bold">import</span> minimize
-
-
-<span style="color: #228B22"># # Initialize registers and circuit</span>
-
-n_qubits = <span style="color: #B452CD">1</span> <span style="color: #228B22">#Number of qubits</span>
-n_cbits = <span style="color: #B452CD">1</span> <span style="color: #228B22">#Number of classical bits (the number of qubits you want to measure at the end of the circuit)</span>
-qreg = qk.QuantumRegister(n_qubits) <span style="color: #228B22">#Create a quantum register</span>
-creg = qk.ClassicalRegister(n_cbits) <span style="color: #228B22">#Create a classical register</span>
-circuit = qk.QuantumCircuit(qreg,creg) <span style="color: #228B22">#Create your quantum circuit</span>
-
-
-circuit.draw() <span style="color: #228B22">#Draw circuit. It is empty</span>
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>Thereafter we perform operations on qubit</p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">circuit.x(qreg[<span style="color: #B452CD">0</span>]) <span style="color: #228B22">#Applies a Pauli X gate to the first qubit in the quantum register</span>
-circuit.draw()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>and select  a qubit to measure and encode the results to a classical bit</p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22">#Measure the first qubit in the quantum register</span>
-<span style="color: #228B22">#and encode the results to the first qubit in the classical register</span>
-circuit.measure(qreg[<span style="color: #B452CD">0</span>],creg[<span style="color: #B452CD">0</span>])
-circuit.draw()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>Thereafter we execute the circuit</p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">backend = qk.Aer.get_backend(<span style="color: #CD5555">&#39;qasm_simulator&#39;</span>) 
-<span style="color: #228B22">#This is the device you want to use. It is an ideal simulation of a quantum device</span>
-
-
-job = backend.run(circuit,shots=<span style="color: #B452CD">1000</span>) <span style="color: #228B22">#Run the circuit 1000 times</span>
-result = job.result()
-counts = result.get_counts()
-<span style="color: #658b00">print</span>(counts)
-circuit.clear()
-circuit.draw()
-
-
-circuit.h(qreg[<span style="color: #B452CD">0</span>]) <span style="color: #228B22">#Apply a Hadamard gate to the first qubit of the quantum register</span>
-circuit.measure(qreg,creg)
-<span style="color: #658b00">print</span>(circuit.draw())
-
-
-job = backend.run(circuit,shots=<span style="color: #B452CD">1000</span>)
-result = job.result()
-counts = result.get_counts()
-<span style="color: #658b00">print</span>(counts)
-circuit.clear()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>Now we create a two-qubit circuit and set up a Bell state</p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">n_qubits = <span style="color: #B452CD">2</span>
-n_cbits = <span style="color: #B452CD">2</span>
-qreg = qk.QuantumRegister(n_qubits)
-creg = qk.ClassicalRegister(n_cbits)
-circuit = qk.QuantumCircuit(qreg,creg)
-circuit.draw()
-
-
-
-circuit.h(qreg[<span style="color: #B452CD">0</span>])
-circuit.cx(qreg[<span style="color: #B452CD">0</span>],qreg[<span style="color: #B452CD">1</span>]) 
-<span style="color: #228B22">#This is a controlled operation. Apply a Pauli X gate to the second qubit (qreg[1]) if the first qubit (qreg[0])</span>
-<span style="color: #228B22">#is in the |1&gt; state. Else do nothing</span>
-
-circuit.draw()
-
-circuit.measure(qreg,creg)
-circuit.draw()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">job = backend.run(circuit,shots=<span style="color: #B452CD">1000</span>)
-result = job.result()
-counts = result.get_counts()
-<span style="color: #658b00">print</span>(counts)
-circuit.clear()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>We apply a rotation to a qubit</p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">theta = np.pi/<span style="color: #B452CD">3</span>
-circuit.rx(theta, qreg[<span style="color: #B452CD">0</span>]) <span style="color: #228B22">#R_x(theta) rotation on the first qubit (qreg[0])</span>
-circuit.measure(qreg,creg)
-<span style="color: #658b00">print</span>(circuit.draw())
-job = backend.run(circuit,shots=<span style="color: #B452CD">1000</span>)
-result = job.result()
-counts = result.get_counts()
-circuit.clear()
-<span style="color: #658b00">print</span>(counts)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>Now we want to find the lowest eigenvalue of <p>&nbsp;<br>
-$$ H = c_1 Z_0 + c_2 Z_1 + c_3 X_0 Y_1 $$
-<p>&nbsp;<br> 
-We will use <p>&nbsp;<br>
-$$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi> $$
+<section>
+<h2 id="reminder-on-technicalities">Reminder on technicalities </h2>
+<p>The most important operators are the Pauli matrices, often referred to the \( X,Y \) and \( Z \) gates</p>
 <p>&nbsp;<br>
+$$
+\begin{align}
+    X = \begin{bmatrix}
+        0 & 1 
+\tag{1}\\
+        1 & 0
+    \end{bmatrix}, Y = \begin{bmatrix}
+        0 & -i 
+\tag{2}\\
+        i & 0
+    \end{bmatrix}, Z = \begin{bmatrix}
+        1 & 0 
+\tag{3}\\
+        0 & -1
+    \end{bmatrix}.
+\tag{4}
+\end{align}
+$$
+<p>&nbsp;<br>
+
+<p>Through the tensor product we can compose operators acting on multiple qubits.</p>
+</section>
+
+<section>
+<h2 id="rotations">Rotations </h2>
+
+<p>Another important set of gates are the \textit{rotation operators} \( R_x, R_y \) and \( R_z \). By application to a qbit, we can reach any point on the Bloch sphere by usage of all three once. They are expressed as</p>
+<p>&nbsp;<br>
+$$
+\begin{align*}
+    \begin{split}
+        R_x(\theta) &= \exp{-iX\theta/2} = \begin{bmatrix}
+            \cos(\theta/2) & -i\sin(\theta/2) \\
+            -i\sin(\theta/2) & \cos(\theta/2)
+        \end{bmatrix}, \\
+        R_y(\theta) &= \exp{-iY\theta/2} = \begin{bmatrix}
+            \cos(\theta/2) & -\sin(\theta/2) \\
+            -\sin(\theta/2) & \cos(\theta/2)
+        \end{bmatrix}, \\
+        R_z(\theta) &= \exp{-iZ\theta/2} = \begin{bmatrix}
+            \exp{-i\theta/2} & 0 \\
+            0 & \exp{i\theta/2}
+        \end{bmatrix}
+    \end{split}
+\end{align*}
+$$
+<p>&nbsp;<br>
+
+<p>with all having a period of \( 4\pi \).</p>
+</section>
+
+<section>
+<h2 id="rayleigh-ritz-variational-principle">Rayleigh-Ritz variational principle </h2>
+
+<p>The Rayleigh-Ritz variational principle states that for a given
+Hamiltonian \( H \), the expectation value of a trial state or
+just ansatz \( \vert x \rangle \) puts a lower bound on the ground state
+energy \( E_0 \).
+</p>
+
+<p>&nbsp;<br>
+$$
+    \frac{\langle \psi \vert H\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="the-ansatz">The ansatz </h2>
+
+<p>The ansatz is typically chosen to be a parameterized superposition of
+basis states that can be varied to improve the energy estimate,
+\( \vert \psi\rangle equiv \vert psi(\boldsymbol{\theta})\rangle \) where
+\( \boldsymbol{\theta} = (\theta_1, \ldots, \theta_M) \) are the \( M \)
+optimization parameters.
+</p>
+</section>
+
+<section>
+<h2 id="rotations-again">Rotations again </h2>
+
+<p>To have any flexibility in the
+ansatz \( \vert \psi\rangle \), we need to allow for parametrization. The most
+common approach is the so-called \( R_y \) ansatz, where we apply chained
+operations of rotating around the \( y \)-axis by \( \boldsymbol{\theta} =
+(\theta_1,\ldots,\theta_Q) \) of the Bloch sphere and CNOT operations.
+</p>
+
+<p>Applications of \( y \) rotations
+specifically ensures that our coefficients always remain real, which
+often is satisfactory when dealing with many-body systems. 
+</p>
+</section>
+
+<section>
+<h2 id="measurements-and-more">Measurements and more </h2>
+
+<p>After the ansatz has been constructed, the Hamiltonian must
+be applied. As discussed, the Hamiltonian must be written in terms of
+Pauli strings.
+</p>
+
+<p>To obtain the expectation value
+of the ground state energy, one can measure the expectation value of
+each Pauli string, 
+</p>
+<p>&nbsp;<br>
+$$
+\begin{align*}
+    E(\boldsymbol{\theta}) = \sum_i w_i\langle \psi(\boldsymbol{\theta})\vert P_i \vert \psi(\boldsymbol{\theta})\rangle \equiv \sum_i w_i f_i,
+\end{align*}
+$$
+<p>&nbsp;<br>
+
+<p>where \( f_i \) is the expectation value of the Pauli string \( i \).</p>
+</section>
+
+<section>
+<h2 id="collecting-data">Collecting data </h2>
+
+<p>This is estimated statistically by considering measurements in the
+appropriate basis of the operator in the Pauli string.
+</p>
+
+<p>With \( N_0 \) and \( N_1 \) as the number of \( 0 \) and \( 1 \) measurements respectively, we can estimate \( f_i \) since </p>
+<p>&nbsp;<br>
+$$
+\begin{align*}
+    f_i = \lim_{N \to \infty} \frac{N_0 - N_1}{N},
+\end{align*}
+$$
+<p>&nbsp;<br>
+
+<p>where \( N \) as the number of shots (measurements).</p>
+
+<p>Each Pauli string requires it own circuit, where multiple measurements
+of each string is required. Adding the results together with the
+corresponding weights, the ground state energy can be estimated. To
+optimize with respect to  \( \boldsymbol{\theta} \), a classical optimizer is often
+applied.
+</p>
+</section>
+
+<section>
+<h2 id="the-vqe-algoritm">The VQE algoritm </h2>
+
+<p>The VQE algorithm consists of several steps, partially done on a classical computer:</p>
+<ol>
+<p><li> A parameterized ansatz for the quantum state is implemented on a quantum computer.</li>
+<p><li> The ansatz is measured in a given measurement basis.</li>
+<p><li> Postprocessing on a classical computer converts the measurement outcomes to an expectation value.</li>
+<p><li> Classical minimization algorithms are used to up- date the variational parameters.</li>
+</ol>
+<p>
+<p>The updated variational parameters are then sent back to the quantum
+computer, and the process is repeated until the optimal variational
+parameters are found. 
+</p>
+</section>
+
+<section>
+<h2 id="vqe-overview">VQE overview </h2>
+
+<br/><br/>
+<center>
+<p><img src="figures/vqe.png" width="700" align="bottom"></p>
+</center>
+<br/><br/>
+</section>
+
+<section>
+<h2 id="vqe-and-efficient-computations-of-gradients">VQE and efficient computations of gradients  </h2>
+
+<p>We start with a reminder on the VQE method with applications to the
+one-qubit system discussed last week.
+</p>
+
+<p>Here we revisit the one-qubit system and develop a VQE
+code for studying this system using gradient descent as a method to
+optimize the variational ansatz. 
+</p>
+
+<p>We start with a simple \( 2\times 2 \) Hamiltonian matrix expressed in
+terms of Pauli \( X \) and \( Z \) matrices, as discussed in the project text.
+</p>
+</section>
+
+<section>
+<h2 id="symmetric-matrix">Symmetric matrix </h2>
+
+<p>We define a  symmetric matrix  \( H\in {\mathbb{R}}^{2\times 2} \)</p>
+<p>&nbsp;<br>
+$$
+H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
+\end{bmatrix},
+$$
+<p>&nbsp;<br>
+
+<p>We  let \( H = H_0 + H_I \), where</p>
+<p>&nbsp;<br>
+$$
+H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
+$$
+<p>&nbsp;<br>
+
+<p>is a diagonal matrix. Similarly,</p>
+<p>&nbsp;<br>
+$$
+H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
+$$
+<p>&nbsp;<br>
+
+<p>where \( V_{ij} \) represent various interaction matrix elements.</p>
+</section>
+
+<section>
+<h2 id="non-interacting-solution">Non-interacting solution </h2>
+
+<p>We can view \( H_0 \) as the non-interacting solution</p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
+\tag{5}
+\end{equation}
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\begin{equation}
+       H_0\vert 1\rangle =E_2\vert 1\rangle,
+\tag{6}
+\end{equation}
+$$
+<p>&nbsp;<br>
+
+<p>where we have defined the orthogonal computational one-qubit basis states \( \vert 0\rangle \) and \( \vert 1\rangle \).</p>
+</section>
+
+<section>
+<h2 id="rewriting-with-pauli-matrices">Rewriting with Pauli matrices </h2>
+<p>We rewrite \( H \) (and \( H_0 \) and \( H_I \))  via Pauli matrices</p>
+<p>&nbsp;<br>
+$$
+H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
+  + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+H_I = c \boldsymbol{I} +\omega_z\sigma_z + \omega_x\sigma_x,
+$$
+<p>&nbsp;<br>
+
+<p>with \( c = (V_{11}+V_{22})/2 \), \( \omega_z = (V_{11}-V_{22})/2 \) and \( \omega_x = V_{12}=V_{21} \).
+We let our Hamiltonian depend linearly on a strength parameter \( \lambda \)
+</p>
+
+<p>&nbsp;<br>
+$$
+H=H_0+\lambda H_\mathrm{I},
+$$
+<p>&nbsp;<br>
+
+<p>with \( \lambda \in [0,1] \), where the limits \( \lambda=0 \) and \( \lambda=1 \)
+represent the non-interacting (or unperturbed) and fully interacting
+system, respectively.
+</p>
+</section>
+
+<section>
+<h2 id="selecting-parameters">Selecting parameters </h2>
+
+<p>The model is an eigenvalue problem with only
+two available states.
+</p>
+
+<p>Here we set the parameters \( E_1=0 \),
+\( E_2=4 \), \( V_{11}=-V_{22}=3 \) and \( V_{12}=V_{21}=0.2 \).
+</p>
+
+<p>The non-interacting solutions represent our computational basis.
+Pertinent to our choice of parameters, is that at \( \lambda\geq 2/3 \),
+the lowest eigenstate is dominated by \( \vert 1\rangle \) while the upper
+is \( \vert 0 \rangle \). At \( \lambda=1 \) the \( \vert 0 \rangle \) mixing of
+the lowest eigenvalue is \( 1\% \) while for \( \lambda\leq 2/3 \) we have a
+\( \vert 0 \rangle \) component of more than \( 90\% \).  The character of the
+eigenvectors has therefore been interchanged when passing \( z=2/3 \). The
+value of the parameter \( V_{12} \) represents the strength of the coupling
+between the two states.
+</p>
+</section>
+
+<section>
+<h2 id="setting-up-the-matrix">Setting up the matrix </h2>
+<p>This part is best seen using the jupyter-notebook</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span>  <span style="color: #008b45; text-decoration: underline">matplotlib</span> <span style="color: #8B008B; font-weight: bold">import</span> pyplot <span style="color: #8B008B; font-weight: bold">as</span> plt
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+dim = <span style="color: #B452CD">2</span>
+Hamiltonian = np.zeros((dim,dim))
+e0 = <span style="color: #B452CD">0.0</span>
+e1 = <span style="color: #B452CD">4.0</span>
+Xnondiag = <span style="color: #B452CD">0.20</span>
+Xdiag = <span style="color: #B452CD">3.0</span>
+Eigenvalue = np.zeros(dim)
+<span style="color: #228B22"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>] = Xdiag+e0
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>] = Xnondiag
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>] = Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">1</span>] = e1-Xdiag
+<span style="color: #228B22"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
+X = np.array([[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>]])
+Y = np.array([[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>j],[<span style="color: #B452CD">1</span>j,<span style="color: #B452CD">0</span>]])
+Z = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>]])
+<span style="color: #228B22"># identity matrix</span>
+I = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]])
+
+epsilon = (e0+e1)*<span style="color: #B452CD">0.5</span>; omega = (e0-e1)*<span style="color: #B452CD">0.5</span>
+c = <span style="color: #B452CD">0.0</span>; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section>
+<h2 id="implementing-the-vqe">Implementing the VQE </h2>
+
+<p>For a one-qubit system we can reach every point on the Bloch sphere
+(as discussed earlier) with a rotation about the \( x \)-axis and the
+\( y \)-axis.
+</p>
+
+<p>We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state \( \vert \psi\rangle \)</p>
+<p>&nbsp;<br>
+$$
+\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="multiple-ansatzes">Multiple ansatzes </h2>
+
+<p>We can produce multiple ansatzes for the new state in terms of the
+angles \( \theta \) and \( \phi \).  With these ansatzes we can in turn
+calculate the expectation value of the above Hamiltonian, now
+rewritten in terms of various Pauli matrices (and thereby gates), that is compute
+</p>
+
+<p>&nbsp;<br>
+$$
+\langle \psi \vert (c+\mathcal{E})\boldsymbol{I} + (\Omega+\omega_z)\boldsymbol{\sigma}_z + \omega_x\boldsymbol{\sigma}_x\vert \psi \rangle.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="rotations-again">Rotations again </h2>
+
+<p>We can now set up a series of ansatzes for \( \vert \psi \rangle \) as
+function of the angles \( \theta \) and \( \phi \) and find thereafter the
+variational minimum using for example a gradient descent method.
+</p>
+
+<p>To do so, we need to remind ourselves about the mathematical expressions for
+the rotational matrices/operators.
+</p>
+
+<p>&nbsp;<br>
+$$
+R_x(\theta)=\cos{\frac{\theta}{2}}\boldsymbol{I}-\imath \sin{\frac{\theta}{2}}\boldsymbol{\sigma}_x,
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+
+<p>&nbsp;<br>
+$$
+R_y(\phi)=\cos{\frac{\phi}{2}}\boldsymbol{I}-\imath \sin{\frac{\phi}{2}}\boldsymbol{\sigma}_y.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="simple-code">Simple code </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define the rotation matrices</span>
+<span style="color: #228B22"># Define angles theta and phi</span>
+theta = <span style="color: #B452CD">0.5</span>*np.pi; phi = <span style="color: #B452CD">0.2</span>*np.pi
+Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+<span style="color: #228B22">#define basis states</span>
+basis0 = np.array([<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>])
+basis1 = np.array([<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
+
+NewBasis = Ry @ Rx @ basis0
+<span style="color: #658b00">print</span>(NewBasis)
+<span style="color: #228B22"># Compute the expectation value</span>
+<span style="color: #228B22">#Note hermitian conjugation</span>
+Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+<span style="color: #658b00">print</span>(Energy)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Not an impressive results. We set up now a loop over many angles \( \theta \) and \( \phi \) and compute the energies</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #228B22"># define a number of angles</span>
+n = <span style="color: #B452CD">20</span>
+angle = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">180</span>,<span style="color: #B452CD">10</span>)
+n = np.size(angle)
+ExpectationValues = np.zeros((n,n))
+<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (n):
+    theta = np.pi*angle[i]/<span style="color: #B452CD">180.0</span>
+    Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+    <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (n):
+        phi = np.pi*angle[j]/<span style="color: #B452CD">180.0</span>
+        Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+        NewBasis = Ry @ Rx @ basis0
+        Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+        Edifference=<span style="color: #658b00">abs</span>(np.real(EigValues[<span style="color: #B452CD">0</span>]-Energy))
+        ExpectationValues[i,j]=Edifference
+
+<span style="color: #658b00">print</span>(np.min(ExpectationValues))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Clearly, this is not the best way of proceeding. Rather, here we
+could try to find the optimal values for the parameters \( \theta \) and
+\( \phi \) through computation of their respective gradients and thereby
+find the minimum as function of the optimal angles \( \hat{\theta} \) and
+\( \hat{\phi} \).
+</p>
+
+<p>Let us now implement a classical gradient descent algorithm to the computation of the energies. 
+We will follow closely  <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" target="_blank"><tt>https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331</tt></a> in order to calculate gradients of the Hamiltonian.
+</p>
+</section>
+
+<section>
+<h2 id="gradient-descent-and-calculations-of-gradients">Gradient descent and calculations of gradients </h2>
+
+<p>In order to optimize the VQE ansatz, we need to compute derivatives
+with respect to the variational parameters.  Here we develop first a
+simpler approach tailored to the one-qubit case. For this particular
+case, we have defined an ansatz in terms of the Pauli rotation
+matrices.
+</p>
+</section>
+
+<section>
+<h2 id="setting-up-gradients">Setting up gradients </h2>
+
+<p>These define an arbitrary one-qubit state on the Bloch
+sphere through the expression
+</p>
+
+<p>&nbsp;<br>
+$$
+\vert\psi\rangle = \vert \psi(\theta,\phi)\rangle =R_y(\phi)R_x(\theta)\vert 0 \rangle.
+$$
+<p>&nbsp;<br>
+
+<p>Each of these rotation matrices can be written in a more general form as</p>
+<p>&nbsp;<br>
+$$
+R_{i}(\gamma)=\exp{-(\imath\frac{\gamma}{2}\sigma_i)}=\cos{(\frac{\gamma}{2})}\boldsymbol{I}-\imath\sin{(\frac{\gamma}{2})}\boldsymbol{\sigma}_i,
+$$
+<p>&nbsp;<br>
+
+<p>where \( \sigma_i \) is one of the Pauli matrices \( \sigma_{x,y,z} \). </p>
+</section>
+
+<section>
+<h2 id="derivatives">Derivatives </h2>
+
+<p>It is easy to see that the derivative with respect to \( \gamma \) is</p>
+<p>&nbsp;<br>
+$$
+\frac{\partial R_{i}(\gamma)}{\partial \gamma}=-\frac{\gamma}{2}\boldsymbol{\sigma}_i R_{i}(\gamma).
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="derivatives-of-the-expectation-value-of-the-hamiltonian">Derivatives of the expectation value of the Hamiltonian </h2>
+
+<p>We can now calculate the derivative of the expectation value of the
+Hamiltonian in terms of the angles \( \theta \) and \( \phi \). We have two
+derivatives 
+</p>
+<p>&nbsp;<br>
+$$
+\frac{\partial}{\partial \theta}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \theta}\left[\langle\boldsymbol{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_x\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c},
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \phi}\left[\langle\boldsymbol{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="two-addtional-expectation-values">Two addtional expectation values </h2>
+
+<p>This means that we have to calculate two additional expectation values
+in addition to the expectation value of the Hamiltonian itself.  If we
+stay with an ansatz for the single qubit states given by the above
+rotation operators, we can, following for example <a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" target="_blank">the article by
+Maria Schuld et
+al</a>,
+show that the derivative of the expectation value of the Hamiltonian
+can be written as (we focus only on a given angle \( \phi \))
+</p>
+
+<p>&nbsp;<br>
+$$
+\frac{\partial}{\partial \phi}\left[\langle\boldsymbol{H}(\phi)\rangle\right]=\frac{1}{2}\left[\langle\boldsymbol{H}(\phi+\frac{\pi}{2})\rangle-\langle\boldsymbol{H}(\phi-\frac{\pi}{2})\rangle\right].
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="rotations-again-and-again">Rotations again and again </h2>
+<p>To see this, consider again the definition of the rotation operators.
+We can write these operators as
+</p>
+
+<p>&nbsp;<br>
+$$
+R_i(\phi)=\exp{-\imath(\phi \boldsymbol{\sigma}_i)},
+$$
+<p>&nbsp;<br>
+
+<p>with \( \boldsymbol{sigma}_i \), with \( \boldsymbol{\sigma}_i \) being any of the Pauli
+matrices \( X \), \( Y \) and \( Z \). The latter can be generalized to other
+unitary matrices as well.
+The derivative with respect to \( \phi \) gives
+</p>
+<p>&nbsp;<br>
+$$
+\frac{\partial R_i(\phi)}{\partial \phi}=-\frac{\imath}{2} \boldsymbol{\sigma}_i\exp{-\imath(\phi \boldsymbol{\sigma}_i)}=-\frac{\imath}{2} \boldsymbol{\sigma} R_i(\phi).
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="bloch-sphere-math">Bloch sphere math </h2>
+
+<p>Our ansatz for a general one-qubit state on the Bloch sphere contains the product of a rotation around the \( x \)-axis and the \( y \)-axis. In the derivation here we focus only on one angle however. Our ansatz is then given by</p>
+
+<p>&nbsp;<br>
+$$
+\vert \psi \rangle = R_i(\phi)\vert 0 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>and the expectation value of our Hamiltonian is</p>
+
+<p>&nbsp;<br>
+$$
+\langle \psi \vert \hat{H}\vert \psi \rangle = \langle 0 \vert R_i(\phi)^{\dagger} \hat{H}R_i(\phi)\vert 0\rangle. 
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="derivatives">Derivatives </h2>
+
+<p>Our derivative with respect to the angle \( \phi \) has a similar structure, that is</p>
+<p>&nbsp;<br>
+$$
+\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \boldsymbol{H}\vert \psi(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \boldsymbol{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="rewriting">Rewriting </h2>
+
+<p>In order to rewrite the equation of the derivative,
+the following relation is useful
+</p>
+<p>&nbsp;<br>
+$$
+\langle \psi \vert \hat{A}^{\dagger}\hat{B}\hat{C}\vert \psi \rangle = \frac{1}{2}\left[
+\langle \psi \vert (\hat{A}+\hat{C})^{\dagger}\hat{B}(\boldsymbol{A}+\hat{C})\vert \psi \rangle-\langle \psi \vert (\hat{A}-\hat{C})^{\dagger}\hat{B}(\boldsymbol{A}-\hat{C})\vert \psi \rangle\right],
+$$
+<p>&nbsp;<br>
+
+<p>where \( \hat{A} \), \( \hat{B} \) and \( \hat{C} \) are arbitrary hermitian
+operators.
+</p>
+</section>
+
+<section>
+<h2 id="final-manipulations">Final manipulations </h2>
+
+<p>If we identify these operators as \( \hat{A}=\boldsymbol{I} \), with
+\( \boldsymbol{I} \) being the unit operator, \( \hat{B}=\hat{H} \) our Hamiltonian,
+and \( \hat{C}=-\imath \boldsymbol{\sigma}_i/2 \), we obtain the following
+expression for the expectation value of the derivative (excluding the hermitian conjugate)
+</p>
+
+<p>&nbsp;<br>
+$$
+\langle \psi \vert \boldsymbol{I}^{\dagger}\hat{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_i\vert \psi \rangle = \frac{1}{2}\left[
+\langle \psi \vert (\boldsymbol{I}-\frac{\imath}{2} \boldsymbol{\sigma}_i)^{\dagger}\hat{H}(\boldsymbol{I}-\frac{\imath}{2} \boldsymbol{\sigma}_i)\vert \psi \rangle-\langle \psi \vert (\boldsymbol{I}+\frac{\imath}{2} \boldsymbol{\sigma}_i)^{\dagger}\hat{H}(\boldsymbol{I}+\frac{\imath}{2} \boldsymbol{\sigma}_i)\vert \psi \rangle\right].
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="the-expressions-to-implement">The expressions to implement </h2>
+
+<p>If we then use that the rotation matrices can be rewritten as</p>
+<p>&nbsp;<br>
+$$
+R_{i}(\phi)=\exp{-(\imath\frac{\phi}{2}\sigma_i)}=\cos{(\frac{\phi}{2})}\boldsymbol{I}-\imath\sin{(\frac{\phi}{2})}\boldsymbol{\sigma}_i,
+$$
+<p>&nbsp;<br>
+
+<p>we see that if we set the angle to \( \phi=\pi/2 \), we have </p>
+<p>&nbsp;<br>
+$$
+R_{i}(\frac{\pi}{2})=\cos{(\frac{\pi}{4})}\boldsymbol{I}-\imath\sin{(\frac{\pi}{4})}\boldsymbol{\sigma}_i=\frac{1}{\sqrt{2}}\left(\boldsymbol{I}-\frac{\imath}{2} \boldsymbol{\sigma}_i\right).
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="final-expression">Final expression </h2>
+
+<p>This means that we can write</p>
+<p>&nbsp;<br>
+$$
+\langle \psi \vert \boldsymbol{I}^{\dagger}\hat{H}(-\frac{\imath}{2}\boldsymbol{\sigma}_i\vert \psi \rangle = \frac{1}{2}\left[
+\langle \psi \vert R_i(\frac{\pi}{2})^{\dagger}\hat{H}R_i(\frac{\pi}{2})\vert \psi \rangle-\langle \psi \vert R_i(-\frac{\pi}{2})^{\dagger}\hat{H}R_i(-\frac{\pi}{2})^{\dagger}\vert \psi \rangle\right]=\frac{1}{2}(\langle\hat{H}(\phi+\frac{\pi}{2})\rangle-\langle\hat{H}(\phi-\frac{\pi}{2})\rangle).
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="basics-of-gradient-descent-and-stochastic-gradient-descent">Basics of gradient descent and stochastic gradient descent </h2>
+
+<p>In order to implement the above equations, we need to remind the
+reader about basic elements of various optimization approaches. Our
+main focus here will be various gradient descent approaches and quasi-Newton methods like Broyden's algorithm and variations thereof.
+</p>
+
+<p>This material is covered by the lectures from <a href="https://github.com/CompPhysics/ComputationalPhysics2/blob/gh-pages/doc/pub/week6/ipynb/week6.ipynb" target="_blank">FYS4411 on gradient optimization</a></p>
+</section>
+
+<section>
+<h2 id="computing-quantum-gradients">Computing quantum gradients  </h2>
+
+<p>Let us implement
+efficient implementations of gradient methods to the derivatives of
+the Hamiltonian expectation values.
 </p>
 
 
@@ -468,29 +979,75 @@ $$<\psi|H|\psi> = c_1<\psi|Z_0|\psi> + c_2<\psi|Z_1|\psi> + c_3<\psi|X_0Y_1|\psi
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">I = np.eye(<span style="color: #B452CD">2</span>)
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span>  <span style="color: #008b45; text-decoration: underline">matplotlib</span> <span style="color: #8B008B; font-weight: bold">import</span> pyplot <span style="color: #8B008B; font-weight: bold">as</span> plt
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">scipy.optimize</span> <span style="color: #8B008B; font-weight: bold">import</span> minimize
+dim = <span style="color: #B452CD">2</span>
+Hamiltonian = np.zeros((dim,dim))
+e0 = <span style="color: #B452CD">0.0</span>
+e1 = <span style="color: #B452CD">4.0</span>
+Xnondiag = <span style="color: #B452CD">0.20</span>
+Xdiag = <span style="color: #B452CD">3.0</span>
+Eigenvalue = np.zeros(dim)
+<span style="color: #228B22"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>] = Xdiag+e0
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>] = Xnondiag
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>] = Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">1</span>] = e1-Xdiag
+<span style="color: #228B22"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+
+<span style="color: #228B22"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
 X = np.array([[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>]])
 Y = np.array([[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>j],[<span style="color: #B452CD">1</span>j,<span style="color: #B452CD">0</span>]])
 Z = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>]])
-H = np.kron(Z,I) + np.kron(I,Z) + np.kron(X,Y)
-eigvals,eigvecs = np.linalg.eigh(H)
-<span style="color: #658b00">print</span>(eigvals[<span style="color: #B452CD">0</span>])
+<span style="color: #228B22"># identity matrix</span>
+I = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]])
+
+epsilon = (e0+e1)*<span style="color: #B452CD">0.5</span>; omega = (e0-e1)*<span style="color: #B452CD">0.5</span>
+c = <span style="color: #B452CD">0.0</span>; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+
+<span style="color: #228B22"># define the rotation matrices</span>
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Rx</span>(theta):
+    <span style="color: #8B008B; font-weight: bold">return</span> np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Ry</span>(phi):
+    <span style="color: #8B008B; font-weight: bold">return</span> np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+
+<span style="color: #228B22">#define basis states</span>
+basis0 = np.array([<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>])
+basis1 = np.array([<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
+
+<span style="color: #228B22"># Computing the expectation value of the energy </span>
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Energy</span>(theta,phi):
+    Basis = Ry(phi) @ Rx(theta) @ basis0
+    energy = Basis.conj().T @ Hamiltonian @ Basis
+    <span style="color: #8B008B; font-weight: bold">return</span> energy
 
 
-
-c_1 = <span style="color: #B452CD">1</span>
-c_2 = <span style="color: #B452CD">1</span>
-c_3 = <span style="color: #B452CD">1</span>
-
-h_1 = [c_1,[<span style="color: #B452CD">0</span>],[<span style="color: #CD5555">&#39;z&#39;</span>]]
-h_2 = [c_2,[<span style="color: #B452CD">1</span>],[<span style="color: #CD5555">&#39;z&#39;</span>]]
-h_3 = [c_3,[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #CD5555">&#39;x&#39;</span>,<span style="color: #CD5555">&#39;y&#39;</span>]]
-H = [h_1,h_2,h_3]
-H
-
-
-
-H[<span style="color: #B452CD">0</span>]
+<span style="color: #228B22"># Set up iteration using gradient descent method</span>
+eta = <span style="color: #B452CD">0.1</span>
+Niterations = <span style="color: #B452CD">100</span>
+<span style="color: #228B22"># Random angles using uniform distribution</span>
+theta = <span style="color: #B452CD">2</span>*np.pi*np.random.rand()
+phi = <span style="color: #B452CD">2</span>*np.pi*np.random.rand()
+pi2 = <span style="color: #B452CD">0.5</span>*np.pi
+<span style="color: #8B008B; font-weight: bold">for</span> <span style="color: #658b00">iter</span> <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(Niterations):
+    thetagradient = <span style="color: #B452CD">0.5</span>*(Energy(theta+pi2,phi)-Energy(theta-pi2,phi))
+    phigradient = <span style="color: #B452CD">0.5</span>*(Energy(theta,phi+pi2)-Energy(theta,phi-pi2))
+    theta -= eta*thetagradient
+    phi -= eta*phigradient
+<span style="color: #658b00">print</span>(Energy(theta,phi))
 </pre>
 </div>
       </div>
@@ -505,9 +1062,106 @@ H[<span style="color: #B452CD">0</span>]
     </div>
   </div>
 </div>
+</section>
 
-<p>We create the ansatz</p>
+<section>
+<h2 id="a-smarter-way-of-doing-this">A smarter way of doing this </h2>
 
+<p>The above approach means that we are setting up several matrix-matrix
+and matrix-vector multiplications. Although straight forward it is not
+the most efficient way of doing this, in particular in case the
+matrices become large (and sparse). But there are some more important
+issues.
+</p>
+
+<p>In a physical realization of these systems we cannot just multiply the
+state with the Hamiltonian. When performing a measurement we can only
+measure in one particular direction. For the computational basis
+states which we have, \( \vert 0\rangle \) and \( \vert 1\rangle \), we have
+to measure along the bases of the Pauli matrices and reconstruct the
+eigenvalues from these measurements.
+</p>
+</section>
+
+<section>
+<h2 id="using-properties-of-pauli-matrices">Using properties of Pauli matrices </h2>
+
+<p>From our earlier discussions we know that the Pauli \( Z \) matrix has the above basis states as eigen states through</p>
+
+<p>&nbsp;<br>
+$$
+Z\vert 0 \rangle = \boldsymbol{Z}\vert 0 \rangle=+1\vert 0 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+Z\vert 1 \rangle = \boldsymbol{Z}\vert 1 \rangle=-1\vert 1 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>with eigenvalue \( -1 \).</p>
+</section>
+
+<section>
+<h2 id="pauli-x-reminder">Pauli \( X \) reminder </h2>
+
+<p>For the Pauli \( X \) matrix on the other hand we have</p>
+<p>&nbsp;<br>
+$$
+\boldsymbol{\sigma}_x\vert 0 \rangle = \boldsymbol{X}\vert 0 \rangle=+1\vert 1 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\boldsymbol{\sigma}_x\vert 1 \rangle = \boldsymbol{X}\vert 1 \rangle=-1\vert 0 \rangle,
+$$
+<p>&nbsp;<br>
+
+<p>with eigenvalues \( 1 \) in both cases. The latter two equations tell us
+that the computational basis we have chosen, and in which we will
+prepare our states, is not an eigenbasis of the \( \sigma_x \) matrix.
+</p>
+</section>
+
+<section>
+<h2 id="rewriting-the-pauli-x-matrix">Rewriting the Pauli \( X \) matrix </h2>
+
+<p>We rewrite the Pauli \( X \) matrix in terms of a Pauli
+\( Z \) matrixcusing the Hadamard matrix
+twice, that is
+</p>
+
+<p>&nbsp;<br>
+$$
+\boldsymbol{X}=\boldsymbol{\sigma}_x=\boldsymbol{H}\boldsymbol{Z}\boldsymbol{H}.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="the-pauli-y-matrix">The Pauli \( Y \) matrix </h2>
+<p>The Pauli \( Y \) matrix can be written as</p>
+
+<p>&nbsp;<br>
+$$
+\boldsymbol{Y}=\boldsymbol{\sigma}_y=\boldsymbol{H}\boldsymbol{S}^{\dagger}\boldsymbol{Z}\boldsymbol{H}\boldsymbol{S},
+$$
+<p>&nbsp;<br>
+
+<p>where \( S \) is the phase matrix</p>
+<p>&nbsp;<br>
+$$
+S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="the-code-for-the-one-qubit-case-code-developed-by-august-gude-2023">The code for the one qubit case (code developed by August Gude, 2023) </h2>
 
 <!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
 <div class="cell border-box-sizing code_cell rendered">
@@ -515,69 +1169,51 @@ H[<span style="color: #B452CD">0</span>]
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">ansatz</span>(theta,n_qubits):
-    qreg = qk.QuantumRegister(n_qubits)
-    circuit = qk.QuantumCircuit(qreg)
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
-        circuit.ry(theta[i],qreg[i])
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits-<span style="color: #B452CD">1</span>):
-        circuit.cx(qreg[i],qreg[i+<span style="color: #B452CD">1</span>])
-    <span style="color: #8B008B; font-weight: bold">return</span>(circuit)
-qreg = qk.QuantumRegister(n_qubits)
-circuit = qk.QuantumCircuit(qreg)
-circuit.h(qreg[:<span style="color: #B452CD">2</span>])
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&#39;Before ansatz&#39;</span>)
-<span style="color: #658b00">print</span>(circuit.draw())
-theta = np.random.randn(<span style="color: #B452CD">2</span>)
-n_qubits = <span style="color: #B452CD">2</span>
-circuit = circuit.compose(ansatz(theta,n_qubits))
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&#39;After ansatz&#39;</span>)
-circuit.draw()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">matplotlib.pyplot</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">plt</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">seaborn</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">sns</span>; sns.set_theme(font_scale=<span style="color: #B452CD">1.5</span>)
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">tqdm</span> <span style="color: #8B008B; font-weight: bold">import</span> tqdm
 
-<p>Now we change measurement basis</p>
+sigma_x = np.array([[<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>], [<span style="color: #B452CD">1</span>, <span style="color: #B452CD">0</span>]])
+sigma_y = np.array([[<span style="color: #B452CD">0</span>, -<span style="color: #B452CD">1</span>j], [<span style="color: #B452CD">1</span>j, <span style="color: #B452CD">0</span>]])
+sigma_z = np.array([[<span style="color: #B452CD">1</span>, <span style="color: #B452CD">0</span>], [<span style="color: #B452CD">0</span>, -<span style="color: #B452CD">1</span>]])
+I = np.eye(<span style="color: #B452CD">2</span>)
 
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">Hamiltonian</span>(lmb):
+    E1 = <span style="color: #B452CD">0</span>
+    E2 = <span style="color: #B452CD">4</span>
+    V11 = <span style="color: #B452CD">3</span>
+    V22 = -<span style="color: #B452CD">3</span>
+    V12 = <span style="color: #B452CD">0.2</span>
+    V21 = <span style="color: #B452CD">0.2</span>
 
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">basis_change</span>(h_i,n_qubits):
-    qreg = qk.QuantumRegister(n_qubits)
-    circuit = qk.QuantumCircuit(qreg)
+    eps = (E1 + E2) / <span style="color: #B452CD">2</span>
+    omega = (E1 - E2) / <span style="color: #B452CD">2</span>
+    c = (V11 + V22) / <span style="color: #B452CD">2</span>
+    omega_z = (V11 - V22) / <span style="color: #B452CD">2</span>
+    omega_x = V12
+
+    H0 = eps * I + omega * sigma_z
+    H1 = c * I + omega_z * sigma_z + omega_x * sigma_x
+    <span style="color: #8B008B; font-weight: bold">return</span> H0 + lmb * H1
     
-    <span style="color: #8B008B; font-weight: bold">for</span> qubit,operator <span style="color: #8B008B">in</span> <span style="color: #658b00">zip</span>(h_i[<span style="color: #B452CD">1</span>],h_i[<span style="color: #B452CD">2</span>]):
-        <span style="color: #8B008B; font-weight: bold">if</span> operator == <span style="color: #CD5555">&#39;x&#39;</span>:
-            circuit.h(qreg[qubit])
-        <span style="color: #8B008B; font-weight: bold">if</span> operator == <span style="color: #CD5555">&#39;y&#39;</span>:
-            circuit.sdg(qreg[qubit])
-            circuit.h(qreg[qubit])
-    <span style="color: #8B008B; font-weight: bold">return</span>(circuit)
-n_qubits = <span style="color: #B452CD">2</span>
-qreg = qk.QuantumRegister(n_qubits)
-circuit = qk.QuantumCircuit(qreg)
-theta = np.random.randn(n_qubits)
-circuit = circuit.compose(ansatz(theta,n_qubits))
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&#39;Ansatz circuit&#39;</span>)
-circuit.draw()
-circuit = circuit.compose(basis_change(H[<span style="color: #B452CD">2</span>],n_qubits))
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&#39;After basis transformation:&#39;</span>)
-<span style="color: #658b00">print</span>(circuit.draw())
+lmbvalues_ana = np.arange(<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>, <span style="color: #B452CD">0.01</span>)
+eigvals_ana = np.zeros((<span style="color: #658b00">len</span>(lmbvalues_ana), <span style="color: #B452CD">2</span>))
+<span style="color: #8B008B; font-weight: bold">for</span> index, lmb <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(lmbvalues_ana):
+    H = Hamiltonian(lmb)
+    eigen, eigvecs = np.linalg.eig(H)
+    permute = eigen.argsort()
+    eigvals_ana[index] = eigen[permute]
+    eigvecs = eigvecs[:,permute]
+
+
+fig, axs = plt.subplots(<span style="color: #B452CD">1</span>, <span style="color: #B452CD">1</span>, figsize=(<span style="color: #B452CD">10</span>, <span style="color: #B452CD">10</span>))
+<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">2</span>):
+    axs.plot(lmbvalues_ana, eigvals_ana[:,i], label=<span style="color: #CD5555">f&#39;$E_{</span>i+<span style="color: #B452CD">1</span><span style="color: #CD5555">}$&#39;</span>)
+axs.set_xlabel(<span style="color: #CD5555">r&#39;$\lambda$&#39;</span>)
+axs.set_ylabel(<span style="color: #CD5555">&#39;Energy&#39;</span>)
+axs.legend()
+plt.show()
 </pre>
 </div>
       </div>
@@ -593,7 +1229,7 @@ circuit = circuit.compose(basis_change(H[<span style="color: #B452CD">2</span>],
   </div>
 </div>
 
-<p>Get energy for given rotational parameters \( theta \)</p>
+<p>This was the standard eigenvalue problem. Let us now switch to our own implementation of the VQE.</p>
 
 
 <!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
@@ -602,39 +1238,172 @@ circuit = circuit.compose(basis_change(H[<span style="color: #B452CD">2</span>],
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">get_energy</span>(theta):
-    n_qubits = <span style="color: #B452CD">2</span>
-    qreg = qk.QuantumRegister(n_qubits)
-    circuit = qk.QuantumCircuit(qreg)
-    circuit = circuit.compose(ansatz(theta,n_qubits))
-    circuit_list = []
-    <span style="color: #8B008B; font-weight: bold">for</span> idx,h_i <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(H):
-        basis_change_circuit = basis_change(h_i,n_qubits)
-        new_circuit = circuit.compose(basis_change_circuit)
-        creg = qk.ClassicalRegister(<span style="color: #658b00">len</span>(h_i[<span style="color: #B452CD">1</span>]))
-        new_circuit.add_register(creg)
-        new_circuit.measure(qreg[h_i[<span style="color: #B452CD">1</span>]],creg)
-        circuit_list.append(new_circuit)
-    shots = <span style="color: #B452CD">10000</span>
-    job = backend.run(circuit_list,shots=shots)
-    E = np.zeros(<span style="color: #658b00">len</span>(circuit_list))
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(circuit_list)):
-        result = job.result()
-        counts = result.get_counts(i)
-        <span style="color: #8B008B; font-weight: bold">for</span> key,value <span style="color: #8B008B">in</span> counts.items():
-            e = <span style="color: #B452CD">1</span>
-            <span style="color: #8B008B; font-weight: bold">for</span> bit <span style="color: #8B008B">in</span> key:
-                <span style="color: #8B008B; font-weight: bold">if</span> bit == <span style="color: #CD5555">&#39;0&#39;</span>:
-                    e *= <span style="color: #B452CD">1</span>
-                <span style="color: #8B008B; font-weight: bold">if</span> bit == <span style="color: #CD5555">&#39;1&#39;</span>:
-                    e *= -<span style="color: #B452CD">1</span>
-            E[i] += e*value
-        E[i] *= H[i][<span style="color: #B452CD">0</span>]
-    E /= shots
-    <span style="color: #8B008B; font-weight: bold">return</span>(np.sum(E))
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">src.qc</span> <span style="color: #8B008B; font-weight: bold">import</span> *
 
-theta = np.random.randn(<span style="color: #B452CD">2</span>)
-get_energy(theta)
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">prepare_state</span>(theta, phi, target = <span style="color: #8B008B; font-weight: bold">None</span>):
+    I = np.eye(<span style="color: #B452CD">2</span>)
+    sigma_x = np.array([[<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>], [<span style="color: #B452CD">1</span>, <span style="color: #B452CD">0</span>]])
+    sigma_y = np.array([[<span style="color: #B452CD">0</span>, -<span style="color: #B452CD">1</span>j], [<span style="color: #B452CD">1</span>j, <span style="color: #B452CD">0</span>]])
+    state = np.array([<span style="color: #B452CD">1</span>, <span style="color: #B452CD">0</span>])
+    Rx = np.cos(theta/<span style="color: #B452CD">2</span>) * I - <span style="color: #B452CD">1</span>j * np.sin(theta/<span style="color: #B452CD">2</span>) * sigma_x
+    Ry = np.cos(phi/<span style="color: #B452CD">2</span>) * I - <span style="color: #B452CD">1</span>j * np.sin(phi/<span style="color: #B452CD">2</span>) * sigma_y
+    state = Ry @ Rx @ state
+    <span style="color: #8B008B; font-weight: bold">if</span> target <span style="color: #8B008B">is</span> <span style="color: #8B008B">not</span> <span style="color: #8B008B; font-weight: bold">None</span>:
+        state = target
+    <span style="color: #8B008B; font-weight: bold">return</span> state
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">get_energy</span>(angles, lmb, number_shots, target = <span style="color: #8B008B; font-weight: bold">None</span>):
+    theta, phi = angles[<span style="color: #B452CD">0</span>], angles[<span style="color: #B452CD">1</span>]
+    <span style="color: #228B22"># print(f&#39;Theta = {theta}, Phi = {phi}&#39;)</span>
+    E1 = <span style="color: #B452CD">0</span>; E2 = <span style="color: #B452CD">4</span>; V11 = <span style="color: #B452CD">3</span>; V22 = -<span style="color: #B452CD">3</span>; V12 = <span style="color: #B452CD">0.2</span>; V21 = <span style="color: #B452CD">0.2</span>
+
+    eps = (E1 + E2) / <span style="color: #B452CD">2</span>; omega = (E1 - E2) / <span style="color: #B452CD">2</span>; c = (V11 + V22) / <span style="color: #B452CD">2</span>; omega_z = (V11 - V22) / <span style="color: #B452CD">2</span>; omega_x = V12
+
+    init_state = prepare_state(theta, phi, target)
+    qubit = One_qubit()
+    qubit.set_state(init_state)
+    measure_z = qubit.measure(number_shots)
+
+    qubit.set_state(init_state)
+    qubit.apply_hadamard()
+    measure_x = qubit.measure(number_shots)
+    
+    <span style="color: #228B22"># expected value of Z = (number of 0 measurements - number of 1 measurements)/ number of shots</span>
+    <span style="color: #228B22"># number of 1 measurements = sum(measure_z)</span>
+    exp_val_z = (omega + lmb*omega_z)*(number_shots - <span style="color: #B452CD">2</span>*np.sum(measure_z)) / number_shots
+    exp_val_x = lmb*omega_x*(number_shots - <span style="color: #B452CD">2</span>*np.sum(measure_x)) / number_shots
+    exp_val_i = (eps + c*lmb) 
+    exp_val = (exp_val_z + exp_val_x + exp_val_i)
+    <span style="color: #8B008B; font-weight: bold">return</span> exp_val 
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">minimize_energy</span>(lmb, number_shots, angles_0, learning_rate, max_epochs):
+    <span style="color: #228B22"># angles = np.random.uniform(low = 0, high = np.pi, size = 2)</span>
+    angles = angles_0 <span style="color: #228B22">#lmb*np.array([np.pi, np.pi])</span>
+    epoch = <span style="color: #B452CD">0</span>
+    delta_energy = <span style="color: #B452CD">1</span>
+    energy = get_energy(angles, lmb, number_shots)
+    <span style="color: #8B008B; font-weight: bold">while</span> (epoch &lt; max_epochs) <span style="color: #8B008B">and</span> (delta_energy &gt; <span style="color: #B452CD">1e-4</span>):
+        grad = np.zeros_like(angles)
+        <span style="color: #8B008B; font-weight: bold">for</span> idx <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(angles.shape[<span style="color: #B452CD">0</span>]):
+            angles_temp = angles.copy()
+            angles_temp[idx] += np.pi/<span style="color: #B452CD">2</span> 
+            E_plus = get_energy(angles_temp, lmb, number_shots)
+            angles_temp[idx] -= np.pi 
+            E_minus = get_energy(angles_temp, lmb, number_shots)
+            grad[idx] = (E_plus - E_minus)/<span style="color: #B452CD">2</span> 
+        angles -= learning_rate*grad 
+        new_energy = get_energy(angles, lmb, number_shots)
+        delta_energy = np.abs(new_energy - energy)
+        energy = new_energy
+        epoch += <span style="color: #B452CD">1</span>
+    <span style="color: #8B008B; font-weight: bold">return</span> angles, epoch, (epoch &lt; max_epochs), energy, delta_energy
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">number_shots_search = <span style="color: #B452CD">10_000</span>
+number_shots = <span style="color: #B452CD">10_000</span>
+learning_rate = <span style="color: #B452CD">0.3</span>
+max_epochs = <span style="color: #B452CD">400</span>
+lmbvalues = np.linspace(<span style="color: #B452CD">0.0</span>, <span style="color: #B452CD">1.0</span>, <span style="color: #B452CD">30</span>)
+min_energy = np.zeros(<span style="color: #658b00">len</span>(lmbvalues))
+epochs = np.zeros(<span style="color: #658b00">len</span>(lmbvalues))
+<span style="color: #8B008B; font-weight: bold">for</span> index, lmb <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(tqdm(lmbvalues)):
+    memory = <span style="color: #B452CD">0</span>
+    angles_0 = np.random.uniform(low = <span style="color: #B452CD">0</span>, high = np.pi, size = <span style="color: #B452CD">2</span>)
+    angles, epochs[index], converged, energy, delta_energy = minimize_energy(lmb, number_shots_search, angles_0, learning_rate, max_epochs)
+    <span style="color: #8B008B; font-weight: bold">if</span> epochs[index] &lt; (epochs[index-<span style="color: #B452CD">1</span>] - <span style="color: #B452CD">5</span>):
+        angles_0 = np.random.uniform(low = <span style="color: #B452CD">0</span>, high = np.pi, size = <span style="color: #B452CD">2</span>)
+        angles, epochs[index], converged, energy, delta_energy = minimize_energy(lmb, number_shots_search, angles_0, learning_rate, max_epochs)
+    min_energy[index] = get_energy(angles, lmb, number_shots)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">scipy.optimize</span> <span style="color: #8B008B; font-weight: bold">import</span> minimize
+number_shots = <span style="color: #B452CD">10_000</span>
+lmbvalues_scipy = np.linspace(<span style="color: #B452CD">0.0</span>, <span style="color: #B452CD">1.0</span>, <span style="color: #B452CD">50</span>)
+min_energy_scipy = np.zeros(<span style="color: #658b00">len</span>(lmbvalues_scipy))
+<span style="color: #8B008B; font-weight: bold">for</span> index, lmb <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(tqdm(lmbvalues_scipy)):
+    angles_start = np.random.uniform(low = <span style="color: #B452CD">0</span>, high = np.pi, size = <span style="color: #B452CD">4</span>)
+    res = minimize(get_energy, angles_start, args = (lmb, number_shots), method = <span style="color: #CD5555">&#39;Powell&#39;</span>, options = {<span style="color: #CD5555">&#39;maxiter&#39;</span>: <span style="color: #B452CD">1000</span>}, tol = <span style="color: #B452CD">1e-5</span>)
+    min_energy_scipy[index] = res.fun
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="font-size: 80%; line-height: 125%;">fig, axs = plt.subplots(<span style="color: #B452CD">1</span>, <span style="color: #B452CD">1</span>, figsize=(<span style="color: #B452CD">10</span>, <span style="color: #B452CD">10</span>))
+<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">2</span>):
+    axs.plot(lmbvalues_ana, eigvals_ana[:,i], label=<span style="color: #CD5555">f&#39;$E_{</span>i+<span style="color: #B452CD">1</span><span style="color: #CD5555">}$&#39;</span>, color = <span style="color: #CD5555">&#39;#4c72b0&#39;</span>)
+axs.scatter(lmbvalues, min_energy, label = <span style="color: #CD5555">&#39;VQE eigenvalues&#39;</span>, color = <span style="color: #CD5555">&#39;#dd8452&#39;</span>)
+axs.scatter(lmbvalues_scipy, min_energy_scipy, label = <span style="color: #CD5555">&#39;VQE Scipy&#39;</span>, color = <span style="color: #CD5555">&#39;#55a868&#39;</span>)
+axs.set_xlabel(<span style="color: #CD5555">r&#39;$\lambda$&#39;</span>)
+axs.set_ylabel(<span style="color: #CD5555">&#39;Energy&#39;</span>)
+plt.legend()
+plt.show()
 </pre>
 </div>
       </div>
@@ -649,9 +1418,7 @@ get_energy(theta)
     </div>
   </div>
 </div>
-
-<p>Minimize energy with Scipy</p>
-
+<h2 id="switching-to-qiskit">Switching to Qiskit  </h2>
 
 <!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
 <div class="cell border-box-sizing code_cell rendered">
@@ -659,90 +1426,7 @@ get_energy(theta)
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">theta = np.random.randn(<span style="color: #B452CD">2</span>)
-res = minimize(get_energy, theta, method=<span style="color: #CD5555">&#39;Powell&#39;</span>,tol=<span style="color: #B452CD">1e-12</span>)
-get_energy(res.x)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>We define  a more flexible ansatz</p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;"><span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">ansatz</span>(theta,n_qubits):
-    qreg = qk.QuantumRegister(n_qubits)
-    circuit = qk.QuantumCircuit(qreg)
-    idx = <span style="color: #B452CD">0</span>
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
-        circuit.ry(theta[idx],qreg[i])
-        idx += <span style="color: #B452CD">1</span>
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits-<span style="color: #B452CD">1</span>):
-        circuit.cx(qreg[i],qreg[i+<span style="color: #B452CD">1</span>])
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
-        circuit.rx(theta[idx],qreg[i])
-        idx += <span style="color: #B452CD">1</span>
-    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits-<span style="color: #B452CD">1</span>):
-        circuit.cx(qreg[i],qreg[i+<span style="color: #B452CD">1</span>])
-    <span style="color: #8B008B; font-weight: bold">return</span>(circuit)
-theta = np.random.randn(<span style="color: #B452CD">4</span>)
-res = minimize(get_energy, theta, method=<span style="color: #CD5555">&#39;Powell&#39;</span>,tol=<span style="color: #B452CD">1e-16</span>)
-get_energy(res.x)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>Minimize energy with gradient descent <p>&nbsp;<br>
-$$ \frac{\partial E (\theta_1,\dots,\theta_i,\dots,\theta_p)}{\partial \theta_i} = \frac{E(\theta_1,\dots,\theta_i + \pi/2,\dots, \theta_p) - E(\theta_1,\dots, \theta_i - \pi/2,\dots, \theta_p}{2} $$
-<p>&nbsp;<br></p>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="font-size: 80%; line-height: 125%;">epochs = <span style="color: #B452CD">200</span>
-theta = np.random.randn(<span style="color: #B452CD">4</span>)
-<span style="color: #8B008B; font-weight: bold">for</span> epoch <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(epochs):
-    <span style="color: #658b00">print</span>(epoch,get_energy(theta))
-    grad = np.zeros_like(theta)
-    <span style="color: #8B008B; font-weight: bold">for</span> idx <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(theta.shape[<span style="color: #B452CD">0</span>]):
-        theta_temp = theta.copy()
-        theta_temp[idx] += np.pi/<span style="color: #B452CD">2</span>
-        E_plus = get_energy(theta_temp)
-        theta_temp[idx] -= np.pi
-        E_minus = get_energy(theta_temp)
-        grad[idx] = (E_plus - E_minus)/<span style="color: #B452CD">2</span>
-    theta -= <span style="color: #B452CD">0.1</span>*grad
+  <pre style="font-size: 80%; line-height: 125%;">
 </pre>
 </div>
       </div>
