@@ -1,0 +1,368 @@
+TITLE: March 4-8,2024: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo & Department of Physics and Astronomy and Facility for Rare Isotope Beams, Michigan State University
+DATE: March 6
+
+
+!split
+===== Mean field solution, Hartree-Fock theory  and comparison with exact diagonalization =====
+
+
+We define now a new basis set (single-particle basis set) given by $\vert \phi_{\alpha,p}\rangle$
+given by a unitary transformation of the original single-particle basis states $\vert u_{\sigma,p}\rangle$
+!bt
+\begin{equation}
+\vert \phi_{\alpha,p}\rangle = \sum_{\sigma = \pm 1} C_{\alpha \sigma} \vert u_{\sigma,p}\rangle.
+\end{equation}
+!et
+
+The new states can thus be written as a linear combination of the
+previous basis states (with fixed $p$). This means that for the new
+basis states,the qyantum numbers $p$ stay the same since they are just
+linear combinations of the previous basis states with the same value
+of $p$.
+Since the previous basis is defined to be orthogonal, it is
+straightforward to demonstrate that the new basis has to preserve the
+orthogonality since we performing a unitary transformation. We will not show that here.
+
+A new Slater determinant can be constructed and is given by
+!bt
+\begin{equation}
+\vert\Psi\rangle = \prod_{p=1}^4 b_{\alpha,p}^\dagger \vert 0\rangle.
+\end{equation}
+!et
+We can express the new creation (and annihilation operators) $b_{\alpha,p}^\dagger$ using $a_{p,\sigma}^\dagger$
+!bt
+\[ \vert\phi_{\alpha,p}\rangle = b_{\alpha,p}^\dagger \vert 0\rangle =
+\sum_{\sigma = \pm 1} C_{\alpha \sigma} \vert u_{\sigma,p}\rangle =
+\sum_{\sigma = \pm 1} C_{\alpha \sigma} a_{p\sigma}^\dagger \vert 0\rangle =
+\left( C_{\alpha +} a_{p+}^\dagger + C_{\alpha -} a_{p-}^\dagger \right) \vert 0\rangle. \]
+!et
+
+With these expressions we can calculate the expecation value of the energy
+$E = \langle \Psi\vert H \vert \Psi\rangle$, resulting in
+
+!bt
+\[ E = \langle \Psi\vert H \vert \Psi\rangle = \langle \Psi\vert ( H_0 + H_1 +H_2) \vert\Psi\rangle,
+\]
+!et
+which reads
+!bt
+\[
+E =  2\varepsilon |C_{\alpha +}|^2 - 2 \varepsilon |C_{\alpha -}|^2 + \\
+\frac{1}{2} V \left( 12(C_{\alpha +}^*)^2 (C_{\alpha -})^2 + 12(C_{\alpha +})^2 (C_{\alpha -}^*)^2 \right) +
+12W|C_{\alpha +}|^2 |C_{\alpha -}|^2 .
+\]
+!et
+If we assume that the coefficients $C_{\alpha \pm}$ are real,  meaning that  $C_{\alpha \pm}^* = C_{\alpha \pm}$, we obtain
+!bt
+\[
+E = = 2\varepsilon C_{\alpha +}^2 - 2 \varepsilon C_{\alpha -}^2 +
+12 (V+W) C_{\alpha +}^2 C_{\alpha -}^2 .
+\]
+!et
+
+We can now minimize the above equation with respect to the coefficients $C$ and assuming they are real, we obtain (using that
+$C_{\alpha +}$ and $C_{\alpha -}$ are real and that the states  $\vert \phi_{\alpha,p}\rangle$ are normalized,
+that $C_{\alpha +}^2 + C_{\alpha -}^2 = 1$. Inserted in the expression for the energy we obtain then
+
+!bt
+\[ E = 2\varepsilon (1 - C_{\alpha -}^2) - 2 \varepsilon C_{\alpha -}^2 +
+12 (V+W) (1 - C_{\alpha -}^2) C_{\alpha -}^2 . \]
+!et
+We simplify the above expression by defnining $x = C_{\alpha -}^2$ og minimize the energy with respect to $x$
+!bt
+\begin{align*}
+\frac{\partial E}{\partial x} &= \frac{\partial}{\partial x} \left[ 2\varepsilon (1 - x) - 2 \varepsilon x +
+12 (V+W) (1 - x) x \right] \\
+&= -2\varepsilon -2\varepsilon + 12(V+W)(-x + 1-x) \\
+&= -4 \varepsilon + 12(V+W)(1-2x).
+\end{align*}
+!et
+
+We obtain the minima by setting
+!bt
+\[ \frac{\partial E}{\partial x} = 0 \quad \Rightarrow \quad -4 \varepsilon + 12(V+W)(1-2x) = 0, \]
+!et
+which results in
+!bt
+\[ -\varepsilon + 3(V+W) = 6(V+W)x \quad \Rightarrow \quad x = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}. \]
+!et
+This gives the following values for $C_{\alpha +}$ and $C_{\alpha -}$:
+!bt
+\begin{equation}
+C_{\alpha -}^2 = \frac{1}{2} - \frac{\varepsilon}{6(V+W)}, \quad C_{\alpha +}^2 = 1 - C_{\alpha -}^2 = \frac{1}{2} + \frac{\varepsilon}{6(V+W)}.
+\end{equation}
+!et
+
+If we have found the energy minimum, this leads to the following stability criteria
+!bt
+\begin{equation}
+(V+W) \leq \frac{\varepsilon}{3} \leq - (V+W),
+\end{equation}
+!et
+where we have assumed that  $V + W < 0$. If we have $V + W > 0$, we simply get reversed inequality signs.
+
+
+
+!split
+===== Variational Quantum Eigensolver =====
+
+One initial algorithm to estimate the eigenenergies of a quantum
+Hamiltonian was "quantum phase estimation":"https://qiskit.org/textbook/ch-algorithms/quantum-phase-estimation.html". In it, one
+encodes the eigenenergies, one binary bit at a time (up to $n$ bits),
+into the complex phases of the quantum states of the Hilbert space for
+$n$ qubits. It does this by applying powers of controlled unitary
+evolution operators to a quantum state that can be expanded in terms
+of the Hamiltonian's eigenvectors of interest. The eigenenergies are
+encoded into the complex phases in such a way that taking the inverse
+quantum Fourier transformation (see material on Quantum Fourier Transforms) of the states into which the
+eigen-energies are encoded results in a measurement probability
+distribution that has peaks around the bit strings that represent a
+binary fraction which corresponds to the eigen-energies of the quantum
+state acted upon by the controlled unitary operators. While quantum
+phase estimation (QPE) is provably efficient, non-hybrid, and
+non-variational, the number of qubits and length of circuits required
+is too great for our NISQ era quantum computers. Thus, QPE is only
+efficiently applicable to large, fault-tolerant quantum computers that
+likely won't exist in the near, but the far future.
+
+Therefore, a different algorithm for finding the eigen-energies of a
+quantum Hamiltonian was put forth in 2014 called the variational
+quantum eigensolver, commonly referred to as "VQE":"https://arxiv.org/abs/2111.05176". The
+algorithm is hybrid, meaning that it requires the use of both a
+quantum computer and a classical computer. It is also variational,
+meaning that it relies, ultimately, on solving an optimization problem
+by varying parameters and thus is not as deterministic as QPE. The
+variational quantum eigensolver is based on the variational principle:
+The expectation value of a Hamiltonian $H$ in a state
+$|\psi(\theta)\rangle$ parameterized by a set of angles $\theta$, is
+always greater than or equal to the minimum eigen-energy $E_0$. To see
+this, let $|n\rangle$ be the eigenstates of $H$, that is
+
+!bt
+\begin{align}
+H|n\rangle=E_n|n\rangle.
+\end{align}
+!et
+
+We can then expand our state $|\psi(\theta)\rangle$ in terms of said eigenstates
+
+!bt
+\[
+|\psi(\theta)\rangle=\sum_nc_n|n\rangle,
+\]
+!et
+and plug this into the expectation value to yield
+!bt
+\[
+\langle\psi(\theta)|H|\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m|H|n \rangle
+=\sum_{nm}c^*_mc_nE_n\langle m|n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n=\sum_{n}|c_n|^2E_n \geq E_0\sum_{n}|c_n|^2=E_0,
+\]
+!et
+which implies that we can minimize over the set of angles $\theta$ and arrive at the ground state energy $E_0$
+
+!bt
+\[
+\min_\theta \ \langle\psi(\theta)|H|\psi(\theta)\rangle=E_0.
+\]
+!et
+
+Using this fact, the VQE algorithm can be broken down into the following steps
+o Prepare the variational state $|\psi(\theta)\rangle$ on a quantum computer.
+o Measure this circuit in various bases and send these measurements to a classical computer
+o The classical computer post-processes the measurement data to compute the expectation value $\langle\psi(\theta)|H|\psi(\theta)\rangle$
+o The classical computer varies the parameters $\theta$ according to a classical minimization algorithm and sends them back to the quantum computer which runs step 1 again.
+
+This loop continues until the classical optimization algorithm
+terminates which results in a set of angles $\theta_{\text{min}}$ that
+characterize the ground state $|\phi(\theta_{\text{min}})\rangle$ and
+an estimate for the ground state energy
+$\langle\psi(\theta_{\text{min}})|H|\psi(\theta_{\text{min}})\rangle$.
+
+===== Expectation values =====
+
+To execute the second step of VQE, we need to understand how
+expectation values of operators can be estimated via quantum computers
+by post-processing measurements of quantum circuits in different
+basis. To rotate bases, one uses the basis rotator $R_\sigma$ which is
+defined for each Pauli gate $\sigma$ to be
+
+!bt
+\begin{align}
+R_{\sigma} = H, & \text{if} \ \sigma = X,
+\end{align} label{eq:auto8}
+!et
+and
+!bt
+\begin{align}
+HS^{\dagger}, & \text{if} \ \sigma = Y,
+\end{align}
+!et
+and
+!bt
+\begin{align}
+I, & \text{if} \ \sigma = Z.
+\end{align}
+!et
+
+
+We can show that these rotations allow us to measure the eigenvalues of the Pauli operators. The eigenvectors of the Pauli $X$ gate are
+!bt
+\[
+\vert\pm\rangle = \frac{\vert 0\rangle \pm \vert 1\rangle}{\sqrt{2}},
+\]
+!et
+with eigenvalues $\pm 1$.
+Acting on the eigenstates with the rotation in eq. (ref{eq:auto8}) gives
+!bt
+\[
+H\vert +\rangle = +1\vert 0\rangle,
+\]
+!et
+and
+!bt
+\[
+H\vert -\rangle = -1\vert 1\rangle.
+\]
+!et
+Any single-qubit state can be written as a linear combination of these eigenvectors,
+!bt
+\[
+\vert \psi\rangle = \alpha \vert +\rangle + \beta \vert -\rangle.
+\]
+!et
+We then have the following expectation value for the Pauli $X$ operator
+!bt
+\[
+\expval{X} = \bra{\psi} X \vert \psi\rangle = |\alpha|^2 - |\beta|^2.
+\]
+!et
+However, we can only measure the qubits in the computational basis. Applying the rotation in eq. (ref{eq:auto8}) to our state gives
+!bt
+\[
+H \vert \psi\rangle = \alpha \vert 0\rangle - \beta \vert 1\rangle.
+\]
+!et
+
+This tells us that we are able to estimate $|\alpha|^2$ and
+$|\beta|^2$ (and hence the expectation value of the Pauli $X$
+operator) by using the rotation in eq. (ref{eq:auto8}) and measure the
+resulting state in the computational basis. We can show this for the
+Pauli $Z$ and Pauli $Y$ similarly.
+
+
+
+Note the following identity of the basis rotator
+!bt
+\[
+R^\dagger_\sigma Z R_\sigma = \sigma,
+\]
+!et
+which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$. With this, we see that the expectation value of an arbitrary
+Pauli-gate $\sigma$ in the state $\vert\psi\rangle$ can be expressed as a linear combination of probabilities
+!bt
+\begin{align}
+E_{\psi}(\sigma)
+&= \langle \psi\vert\sigma\vert\psi\rangle \nonumber \\
+&=\langle\psi\vert R_{\sigma}^{\dagger}ZR_{\sigma}\vert\psi\rangle =\langle \phi\vert Z\vert \phi\rangle \nonumber \\
+&=\langle\phi\vert\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\langle x\vert\right)\vert\phi\rangle \nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^x\vert\langle x\vert \phi\rangle\vert^2\nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
+\end{align}
+!et
+
+where $\vert \phi\rangle=\vert R_\sigma\phi\rangle$ and
+$P(\vert \phi\rangle\to\vert x\rangle$ is the probability that the state
+$\vert \phi\rangle$ collapses to the state $\vert x\rangle$ when measured. This can
+be extended to any arbitrary Pauli string: consider the string of
+Pauli operators $P=\bigotimes_{p\in Q}\sigma_p$ which acts
+non-trivially on the set of qubits $Q$ which is a subset of the total
+set of $n$ qubits in the system. Then
+
+!bt
+\begin{align}
+E_{\psi}\left(P\right)
+&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
+&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
+&=\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}Z_pR_{\sigma_p}\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
+&=
+\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}\right)
+\left(\bigotimes_{p \in Q}Z_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)
+\left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
+\\
+&=
+\langle \phi\vert
+\left(\bigotimes_{p \in Q}Z_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)
+\vert \phi\rangle \nonumber \\
+&=
+\langle \phi\vert
+\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\vert x_p\rangle\langle x_p\vert\right)
+\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\vert y_q\rangle\langle y_q\vert\right)
+\vert \phi\rangle 
+\nonumber 
+\\
+&=
+\langle \phi\vert
+\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert x\rangle\langle x\vert\right)
+\vert \phi\rangle 
+\nonumber 
+\\
+&=
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert\langle x\vert\vert \phi\rangle\vert^2
+\nonumber 
+\\
+&=
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
+\end{align}
+!et
+
+where $\vert \phi\rangle=\vert \bigotimes_{p\in
+Q}R_{\sigma_p}\psi\rangle$. Finally, because the expectation value is
+linear
+!bt
+\begin{align}
+E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
+\end{align}
+!et
+one can estimate any observable that can be written as a linear combination of Pauli-string terms. 
+
+===== Measurement =====
+
+To estimate the probability $P(\vert \phi\rangle\to \vert x\rangle)$ from the
+previous section, one prepares the state $\vert \phi\rangle$ on a quantum
+computer and measures it, and then repeats this process (prepare and
+measure) several times. The probability $P(\vert \phi\rangle\to \vert x\rangle)$ is
+estimated to be the number of times that one measures the bit-string
+$x$ divided by the total number of measurements that one makes; that
+is
+
+
+!bt
+\begin{align}
+P(\vert \phi\rangle\to \vert x\rangle\rangle \approx \sum_{m=1}^M\frac{x_m}{M},
+\end{align}
+!et
+where $x_m=1$
+if the result of measurement is $x$ and  $0$ if the result of measurement is not $x$.
+
+By the law of large numbers the approximation approaches equality as
+$M$ goes to infinity
+
+!bt
+\begin{align}
+P(\vert \phi\rangle\to \vert x\rangle) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
+\end{align}
+!et
+
+As we obviously do not have infinite time nor infinite quantum
+computers (which could be run in parallel), we must truncate our
+number of measurement $M$ to a finite, but sufficiently large
+number. More precisely, for precision $\epsilon$, each expectation
+estimation subroutine within VQE requires $\mathcal{O}(1/\epsilon^2)$
+samples from circuits with depth $\mathcal{O}(1)$.
+
+
