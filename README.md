@@ -80,6 +80,9 @@
 ##  March 4-8, 2024. Solving quantum mechanical problems
   - Introducing the final Hamiltonian for project 1, the Lipkin model
   - Analyzing the solution of eigenvalue problems and the VQE using the Lipkin model
+  - Video of lecture at https://youtu.be/mhGUTSQKR04
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesMarch6.pdf
+  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
