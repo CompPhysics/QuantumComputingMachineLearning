@@ -70,6 +70,12 @@ doconce format html week9.do.txt --html_style=bootstrap --pygments_html_style=de
                'lipkin-hamiltonian-for-quantum-computing'),
               ('For four fermions', 2, None, 'for-four-fermions'),
               ('Leaving out the $W$ term', 2, None, 'leaving-out-the-w-term'),
+              ('More details', 2, None, 'more-details'),
+              ('Other manipulations', 2, None, 'other-manipulations'),
+              ('Final expression for $H_1$ and $H_2$',
+               2,
+               None,
+               'final-expression-for-h-1-and-h-2'),
               ('Quantum computing and solving  the eigenvalue problem for the '
                'Lipkin model',
                2,
@@ -125,6 +131,9 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#lipkin-hamiltonian-for-quantum-computing" style="font-size: 80%;">Lipkin Hamiltonian for quantum computing</a></li>
      <!-- navigation toc: --> <li><a href="#for-four-fermions" style="font-size: 80%;">For four fermions</a></li>
      <!-- navigation toc: --> <li><a href="#leaving-out-the-w-term" style="font-size: 80%;">Leaving out the \( W \) term</a></li>
+     <!-- navigation toc: --> <li><a href="#more-details" style="font-size: 80%;">More details</a></li>
+     <!-- navigation toc: --> <li><a href="#other-manipulations" style="font-size: 80%;">Other manipulations</a></li>
+     <!-- navigation toc: --> <li><a href="#final-expression-for-h-1-and-h-2" style="font-size: 80%;">Final expression for \( H_1 \) and \( H_2 \)</a></li>
      <!-- navigation toc: --> <li><a href="#quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model" style="font-size: 80%;">Quantum computing and solving  the eigenvalue problem for the Lipkin model</a></li>
 
         </ul>
@@ -428,9 +437,9 @@ $$
 <p>We rewrote our Hamiltonian as</p>
 $$
 \begin{align*}
-    \begin{split}\label[eq]{eq:met:lipkin_pauli_hamiltonian} 
+    \begin{split}
         H_0 &= \frac{\epsilon}{2}\sum_{p}Z_p,  \\
-        H_1 &= \frac{1}{2}V \sum_{p < q} X_p X_q - Y_p Y_q, \\
+        H_1 &= \frac{1}{2}V \sum_{p < q}( X_p X_q - Y_p Y_q), \\
         H_2 &= \frac{1}{2}W \sum_{p < q} \left( X_p X_q + Y_p Y_q \right). 
     \end{split}
 \end{align*}
@@ -457,7 +466,7 @@ $$
 \end{align*}
 $$
 
-
+<p>Note that well that a term like \( Z_1 \) reads \( Z_1\otimes I_2 \otimes I_3 \otimes I_4 \) where the subscript points to qubit \( i \) and all matrices are \( 2\times 2 \) matrices.</p>
 <!-- !split -->
 <h2 id="leaving-out-the-w-term" class="anchor">Leaving out the \( W \) term </h2>
 
@@ -469,7 +478,62 @@ $$
     H_{W=0}^{N=4} = \epsilon(Z_1 + Z_2) + \frac{\sqrt{6}}{2}V (X_1 + X_2 + Z_1 X_0 - X_1 Z_0).
 $$
 
-<p>This is be more computationally efficient due to requiring only half the qubits.</p>
+<p>This is be more computationally efficient since we only need half of the qubits.</p>
+
+<!-- !split -->
+<h2 id="more-details" class="anchor">More details </h2>
+
+<p>Here we give some additional details behind the rewriting of the Lipkin Hamiltonian in term of Pauli matrices and the identity matrix.
+For the one-body term we have
+</p>
+$$
+\begin{align*}
+    H_0 = \epsilon J_z = \epsilon \sum_{p} j_{z}^{p} = \frac{\epsilon}{2} \sum_p Z_p 
+\end{align*}
+$$
+
+<p>Moving on to the \( H_1 \) term, we need to expand the square of the \( J_\pm \) operators. Starting with \( J_+ \) we find</p>
+$$
+\begin{align*}
+    J_+^2 &= (\sum_p j_{x}^{p} + \imath j_{y}^{p})^2 = \sum_{pq}(j_{x}^{p} + \imath j_{y}^{p})(j_{x}^{q} + \imath j_{y}^{q}) \\
+    &= \sum_{pq} \left(j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} + \imath j_{y}^{p}j_{x}^{q} + \imath j_{x}^{p}j_{y}^{q}\right).
+\end{align*}
+$$
+
+
+<!-- !split -->
+<h2 id="other-manipulations" class="anchor">Other manipulations </h2>
+
+<p>Similarly, the \( J_-^2 \) term yields</p>
+$$
+\begin{align*}
+    J_-^2 = \sum_{pq} (j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} - \imath j_{y}^{p}j_{x}^{q} - \imath j_{x}^{p}j_{y}^{q}).
+\end{align*}
+$$
+
+<p>Rewriting we get</p>
+$$
+\begin{align*}
+    J_+^2 + J_-^2 &= 2\sum_{pq} j_{x}^{p}j_{x}^{q} - j_{z}^{p}j_{z}^{q} \\
+    &= 2 \sum_p (j_{x}^{p})^2 - (j_{y}^{p})^2 + 4\sum_{p > q}( j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q}) \\
+    &= \frac{1}{2} \sum_p (X_p^2 - Y_p^2) + \sum_{p > q} (X_p X_q - Y_p Y_q)
+\end{align*}
+$$
+
+
+<!-- !split -->
+<h2 id="final-expression-for-h-1-and-h-2" class="anchor">Final expression for \( H_1 \) and \( H_2 \) </h2>
+
+<p>The diagonal term will cancel out, since the Pauli matrices are involutory, resulting in</p>
+$$
+    H_1 = \frac{1}{2}V \sum_{p > q}( X_p X_q - Y_p Y_q).
+$$
+
+<p>Following the same procedure as above, we have finally</p>
+$$
+    H_2 = \frac{1}{2}W \sum_{p < q} (X_p X_q + Y_p Y_q). 
+$$
+
 
 <!-- !split -->
 <h2 id="quantum-computing-and-solving-the-eigenvalue-problem-for-the-lipkin-model" class="anchor">Quantum computing and solving  the eigenvalue problem for the Lipkin model </h2>

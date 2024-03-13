@@ -267,9 +267,9 @@ This means that we require $N$ qubits to calculate properties of a $N$ particle 
 We rewrote our Hamiltonian as
 !bt
 \begin{align*}
-    \begin{split}\label[eq]{eq:met:lipkin_pauli_hamiltonian} 
+    \begin{split}
         H_0 &= \frac{\epsilon}{2}\sum_{p}Z_p,  \\
-        H_1 &= \frac{1}{2}V \sum_{p < q} X_p X_q - Y_p Y_q, \\
+        H_1 &= \frac{1}{2}V \sum_{p < q}( X_p X_q - Y_p Y_q), \\
         H_2 &= \frac{1}{2}W \sum_{p < q} \left( X_p X_q + Y_p Y_q \right). 
     \end{split}
 \end{align*}
@@ -297,6 +297,7 @@ Our Hamiltonian for $N=4$ is
 \end{align*}
 !et
 
+Note that well that a term like $Z_1$ reads $Z_1\otimes I_2 \otimes I_3 \otimes I_4$ where the subscript points to qubit $i$ and all matrices are $2\times 2$ matrices.
 !split
 ===== Leaving out the $W$ term =====
 
@@ -308,9 +309,61 @@ the two-qubit Hamiltonian for $N=4$ can be written as
     H_{W=0}^{N=4} = \epsilon(Z_1 + Z_2) + \frac{\sqrt{6}}{2}V (X_1 + X_2 + Z_1 X_0 - X_1 Z_0).
 \]
 !et
-This is be more computationally efficient due to requiring only half the qubits.
+This is be more computationally efficient since we only need half of the qubits.
+
+!split
+===== More details =====
+
+Here we give some additional details behind the rewriting of the Lipkin Hamiltonian in term of Pauli matrices and the identity matrix.
+For the one-body term we have
+!bt
+\begin{align*}
+    H_0 = \epsilon J_z = \epsilon \sum_{p} j_{z}^{p} = \frac{\epsilon}{2} \sum_p Z_p 
+\end{align*}
+!et
+
+Moving on to the $H_1$ term, we need to expand the square of the $J_\pm$ operators. Starting with $J_+$ we find
+!bt
+\begin{align*}
+    J_+^2 &= (\sum_p j_{x}^{p} + \imath j_{y}^{p})^2 = \sum_{pq}(j_{x}^{p} + \imath j_{y}^{p})(j_{x}^{q} + \imath j_{y}^{q}) \\
+    &= \sum_{pq} \left(j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} + \imath j_{y}^{p}j_{x}^{q} + \imath j_{x}^{p}j_{y}^{q}\right).
+\end{align*}
+!et
 
 
+!split
+===== Other manipulations =====
+
+Similarly, the $J_-^2$ term yields
+!bt
+\begin{align*}
+    J_-^2 = \sum_{pq} (j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} - \imath j_{y}^{p}j_{x}^{q} - \imath j_{x}^{p}j_{y}^{q}).
+\end{align*}
+!et
+Rewriting we get
+!bt
+\begin{align*}
+    J_+^2 + J_-^2 &= 2\sum_{pq} j_{x}^{p}j_{x}^{q} - j_{z}^{p}j_{z}^{q} \\
+    &= 2 \sum_p (j_{x}^{p})^2 - (j_{y}^{p})^2 + 4\sum_{p > q}( j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q}) \\
+    &= \frac{1}{2} \sum_p (X_p^2 - Y_p^2) + \sum_{p > q} (X_p X_q - Y_p Y_q)
+\end{align*}
+!et
+
+!split
+===== Final expression for $H_1$ and $H_2$ =====
+
+The diagonal term will cancel out, since the Pauli matrices are involutory, resulting in
+!bt
+\[
+    H_1 = \frac{1}{2}V \sum_{p > q}( X_p X_q - Y_p Y_q).
+\]
+!et
+Following the same procedure as above, we have finally
+!bt
+\[
+    H_2 = \frac{1}{2}W \sum_{p < q} (X_p X_q + Y_p Y_q). 
+\]
+!et
 
 
 !split
@@ -321,6 +374,7 @@ This is be more computationally efficient due to requiring only half the qubits.
 o Discussion of project 1 and possible paths for project 2
 o Introduction to Quantum Fourier transforms
 !eblock
+
 
 
 
