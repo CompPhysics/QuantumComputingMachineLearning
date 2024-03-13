@@ -50,13 +50,28 @@ system doconce format html $name --html_style=bootstrap --pygments_html_style=de
 system doconce format ipynb $name $opt
 
 
+# LaTeX Beamer slides
+beamertheme=red_plain
+system doconce format pdflatex $name --latex_title_layout=beamer --latex_table_format=footnotesize $opt
+system doconce ptex2tex $name envir=minted
+# Add special packages
+doconce subst "% Add user's preamble" "\g<1>\n\\usepackage{simplewick}" $name.tex
+system doconce slides_beamer $name --beamer_slide_theme=$beamertheme
+system pdflatex -shell-escape ${name}
+system pdflatex -shell-escape ${name}
+cp $name.pdf ${name}.pdf
+cp $name.tex ${name}.tex
+
+
 # Publish
 dest=../../pub
 if [ ! -d $dest/$name ]; then
 mkdir $dest/$name
+mkdir $dest/$name/pdf
 mkdir $dest/$name/html
 mkdir $dest/$name/ipynb
 fi
+cp ${name}*.pdf $dest/$name/pdf
 cp -r ${name}*.html ._${name}*.html reveal.js $dest/$name/html
 
 # Figures: cannot just copy link, need to physically copy the files
@@ -77,3 +92,11 @@ EOF
 tar czf ${ipynb_tarfile} README.txt
 fi
 cp ${ipynb_tarfile} $dest/$name/ipynb
+
+
+
+
+
+
+
+
