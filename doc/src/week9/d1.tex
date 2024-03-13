@@ -1,15 +1,5 @@
-TITLE: March 20-24, 2023: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
-AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo & Department of Physics and Astronomy and Facility for Rare Isotope Beams, Michigan State University
-DATE: March 20-24
 
-!bblock
-  o  Lipkin model for  VQE quantum computing
-  o "Discussion and work on  the project":"https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/Projects/2024/Project1"
-!eblock
-
-
-!split
-===== Hamiltonians and project 1 =====
+In our project we have four different Hamiltonians
 
 As an initial test, we consider a simply $2\times 2$ real
 Hamiltonian consistend of a diagonal part $H_0$ and off-diagonal part
@@ -34,45 +24,6 @@ express them in the Pauli basis $\vert 0\rangle$ and $\vert 1 \rangle$
 !et
 Where $\lambda \in [0,1]$ is a coupling constant parameterizing the strength of the interaction. 
 
-!split
-===== Rewriting in terms of Pauli matrices =====
-
-Defining
-!bt
-\[
-    E_+ = \frac{E_1 + E_2}{2},\hspace{20px} E_- = \frac{E_1 - E_2}{2}
-\]
-!et
-we see that by combining the identity and $Z$ Pauli matrix, this can be expressed as
-
-!bt
-\[
-    H_0 = E_+ I + E_- Z
-\]
-!et
-
-For $H_1$ we use the same trick to fill the diagonal, defining $V_+ = (V_{11} + V_{22})/2, V_- = (V_{11} - V_{22})/2$. From the hermiticity requirements of $H$, we note that $V_{12} = V_{21} \equiv V_o$, which simplifies the problem to a simple $X$. This gives
-
-!bt
-\[
-    H_I = V_+ I + V_- Z + V_o X
-\]
-!et
-
-!split
-===== Measurement basis =====
-
-For this system we note that the Pauli $X$ matrix can be rewritten in terms of the Hadamard matrices and the Pauli $Z$ matrix, that is
-!bt
-\[
-X=HZH.
-\]
-!et
-
-
-!split
-===== Second Hamiltonian matrix problems =====
-
 The second case is defined as a $4 \times 4$ real Hamiltonian.
 This can be viewed as two  composite systems where each system is a two-level system. In the product basis $\vert 00\rangle$, $\vert 01\rangle$, $\vert 10\rangle$ and $\vert 11\rangle$
 we define the one-body part as 
@@ -92,15 +43,79 @@ with a two-body interaction defined as
             0 & - H_z & H_x & 0 \\
             0 & H_x & - H_z & 0 \\
             H_x & 0 & 0 & H_z
-        \end{pmatrix}.
+        \end{pmatrix}
     \end{split}
 \end{align*}
 !et
+Where $H_x$
+and $H_y$ are couplings playing the same role as $\lambda$.
 
-Here $H_x$ and $H_z$ are coupling constants.
 
-!split
-===== Rewriting =====
+
+
+
+
+we can rewrite the Lipkin Hamiltonian from \cref{eq:theo:lipkin_second_quant_hamiltonian} using these
+\begin{align}
+    \begin{split} \label[eq]{eq:theo:lipkin_quasispin_hamiltonian}
+        H_0 &= \epsilon J_z, \\
+        H_1 &= \frac{1}{2}V (J_+^2 + J_-^2), \\
+        H_2 &= \frac{1}{2}W ( \set{J_+ , J_- } - N ),
+    \end{split}
+\end{align}
+These quasi spin operators obey the normal spin commutator relations
+\begin{align*}
+    &\commutator{J_z}{J_\pm} = \pm J_\pm, 
+    &\commutator{J_+}{J_-} = 2 J_z, \\
+    &\commutator{J^2}{J_\pm} = 0,
+    &\commutator{J^2}{J_z} = 0,
+\end{align*}
+in addition to commuting with the number operator
+\begin{align*}
+    \commutator{N}{J_z} = \commutator{N}{J_\pm} = \commutator{N}{J^2} = 0.
+\end{align*}
+Using these relations we can show that the Hamiltonian (a product of quasi spin operators and the number operator) also commutes with  $J^2$, that is $\commutator{H}{J^2}=0$. Therefor $H$ and $J^2$ have shared eigenbasis, with $J$ being a `good` quantum number.
+
+Using spin-eigenstates as the Hamiltonian basis, we define states through the normal approach $\ket{J,J_z}$ with $J$ and $ J_z$ as spin and spin-projections respectively. The states $J_z = \pm J$ are the easiest to construct, corresponding to a single level being completely filled. States in between can then be found using the quasi-spin ladder operators following
+
+\begin{align}
+    J_\pm \ket{J,J_z} &= \sqrt{J(J+1)-J_z (J_z \pm 1)} \ket{J,J_z \pm 1}. \label[eq]{eq:theo:ladder_operations}
+\end{align}
+Using this basis for the quasi-spin Hamiltonian from \cref{eq:theo:lipkin_quasispin_hamiltonian}, the explicit matrix $H_{J_z,J'_z} = \bra{J,J_z} H \ket{J,J_z'}$ can be constructed. For $N=2$ particles, we have the triplet $J=1$, with three possible projection $J_z = 0, \pm 1$. As shown in \cref{sec:app:lipkin_spin_one_hamiltonian}, the Hamiltonian can be written in the $J$ basis as
+\begin{align}
+    H = \begin{pmatrix} \label[eq]{eq:theo:lipkin_N2_matrix}
+        -\epsilon & 0 & V \\
+        0 & W & 0 \\
+        V & 0 & \epsilon
+    \end{pmatrix}.
+\end{align}
+By solving the eigenvalue problem, the ground state energy can be exactly found. Similarly, for the $N=4$ case we have $J = 2$ with five possible projections $J_z = 0,\pm1,\pm2$. Using the same approach as in \cref{sec:app:lipkin_spin_one_hamiltonian}, the Hamiltonian can be expressed as  
+\begin{align}
+    H = \begin{pmatrix}\label[eq]{eq:theo:lipkin_N4_matrix}
+        -2\epsilon & 0  & \sqrt{6}V &0 &0 \\
+        0 & -\epsilon + 3W & 0 & 3V & 0 \\
+        \sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
+        0 & 3V & 0 & \epsilon + 3W & 0 \\
+        0 & 0 & \sqrt{6}V & 0 & 2\epsilon
+    \end{pmatrix}.
+\end{align}
+
+\subsubsection{Toy Hamiltonians}
+Firstly we need to express the Hamiltonian from \cref{eq:theo:2times2_hamiltonian} using Pauli matrices. Beginning with the diagonal $H_0$, we need to fill the both entries with different energy values. Defining their difference using
+
+\begin{align*}
+    E_+ = \frac{E_1 + E_2}{2},\hspace{20px} E_- = \frac{E_1 - E_2}{2}
+\end{align*}
+we see that by combining the identity and Z Pauli matrix, this can be expressed as
+
+\begin{align*}
+    H_0 = E_+ I + E_- Z
+\end{align*}
+For $H_1$ we use the same trick to fill the diagonal, defining $V_+ = (V_{11} + V_{22})/2, V_- = (V_{11} - V_{22})/2$. From the hermiticity requirements of $H$, we note that $V_{12} = V_{21} \equiv V_o$, which simplifies the problem to a simple $X$. Therefor
+
+\begin{align*}
+    H_I = V_+ I + V_- Z + V_o X
+\end{align*}
 
 For the $4 \times 4$ case we note that the interacting part of the Hamiltonian \cref{eq:theo:4times4_diagonal_hamiltonian} is already written in terms of Pauli matrices, and no encoding beyond this is necessary. The diagonal however needs to be rewritten. Following the same procedure as the $2 \times 2$ case, we define
 
@@ -129,88 +144,6 @@ where we have defined
 \begin{align*}
     \alpha_\pm = \frac{\epsilon_{+0}\pm\epsilon_{+1}}{2}, \hspace{10px} \beta_\pm = \frac{\epsilon_{-0}\pm\epsilon_{+1}}{2}
 \end{align*}
-
-
-!split
-===== The Lipkin model =====
-
-Last week we introduced the Lipkin model which could be rewritten in terms of the quasipin operators as
-!bt
-\begin{align*}
-    \begin{split}
-        H_0 &= \epsilon J_z, \\
-        H_1 &= \frac{1}{2}V (J_+^2 + J_-^2), \\
-        H_2 &= \frac{1}{2}W ( \set{J_+ , J_- } - N ),
-    \end{split}
-\end{align*}
-!et
-
-!split
-===== Quasispin operators =====
-
-These quasi spin operators obey the normal spin commutator relations
-!bt
-\begin{align*}
-    &[J_z,J_{\pm}] = \pm J_\pm, 
-    &[J_+,J_-] = 2 J_z, \\
-    &[J^2,J_{\pm}] = 0,
-    &[J^2,J_z] = 0,
-\end{align*}
-!et
-in addition to commuting with the number operator
-\begin{align*}
-    [N,J_z] = [N,J_{\pm}] = [N,J^2] = 0.
-\end{align*}
-
-Using these relations we can show that the Hamiltonian (a product of
-quasi spin operators and the number operator) also commutes with
-$J^2$, that is $[{H,J^2]=0$. Therefor $H$ and $J^2$ have shared
-eigenbasis, with $J$ being a `good` quantum number.
-
-
-!split
-===== Quantum computing and solving  the eigenvalue problem for the Lipkin model =====
-
-
-!bblock Plans for the week March 18-22
-o Discussion of project 1 and possible paths for project 2
-o Introduction to Quantum Fourier transforms
-!eblock
-
-
-
-
-
-
-
-
-
-Using spin-eigenstates as the Hamiltonian basis, we define states through the normal approach $\ket{J,J_z}$ with $J$ and $ J_z$ as spin and spin-projections respectively. The states $J_z = \pm J$ are the easiest to construct, corresponding to a single level being completely filled. States in between can then be found using the quasi-spin ladder operators following
-
-\begin{align}
-    J_\pm \ket{J,J_z} &= \sqrt{J(J+1)-J_z (J_z \pm 1)} \ket{J,J_z \pm 1}. \label[eq]{eq:theo:ladder_operations}
-\end{align}
-Using this basis for the quasi-spin Hamiltonian from \cref{eq:theo:lipkin_quasispin_hamiltonian}, the explicit matrix $H_{J_z,J'_z} = \bra{J,J_z} H \ket{J,J_z'}$ can be constructed. For $N=2$ particles, we have the triplet $J=1$, with three possible projection $J_z = 0, \pm 1$. As shown in \cref{sec:app:lipkin_spin_one_hamiltonian}, the Hamiltonian can be written in the $J$ basis as
-\begin{align}
-    H = \begin{pmatrix} \label[eq]{eq:theo:lipkin_N2_matrix}
-        -\epsilon & 0 & V \\
-        0 & W & 0 \\
-        V & 0 & \epsilon
-    \end{pmatrix}.
-\end{align}
-By solving the eigenvalue problem, the ground state energy can be exactly found. Similarly, for the $N=4$ case we have $J = 2$ with five possible projections $J_z = 0,\pm1,\pm2$. Using the same approach as in \cref{sec:app:lipkin_spin_one_hamiltonian}, the Hamiltonian can be expressed as  
-\begin{align}
-    H = \begin{pmatrix}\label[eq]{eq:theo:lipkin_N4_matrix}
-        -2\epsilon & 0  & \sqrt{6}V &0 &0 \\
-        0 & -\epsilon + 3W & 0 & 3V & 0 \\
-        \sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
-        0 & 3V & 0 & \epsilon + 3W & 0 \\
-        0 & 0 & \sqrt{6}V & 0 & 2\epsilon
-    \end{pmatrix}.
-\end{align}
-
-
-
 \subsubsection{Lipkin Model}
 Using the level mapping from \citep{hlatshwayoSimulatingExcitedStates2022}, the spin operators from \cref{eq:theo:quasi_spin_definitions} can be written using their one-body counterparts 
 \begin{align}
@@ -278,4 +211,3 @@ The von Neumann entanglement entropy is defined by the trace of the product betw
     \implies S(\rho_a) =& \frac{\ln2}{2}\Big((\alpha_{00}+\alpha_{10}\big) \times \big(\alpha_{01}+\alpha_{11}\big)\Big)\\ &\times\ln\big(\alpha_{00}+\alpha_{10}\big) \times\ln \big(\alpha_{01}+\alpha_{11}\big) \nonumber
 \end{align}
 It quantizes the entanglement between the two separate Hilbert spaces. The maximal entropy for a two qubit mixed state, will be $\ln 2$, that of a Bell state. This leads to a possible visualization of the entanglement von Neumann entropy as a metric of the "probability" of achieving a Bell state, given a mixed state, normalized by $\ln 2$. This generalizes for more qubits, it is a measure of the "probability" of achieving maximally entangled states. 
-
