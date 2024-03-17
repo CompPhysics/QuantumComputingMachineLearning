@@ -318,7 +318,7 @@ Again, we will express the final mathemtical operations interms of specific line
 Furthermore, the quantum version  of the 
 discrete Fourier transform requires only $O(n\log{n})$ gates
 to be implemented, and is a part of many important quantum algorithms
-such as phase estimation.
+such as the phase estimation algorithm and Shor's algorithm.
 
 
 A useful way to solve problems in many fields of science, especially
@@ -332,35 +332,36 @@ on a classical.
 ===== Fourier transform =====
 
 Assume a periodic function $f(x)$ in an interval
-$[ -\frac{L}{2}, \frac{L}{2} ]$. The fourier series in exponential form can be written
+$[ -\frac{L}{2}, \frac{L}{2} ]$. The Fourier series in exponential form can be written
 as
 !bt
 \[
-f(x) = \sum_{-\inf}^\inf A_n e^{i(2\pi nx/L)}
+f(x) = \sum_{-\infty}^{\infty} A_n \exp{i(2\pi nx/L)},
 \]
 !et
 where
 !bt
 \[
-A_n = \frac{1}{L} \int_{-L/2}^{L/2} f(x)e^{-i(2\pi nx/L)} dx
+A_n = \frac{1}{L} \int_{-L/2}^{L/2} f(x)\exp{-i(2\pi nx/L)} dx.
 \]
 !et
+
+!split
+===== Transforming to discrete variables =====
 
 In the fourier transform $A_n$ is transformed from a dicrete variable
 to a continous one as $L \rightarrow \inf$. We then replace $A_n$ with
 $f(k)dk$ and let $n/L \rightarrow k$, and the sum is changed to an
 integral. This gives
-
- 
 !bt
 \[
-f(x) = \int_{-\inf}^{\inf}dkF(k) e^{i(2\pi kx)}
+f(x) = \int_{-\infty}^{\infty}dkF(k) \exp{i(2\pi kx)}
 \]
 !et
-
+and
 !bt
 \[
-F(k) = \int_{-\inf}^{\inf}dxf(x) e^{-i(2\pi kx)}
+F(k) = \int_{-\infty}^{\infty}dxf(x) \exp{-i(2\pi kx)}
 \]
 !et 
 One way to interpret the Fourier transform is then as a transformation from one basis to another. 
@@ -370,8 +371,6 @@ One way to interpret the Fourier transform is then as a transformation from one 
 
 Next we make another generalization by having a discrete function,
 that is $f(x) \rightarrow f(x_k)$ with $x_k = k\Delta x$ for $k=0,\dots, N-1$. This leads to the sums
-
-
 !bt
 \[
 f_x = \frac{1}{N} \sum_{k=0}^{N-1}F_k e^{i(2\pi kx)/N},
@@ -385,13 +384,17 @@ F_k = \sum_{x=0}^{N-1}f_x e^{-i(2\pi kx)/N}.
 !et
 
 Although we have used functions here, this could also be a set of
-numbers. As an example we can have a set of complex numbers $\{x_0,\dots,x_{N-1}\}$ with fixed length $N$, we can Fourier transform
-this as
+numbers.
 
+!split
+===== Simple example =====
 
+As an example we can have a set of complex numbers
+$\{x_0,\dots,x_{N-1}\}$ with fixed length $N$, we can Fourier
+transform this as
 !bt
 \[
-y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_j e^{i(2\pi jk)/N}
+y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_j \exp{i(2\pi jk)/N},
 \]
 !et
 
@@ -406,15 +409,15 @@ the unitary operation
 
 !bt
 \[
-    \ket{\psi'} \leftarrow \hat{F}\ket{\psi}, \quad \hat{F}^\dagger \hat{F} = I
+    \vert \psi'\rangle \leftarrow \hat{F}\vert \psi\rangle, \quad \hat{F}^\dagger \hat{F} = I
 \]
 !et
 
-In terms of an orthonormal basis $\ket{0},\ket{1},\dots,\ket{0}$ this linear operator has the following action
+In terms of an orthonormal basis $\vert 0 \rangle,\vert 1\rangle,\dots,\vert 0 \rangle$ this linear operator has the following action
 
 !bt
 \[
-\ket{j} \rightarrow \sum_{k=0}^{N-1} e^{i(2\pi jk/N)}\ket{k}
+\vert j \rangle \rightarrow \sum_{k=0}^{N-1} e^{i(2\pi jk/N)}\vert k 
 \]
 !et
 
@@ -422,7 +425,7 @@ In terms of an orthonormal basis $\ket{0},\ket{1},\dots,\ket{0}$ this linear ope
 
 !bt
 \[
-\sum_{j=0}^{N-1} x_j \ket{j} \rightarrow \sum_{k=0}^{N-1} y_k\ket{k}
+\sum_{j=0}^{N-1} x_j \vert j \rangle \rightarrow \sum_{k=0}^{N-1} y_k\vert k \rangle
 \]
 !et
 
@@ -431,7 +434,7 @@ equivalent to the equation for discrete Fourier transform on a set of complex nu
 Next we assume an $n$-qubit system, where we take $N=s^n$ in the computational basis 
 !bt
 \[
-\ket{0},\dots,\ket{2^n -1}
+\vert 0 \rangle,\dots,\vert 2^n -1\rangle.
 \]
 !et
 
@@ -443,12 +446,12 @@ define the product representation of the quantum Fourier transform
 
 !bt
 \[
-\ket{j_1,\dots,j_n} \rightarrow 
+\vert j_1,\dots,j_n\rangle  \rightarrow 
 \frac{
-\left(\ket{0} + e^{i(2\pi 0.j_n)}\right)
-\left(\ket{0} + e^{i(2\pi 0.j_{j-1}j_n)}\right)
+\left(\vert 0 \rangle + \exp{i(2\pi 0.j_n)}\right)
+\left(\vert 0 \rangle + \exp{i(2\pi 0.j_{j-1}j_n)}\right)
 \dots
-\left(\ket{0} + e^{i(2\pi 0.j_1j_2\dots j_n)}\right)
+\left(\vert 0 \rangle + \exp{i(2\pi 0.j_1j_2\dots j_n)}\right)
 }{2^{n/2}}
 \]
 !et
@@ -484,15 +487,15 @@ states, assuming it is not already in a superposition, such that
  
 !bt
 \[
-H\ket{0} = \frac{1}{\sqrt{2}} \left(\ket{0} + \ket{1}\right), \quad H\ket{1} = \frac{1}{\sqrt{2}} \left(\ket{0} - \ket{1}\right)
+H\vert 0 \rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle + \vert 1\rangle\right), \quad H\vert 1\rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle - \vert 1\rangle\right)
 \]
 !et 
-The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\ket{1}$
+The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\vert 1\rangle$
 
 
 !bt
 \[
-    R_k\ket{0} = \ket{0}, \quad R_k\ket{1} = e^{2\pi i/2^{k}}\ket{1}
+    R_k\vert 0 \rangle = \vert 0 \rangle, \quad R_k\vert 1\rangle = e^{2\pi i/2^{k}}\vert 1\rangle
 \]
 !et
 
@@ -501,14 +504,14 @@ Since all this gates are unitary, the quantum Fourier transfrom is also unitary.
 !split
 ===== Algorithm =====
 
-Assume we have a quantum register of $n$ qubits in the state $\ket{j_1
-j_2 \dots j_n}$. Applying the hadamard gate to the first qubit
+Assume we have a quantum register of $n$ qubits in the state $\vert j_1 j_2 \dots j_n\rangle$.
+Applying the hadamard gate to the first qubit
 produces the state
 
 
 !bt
 \[
-H\ket{j_1 j_2 \dots j_n} = \frac{\left(\ket{0} + e^{2\pi i 0.j_1}\ket{1}\right)}{2^{1/2}} \ket{j_2 \dots j_n}
+H\vert j_1 j_2 \dots j_n\rangle = \frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle 
 \]
 !et
 
@@ -530,7 +533,7 @@ Furthermore we can apply the controlled-$R_k$ gate, with all the other qubits $
 
 !bt
 \[
-\frac{\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right)}{2^{1/2}} \ket{j_2 \dots j_n}
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle
 \]
 !et
 
@@ -538,7 +541,7 @@ Next we do the same procedure on qubit $2$ producing the state
 
 !bt
 \[
-\frac{\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right)\left(\ket{0} + e^{2\pi i 0.j_2\dots j_n}\ket{1}\right)}{2^{2/2}} \ket{j_2 \dots j_n}
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)}{2^{2/2}} \vert j_2 \dots j_n\rangle
 \]
 !et
 
@@ -546,14 +549,14 @@ Doing this for all $n$ qubits yields state
 
 !bt
 \[
-\frac{\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right)\left(\ket{0} + e^{2\pi i 0.j_2\dots j_n}\ket{1}\right)\dots \left(\ket{0} + e^{2\pi i 0.j_n}\ket{1}\right)}{2^{n/2}} \ket{j_2 \dots j_n}
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)\dots \left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)}{2^{n/2}} \vert j_2 \dots j_n\rangle
 \]
 !et
 At the end we use swap gates to reverse the order of the qubits
 
 !bt
 \[
-\frac{\left(\ket{0} + e^{2\pi i 0.j_n}\ket{1}\right)\left(\ket{0} + e^{2\pi i 0.j_{n-1}j_n}\ket{1}\right)\dots\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right) }{2^{n/2}} \ket{j_2 \dots j_n}
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_{n-1}j_n}\vert 1\rangle\right)\dots\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right) }{2^{n/2}} \vert j_2 \dots j_n\rangle
 \]
 !et
 This is just the product representation from earlier, obviously our desired output.
