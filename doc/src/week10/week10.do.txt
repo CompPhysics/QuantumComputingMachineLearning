@@ -245,5 +245,321 @@ and
 y_1 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}},
 \]
 !et
- We can rewrite this in terms of the following matrix-vector operation
+ We can rewrite this in terms of the following matrix-vector operation.
 
+
+
+!split
+===== Quantum Fourier Transform =====
+ 
+Linear, invertible transformation on qubits. The quantum analouge of
+discrete Fourier transform. Requires only $\mathcal{O}(nlog\ n)$ gates
+to be implemented, and is a part of many important quantum algorithms
+such as phase estimation.
+
+
+A useful way to solve problems in many fields of science, especially
+in physics and mathematics, is to transform it into some other (often
+simpler) problem for which a solution is known. The discrete fourier
+transform, which involves such a transformation, is one of a few known
+algorithms that can be computed much faster on a quantum computer than
+on a classical.
+
+!split
+===== Fourier transform =====
+
+Assume a periodic function $f(x)$ in an interval $[ -\frac{L}{2},
+\frac{L}{2} ]$. The fourier series in exponential form can be written
+as
+!bt
+\[
+f(x) = \sum_{-\inf}^\inf A_n e^{i(2\pi nx/L)}
+\]
+!et
+where
+!bt
+\[
+A_n = \frac{1}{L} \int_{-L/2}^{L/2} f(x)e^{-i(2\pi nx/L)} dx
+\]
+!et
+
+In the fourier transform $A_n$ is transformed from a dicrete variable
+to a continous one as $L \rightarrow \inf$. We then replace $A_n$ with
+$f(k)dk$ and let $n/L \rightarrow k$, and the sum is changed to an
+integral. This gives
+
+ 
+!bt
+\[
+f(x) = \int_{-\inf}^{\inf}dkF(k) e^{i(2\pi kx)}
+\]
+!et
+
+!bt
+\[
+
+ F(k) = \int_{-\inf}^{\inf}dxf(x) e^{-i(2\pi kx)}
+\]
+ 
+One way to interperet the Fourier transform is then as a transformation from one basis to another. 
+
+!split
+===== Discrete Fourier transform =====
+
+Next we make another generalization by having a discrete function,
+that is $f(x) \rightarrow f(x_k)$ with $x_k = k\Delta x$ for $k=0,
+\dots, N-1$. This leads to the sums
+
+
+!bt
+\[
+f_x = \frac{1}{N} \sum_{k=0}^{N-1}F_k e^{i(2\pi kx)/N}
+\]
+!et
+
+!bt
+\[
+F_k = \sum_{x=0}^{N-1}f_x e^{-i(2\pi kx)/N}
+\]
+!et
+
+Although we have used functions here, this could also be a set of
+numbers. As an example we can have a set of complex numbers $\{
+x_0,\dots,x_{N-1}\}$ with fixed length $N$, we can Fourier transform
+this as
+
+
+!bt
+\[
+y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_j e^{i(2\pi jk)/N}
+\]
+!et
+leading to a new set of complex numbers $\{ y_0,\dots,y_{N-1}\}$. 
+
+!split
+===== Quantum Fourier transform =====
+
+We now turn to the quantum Fourier transform. It is the same
+transformation as described above, however we define it in terms of
+the unitary operation
+
+!bt
+\[
+    \ket{\psi'} \leftarrow \hat{F}\ket{\psi}, \quad \hat{F}^\dagger \hat{F} = I
+\]
+!et
+
+In terms of an orthonormal basis $\ket{0},\ket{1},\dots,\ket{0}$ this linear operator has the following action
+
+!bt
+\[
+\ket{j} \rightarrow \sum_{k=0}^{N-1} e^{i(2\pi jk/N)}\ket{k}
+\]
+!et
+
+ or on an arbitrary state
+
+!bt
+\[
+\sum_{j=0}^{N-1} x_j \ket{j} \rightarrow \sum_{k=0}^{N-1} y_k\ket{k}
+\]
+!et
+
+equivalent to the equation for discrete Fourier transform on a set of complex numbers.
+ 
+Next we assume an $n$-qubit system, where we take $N=s^n$ in the computational basis 
+!bt
+\[
+\ket{0},\dots,\ket{2^n -1}
+\]
+!et
+
+We make use of the binary representation $j = j_1 2^{n-1} + j_2
+2^{n-2} + \dots + j_n 2^0$ , and take note of the notation $0.j_l
+j_{l+1} \dots j_m$ representing the binary fraction $\frac{j_l}{2^1} +
+\frac{j_{l+1}}{2^{2}} + \dots + \frac{j_m}{2^{m-l+1}}$. With this we
+define the product representation of the quantum Fourier transform
+
+!bt
+\[
+\ket{j_1,\dots,j_n} \rightarrow 
+\frac{
+\left(\ket{0} + e^{i(2\pi 0.j_n)}\right)
+\left(\ket{0} + e^{i(2\pi 0.j_{j-1}j_n)}\right)
+\dots
+\left(\ket{0} + e^{i(2\pi 0.j_1j_2\dots j_n)}\right)
+}{2^{n/2}}
+\]
+!et
+
+!split
+===== Components =====
+
+From the product representation we can derive a circuit for the
+quantum Fourier transform. This will make use of the following two
+single-qubit gates
+!bt
+\[
+    H = \frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1 & 1 \\
+        1 & -1
+    \end{bmatrix}
+\]
+!et
+!bt
+\[
+    R_k =
+    \begin{bmatrix}
+        1 & 0 \\
+        0 & e^{2\pi i/2^{k}}
+    \end{bmatrix}
+\]
+!et
+
+First we refresh our memory of the action of these gates. The hadamard
+gate on a single qubit creates an equal superposition of its basis
+states, assuming it is not already in a superposition, such that
+ 
+!bt
+\[
+H\ket{0} = \frac{1}{\sqrt{2}} \left(\ket{0} + \ket{1}\right), \quad H\ket{1} = \frac{1}{\sqrt{2}} \left(\ket{0} - \ket{1}\right)
+\]
+!et 
+The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\ket{1}$
+
+
+!bt
+\[
+    R_k\ket{0} = \ket{0}, \quad R_k\ket{1} = e^{2\pi i/2^{k}}\ket{1}
+\]
+!et
+
+Since all this gates are unitary, the quantum Fourier transfrom is also unitary.
+
+!split
+===== Algorithm =====
+
+Assume we have a quantum register of $n$ qubits in the state $\ket{j_1
+j_2 \dots j_n}$. Applying the hadamard gate to the first qubit
+produces the state
+
+
+!bt
+\[
+H\ket{j_1 j_2 \dots j_n} = \frac{\left(\ket{0} + e^{2\pi i 0.j_1}\ket{1}\right)}{2^{1/2}} \ket{j_2 \dots j_n}
+\]
+!et
+
+where we have made use of the binary fraction to represent the action of the hadamard gate 
+
+!bt
+\[
+\begin{equation}
+e^{2\pi i 0.j_1} = 
+\begin{cases}
+-1, & \quad \text{if $j_1 = 1$} \\
++1, & \quad \text{if $j_1 = 0$}
+\end{cases}
+\end{equation}
+\]
+!et
+
+Furthermore we can apply the controlled-$R_k$ gate, with all the other qubits $j_k$ for $k>1$ as control qubits to produce the state
+
+!bt
+\[
+\frac{\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right)}{2^{1/2}} \ket{j_2 \dots j_n}
+\]
+!et
+
+Next we do the same procedure on qubit $2$ producing the state
+
+!bt
+\[
+\frac{\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right)\left(\ket{0} + e^{2\pi i 0.j_2\dots j_n}\ket{1}\right)}{2^{2/2}} \ket{j_2 \dots j_n}
+\]
+!et
+
+Doing this for all $n$ qubits yields state
+
+!bt
+\[
+\frac{\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right)\left(\ket{0} + e^{2\pi i 0.j_2\dots j_n}\ket{1}\right)\dots \left(\ket{0} + e^{2\pi i 0.j_n}\ket{1}\right)}{2^{n/2}} \ket{j_2 \dots j_n}
+\]
+!et
+At the end we use swap gates to reverse the order of the qubits
+
+!bt
+\[
+\frac{\left(\ket{0} + e^{2\pi i 0.j_n}\ket{1}\right)\left(\ket{0} + e^{2\pi i 0.j_{n-1}j_n}\ket{1}\right)\dots\left(\ket{0} + e^{2\pi i 0.j_1j_2\dots j_n}\ket{1}\right) }{2^{n/2}} \ket{j_2 \dots j_n}
+\]
+!et
+This is just the product representation from earlier, obviously our desired output.
+
+
+
+!bc pycod
+import qiskit as qk
+import numpy as np
+##qk.IBMQ.load_account()
+
+def QFT(Qcircuit, inverse=False):
+    """ _________________________
+    
+        Quantum Fourier Transform
+        _________________________
+        
+        Input: 
+        
+            Qcircuit = [qc,qr,cr,n]
+                - qc -> Quantum circuit object
+                - qr -> Quantum register object
+                - cr -> Classical register object
+                - n  -> Number of qubits
+                
+            inverse:
+                True,False
+   
+        Output:
+        
+            Qcircuit
+    """
+    
+    qc       =  Qcircuit[0]
+    qr       =  Qcircuit[1]
+    n_qubits =  Qcircuit[2]
+    
+    if not inverse:
+        for i in range(n_qubits):
+            qc.h(qr[i])
+            for j in range(i+1,n_qubits):
+                qc.cu1(np.pi/2**(j-i),qr[j],qr[i])
+
+        for i in range(int(n_qubits/2)):
+            qc.swap(qr[i],qr[-(i+1)])
+    else:
+        for i in range(int(n_qubits/2)):
+            qc.swap(qr[i],qr[-(i+1)])
+            
+        for i in range(n_qubits):
+            for j in range(i):
+                qc.cu1(-np.pi/2**(i-j),qr[j],qr[i])
+            qc.h(qr[i])    
+    
+    return [qc,qc,n_qubits] 
+
+
+
+## Simple 3-qubit transform to confirm correct implementation
+n_qubits = 3
+qr1      = qk.QuantumRegister(n_qubits)
+qc1      = qk.QuantumCircuit(qr1)
+qr2      = qk.QuantumRegister(n_qubits)
+qc2      = qk.QuantumCircuit(qr2)
+Qcircuit1 = QFT([qc1,qr1,n_qubits])
+Qcircuit2 = QFT([qc2,qr2,n_qubits],inverse=True)
+
+Qcircuit1[0].draw()
+Qcircuit2[0].draw()
+!ec
