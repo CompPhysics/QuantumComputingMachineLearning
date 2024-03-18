@@ -92,7 +92,7 @@
 
 ## March 18-22, 2024. VQE 
   - Summary of project 1
-  - Quantum Fourier transforms and preparing for new topics and project 2
+  - Quantum Fourier transforms and preparing for new topics and possible paths for project 2
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
@@ -104,7 +104,7 @@
 ## April 15-19, 2024, TBA
 
 ## April 22-26, 2024, TBA
-## April 29-May 3, TBA
+## April 29-May 3, no lecture due to public holiday in Norway
 ## May 6-10, TBA
 
 
