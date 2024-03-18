@@ -144,24 +144,17 @@ div.toc p,a {
                2,
                None,
                'plans-for-the-week-of-march-18-22-2024'),
-              ('Principle of Superposition and Fourier Transforms',
+              ('Overarching motivation', 2, None, 'overarching-motivation'),
+              ('Continuous Fourier transforms and the principle of '
+               'Superposition',
                2,
                None,
-               'principle-of-superposition-and-fourier-transforms'),
+               'continuous-fourier-transforms-and-the-principle-of-superposition'),
               ('Quantum Fourier Transform',
                2,
                None,
                'quantum-fourier-transform'),
               ('Fourier transform', 2, None, 'fourier-transform'),
-              ('Transforming to discrete variables',
-               2,
-               None,
-               'transforming-to-discrete-variables'),
-              ('Discrete Fourier transform',
-               2,
-               None,
-               'discrete-fourier-transform'),
-              ('Simple example', 2, None, 'simple-example'),
               ('Several driving forces', 2, None, 'several-driving-forces'),
               ('Periodicity', 2, None, 'periodicity'),
               ('Simple Code Example', 2, None, 'simple-code-example'),
@@ -179,6 +172,15 @@ div.toc p,a {
                None,
                'inverse-fourier-transform'),
               ('Rewriting', 2, None, 'rewriting'),
+              ('Transforming to discrete variables',
+               2,
+               None,
+               'transforming-to-discrete-variables'),
+              ('Discrete Fourier transform',
+               2,
+               None,
+               'discrete-fourier-transform'),
+              ('Simple example', 2, None, 'simple-example'),
               ('Discrete Fourier Transformations',
                2,
                None,
@@ -198,7 +200,56 @@ div.toc p,a {
               ('Binary fraction', 2, None, 'binary-fraction'),
               ('Controllod rotation gate', 2, None, 'controllod-rotation-gate'),
               ('Applying to all qubits', 2, None, 'applying-to-all-qubits'),
-              ('Code example', 2, None, 'code-example')]}
+              ('Code example', 2, None, 'code-example'),
+              ('Discrete Fourier transforms',
+               2,
+               None,
+               'discrete-fourier-transforms'),
+              ('Invert DFT', 2, None, 'invert-dft'),
+              ('Orthonormality', 2, None, 'orthonormality'),
+              ('Convolution again', 2, None, 'convolution-again'),
+              ('Fast Fourier transform (FFT)',
+               2,
+               None,
+               'fast-fourier-transform-fft'),
+              ('FFT algorithm', 2, None, 'fft-algorithm'),
+              ('Splitting into smaller components',
+               2,
+               None,
+               'splitting-into-smaller-components'),
+              ('Formula for DFT', 2, None, 'formula-for-dft'),
+              ('How many complex multiplications?',
+               2,
+               None,
+               'how-many-complex-multiplications'),
+              ('More details', 2, None, 'more-details'),
+              ('Application of the FFT', 2, None, 'application-of-the-fft'),
+              ('Convolution yet again', 2, None, 'convolution-yet-again'),
+              ('More discussions', 2, None, 'more-discussions'),
+              ('Quantum Fourier transform',
+               2,
+               None,
+               'quantum-fourier-transform'),
+              ('QFT for $N=2$', 2, None, 'qft-for-n-2'),
+              ('Full QFT', 2, None, 'full-qft'),
+              ('Explicit transform', 2, None, 'explicit-transform'),
+              ('Unitarity', 2, None, 'unitarity'),
+              ('Importance of QFT', 2, None, 'importance-of-qft'),
+              ('Circuit QFT', 2, None, 'circuit-qft'),
+              ('Expanding the exponential',
+               2,
+               None,
+               'expanding-the-exponential'),
+              ('Rearranging', 2, None, 'rearranging'),
+              ('Notation for binary fraction',
+               2,
+               None,
+               'notation-for-binary-fraction'),
+              ('More notations', 2, None, 'more-notations'),
+              ('Deriving a circuit', 2, None, 'deriving-a-circuit'),
+              ('Rotation gate', 2, None, 'rotation-gate'),
+              ('Proceeding', 2, None, 'proceeding'),
+              ('Polynomial size', 2, None, 'polynomial-size')]}
 end of tocinfo -->
 
 <body>
@@ -254,8 +305,29 @@ MathJax.Hub.Config({
 </div>
 
 
+<!-- to do: add material about continuous Fourier transform from standard course in math physics -->
+<!-- Then introduce the discrete Fourier tramsform, the FFT and finally the quantum equivalent -->
+
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="principle-of-superposition-and-fourier-transforms">Principle of Superposition and Fourier Transforms </h2>
+<h2 id="overarching-motivation">Overarching motivation </h2>
+
+<p>After Simon's algorithm, the next big breakthrough in quantum
+algorithms occurred when Peter Shor discovered his algorithm for
+efficiently factoring numbers. This algorithm makes use of the quantum
+Fourier transform which is the topic of this sets of lectures.
+</p>
+
+<p>We will start with discrete Fourier transforms (DFT).  There are many
+motivations for the DFT. For those of you familiar with signal
+processing, harmonic oscillations, and many other areas of
+applications, Fourier transforms are almost standard kitchen
+items. For those of you who have studied quantum theory, you have
+probably met Fourier transforms when studying Heisenberg's uncertainty
+relation between momentum and position.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="continuous-fourier-transforms-and-the-principle-of-superposition">Continuous Fourier transforms and the principle of Superposition  </h2>
 
 <p>For problems with so-called harmonic oscillations, given by for example the following differential equation</p>
 $$
@@ -302,57 +374,6 @@ $$
 A_n = \frac{1}{L} \int_{-L/2}^{L/2} f(x)\exp{-i(2\pi nx/L)} dx.
 $$
 
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="transforming-to-discrete-variables">Transforming to discrete variables </h2>
-
-<p>In the fourier transform \( A_n \) is transformed from a dicrete variable
-to a continous one as \( L \rightarrow \inf \). We then replace \( A_n \) with
-\( f(k)dk \) and let \( n/L \rightarrow k \), and the sum is changed to an
-integral. This gives
-</p>
-$$
-f(x) = \int_{-\infty}^{\infty}dkF(k) \exp{i(2\pi kx)}
-$$
-
-<p>and</p>
-$$
-F(k) = \int_{-\infty}^{\infty}dxf(x) \exp{-i(2\pi kx)}
-$$
-
-<p>One way to interpret the Fourier transform is then as a transformation from one basis to another. </p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="discrete-fourier-transform">Discrete Fourier transform </h2>
-
-<p>Next we make another generalization by having a discrete function,
-that is \( f(x) \rightarrow f(x_k) \) with \( x_k = k\Delta x \) for \( k=0,\dots, N-1 \). This leads to the sums
-</p>
-$$
-f_x = \frac{1}{N} \sum_{k=0}^{N-1}F_k e^{i(2\pi kx)/N},
-$$
-
-<p>and</p>
-$$
-F_k = \sum_{x=0}^{N-1}f_x e^{-i(2\pi kx)/N}.
-$$
-
-<p>Although we have used functions here, this could also be a set of
-numbers.
-</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="simple-example">Simple example </h2>
-
-<p>As an example we can have a set of complex numbers
-\( \{x_0,\dots,x_{N-1}\} \) with fixed length \( N \), we can Fourier
-transform this as
-</p>
-$$
-y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_j \exp{i(2\pi jk)/N},
-$$
-
-<p>leading to a new set of complex numbers \( \{ y_0,\dots,y_{N-1}\} \). </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="several-driving-forces">Several driving forces </h2>
@@ -560,6 +581,57 @@ $$
 <p>the convolution of the functions \( f \) and \( g \).</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="transforming-to-discrete-variables">Transforming to discrete variables </h2>
+
+<p>In the fourier transform \( A_n \) is transformed from a dicrete variable
+to a continous one as \( L \rightarrow \inf \). We then replace \( A_n \) with
+\( f(k)dk \) and let \( n/L \rightarrow k \), and the sum is changed to an
+integral. This gives
+</p>
+$$
+f(x) = \int_{-\infty}^{\infty}dkF(k) \exp{i(2\pi kx)}
+$$
+
+<p>and</p>
+$$
+F(k) = \int_{-\infty}^{\infty}dxf(x) \exp{-i(2\pi kx)}
+$$
+
+<p>One way to interpret the Fourier transform is then as a transformation from one basis to another. </p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="discrete-fourier-transform">Discrete Fourier transform </h2>
+
+<p>Next we make another generalization by having a discrete function,
+that is \( f(x) \rightarrow f(x_k) \) with \( x_k = k\Delta x \) for \( k=0,\dots, N-1 \). This leads to the sums
+</p>
+$$
+f_x = \frac{1}{N} \sum_{k=0}^{N-1}F_k e^{i(2\pi kx)/N},
+$$
+
+<p>and</p>
+$$
+F_k = \sum_{x=0}^{N-1}f_x e^{-i(2\pi kx)/N}.
+$$
+
+<p>Although we have used functions here, this could also be a set of
+numbers.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="simple-example">Simple example </h2>
+
+<p>As an example we can have a set of complex numbers
+\( \{x_0,\dots,x_{N-1}\} \) with fixed length \( N \), we can Fourier
+transform this as
+</p>
+$$
+y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_j \exp{i(2\pi jk)/N},
+$$
+
+<p>leading to a new set of complex numbers \( \{ y_0,\dots,y_{N-1}\} \). </p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="discrete-fourier-transformations">Discrete Fourier Transformations </h2>
 
 <p>Consider two sets of complex numbers \( x_k \) and \( y_k \) with
@@ -747,68 +819,7 @@ $$
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qk</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
-<span style="color: #408080; font-style: italic">##qk.IBMQ.load_account()</span>
-
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">QFT</span>(Qcircuit, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
-    <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot; _________________________</span>
-<span style="color: #BA2121; font-style: italic">    </span>
-<span style="color: #BA2121; font-style: italic">        Quantum Fourier Transform</span>
-<span style="color: #BA2121; font-style: italic">        _________________________</span>
-<span style="color: #BA2121; font-style: italic">        </span>
-<span style="color: #BA2121; font-style: italic">        Input: </span>
-<span style="color: #BA2121; font-style: italic">        </span>
-<span style="color: #BA2121; font-style: italic">            Qcircuit = [qc,qr,cr,n]</span>
-<span style="color: #BA2121; font-style: italic">                - qc -&gt; Quantum circuit object</span>
-<span style="color: #BA2121; font-style: italic">                - qr -&gt; Quantum register object</span>
-<span style="color: #BA2121; font-style: italic">                - cr -&gt; Classical register object</span>
-<span style="color: #BA2121; font-style: italic">                - n  -&gt; Number of qubits</span>
-<span style="color: #BA2121; font-style: italic">                </span>
-<span style="color: #BA2121; font-style: italic">            inverse:</span>
-<span style="color: #BA2121; font-style: italic">                True,False</span>
-<span style="color: #BA2121; font-style: italic">   </span>
-<span style="color: #BA2121; font-style: italic">        Output:</span>
-<span style="color: #BA2121; font-style: italic">        </span>
-<span style="color: #BA2121; font-style: italic">            Qcircuit</span>
-<span style="color: #BA2121; font-style: italic">    &quot;&quot;&quot;</span>
-    
-    qc       <span style="color: #666666">=</span>  Qcircuit[<span style="color: #666666">0</span>]
-    qr       <span style="color: #666666">=</span>  Qcircuit[<span style="color: #666666">1</span>]
-    n_qubits <span style="color: #666666">=</span>  Qcircuit[<span style="color: #666666">2</span>]
-    
-    <span style="color: #008000; font-weight: bold">if</span> <span style="color: #AA22FF; font-weight: bold">not</span> inverse:
-        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits):
-            qc<span style="color: #666666">.</span>h(qr[i])
-            <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(i<span style="color: #666666">+1</span>,n_qubits):
-                qc<span style="color: #666666">.</span>cu1(np<span style="color: #666666">.</span>pi<span style="color: #666666">/2**</span>(j<span style="color: #666666">-</span>i),qr[j],qr[i])
-
-        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">int</span>(n_qubits<span style="color: #666666">/2</span>)):
-            qc<span style="color: #666666">.</span>swap(qr[i],qr[<span style="color: #666666">-</span>(i<span style="color: #666666">+1</span>)])
-    <span style="color: #008000; font-weight: bold">else</span>:
-        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">int</span>(n_qubits<span style="color: #666666">/2</span>)):
-            qc<span style="color: #666666">.</span>swap(qr[i],qr[<span style="color: #666666">-</span>(i<span style="color: #666666">+1</span>)])
-            
-        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_qubits):
-            <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(i):
-                qc<span style="color: #666666">.</span>cu1(<span style="color: #666666">-</span>np<span style="color: #666666">.</span>pi<span style="color: #666666">/2**</span>(i<span style="color: #666666">-</span>j),qr[j],qr[i])
-            qc<span style="color: #666666">.</span>h(qr[i])    
-    
-    <span style="color: #008000; font-weight: bold">return</span> [qc,qc,n_qubits] 
-
-
-
-<span style="color: #408080; font-style: italic">## Simple 3-qubit transform to confirm correct implementation</span>
-n_qubits <span style="color: #666666">=</span> <span style="color: #666666">3</span>
-qr1      <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
-qc1      <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qr1)
-qr2      <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumRegister(n_qubits)
-qc2      <span style="color: #666666">=</span> qk<span style="color: #666666">.</span>QuantumCircuit(qr2)
-Qcircuit1 <span style="color: #666666">=</span> QFT([qc1,qr1,n_qubits])
-Qcircuit2 <span style="color: #666666">=</span> QFT([qc2,qr2,n_qubits],inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
-
-Qcircuit1[<span style="color: #666666">0</span>]<span style="color: #666666">.</span>draw()
-Qcircuit2[<span style="color: #666666">0</span>]<span style="color: #666666">.</span>draw()
+  <pre style="line-height: 125%;">
 </pre>
 </div>
       </div>
@@ -825,6 +836,517 @@ Qcircuit2[<span style="color: #666666">0</span>]<span style="color: #666666">.</
 </div>
 
 
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="discrete-fourier-transforms">Discrete Fourier transforms </h2>
+
+<p>Suppose that we have a vector \( f \) of \( N \) complex numbers, \( f_{k}, k
+\in\{0,1, \ldots, N-1\} \). Then the discrete Fourier transform (DFT) is
+a map from these \( N \) complex numbers to \( N \) complex numbers, the
+Fourier transformed coefficients \( \tilde{f}_{j} \), given by
+</p>
+
+$$
+\begin{equation*}
+\tilde{f}_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{-j k} f_{k}
+\end{equation*}
+$$
+
+<p>where \( \omega=\exp \left(\frac{2 \pi i}{N}\right) \).</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="invert-dft">Invert DFT </h2>
+<p>The inverse DFT is given by</p>
+
+$$
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \tilde{f}_{k}
+\end{equation*}
+$$
+
+<p>To see this consider how the basis vectors transform. If \( f_{k}^{l}=\delta_{k, l} \), then</p>
+
+$$
+\begin{equation*}
+\tilde{f}_{j}^{l}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{-j k} \delta_{k, l}=\frac{1}{\sqrt{N}} \omega^{-j l}
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="orthonormality">Orthonormality </h2>
+<p>These DFT vectors are orthonormal:</p>
+
+$$
+\begin{equation*}
+\sum_{j=0}^{N-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\frac{1}{N} \sum_{j=0}^{N-1} \omega^{j l} \omega^{-j m}=\frac{1}{N} \sum_{j=0}^{N-1} \omega^{j(l-m)} 
+\end{equation*}
+$$
+
+<p>This last sum can be evaluated as a geometric series, but beware of the \( (l-m)=0 \) term, and yields</p>
+
+$$
+\begin{equation*}
+\sum_{j=0}^{N-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\delta_{l, m}
+\end{equation*}
+$$
+
+<p>From this we can check that the inverse DFT does indeed perform the inverse transform:</p>
+
+$$
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \tilde{f}_{k}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \frac{1}{\sqrt{N}} \sum_{l=0}^{N-1} \omega^{-l k} f_{l}=\frac{1}{N} \sum_{k, l=0}^{N-1} \omega^{(j-l) k} f_{l}=\sum_{l=0}^{N-1} \delta_{j, l} f_{l}=f_{j} 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="convolution-again">Convolution again </h2>
+
+<p>An important property of the DFT is above mentioned convolution
+theorem. The circular convolution of two vectors \( f \) and \( g \) is given
+by
+</p>
+
+$$
+\begin{equation*}
+(f * g)_{i}=\sum_{j=0}^{N-1} f_{j} g_{i-j} 
+\end{equation*}
+$$
+
+<p>where we define \( g_{-m}=g_{N-m} \). The convolution theorem states that the DFT turns convolution into pointwise vector multiplication. In other words if the components of the DFT of \( (f * g) \) are \( \tilde{c}_{k} \), then \( \tilde{c}_{k}=\tilde{f}_{k} \tilde{g}_{k} \). What use is the convolution theorem? Well this leads us nicely to our next topic, the fast Fourier transform.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="fast-fourier-transform-fft">Fast Fourier transform (FFT) </h2>
+
+<p>Naively how many math operations do we have to do to perform a
+discrete Fourier transform? Well for each component of the new vector
+we will need to perform \( N \) multiplications and then we will need to
+add these components. Since we need to do this for each of the \( N \)
+different component. Thus we see that \( N^{2} \) complex multiplications
+and \( N(N-1) \) complex additions are needed to compute the DFT. The goal
+of the fast Fourier transform is to perform the DFT using less basic
+math operations. There are may ways to do this. We will describe one
+particular method for \( N=2^{n} \) and will put off discussion of the
+case where \( N \neq 2^{n} \) until later. So assume \( N=2^{n} \) from here
+until I say otherwise.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="fft-algorithm">FFT algorithm </h2>
+
+<p>The Fast Fourier Transform (FFT) we will consider is based on
+observing the fact that the there are symmetries of the coefficients
+in the DFT,
+</p>
+
+$$
+\begin{align*}
+\omega^{k+N / 2} & =-\omega^{k} \\
+\omega^{k+N} & =\omega^{k} .
+\end{align*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="splitting-into-smaller-components">Splitting into smaller components </h2>
+
+<p>Suppose we want to perform the DFT of the vector \( f \). Split the
+components of \( f \) up into smaller vectors of size \( N / 2 \), \( e \) and
+\( o \). The coefficients of \( e \) are the components of \( f \) which are even
+and the coefficients of \( o \) are the components of \( f \) which are
+odd. The order of the coefficients is retained. Then it is easy to see
+that
+</p>
+
+$$
+\begin{align*}
+\tilde{f}_{j} & =\frac{1}{\sqrt{N}} \sum_{i=0}^{N-1} \omega^{-i j} f_{i}=\frac{1}{\sqrt{N}} \sum_{i=0}^{N / 2-1} \omega^{-2 i j} e_{i}+\sum_{i=0}^{N / 2-1} \omega^{-(2 i+1) j} o_{i} \\
+& =\frac{1}{\sqrt{N}}\left(\sum_{i=0}^{N / 2-1} \omega_{N / 2}^{-i j} e_{i}+\omega_{N}^{-j} \sum_{i=0}^{N / 2-1} \omega_{N / 2}^{-i j} o_{i}\right) 
+\end{align*}
+$$
+
+<p>where \( \omega_{N / 2}=\exp \left(\frac{2 \pi i}{N}\right) \) and we have denoted \( \omega \) by \( \omega_{N} \) for clarity.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="formula-for-dft">Formula for DFT </h2>
+
+<p>We have thus obtained the a formula for the DFT of \( f \) in terms of the DFT of \( e \) and \( o \) :</p>
+
+$$
+\begin{equation*}
+\tilde{f}_{j}=\tilde{e}_{j}+\omega_{N}^{-j} \tilde{o}_{j} 
+\end{equation*}
+$$
+
+<p>Now recall that \( j \) runs from 0 to \( N-1 \) and the DFTs of \( e \) and \( f \) are periodic with period \( N / 2 \). Using this and the above symmetry we find that we can express our formula as</p>
+$$
+\begin{array}{ll}
+\sqrt{2} \tilde{f}_{j}=\tilde{e}_{j}+\omega_{N}^{-j} \tilde{o}_{j} & 0 \leq j \leq N / 2-1 \\
+\sqrt{2} \tilde{f}_{j}=\tilde{e}_{j}-\omega_{N}^{-j} \tilde{o}_{j} & N / 2-2 \leq j \leq N-1 
+\end{array}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="how-many-complex-multiplications">How many complex multiplications? </h2>
+
+<p>Suppose that we first compute the DFT over \( e \) and \( o \) and then uses
+them in this formula to compute the full DFT of \( f \). How many complex
+multiplications do we need to perform? Well to compute \( e \) and \( o \)
+requires \( 2 \frac{N}{2}^{2}=\frac{N^{2}}{2} \) multiplications. We need
+another \( N / 2 \) to compute \( \omega_{N}^{-j} \tilde{o}_{j} \). Forget
+about the square root of two, it can always be put in at the end as an
+extra \( N \) multiplications. Thus we require
+\( \frac{N^{2}}{2}+\frac{N}{2} \) complex multiplications to compute the
+DFT as opposed to \( N^{2} \) in the the previous method. This is a
+reduction of about a factor of 2 for large \( N \).
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-details">More details </h2>
+
+<p>Further it is clear that for \( N=2^{n} \) we can use the above trick all
+the way down to \( N=2 \). How many complex multiplications do we need to
+perform if we do this? Let \( T_{n} \) denote the number of
+multiplications at the \( N=2^{n} \) th level, such that \( T_{1}=4 \). Then
+</p>
+
+$$
+\begin{equation*}
+T_{n}=2 T_{n-1}+2^{n-1}
+\end{equation*}
+$$
+
+<p>which can be bounded by</p>
+
+$$
+\begin{equation*}
+T_{n} \leq 2 T_{n-1}+2^{n}
+\end{equation*}
+$$
+
+<p>which has solution \( T_{n} \leq 2^{n} n \). In other words the running
+time is bounded by \( N \log N \). Thus we see that in the FFT we can
+compute the DFT in a complexity of \( N \log N \) operations. This is a
+nice little improvement. Of historical interest apparently Gauss knew
+the FFT algorithm.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="application-of-the-fft">Application of the FFT </h2>
+
+<p>Here is a very cool application of the FFT. Suppose that you have two
+polynomials with complex coefficients: \( f(x)=a_{0}+a_{1}
+x+\cdots+a_{N-1} x^{N-1} \) and \( g(x)=b_{0}+b_{1} x+\cdots+b_{N-1}
+x^{N-1} \). If you multiply these two polynomials\\ together you get a
+new polynomial \( f(x) g(x)=\sum_{i, j=0}^{N-1} a_{i} b_{j}
+x^{i+j}=\sum_{k=0}^{2(N-1)} c_{k} x^{k} \). The new coefficients for
+this polynomial are a function of the two polynomials:
+</p>
+
+$$
+\begin{equation*}
+c_{k}=\sum_{l=0}^{N-1} a_{l} b_{k-l}
+\end{equation*}
+$$
+
+<p>where the sum is over all valid polynomial terms (i.e. when \( k-l \) is negative, there is no term in the sum.) One sees that computing \( c_{k} \) requires \( N^{2} \) multiplications.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="convolution-yet-again">Convolution yet again </h2>
+
+<p>But wait, the expression for \( c_{k} \) looks a lot like
+convolution. Indeed suppose that we form a \( 2 N \) dimensional vector
+\( a=\left(a_{0}, \ldots, a_{N-1}, 0, \ldots, 0\right) \) and
+\( b=\left(b_{0}, \ldots, b_{N-1}, 0, \ldots, 0\right) \) from our
+original data. The vector \( c \) which will represent the coefficients of
+the new polynomial are then given by
+</p>
+
+$$
+\begin{equation*}
+c_{k}=\sum_{l=0}^{2 N-1} a_{l} b_{k-l} \bmod 2 N 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-discussions">More discussions </h2>
+<p>Now we don't need to condition this sum on their being valid
+terms. Now this is explicitly convolution! Thus we can compute the
+coefficients \( c_{k} \) by the following algorithm. Compute the DFT of
+the vectors \( a \) and \( b \). Pointwise multiply these two vectors. Then
+inverse DFT this new vector. The result will be \( c_{k} \) by the
+convolution theorem. If we use the FFT algorithm for this procedure,
+then we will require \( O(N \log N) \) multiplications. This is pretty
+cool: by using the FFT we can multiply polynomials faster than our
+naive grade school method for multiplying polynomials. It is good to
+see that our grad school self can do things our grade school self
+cannot do. Some of you will even know that you can use the FFT to
+multiply integers \( N \) integers with a cost of \( O\left(N \log ^{2}
+N\right) \) or used recursively: \( O(N \log N \log \log N \log \log \log
+N \cdots) \).
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="quantum-fourier-transform">Quantum Fourier transform </h2>
+
+<p>Now lets turn to the Quantum Fourier transform (QFT). We've already
+seen the QFT for \( N=2 \). It is the Hadamard transform:
+</p>
+$$
+H=\frac{1}{\sqrt{2}}\left[\begin{array}{cc}
+1 & 1  \\
+1 & -1
+\end{array}\right]
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="qft-for-n-2">QFT for \( N=2 \) </h2>
+
+<p>Why is this the QFT for \( N=2 \) ? Well suppose have the single qubit
+state \( a_{0}|0\rangle+a_{1}|1\rangle \). If we apply the Hadamard
+operation to this state we obtain the new state
+</p>
+
+$$
+\begin{equation*}
+\frac{1}{\sqrt{2}}\left(a_{0}+a_{1}\right)|0\rangle+\frac{1}{\sqrt{2}}\left(a_{0}-a_{1}\right)|1\rangle=\tilde{a}_{0}|0\rangle+\tilde{a}_{1}|1\rangle . 
+\end{equation*}
+$$
+
+<p>In other words the Hadamard gate performs the DFT for \( N=2 \) on the
+amplitudes of the state! Notice that this is very different that
+computing the DFT for \( N=2 \) : remember the amplitudes are not numbers
+which are accessible to us mere mortals, they just represent our
+description of the quantum system.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="full-qft">Full QFT </h2>
+
+<p>So what is the full quantum Fourier transform? It is the transform
+which takes the amplitudes of a \( N \) dimensional state and computes the
+Fourier transform on these amplitudes (which are then the new
+amplitudes in the computational basis.) In other words, the QFT enacts
+the transform
+</p>
+
+$$
+\begin{equation*}
+\sum_{x=0}^{N-1} a_{x}|x\rangle \rightarrow \sum_{x=0}^{N-1} \tilde{a}_{x}|x\rangle=\sum_{x=0}^{N-1} \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y} a_{y}|x\rangle 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="explicit-transform">Explicit transform </h2>
+<p>It is easy to see that this implies that the QFT performs the following transform on basis states:</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y}|y\rangle
+\end{equation*}
+$$
+
+<p>Thus the QFT is given by the matrix</p>
+
+$$
+\begin{equation*}
+U_{Q F T}=\frac{1}{\sqrt{N}} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{-y x}|y\rangle\langle x| 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="unitarity">Unitarity </h2>
+<p>The last  matrix is unitary. Let's check this:</p>
+
+$$
+\begin{align*}
+U_{Q F T} U_{Q F T}^{\dagger} & =\frac{1}{N} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{y x}|x\rangle\left\langle y\left|\sum_{x^{\prime}=0}^{N-1} \sum_{y^{\prime}=0}^{N-1} \omega_{N}^{-y^{\prime} x^{\prime}}\right| y^{\prime}\right\rangle\left\langle x^{\prime}\right| \\
+& =\frac{1}{N} \sum_{x, y, x^{\prime}, y^{\prime}=0}^{N-1} \omega_{N}^{y x-y^{\prime} x^{\prime}} \delta_{y, y^{\prime}}|x\rangle\left\langle x^{\prime}\left|=\frac{1}{N} \sum_{x, y, x^{\prime}=0}^{N-1} \omega_{N}^{y\left(x-x^{\prime}\right)}\right| x\right\rangle\left\langle x^{\prime}\right| \\
+& =\sum_{x, x^{\prime}=0}^{N-1} \delta_{x, x^{\prime}}|x\rangle\left\langle x^{\prime}\right|=I 
+\end{align*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="importance-of-qft">Importance of QFT </h2>
+
+<p>The QFT is a very important transform in quantum computing. It can be
+used for all sorts of cool tasks, including, as we shall see in Shor's
+algorithm. But before we can use it for quantum computing tasks, we
+should try to see if we can efficiently implement the QFT with a
+quantum circuit. Indeed we can and the reason we can is intimately
+related to the fast Fourier transform.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="circuit-qft">Circuit QFT </h2>
+
+<p>Let's derive a circuit for the QFT when \( N=2^{n} \). The QFT performs the transform</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y=0}^{2^{n}-1} \omega_{N}^{-x y}|y\rangle 
+\end{equation*}
+$$
+
+<p>Then we can expand out this sum</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \omega_{N}^{-x \sum_{k=1}^{n} 2^{n-k} y_{k}}\left|y_{1}, y_{2}, \ldots, y_{n}\right\rangle 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="expanding-the-exponential">Expanding the exponential </h2>
+
+<p>Expanding the exponential of a sum to a product of exponentials and
+collecting these terms in from the appropriate terms we can express
+this as
+</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \bigotimes_{k=1}^{n} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="rearranging">Rearranging </h2>
+
+<p>We can rearrange the sum and products as</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[\sum_{y_{k} \in\{0,1\}} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle\right] 
+\end{equation*}
+$$
+
+<p>Expanding this sum yields</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[|0\rangle+\omega_{N}^{-x 2^{n-k}}|1\rangle\right]
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="notation-for-binary-fraction">Notation for binary fraction </h2>
+
+<p>But now notice that \( \omega_{N}^{-x 2^{n-k}} \) is not dependent on the
+higer order bits of \( x \). It is convenient to adopt the following
+expression for a binary fraction:
+</p>
+
+$$
+\begin{equation*}
+0 . x_{l} x_{l+1} \ldots x_{n}=\frac{x_{l}}{2}+\frac{x_{l+1}}{4}+\cdots+\frac{x_{n}}{2^{n-l+1}}
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-notations">More notations </h2>
+<p>Then we can see that</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n-1} x_{n}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] 
+\end{equation*}
+$$
+
+<p>This is a very useful form of the QFT for \( N=2^{n} \). Why? Because we
+see that only the last qubit depends on the the values of all the
+other input qubits and each further bit depends less and less on the
+input qubits. Further we note that \( e^{-2 \pi i 0 . a} \) is either +1
+or -1 , which reminds us of the Hadamard transform.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="deriving-a-circuit">Deriving a circuit </h2>
+
+<p>So how do we use this to derive a circuit for the QFT over \( N=2^{n} \) ?</p>
+
+<p>Take the first qubit of \( \left|x_{1}, \ldots, x_{n}\right\rangle \) and
+apply a Hadamard transform. This produces the transform
+</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 \cdot x_{1}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="rotation-gate">Rotation gate </h2>
+<p>Now define the rotation gate</p>
+
+$$
+R_{k}=\left[\begin{array}{cc}
+1 & 0  \tag{30}\\
+0 & \exp \left(\frac{-2 \pi i}{2^{k}}\right)
+\end{array}\right]
+$$
+
+<p>If we now apply controlled \( R_{2}, R_{3} \), etc. gates controlled on
+the appropriate bits this enacts the transform
+</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \ldots x_{n}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
+\end{equation*}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="proceeding">Proceeding </h2>
+
+<p>Thus we have reproduced the last term in the QFTed state. Of course
+now we can proceed to the second qubit, perform a Hadamard, and the
+appropriate controlled \( R_{k} \) gates and get the second to last
+qubit. Thus when we are finished we will have the transform
+</p>
+
+$$
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n-1}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right]
+\end{equation*}
+$$
+
+<p>Reversing the order of these qubits will then produce the QFT!</p>
+
+<p>The circuit we have constructed on \( n \) qubits is</p>
+
+<!-- \includegraphics[max width=\textwidth]{2024_03_18_c1d427fa6b85efa365f1g-5} -->
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="polynomial-size">Polynomial size </h2>
+
+<p>This circuit is polynomial size in \( n \). Actually we can count the
+number of quantum gates in it: \( \sum_{i=1}^{n} i=\frac{n(n+1)}{2} \)
+Hadamards and controlled \( R_{k} \) gates plus
+\( \left\lfloor\frac{n}{2}\right\rfloor \) swap gates. What was it that
+allowed us to construct an efficient circuit? Well if you look at the
+factorization we used, you will see that we have basically used the
+same trick that we used for the FFT! But now, since we are working on
+amplitudes and not operating on the the complex vectors themselves, we
+get an algorithm which scales nicely in the number of qubits. It is
+important to realize that the QFT cannot be used like the FFT on
+data. Thus there is a tendency to want to port quantum computers over
+to signal processing. Currently there are some preliminary ideas about
+how to do this, but the naive way you might expect this to work does
+not work.
+</p>
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">
 <!-- copyright --> &copy; 1999-2024, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license
