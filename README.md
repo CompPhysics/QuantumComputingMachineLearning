@@ -93,6 +93,8 @@
 ## March 18-22, 2024. VQE 
   - Summary of project 1
   - Quantum Fourier transforms and preparing for new topics and possible paths for project 2
+  - Video of lecture at https://youtu.be/kR-4qqtFyxQ
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesMarch20.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
