@@ -15,11 +15,24 @@ DATE: Week of March 18-22
 # to do: add material about continuous Fourier transform from standard course in math physics
 # Then introduce the discrete Fourier tramsform, the FFT and finally the quantum equivalent
 
+!split
+===== Possible paths for project 2 =====
+
+o Implement QFTs  and study the phase estimation algorithm and eventually Shor's algorithm for factorization of numbers.
+o Study other algorithms
+  o Deutsch-Jozsa algorithm: Determine if a function is constant or balance using the fewest number of queries.
+  o SImon's algorithm: Determine if a function (Oracle) is one-to-one or two-to-one
+  o Grover's algorithm: Search unstructured list of data fast
+  o Shor's algorithm : Factorize integers efficiently
+o Study the solution of quantum mechanical eigenvalue problems with systems from atomic/molecular physics and quantum chemistry
+o Quantum machine learning projects
+o Other paths
+
 
 !split
 ===== Overarching motivation =====
 
-After Simon's algorithm, the next big breakthrough in quantum
+After Simon's algorithm (to be discussed later), the next big breakthrough in quantum
 algorithms occurred when Peter Shor discovered his algorithm for
 efficiently factoring numbers. This algorithm makes use of the quantum
 Fourier transform which is the topic of this sets of lectures.
@@ -285,13 +298,13 @@ Next we make another generalization by having a discrete function,
 that is $f(x) \rightarrow f(x_k)$ with $x_k = k\Delta x$ for $k=0,\dots, N-1$. This leads to the sums
 !bt
 \[
-f_x = \frac{1}{N} \sum_{k=0}^{N-1}F_k e^{i(2\pi kx)/N},
+f_x = \frac{1}{N} \sum_{k=0}^{N-1}F_k \exp{i(2\pi kx)/N},
 \]
 !et
 and
 !bt
 \[
-F_k = \sum_{x=0}^{N-1}f_x e^{-i(2\pi kx)/N}.
+F_k = \sum_{x=0}^{N-1}f_x \exp{-i(2\pi kx)/N}.
 \]
 !et
 
@@ -342,7 +355,260 @@ y_1 = \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+
 !et
 
 
-We can rewrite this in terms of the following matrix-vector operation. More material to come here.
+!split
+===== More details on Discrete Fourier transforms =====
+
+Suppose that we have a vector $f$ of $N$ complex numbers, $f_{k}, k
+\in\{0,1, \ldots, N-1\}$. Then the discrete Fourier transform (DFT) is
+a map from these $N$ complex numbers to $N$ complex numbers, the
+Fourier transformed coefficients $\tilde{f}_{j}$, given by
+
+!bt
+\begin{equation*}
+\tilde{f}_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{-j k} f_{k}
+\end{equation*}
+!et
+where $\omega=\exp \left(\frac{2 \pi i}{N}\right)$.
+
+!split
+===== Invert DFT =====
+The inverse DFT is given by
+
+!bt
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \tilde{f}_{k}
+\end{equation*}
+!et
+
+To see this consider how the basis vectors transform. If $f_{k}^{l}=\delta_{k, l}$, then
+
+
+!bt
+\begin{equation*}
+\tilde{f}_{j}^{l}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{-j k} \delta_{k, l}=\frac{1}{\sqrt{N}} \omega^{-j l}
+\end{equation*}
+!et
+
+!split
+===== Orthonormality ===== 
+These DFT vectors are orthonormal:
+
+!bt
+\begin{equation*}
+\sum_{j=0}^{N-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\frac{1}{N} \sum_{j=0}^{N-1} \omega^{j l} \omega^{-j m}=\frac{1}{N} \sum_{j=0}^{N-1} \omega^{j(l-m)} 
+\end{equation*}
+!et
+
+This last sum can be evaluated as a geometric series, but beware of the $(l-m)=0$ term, and yields
+
+!bt
+\begin{equation*}
+\sum_{j=0}^{N-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\delta_{l, m}
+\end{equation*}
+!et
+
+From this we can check that the inverse DFT does indeed perform the inverse transform:
+
+!bt
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \tilde{f}_{k}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \frac{1}{\sqrt{N}} \sum_{l=0}^{N-1} \omega^{-l k} f_{l}=\frac{1}{N} \sum_{k, l=0}^{N-1} \omega^{(j-l) k} f_{l}=\sum_{l=0}^{N-1} \delta_{j, l} f_{l}=f_{j} 
+\end{equation*}
+!et
+
+!split
+===== Convolution again =====
+
+An important property of the DFT is the above mentioned convolution
+theorem. The circular convolution of two vectors $f$ and $g$ is given
+by
+
+!bt
+\begin{equation*}
+(f * g)_{i}=\sum_{j=0}^{N-1} f_{j} g_{i-j} 
+\end{equation*}
+!et
+
+where we define $g_{-m}=g_{N-m}$. The convolution theorem states that the DFT turns convolution into pointwise vector multiplication. In other words if the components of the DFT of $(f * g)$ are $\tilde{c}_{k}$, then $\tilde{c}_{k}=\tilde{f}_{k} \tilde{g}_{k}$. What use is the convolution theorem? Well this leads us nicely to our next topic, the fast Fourier transform.
+
+
+!split
+===== Fast Fourier transform (FFT) =====
+
+Naively how many math operations do we have to do to perform a
+discrete Fourier transform? Well for each component of the new vector
+we will need to perform $N$ multiplications and then we will need to
+add these components. Since we need to do this for each of the $N$
+different component. Thus we see that $N^{2}$ complex multiplications
+and $N(N-1)$ complex additions are needed to compute the DFT. The goal
+of the fast Fourier transform is to perform the DFT using less basic
+math operations. There are may ways to do this. We will describe one
+particular method for $N=2^{n}$ and will put off discussion of the
+case where $N \neq 2^{n}$ until later. So assume $N=2^{n}$ from here
+until I say otherwise.
+
+
+!split
+===== FFT algorithm =====
+
+The Fast Fourier Transform (FFT) is based on
+observing the fact that there are symmetries of the coefficients
+in the DFT,
+
+!bt
+\begin{align*}
+\omega^{k+N / 2} & =-\omega^{k} \\
+\omega^{k+N} & =\omega^{k} .
+\end{align*}
+!et
+
+
+!split
+===== Splitting into smaller components =====
+
+Suppose we want to perform the DFT of the vector $f$. Split the
+components of $f$ up into smaller vectors of size $N / 2$, $e$ and
+$o$. The coefficients of $e$ are the components of $f$ which are even
+and the coefficients of $o$ are the components of $f$ which are
+odd. The order of the coefficients is retained. Then it is easy to see
+that
+
+!bt
+\begin{align*}
+\tilde{f}_{j} & =\frac{1}{\sqrt{N}} \sum_{i=0}^{N-1} \omega^{-i j} f_{i}=\frac{1}{\sqrt{N}} \sum_{i=0}^{N / 2-1} \omega^{-2 i j} e_{i}+\sum_{i=0}^{N / 2-1} \omega^{-(2 i+1) j} o_{i} \\
+& =\frac{1}{\sqrt{N}}\left(\sum_{i=0}^{N / 2-1} \omega_{N / 2}^{-i j} e_{i}+\omega_{N}^{-j} \sum_{i=0}^{N / 2-1} \omega_{N / 2}^{-i j} o_{i}\right) 
+\end{align*}
+!et
+
+where $\omega_{N / 2}=\exp \left(\frac{2 \pi i}{N}\right)$ and we have denoted $\omega$ by $\omega_{N}$ for clarity.
+
+
+!split
+===== Formula for DFT =====
+
+We have thus obtained the a formula for the DFT of $f$ in terms of the DFT of $e$ and $o$ :
+
+!bt
+\begin{equation*}
+\tilde{f}_{j}=\tilde{e}_{j}+\omega_{N}^{-j} \tilde{o}_{j} 
+\end{equation*}
+!et
+
+
+!split
+===== Rearranging the sums =====
+
+Recall that $j$ runs from 0 to $N-1$ and the DFTs of $e$ and $f$ are periodic with period $N / 2$. Using this and the above symmetry we find that we can express our formula as
+!bt
+\[
+\begin{array}{ll}
+\sqrt{2} \tilde{f}_{j}=\tilde{e}_{j}+\omega_{N}^{-j} \tilde{o}_{j} & 0 \leq j \leq N / 2-1 \\
+\sqrt{2} \tilde{f}_{j}=\tilde{e}_{j}-\omega_{N}^{-j} \tilde{o}_{j} & N / 2-2 \leq j \leq N-1 
+\end{array}
+\]
+!et
+
+!split
+===== How many complex multiplications? =====
+
+Suppose that we first compute the DFT over $e$ and $o$ and then uses
+them in this formula to compute the full DFT of $f$. How many complex
+multiplications do we need to perform? Well to compute $e$ and $o$
+requires $2 \frac{N}{2}^{2}=\frac{N^{2}}{2}$ multiplications. We need
+another $N / 2$ to compute $\omega_{N}^{-j} \tilde{o}_{j}$. Forget
+about the square root of two, it can always be put in at the end as an
+extra $N$ multiplications. Thus we require
+$\frac{N^{2}}{2}+\frac{N}{2}$ complex multiplications to compute the
+DFT as opposed to $N^{2}$ in the the previous method. This is a
+reduction of about a factor of 2 for large $N$.
+
+
+
+!split
+===== More details =====
+
+Further it is clear that for $N=2^{n}$ we can use the above trick all
+the way down to $N=2$. How many complex multiplications do we need to
+perform if we do this? Let $T_{n}$ denote the number of
+multiplications at the $N=2^{n}$ th level, such that $T_{1}=4$. Then
+
+!bt
+\begin{equation*}
+T_{n}=2 T_{n-1}+2^{n-1}.
+\end{equation*}
+!et
+
+!split
+===== Bounds =====
+
+The latter can be bounded by
+
+!bt
+\begin{equation*}
+T_{n} \leq 2 T_{n-1}+2^{n}
+\end{equation*}
+!et
+which has solution $T_{n} \leq 2^{n} n$. In other words the running
+time is bounded by $N \log N$. Thus we see that in the FFT we can
+compute the DFT in a complexity of $N \log N$ operations. This is a
+nice little improvement. Of historical interest apparently Gauss knew
+the FFT algorithm.
+
+
+!split
+===== Application of the FFT =====
+
+Suppose that you have two
+polynomials with complex coefficients: $f(x)=a_{0}+a_{1}
+x+\cdots+a_{N-1} x^{N-1}$ and $g(x)=b_{0}+b_{1} x+\cdots+b_{N-1}
+x^{N-1}$. If you multiply these two polynomials\\ together you get a
+new polynomial $f(x) g(x)=\sum_{i, j=0}^{N-1} a_{i} b_{j}
+x^{i+j}=\sum_{k=0}^{2(N-1)} c_{k} x^{k}$. The new coefficients for
+this polynomial are a function of the two polynomials:
+
+!bt
+\begin{equation*}
+c_{k}=\sum_{l=0}^{N-1} a_{l} b_{k-l},
+\end{equation*}
+!et
+
+where the sum is over all valid polynomial terms (i.e. when $k-l$ is negative, there is no term in the sum.) One sees that computing $c_{k}$ requires $N^{2}$ multiplications.
+
+
+!split
+===== Convolution yet again =====
+
+The expression for $c_{k}$ looks a lot like convolution. Indeed
+suppose that we form a $2 N$ dimensional vector $a=\left(a_{0},
+\ldots, a_{N-1}, 0, \ldots, 0\right)$ and $b=\left(b_{0}, \ldots,
+b_{N-1}, 0, \ldots, 0\right)$ from our original data. The vector $c$
+which will represent the coefficients of the new polynomial are then
+given by
+
+!bt
+\begin{equation*}
+c_{k}=\sum_{l=0}^{2 N-1} a_{l} b_{k-l} \bmod 2 N 
+\end{equation*}
+!et
+
+
+!split
+===== More discussions =====
+
+Now we don't need to condition this sum on their being valid
+terms. Now this is explicitly convolution! Thus we can compute the
+coefficients $c_{k}$ by the following algorithm. Compute the DFT of
+the vectors $a$ and $b$. Pointwise multiply these two vectors. Then
+inverse DFT this new vector. The result will be $c_{k}$ by the
+convolution theorem. If we use the FFT algorithm for this procedure,
+then we will require $O(N \log N)$ multiplications. This is pretty
+cool: by using the FFT we can multiply polynomials faster than our
+naive grade school method for multiplying polynomials. It is good to
+see that our grad school self can do things our grade school self
+cannot do. Some of you will even know that you can use the FFT to
+multiply integers $N$ integers with a cost of $O\left(N \log ^{2}
+N\right)$ or used recursively: $O(N \log N \log \log N \log \log \log
+N \cdots)$.
+
 
 
 
@@ -367,7 +633,7 @@ In terms of an orthonormal basis $\vert 0 \rangle,\vert 1\rangle,\dots,\vert 0 \
 
 !bt
 \[
-\vert j \rangle \rightarrow \sum_{k=0}^{N-1} e^{i(2\pi jk/N)}\vert k 
+\vert j \rangle \rightarrow \sum_{k=0}^{N-1} \exp{i(2\pi jk/N)}\vert k 
 \]
 !et
 
@@ -518,257 +784,6 @@ At the end we use swap gates to reverse the order of the qubits
 This is just the product representation from earlier, obviously our desired output.
 
 
-!split
-===== Code example =====
-!bc pycod
-!ec
-
-
-!split
-===== Discrete Fourier transforms =====
-
-Suppose that we have a vector $f$ of $N$ complex numbers, $f_{k}, k
-\in\{0,1, \ldots, N-1\}$. Then the discrete Fourier transform (DFT) is
-a map from these $N$ complex numbers to $N$ complex numbers, the
-Fourier transformed coefficients $\tilde{f}_{j}$, given by
-
-!bt
-\begin{equation*}
-\tilde{f}_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{-j k} f_{k}
-\end{equation*}
-!et
-where $\omega=\exp \left(\frac{2 \pi i}{N}\right)$.
-
-!split
-===== Invert DFT =====
-The inverse DFT is given by
-
-!bt
-\begin{equation*}
-f_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \tilde{f}_{k}
-\end{equation*}
-!et
-
-To see this consider how the basis vectors transform. If $f_{k}^{l}=\delta_{k, l}$, then
-
-
-!bt
-\begin{equation*}
-\tilde{f}_{j}^{l}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{-j k} \delta_{k, l}=\frac{1}{\sqrt{N}} \omega^{-j l}
-\end{equation*}
-!et
-
-!split
-===== Orthonormality ===== 
-These DFT vectors are orthonormal:
-
-!bt
-\begin{equation*}
-\sum_{j=0}^{N-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\frac{1}{N} \sum_{j=0}^{N-1} \omega^{j l} \omega^{-j m}=\frac{1}{N} \sum_{j=0}^{N-1} \omega^{j(l-m)} 
-\end{equation*}
-!et
-
-This last sum can be evaluated as a geometric series, but beware of the $(l-m)=0$ term, and yields
-
-!bt
-\begin{equation*}
-\sum_{j=0}^{N-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\delta_{l, m}
-\end{equation*}
-!et
-
-From this we can check that the inverse DFT does indeed perform the inverse transform:
-
-!bt
-\begin{equation*}
-f_{j}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \tilde{f}_{k}=\frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \omega^{j k} \frac{1}{\sqrt{N}} \sum_{l=0}^{N-1} \omega^{-l k} f_{l}=\frac{1}{N} \sum_{k, l=0}^{N-1} \omega^{(j-l) k} f_{l}=\sum_{l=0}^{N-1} \delta_{j, l} f_{l}=f_{j} 
-\end{equation*}
-!et
-
-!split
-===== Convolution again =====
-
-An important property of the DFT is above mentioned convolution
-theorem. The circular convolution of two vectors $f$ and $g$ is given
-by
-
-!bt
-\begin{equation*}
-(f * g)_{i}=\sum_{j=0}^{N-1} f_{j} g_{i-j} 
-\end{equation*}
-!et
-
-where we define $g_{-m}=g_{N-m}$. The convolution theorem states that the DFT turns convolution into pointwise vector multiplication. In other words if the components of the DFT of $(f * g)$ are $\tilde{c}_{k}$, then $\tilde{c}_{k}=\tilde{f}_{k} \tilde{g}_{k}$. What use is the convolution theorem? Well this leads us nicely to our next topic, the fast Fourier transform.
-
-
-!split
-===== Fast Fourier transform (FFT) =====
-
-Naively how many math operations do we have to do to perform a
-discrete Fourier transform? Well for each component of the new vector
-we will need to perform $N$ multiplications and then we will need to
-add these components. Since we need to do this for each of the $N$
-different component. Thus we see that $N^{2}$ complex multiplications
-and $N(N-1)$ complex additions are needed to compute the DFT. The goal
-of the fast Fourier transform is to perform the DFT using less basic
-math operations. There are may ways to do this. We will describe one
-particular method for $N=2^{n}$ and will put off discussion of the
-case where $N \neq 2^{n}$ until later. So assume $N=2^{n}$ from here
-until I say otherwise.
-
-
-!split
-===== FFT algorithm =====
-
-The Fast Fourier Transform (FFT) we will consider is based on
-observing the fact that the there are symmetries of the coefficients
-in the DFT,
-
-!bt
-\begin{align*}
-\omega^{k+N / 2} & =-\omega^{k} \\
-\omega^{k+N} & =\omega^{k} .
-\end{align*}
-!et
-
-
-!split
-===== Splitting into smaller components =====
-
-Suppose we want to perform the DFT of the vector $f$. Split the
-components of $f$ up into smaller vectors of size $N / 2$, $e$ and
-$o$. The coefficients of $e$ are the components of $f$ which are even
-and the coefficients of $o$ are the components of $f$ which are
-odd. The order of the coefficients is retained. Then it is easy to see
-that
-
-!bt
-\begin{align*}
-\tilde{f}_{j} & =\frac{1}{\sqrt{N}} \sum_{i=0}^{N-1} \omega^{-i j} f_{i}=\frac{1}{\sqrt{N}} \sum_{i=0}^{N / 2-1} \omega^{-2 i j} e_{i}+\sum_{i=0}^{N / 2-1} \omega^{-(2 i+1) j} o_{i} \\
-& =\frac{1}{\sqrt{N}}\left(\sum_{i=0}^{N / 2-1} \omega_{N / 2}^{-i j} e_{i}+\omega_{N}^{-j} \sum_{i=0}^{N / 2-1} \omega_{N / 2}^{-i j} o_{i}\right) 
-\end{align*}
-!et
-
-where $\omega_{N / 2}=\exp \left(\frac{2 \pi i}{N}\right)$ and we have denoted $\omega$ by $\omega_{N}$ for clarity.
-
-
-!split
-===== Formula for DFT =====
-
-We have thus obtained the a formula for the DFT of $f$ in terms of the DFT of $e$ and $o$ :
-
-!bt
-\begin{equation*}
-\tilde{f}_{j}=\tilde{e}_{j}+\omega_{N}^{-j} \tilde{o}_{j} 
-\end{equation*}
-!et
-
-Now recall that $j$ runs from 0 to $N-1$ and the DFTs of $e$ and $f$ are periodic with period $N / 2$. Using this and the above symmetry we find that we can express our formula as
-!bt
-\[
-\begin{array}{ll}
-\sqrt{2} \tilde{f}_{j}=\tilde{e}_{j}+\omega_{N}^{-j} \tilde{o}_{j} & 0 \leq j \leq N / 2-1 \\
-\sqrt{2} \tilde{f}_{j}=\tilde{e}_{j}-\omega_{N}^{-j} \tilde{o}_{j} & N / 2-2 \leq j \leq N-1 
-\end{array}
-\]
-!et
-
-!split
-===== How many complex multiplications? =====
-
-Suppose that we first compute the DFT over $e$ and $o$ and then uses
-them in this formula to compute the full DFT of $f$. How many complex
-multiplications do we need to perform? Well to compute $e$ and $o$
-requires $2 \frac{N}{2}^{2}=\frac{N^{2}}{2}$ multiplications. We need
-another $N / 2$ to compute $\omega_{N}^{-j} \tilde{o}_{j}$. Forget
-about the square root of two, it can always be put in at the end as an
-extra $N$ multiplications. Thus we require
-$\frac{N^{2}}{2}+\frac{N}{2}$ complex multiplications to compute the
-DFT as opposed to $N^{2}$ in the the previous method. This is a
-reduction of about a factor of 2 for large $N$.
-
-
-
-!split
-===== More details =====
-
-Further it is clear that for $N=2^{n}$ we can use the above trick all
-the way down to $N=2$. How many complex multiplications do we need to
-perform if we do this? Let $T_{n}$ denote the number of
-multiplications at the $N=2^{n}$ th level, such that $T_{1}=4$. Then
-
-!bt
-\begin{equation*}
-T_{n}=2 T_{n-1}+2^{n-1}
-\end{equation*}
-!et
-
-which can be bounded by
-
-!bt
-\begin{equation*}
-T_{n} \leq 2 T_{n-1}+2^{n}
-\end{equation*}
-!et
-which has solution $T_{n} \leq 2^{n} n$. In other words the running
-time is bounded by $N \log N$. Thus we see that in the FFT we can
-compute the DFT in a complexity of $N \log N$ operations. This is a
-nice little improvement. Of historical interest apparently Gauss knew
-the FFT algorithm.
-
-
-!split
-===== Application of the FFT =====
-
-Here is a very cool application of the FFT. Suppose that you have two
-polynomials with complex coefficients: $f(x)=a_{0}+a_{1}
-x+\cdots+a_{N-1} x^{N-1}$ and $g(x)=b_{0}+b_{1} x+\cdots+b_{N-1}
-x^{N-1}$. If you multiply these two polynomials\\ together you get a
-new polynomial $f(x) g(x)=\sum_{i, j=0}^{N-1} a_{i} b_{j}
-x^{i+j}=\sum_{k=0}^{2(N-1)} c_{k} x^{k}$. The new coefficients for
-this polynomial are a function of the two polynomials:
-
-!bt
-\begin{equation*}
-c_{k}=\sum_{l=0}^{N-1} a_{l} b_{k-l}
-\end{equation*}
-!et
-
-where the sum is over all valid polynomial terms (i.e. when $k-l$ is negative, there is no term in the sum.) One sees that computing $c_{k}$ requires $N^{2}$ multiplications.
-
-
-!split
-===== Convolution yet again =====
-
-But wait, the expression for $c_{k}$ looks a lot like
-convolution. Indeed suppose that we form a $2 N$ dimensional vector
-$a=\left(a_{0}, \ldots, a_{N-1}, 0, \ldots, 0\right)$ and
-$b=\left(b_{0}, \ldots, b_{N-1}, 0, \ldots, 0\right)$ from our
-original data. The vector $c$ which will represent the coefficients of
-the new polynomial are then given by
-
-!bt
-\begin{equation*}
-c_{k}=\sum_{l=0}^{2 N-1} a_{l} b_{k-l} \bmod 2 N 
-\end{equation*}
-!et
-
-
-!split
-===== More discussions =====
-Now we don't need to condition this sum on their being valid
-terms. Now this is explicitly convolution! Thus we can compute the
-coefficients $c_{k}$ by the following algorithm. Compute the DFT of
-the vectors $a$ and $b$. Pointwise multiply these two vectors. Then
-inverse DFT this new vector. The result will be $c_{k}$ by the
-convolution theorem. If we use the FFT algorithm for this procedure,
-then we will require $O(N \log N)$ multiplications. This is pretty
-cool: by using the FFT we can multiply polynomials faster than our
-naive grade school method for multiplying polynomials. It is good to
-see that our grad school self can do things our grade school self
-cannot do. Some of you will even know that you can use the FFT to
-multiply integers $N$ integers with a cost of $O\left(N \log ^{2}
-N\right)$ or used recursively: $O(N \log N \log \log N \log \log \log
-N \cdots)$.
 
 
 !split
@@ -993,26 +1008,15 @@ qubit. Thus when we are finished we will have the transform
 
 Reversing the order of these qubits will then produce the QFT!
 
-The circuit we have constructed on $n$ qubits is
+#The circuit we have constructed on $n$ qubits is
 
 
 #\includegraphics[max width=\textwidth]{2024_03_18_c1d427fa6b85efa365f1g-5}
 
+
 !split
-===== Polynomial size =====
+===== Plans for the week of April 1-5 =====
 
-This circuit is polynomial size in $n$. Actually we can count the
-number of quantum gates in it: $\sum_{i=1}^{n} i=\frac{n(n+1)}{2}$
-Hadamards and controlled $R_{k}$ gates plus
-$\left\lfloor\frac{n}{2}\right\rfloor$ swap gates. What was it that
-allowed us to construct an efficient circuit? Well if you look at the
-factorization we used, you will see that we have basically used the
-same trick that we used for the FFT! But now, since we are working on
-amplitudes and not operating on the the complex vectors themselves, we
-get an algorithm which scales nicely in the number of qubits. It is
-important to realize that the QFT cannot be used like the FFT on
-data. Thus there is a tendency to want to port quantum computers over
-to signal processing. Currently there are some preliminary ideas about
-how to do this, but the naive way you might expect this to work does
-not work.
-
+o Finalize our discussion of QFTs
+o Set up calculations of QFTs
+o Implementing the phase estimation algorithm for finding eigenvalues
