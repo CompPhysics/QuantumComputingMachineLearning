@@ -101,6 +101,8 @@
 ## April 1-5, 2024, TBA
   - Discrete Fourier transforms and fast Fourier transform
   - Quantum Fourier transform
+  - Video of lecture at https://youtu.be/XxifXp4M2Fk
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril3.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
 ## April 8-16, 2024, TBA
