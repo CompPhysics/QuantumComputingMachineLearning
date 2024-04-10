@@ -105,7 +105,11 @@
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril3.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
-## April 8-16, 2024, TBA
+## April 8-12, 2024, TBA
+  - Quantum Fourier Transforms, algorithm and implementation
+  - Quantum phase estimation algorithm
+  - Video of lecture at https://youtu.be/dYJIkcd34tc
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril10.pdf
 
 ## April 15-19, 2024, TBA
 
