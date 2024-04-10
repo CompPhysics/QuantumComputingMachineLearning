@@ -7,13 +7,12 @@ DATE: April 10
 
 !bblock 
 o Quantum Fourier transforms (QFTs), basic mathematical expressions, reminder from last week
-o Setting up circuits for QFT
-o Finalize our discussion of QFTs
 o Implementing the QFT algorithm
 o Implementing the phase estimation algorithm for finding eigenvalues
+o Discussion of project 2
 o Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT.
-#o "Video of lecture":"https://youtu.be/XxifXp4M2Fk"
-#o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril3.pdf"
+#o "Video of lecture":""
+#o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril10.pdf"
 !eblock
 
 !split
@@ -90,15 +89,11 @@ In the above, we use the notation
 \]
 !et
 
-!split
-===== Two-qubit system =====
-
-First a two qubit system. See whiteboard notes.
 
 
 !split
 ===== Four qubit system =====
-Let us then move to  a four qubit system. The basis states are,
+The basis states are
 !bt
 \[
 |j_1j_2j_3j_4 \rangle
@@ -147,7 +142,6 @@ R_k =
 \end{align*}
 !et
 
-For the circuit computing the QFT on four qubits, see whiteboard notes again.
 
 !split
 ===== Rotation gates =====
@@ -269,215 +263,14 @@ This is just the product representation from earlier, obviously our desired outp
 
 
 !split
-===== Quantum Fourier transform =====
-
-Now lets turn to the Quantum Fourier transform (QFT). We've already
-seen the QFT for $N=2$. It is the Hadamard transform:
-!bt
-\[
-H=\frac{1}{\sqrt{2}}\left[\begin{array}{cc}
-1 & 1  \\
-1 & -1
-\end{array}\right]
-\]
-!et
-
-!split
-===== QFT for $N=2$ =====
-
-Why is this the QFT for $N=2$ ? Well suppose have the single qubit
-state $a_{0}|0\rangle+a_{1}|1\rangle$. If we apply the Hadamard
-operation to this state we obtain the new state
-
-!bt
-\begin{equation*}
-\frac{1}{\sqrt{2}}\left(a_{0}+a_{1}\right)|0\rangle+\frac{1}{\sqrt{2}}\left(a_{0}-a_{1}\right)|1\rangle=\tilde{a}_{0}|0\rangle+\tilde{a}_{1}|1\rangle . 
-\end{equation*}
-!et
-
-In other words the Hadamard gate performs the DFT for $N=2$ on the
-amplitudes of the state! Notice that this is very different that
-computing the DFT for $N=2$ : remember the amplitudes are not numbers
-which are accessible to us mere mortals, they just represent our
-description of the quantum system.
-
-
-!split
-===== Full QFT =====
-
-So what is the full quantum Fourier transform? It is the transform
-which takes the amplitudes of a $N$ dimensional state and computes the
-Fourier transform on these amplitudes (which are then the new
-amplitudes in the computational basis.) In other words, the QFT enacts
-the transform
-
-!bt
-\begin{equation*}
-\sum_{x=0}^{N-1} a_{x}|x\rangle \rightarrow \sum_{x=0}^{N-1} \tilde{a}_{x}|x\rangle=\sum_{x=0}^{N-1} \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y} a_{y}|x\rangle 
-\end{equation*}
-!et
-
-!split
-===== Explicit transform =====
-It is easy to see that this implies that the QFT performs the following transform on basis states:
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y}|y\rangle
-\end{equation*}
-!et
-
-Thus the QFT is given by the matrix
-
-!bt
-\begin{equation*}
-U_{Q F T}=\frac{1}{\sqrt{N}} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{-y x}|y\rangle\langle x| 
-\end{equation*}
-!et
-
-!split
-===== Unitarity =====
-The last  matrix is unitary. Let's check this:
-
-!bt
-\begin{align*}
-U_{Q F T} U_{Q F T}^{\dagger} & =\frac{1}{N} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{y x}|x\rangle\left\langle y\left|\sum_{x^{\prime}=0}^{N-1} \sum_{y^{\prime}=0}^{N-1} \omega_{N}^{-y^{\prime} x^{\prime}}\right| y^{\prime}\right\rangle\left\langle x^{\prime}\right| \\
-& =\frac{1}{N} \sum_{x, y, x^{\prime}, y^{\prime}=0}^{N-1} \omega_{N}^{y x-y^{\prime} x^{\prime}} \delta_{y, y^{\prime}}|x\rangle\left\langle x^{\prime}\left|=\frac{1}{N} \sum_{x, y, x^{\prime}=0}^{N-1} \omega_{N}^{y\left(x-x^{\prime}\right)}\right| x\right\rangle\left\langle x^{\prime}\right| \\
-& =\sum_{x, x^{\prime}=0}^{N-1} \delta_{x, x^{\prime}}|x\rangle\left\langle x^{\prime}\right|=I 
-\end{align*}
-!et
-
-!split
-===== Importance of QFT =====
-
-The QFT is a very important transform in quantum computing. It can be
-used for all sorts of cool tasks, including, as we shall see in Shor's
-algorithm. But before we can use it for quantum computing tasks, we
-should try to see if we can efficiently implement the QFT with a
-quantum circuit. Indeed we can and the reason we can is intimately
-related to the fast Fourier transform.
-
-
-!split
-===== Circuit QFT =====
-
-Let's derive a circuit for the QFT when $N=2^{n}$. The QFT performs the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y=0}^{2^{n}-1} \omega_{N}^{-x y}|y\rangle 
-\end{equation*}
-!et
-
-Then we can expand out this sum
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \omega_{N}^{-x \sum_{k=1}^{n} 2^{n-k} y_{k}}\left|y_{1}, y_{2}, \ldots, y_{n}\right\rangle 
-\end{equation*}
-!et
-
-!split
-===== Expanding the exponential =====
-
-Expanding the exponential of a sum to a product of exponentials and
-collecting these terms in from the appropriate terms we can express
-this as
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \bigotimes_{k=1}^{n} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle 
-\end{equation*}
-!et
-
-
-!split
-===== Rearranging =====
-
-We can rearrange the sum and products as
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[\sum_{y_{k} \in\{0,1\}} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle\right] 
-\end{equation*}
-!et
-
-Expanding this sum yields
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[|0\rangle+\omega_{N}^{-x 2^{n-k}}|1\rangle\right]
-\end{equation*}
-!et
-
-!split
-===== Notation for binary fraction =====
-
-But now notice that $\omega_{N}^{-x 2^{n-k}}$ is not dependent on the
-higer order bits of $x$. It is convenient to adopt the following
-expression for a binary fraction:
-
-!bt
-\begin{equation*}
-0 . x_{l} x_{l+1} \ldots x_{n}=\frac{x_{l}}{2}+\frac{x_{l+1}}{4}+\cdots+\frac{x_{n}}{2^{n-l+1}}
-\end{equation*}
-!et
-
-!split
-===== More notations =====
-Then we can see that
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n-1} x_{n}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] 
-\end{equation*}
-!et
-
-This is a very useful form of the QFT for $N=2^{n}$. Why? Because we
-see that only the last qubit depends on the the values of all the
-other input qubits and each further bit depends less and less on the
-input qubits. Further we note that $e^{-2 \pi i 0 . a}$ is either +1
-or -1 , which reminds us of the Hadamard transform.
-
-!split
-===== Deriving a circuit =====
-
-So how do we use this to derive a circuit for the QFT over $N=2^{n}$ ?
-
-Take the first qubit of $\left|x_{1}, \ldots, x_{n}\right\rangle$ and
-apply a Hadamard transform. This produces the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 \cdot x_{1}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
-\end{equation*}
-!et
-
-!split
-===== Rotation gate =====
-Now define the rotation gate
-
-!bt
-\[
-R_{k}=\left[\begin{array}{cc}
-1 & 0  \tag{30}\\
-0 & \exp \left(\frac{-2 \pi i}{2^{k}}\right)
-\end{array}\right]
-\]
-!et
-If we now apply controlled $R_{2}, R_{3}$, etc. gates controlled on
-the appropriate bits this enacts the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \ldots x_{n}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
-\end{equation*}
-!et
-
-
-!split
 ===== Plans for the week of April 15-19 =====
 
+o Discussion of other algorithms (Reading suggestions: Hundt's text sections 6.5-6.8)
+  o Order-finding
+  o Factoring
+  o Quantum search algorithms
+o Eventually discuss quantum machine learning approaches
+o Or physical realizations of quantum computers
 
 
 
