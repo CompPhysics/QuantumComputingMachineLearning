@@ -33,14 +33,15 @@ system doconce split_html $html.html --method=space10
 # Bootstrap style
 html=${name}-bs
 system doconce format html $name --html_style=bootstrap --pygments_html_style=default --html_admon=bootstrap_panel --html_output=$html $opt
-#system doconce split_html $html.html --method=split --pagination --nav_button=bottom
+system doconce split_html $html.html --method=split --pagination --nav_button=bottom
 
 # IPython notebook
 system doconce format ipynb $name $opt
 
+
 # Ordinary plain LaTeX document
 system doconce format pdflatex $name --print_latex_style=trac --latex_admon=paragraph $opt
-system doconce ptex2tex $name envir=print
+system doconce ptex2tex $name envir=verbatim
 # Add special packages
 doconce subst "% Add user's preamble" "\g<1>\n\\usepackage{simplewick}" $name.tex
 doconce replace 'section{' 'section*{' $name.tex
@@ -50,7 +51,7 @@ mv -f $name.pdf ${name}.pdf
 cp $name.tex ${name}.tex
 
 # Publish
-dest=../../../../Projects/2022/Project2/
+dest=../../../../Projects/2024
 if [ ! -d $dest/$name ]; then
 mkdir $dest/$name
 mkdir $dest/$name/pdf
@@ -79,3 +80,8 @@ EOF
 tar czf ${ipynb_tarfile} README.txt
 fi
 cp ${ipynb_tarfile} $dest/$name/ipynb
+
+
+
+
+
