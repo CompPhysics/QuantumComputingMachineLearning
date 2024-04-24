@@ -110,8 +110,13 @@
   - Quantum phase estimation algorithm
   - Video of lecture at https://youtu.be/dYJIkcd34tc
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril10.pdf
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
 
 ## April 15-19, 2024, TBA
+  - Quantum phase estimation algorithm
+  - Video of lecture at https://youtu.be/gNKJ_sBrPuE
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril17.pdf
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13  
 
 ## April 22-26, 2024, TBA
 ## April 29-May 3, no lecture due to public holiday in Norway
