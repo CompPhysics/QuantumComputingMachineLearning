@@ -90,7 +90,7 @@
   - Work on project 1
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
-## March 18-22, 2024. VQE 
+## March 18-22, 2024
   - Summary of project 1
   - Quantum Fourier transforms and preparing for new topics and possible paths for project 2
   - Video of lecture at https://youtu.be/kR-4qqtFyxQ
@@ -98,27 +98,36 @@
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-## April 1-5, 2024, TBA
+## April 1-5, 2024
   - Discrete Fourier transforms and fast Fourier transform
   - Quantum Fourier transform
   - Video of lecture at https://youtu.be/XxifXp4M2Fk
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril3.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
-## April 8-12, 2024, TBA
+## April 8-12, 2024
   - Quantum Fourier Transforms, algorithm and implementation
   - Quantum phase estimation algorithm
   - Video of lecture at https://youtu.be/dYJIkcd34tc
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril10.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
 
-## April 15-19, 2024, TBA
+## April 15-19, 2024
   - Quantum phase estimation algorithm
   - Video of lecture at https://youtu.be/gNKJ_sBrPuE
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril17.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13  
 
-## April 22-26, 2024, TBA
+## April 22-26, 2024
+  - Discussion of project 2
+  - Summary of quantum phase estimation algorithm
+  - Discussion of various quantum algorithms, see Hundt sections 6.4-6.6
+  - Reading suggestions: Hundt sections 6.4-6.6 and Nielsen and Chuang, sections 5.2-5.3
+  - Teaching material via whiteboard notes (typed version available later).
+  - Video of lecture at https://youtu.be/OZdyky8UYdk
+  - Whiteboard notes https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril24.pdf
+
+
 ## April 29-May 3, no lecture due to public holiday in Norway
 ## May 6-10, TBA
 
