@@ -49,14 +49,29 @@ system doconce format html $name --html_style=bootstrap --pygments_html_style=de
 # IPython notebook
 system doconce format ipynb $name $opt
 
+# Ordinary plain LaTeX document
+system doconce format pdflatex $name --minted_latex_style=trac --latex_admon=paragraph $opt
+system doconce ptex2tex $name envir=minted
+# Add special packages
+doconce subst "% Add user's preamble" "\g<1>\n\\usepackage{simplewick}" $name.tex
+doconce replace 'section{' 'section*{' $name.tex
+pdflatex -shell-escape $name
+pdflatex -shell-escape $name
+mv -f $name.pdf ${name}.pdf
+cp $name.tex ${name}.tex
+
+
+
 
 # Publish
 dest=../../pub
 if [ ! -d $dest/$name ]; then
 mkdir $dest/$name
+mkdir $dest/$name/pdf
 mkdir $dest/$name/html
 mkdir $dest/$name/ipynb
 fi
+cp ${name}*.pdf $dest/$name/pdf
 cp -r ${name}*.html ._${name}*.html reveal.js $dest/$name/html
 
 # Figures: cannot just copy link, need to physically copy the files
@@ -77,3 +92,7 @@ EOF
 tar czf ${ipynb_tarfile} README.txt
 fi
 cp ${ipynb_tarfile} $dest/$name/ipynb
+
+
+
+
