@@ -129,7 +129,13 @@
 
 
 ## April 29-May 3, no lecture due to public holiday in Norway
-## May 6-10, TBA
 
+## May 6-10, 2024
+  - Discussion and work on project 2
 
+## May 13-17, 2024
+  - Discussion and work on project 2
+  - Summary of course
 
+## May 20-31, 2024
+  - The last two weeks we will mainly work on the final project.
