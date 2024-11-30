@@ -2,7 +2,7 @@
 
 ![alt text](https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/images/qc.png?raw=true)
 
-### Recommended textbooks:
+### Possible  textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
@@ -15,23 +15,23 @@
  - Passcode: FYS4411
 
 
-## January 15-19, 2024. Overview of first week, Basic Notions of Quantum Mechanics
+## January 20-24, 2024. Overview of first week, Basic Notions of Quantum Mechanics
 - Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems
   - Definitions
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
-  - Link to video of lecture https://youtu.be/YRobDADb63E
-  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary17.pdf
+  - Link to video of lecture to be added 
+  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary22.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
-## January 22 - January 26, 2024. Composite Systems and Tensor Products
+## January 27 - January 31, 2024. Composite Systems and Tensor Products
   - Spectral decomposition and measurements
   - Density matrices
   - Simple Hamiltonians and other operators
   - Video of lecture at https://youtu.be/E1dhiboQHis
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary24.pdf
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary29.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
 
