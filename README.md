@@ -15,7 +15,7 @@
  - Passcode: FYS4411
 
 
-## January 20-24, 2024. Overview of first week, Basic Notions of Quantum Mechanics
+## January 20-24, 2025. Overview of first week, Basic Notions of Quantum Mechanics
 - Definitions, Linear Algebra reminder, Hilbert Space, Operators on Hilbert Spaces, Composite Systems
   - Definitions
   - Mathematical notation, Hilbert spaces and operators
@@ -24,118 +24,106 @@
   - Link to video of lecture to be added 
   - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary22.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
+  - _Reading recommendation_: 
 
-## January 27 - January 31, 2024. Composite Systems and Tensor Products
+## January 27 - January 31, 2025. Composite Systems and Tensor Products
   - Spectral decomposition and measurements
   - Density matrices
   - Simple Hamiltonians and other operators
-  - Video of lecture at https://youtu.be/E1dhiboQHis
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary29.pdf
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary29.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 2
+  - _Reading recommendation_: 
 
-## January 29-February 2, 2024. Density matrices and Measurements
+## February 3-7, 2025. Density matrices and Measurements
   - Spectral decomposition and measurements
   - Density matrices
   - Entanglement and Schmidt decomposition
   - Entropies
-  - Video of lecture at https://youtu.be/6v5iqPmQIFM
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary31.pdf  
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary5.pdf  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
-  - _Reading recommendation_: Scherer, Mathematics of Quantum Computations, xxx
+  - _Reading recommendation_: 
 
-## February 5-9, 2024. Entanglement and entropies
+## February 10-14, 2025. Entanglement and entropies
   - Entanglement and Schmidt decomposition 
   - Entropy as a measurement of entanglement
   - Introduction to gates and calculations
-  - Video of lecture https://youtu.be/XP9z8z6ptWI
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary7.pdf
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary12.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-  - _Reading recommendation_: Hundt, chapter 2 and 3
+  - _Reading recommendation_: 
 
-## February 12-16, 2024. 
+## February 17-21, 2025. 
   - Quantum gates and circuits
   - Developing our own codes for Bell states and comparing with qiskit
-  - Video of lecture at https://youtu.be/9XrDKgTQL6I
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary14.pdf
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary19.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
 
 
-## February 19-23, 2024. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
+## February 24-28, 2025. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
   - Discussion of the VQE algorithm and discussions of project 1
   - Video of lecture at https://youtu.be/PW1mOn3E4eQ
-  - Whiteboard	notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary21.pdf
+  - Whiteboard	notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
-##  February 26-March 1, 2024. Algorithms for solving quantum mechanical problems.
+##  March 3-7, 2025. Algorithms for solving quantum mechanical problems.
   - VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one-qubit Hamiltonian
   - Discussion of project 1
-  - Video of lecture at https://youtu.be/sTf-WuA4hV8
+  - Video of lecture 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
-##  March 4-8, 2024. Solving quantum mechanical problems
+##  March 10-14, 2025. Solving quantum mechanical problems
   - Introducing the final Hamiltonian for project 1, the Lipkin model
   - Analyzing the solution of eigenvalue problems and the VQE using the Lipkin model
-  - Video of lecture at https://youtu.be/mhGUTSQKR04
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesMarch6.pdf
-  
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch12.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
-## March 11-15-24, 2024. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
+## March 17-21, 2025. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
   - Work on project 1
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
-## March 18-22, 2024
-  - Summary of project 1
-  - Quantum Fourier transforms and preparing for new topics and possible paths for project 2
-  - Video of lecture at https://youtu.be/kR-4qqtFyxQ
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesMarch20.pdf
+## March 24-28, 2025
+  - Discrete Fourier transforms and fast Fourier transform
+  - Quantum Fourier transforms
+  - Video of lecture
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-## April 1-5, 2024
-  - Discrete Fourier transforms and fast Fourier transform
-  - Quantum Fourier transform
-  - Video of lecture at https://youtu.be/XxifXp4M2Fk
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril3.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
-
-## April 8-12, 2024
+## March 31-April 4, 2025
   - Quantum Fourier Transforms, algorithm and implementation
   - Quantum phase estimation algorithm
-  - Video of lecture at https://youtu.be/dYJIkcd34tc
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril10.pdf
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril2.pdf
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
+
+## April 7-11, 2025
+  - TBA
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril9.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
 
-## April 15-19, 2024
-  - Quantum phase estimation algorithm
-  - Video of lecture at https://youtu.be/gNKJ_sBrPuE
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril17.pdf
+## April 21-15, 2025
+  - TBA
+  - Video of lecture 
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13  
 
-## April 22-26, 2024
-  - Discussion of project 2
-  - Summary of quantum phase estimation algorithm
-  - Discussion of various quantum algorithms, see Hundt sections 6.4-6.6
-  - Reading suggestions: Hundt sections 6.4-6.6 and Nielsen and Chuang, sections 5.2-5.3
-  - Teaching material via whiteboard notes (typed version available later).
+## April 28-May 2, 2025
+  - TBA
   - Video of lecture at https://youtu.be/OZdyky8UYdk
-  - Whiteboard notes https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril24.pdf
+  - Whiteboard notes https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril24.pdf
 
+## May 5-9, 2025
+  - TBA
 
-## April 29-May 3, no lecture due to public holiday in Norway
-
-## May 6-10, 2024
-  - Discussion and work on project 2
-
-## May 13-17, 2024
-  - Discussion and work on project 2
+## May 12-16, 2025
+  - TBA
   - Summary of course
-
-## May 20-31, 2024
-  - The last two weeks we will mainly work on the final project.
