@@ -8,11 +8,9 @@
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
 - Robert Loredo, Learn Quantum Computing with Python and IBM Quantum Experience, see https://github.com/PacktPublishing/Learn-Quantum-Computing-with-Python-and-IBM-Quantum-Experience
 
-### Time: Each Wednesday at 215pm-4pm CET (The sessions will be recorded)
--Permanent Zoom link for the whole semester:
- - https://msu.zoom.us/j/6424997467?pwd=ZW5jSGtEeHJxM0dqd0draXlWY29FQT09
- - Meeting ID: 642 499 7467
- - Passcode: FYS4411
+### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
+-Permanent Zoom link for the whole semester to be added:
+
 
 
 ## January 20-24, 2025. Overview of first week, Basic Notions of Quantum Mechanics
