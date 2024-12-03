@@ -84,7 +84,7 @@
 
 
 ## March 17-21, 2025. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
-  - Work on project 1
+  - TBA
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 24-28, 2025
