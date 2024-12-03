@@ -1,6 +1,12 @@
 # Quantum Computing and Quantum Machine Learning 
 
-![alt text](https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/images/cover.jpeg?raw=true)
+The first part of the course has its focus on how to study
+quantum-mechanical many-particle systems using quantum computing
+algorithms and quantum computers. The second part is optional and
+depends on the interests and backgrounds of the participants. Two main
+themes can be covered:
+- Quantum machine learning algorithms, implementations and studies
+- Realization and studies of entanglement in physical systems
 
 ### Possible  textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
@@ -9,7 +15,7 @@
 - Robert Loredo, Learn Quantum Computing with Python and IBM Quantum Experience, see https://github.com/PacktPublishing/Learn-Quantum-Computing-with-Python-and-IBM-Quantum-Experience
 
 
-
+![alt text](https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/images/cover.jpeg?raw=true)
 
 
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
@@ -67,12 +73,12 @@
 ## February 24-28, 2025. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
   - Discussion of the VQE algorithm and discussions of project 1
-  - Video of lecture at https://youtu.be/PW1mOn3E4eQ
+  - Video of lecture at https://youtu.be/
   - Whiteboard	notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  March 3-7, 2025. Algorithms for solving quantum mechanical problems.
-  - VQE, Variational Quantum Eigensolver and discussion of codes
+  - VQE and adaptive VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one-qubit Hamiltonian
   - Discussion of project 1
   - Video of lecture 
@@ -80,28 +86,27 @@
 
 
 ##  March 10-14, 2025. Solving quantum mechanical problems
-  - Introducing the final Hamiltonian for project 1, the Lipkin model
-  - Analyzing the solution of eigenvalue problems and the VQE using the Lipkin model
+  - Discrete Fourier transforms and fast Fourier transform
+  - Quantum Fourier transforms
   - Video of lecture 
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch12.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
 ## March 17-21, 2025. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
-  - TBA
+  - Quantum Fourier Transforms, algorithm and implementation
+  - Quantum phase estimation algorithm
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 24-28, 2025
-  - Discrete Fourier transforms and fast Fourier transform
-  - Quantum Fourier transforms
+  - TBA
   - Video of lecture
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
 ## March 31-April 4, 2025
-  - Quantum Fourier Transforms, algorithm and implementation
-  - Quantum phase estimation algorithm
+  - TBA
   - Video of lecture 
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril2.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
