@@ -1,6 +1,6 @@
 # Quantum Computing and Quantum Machine Learning 
 
-The first part of the course has its focus on how to study
+The first part of the course (project 1 and till mid march) has its focus on studies of
 quantum-mechanical many-particle systems using quantum computing
 algorithms and quantum computers. The second part is optional and
 depends on the interests and backgrounds of the participants. Two main
@@ -15,12 +15,8 @@ themes can be covered:
 - Robert Loredo, Learn Quantum Computing with Python and IBM Quantum Experience, see https://github.com/PacktPublishing/Learn-Quantum-Computing-with-Python-and-IBM-Quantum-Experience
 
 
-![alt text](https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/images/cover.jpeg?raw=true)
-
-
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
 -Permanent Zoom link for the whole semester to be added:
-
 
 
 ## January 20-24, 2025. Overview of first week, Basic Notions of Quantum Mechanics
