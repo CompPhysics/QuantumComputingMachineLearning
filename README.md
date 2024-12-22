@@ -25,8 +25,6 @@ themes can be covered:
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
-  - Link to video of lecture to be added 
-  - Handwritten notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary22.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
   - _Reading recommendation_: 
 
@@ -34,8 +32,6 @@ themes can be covered:
   - Spectral decomposition and measurements
   - Density matrices
   - Simple Hamiltonians and other operators
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary29.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: 
 
@@ -44,8 +40,6 @@ themes can be covered:
   - Density matrices
   - Entanglement and Schmidt decomposition
   - Entropies
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary5.pdf  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
   - _Reading recommendation_: 
 
@@ -53,39 +47,29 @@ themes can be covered:
   - Entanglement and Schmidt decomposition 
   - Entropy as a measurement of entanglement
   - Introduction to gates and calculations
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary12.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
   - _Reading recommendation_: 
 
 ## February 17-21, 2025. 
   - Quantum gates and circuits
   - Developing our own codes for Bell states and comparing with qiskit
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary19.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
 
 
 ## February 24-28, 2025. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
   - Discussion of the VQE algorithm and discussions of project 1
-  - Video of lecture at https://youtu.be/
-  - Whiteboard	notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  March 3-7, 2025. Algorithms for solving quantum mechanical problems.
   - VQE and adaptive VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one-qubit Hamiltonian
-  - Discussion of project 1
-  - Video of lecture 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
 ##  March 10-14, 2025. Solving quantum mechanical problems
   - Discrete Fourier transforms and fast Fourier transform
   - Quantum Fourier transforms
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch12.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
 
 
@@ -96,33 +80,22 @@ themes can be covered:
 
 ## March 24-28, 2025
   - TBA
-  - Video of lecture
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch26.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
 ## March 31-April 4, 2025
   - TBA
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril2.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11
 
 ## April 7-11, 2025
   - TBA
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril9.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12
+
+## April 14-18, 2025, Public holidays in Norway no classes
 
 ## April 21-15, 2025
   - TBA
-  - Video of lecture 
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13  
+
 
 ## April 28-May 2, 2025
   - TBA
-  - Video of lecture at https://youtu.be/OZdyky8UYdk
-  - Whiteboard notes https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril24.pdf
 
 ## May 5-9, 2025
   - TBA
