@@ -15,6 +15,9 @@ themes can be covered:
 - Robert Loredo, Learn Quantum Computing with Python and IBM Quantum Experience, see https://github.com/PacktPublishing/Learn-Quantum-Computing-with-Python-and-IBM-Quantum-Experience
 
 
+### Intersting online courses:
+- See IBM's Quantum Computer Programming: Hands-On Workshop at https://quantgates.com/learn-quantum
+
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
 -Permanent Zoom link for the whole semester to be added:
 
