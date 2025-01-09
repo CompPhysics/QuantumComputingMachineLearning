@@ -16,10 +16,11 @@ themes can be covered:
 
 
 ### Interesting online courses and software:
-- See IBM's Quantum Computer Programming: Hands-On Workshop at https://quantgates.com/learn-quantum
-- See QuTip at URL:"https://github.com/qutip"
-- See QisKit at URL:"https://www.ibm.com/quantum/qiskit"
-- And PySCF at URL:"https://pyscf.org/user/install.html#how-to-install-pyscf"
+- IBM's Quantum Computer Programming: Hands-On Workshop at https://quantgates.com/learn-quantum
+- QuTip at https://github.com/qutip
+- QisKit at https://www.ibm.com/quantum/qiskit
+- PySCF at https://pyscf.org/user/install.html#how-to-install-pyscf
+- Qbraid at https://www.qbraid.com
 
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
 -Permanent Zoom link for the whole semester to be added:
