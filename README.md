@@ -19,7 +19,7 @@ themes can be covered:
 - IBM's Quantum Computer Programming: Hands-On Workshop at https://quantgates.com/learn-quantum
 - QuTip at https://github.com/qutip
 - QisKit at https://www.ibm.com/quantum/qiskit
-- PySCF at https://pyscf.org/user/install.html#how-to-install-pyscf
+- PySCF for traditional quantum mechanical methods at https://pyscf.org/user/install.html#how-to-install-pyscf. This library can be integrated with QisKit for quantum computing simulations.
 - Qbraid at https://www.qbraid.com
 
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
