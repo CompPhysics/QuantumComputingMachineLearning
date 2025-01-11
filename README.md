@@ -7,7 +7,7 @@ depends on the interests and backgrounds of the participants. Two main
 themes can be covered:
 - Quantum machine learning algorithms, implementations and studies
 - Realization and studies of entanglement in physical systems
-
+- Advanced VQE and hamiltonian systems
 ### Possible  textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
