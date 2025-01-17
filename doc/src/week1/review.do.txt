@@ -167,6 +167,9 @@ For an $n\times n$ matrix  $\bm{A}$ the following properties are all equivalent
   * $0$ is not an eigenvalue of $\bm{A}$.
 !eblock
 
+
+
+
 !split
 ===== Important Mathematical Operations =====
 
@@ -253,6 +256,465 @@ and the outer product, which yields a matrix,
 !et
 
 
+!split
+===== Linear Algebra Methods =====
+
+  * Gaussian elimination, $O(2/3n^3)$ flops, general matrix
+  * LU decomposition, upper triangular and lower tridiagonal matrices, $O(2/3n^3)$ flops, general matrix. Get easily the inverse, determinant and can solve linear equations with back-substitution only, $O(n^2)$ flops
+  * Cholesky decomposition. Real symmetric or hermitian positive definite matrix, $O(1/3n^3)$ flops.
+  * Tridiagonal linear systems, important for differential equations. Normally positive definite and non-singular. $O(8n)$ flops for symmetric. Special case of banded matrices.
+  * Singular value decomposition
+  * the QR method will be discussed in chapter 7 in connection with eigenvalue systems. $O(4/3n^3)$ flops.
+
+!split
+===== LU Decomposition =====
+
+The LU decomposition method means that we can rewrite
+this matrix as the product of two matrices $\mathbf{L}$ and $\mathbf{U}$
+where
+
+!bt
+\[
+   \begin{bmatrix}
+                          a_{11} & a_{12} & a_{13} & a_{14} \\
+                          a_{21} & a_{22} & a_{23} & a_{24} \\
+                          a_{31} & a_{32} & a_{33} & a_{34} \\
+                          a_{41} & a_{42} & a_{43} & a_{44}
+                      \end{bmatrix}
+                      = \begin{bmatrix}
+                              1  & 0      & 0      & 0 \\
+                          l_{21} & 1      & 0      & 0 \\
+                          l_{31} & l_{32} & 1      & 0 \\
+                          l_{41} & l_{42} & l_{43} & 1
+                      \end{bmatrix}
+                        \begin{bmatrix}
+                          u_{11} & u_{12} & u_{13} & u_{14} \\
+                               0 & u_{22} & u_{23} & u_{24} \\
+                               0 & 0      & u_{33} & u_{34} \\
+                               0 & 0      &  0     & u_{44}
+             \end{bmatrix}.
+\]
+!et
+
+!split
+===== LU Decomposition =====
+
+LU decomposition forms the backbone of other algorithms in linear algebra, such as the
+solution of linear equations given by
+
+!bt
+\begin{align}
+ a_{11}x_1 +a_{12}x_2 +a_{13}x_3 + a_{14}x_4=&w_1 \nonumber \\
+a_{21}x_1 + a_{22}x_2 + a_{23}x_3 + a_{24}x_4=&w_2 \nonumber \\
+a_{31}x_1 + a_{32}x_2 + a_{33}x_3 + a_{34}x_4=&w_3 \nonumber \\
+a_{41}x_1 + a_{42}x_2 + a_{43}x_3 + a_{44}x_4=&w_4.  \nonumber
+\end{align}
+!et
+The above set of equations is conveniently solved by using LU decomposition as an intermediate step.
+
+The matrix $\mathbf{A}\in \mathbb{R}^{n\times n}$ has an LU factorization if the determinant
+is different from zero. If the LU factorization exists and $\mathbf{A}$ is non-singular, then the LU factorization
+is unique and the determinant is given by
+
+!bt
+\[
+det\{\mathbf{A}\}=det\{\mathbf{LU}\}= det\{\mathbf{L}\}det\{\mathbf{U}\}=u_{11}u_{22}\dots u_{nn}.
+\]
+!et
+
+!split
+===== LU Decomposition, why? =====
+
+There are at least three main advantages with LU decomposition compared with standard Gaussian elimination:
+
+  * It is straightforward to compute the determinant of a matrix
+  * If we have to solve sets of linear equations with the same matrix but with different vectors $\mathbf{y}$, the number of FLOPS is of the order $n^3$.
+  * The inverse is such an operation 
+
+!split
+===== LU Decomposition, linear equations =====
+
+With the LU decomposition it is rather
+simple to solve a system of linear equations
+
+!bt
+\begin{align}
+ a_{11}x_1 +a_{12}x_2 +a_{13}x_3 + a_{14}x_4=&w_1 \nonumber \\
+a_{21}x_1 + a_{22}x_2 + a_{23}x_3 + a_{24}x_4=&w_2 \nonumber \\
+a_{31}x_1 + a_{32}x_2 + a_{33}x_3 + a_{34}x_4=&w_3 \nonumber \\
+a_{41}x_1 + a_{42}x_2 + a_{43}x_3 + a_{44}x_4=&w_4. \nonumber
+\end{align}
+!et
+
+This can be written in matrix form as
+
+!bt
+\[ \mathbf{Ax}=\mathbf{w}. \]
+!et
+
+where $\mathbf{A}$ and $\mathbf{w}$ are known and we have to solve for
+$\mathbf{x}$. Using the LU dcomposition we write
+
+!bt
+\[ \mathbf{A} \mathbf{x} \equiv \mathbf{L} \mathbf{U} \mathbf{x} =\mathbf{w}. \]
+!et
+
+!split
+===== LU Decomposition, linear equations =====
+
+The previous equation can be calculated in two steps
+
+!bt
+\[ \mathbf{L} \mathbf{y} = \mathbf{w};\qquad \mathbf{Ux}=\mathbf{y}. \]
+!et
+
+To show that this is correct we use to the LU decomposition
+to rewrite our system of linear equations as
+
+!bt
+\[  \mathbf{LUx}=\mathbf{w}, \]
+!et
+and since the determinant of $\mathbf{L}$ is equal to 1 (by construction
+since the diagonals of $\mathbf{L}$ equal 1) we can use the inverse of
+$\mathbf{L}$ to obtain
+
+!bt
+\[
+   \mathbf{Ux}=\mathbf{L^{-1}w}=\mathbf{y},
+\]
+!et
+which yields the intermediate step
+
+!bt
+\[
+   \mathbf{L^{-1}w}=\mathbf{y}
+\]
+!et
+and as soon as we have $\mathbf{y}$ we can obtain $\mathbf{x}$
+through $\mathbf{Ux}=\mathbf{y}$.
+
+!split
+===== LU Decomposition, why? =====
+
+For our four-dimentional example this takes the form
+
+!bt
+\begin{align}
+ y_1=&w_1 \nonumber\\
+l_{21}y_1 + y_2=&w_2\nonumber \\
+l_{31}y_1 + l_{32}y_2 + y_3 =&w_3\nonumber \\
+l_{41}y_1 + l_{42}y_2 + l_{43}y_3 + y_4=&w_4. \nonumber
+\end{align}
+!et
+
+and
+
+!bt
+\begin{align}
+ u_{11}x_1 +u_{12}x_2 +u_{13}x_3 + u_{14}x_4=&y_1 \nonumber\\
+u_{22}x_2 + u_{23}x_3 + u_{24}x_4=&y_2\nonumber \\
+u_{33}x_3 + u_{34}x_4=&y_3\nonumber \\
+u_{44}x_4=&y_4  \nonumber
+\end{align}
+!et
+
+This example shows the basis for the algorithm
+needed to solve the set of $n$ linear equations.
+
+!split
+===== LU Decomposition, the inverse of a matrix =====
+
+If the inverse exists then
+
+!bt
+\[
+   \mathbf{A}^{-1}\mathbf{A}=\mathbf{I},
+\]
+!et
+the identity matrix. With an LU decomposed matrix we can rewrite the last equation as
+
+!bt
+\[
+   \mathbf{LU}\mathbf{A}^{-1}=\mathbf{I}.
+\]
+!et
+
+!split
+===== LU Decomposition, the inverse of a matrix =====
+
+If we assume that the first column (that is column 1) of the inverse matrix
+can be written as a vector with unknown entries
+
+!bt
+\[
+    \mathbf{A}_1^{-1}= \begin{bmatrix}
+
+                              a_{11}^{-1} \\
+                              a_{21}^{-1} \\
+                              \dots \\
+                              a_{n1}^{-1} \\
+                    \end{bmatrix},
+\]
+!et
+then we have a linear set of equations
+
+!bt
+\[
+    \mathbf{LU}\begin{bmatrix}
+
+                              a_{11}^{-1} \\
+                              a_{21}^{-1} \\
+                              \dots \\
+                              a_{n1}^{-1} \\
+                    \end{bmatrix} =\begin{bmatrix}
+                               1 \\
+                              0 \\
+                              \dots \\
+                              0 \\
+                    \end{bmatrix}.
+\]
+!et
+
+!split
+===== LU Decomposition, the inverse =====
+
+In a similar way we can compute the unknow entries of the second column,
+
+!bt
+\[
+    \mathbf{LU}\begin{bmatrix}
+
+                              a_{12}^{-1} \\
+                              a_{22}^{-1} \\
+                              \dots \\
+                              a_{n2}^{-1} \\
+                    \end{bmatrix}=\begin{bmatrix}
+                                0 \\
+                              1 \\
+                              \dots \\
+                              0 \\
+                    \end{bmatrix},
+\]
+!et
+and continue till we have solved all $n$ sets of linear equations.
+
+
+
+
+
+
+!split
+===== Basic math of the SVD =====
+
+
+From standard linear algebra we know that a square matrix $\bm{X}$ can
+be diagonalized if and only it is a so-called "normal
+matrix":"https://en.wikipedia.org/wiki/Normal_matrix", that is if
+$\bm{X}\in {\mathbb{R}}^{n\times n}$ we have
+$\bm{X}\bm{X}^T=\bm{X}^T\bm{X}$ or if $\bm{X}\in {\mathbb{C}}^{n\times
+n}$ we have $\bm{X}\bm{X}^{\dagger}=\bm{X}^{\dagger}\bm{X}$.  The
+matrix has then a set of eigenpairs
+
+!bt
+\[
+(\lambda_1,\bm{u}_1),\dots, (\lambda_n,\bm{u}_n),
+\]
+!et
+and the eigenvalues are given by the diagonal matrix
+!bt
+\[
+\bm{\Sigma}=\mathrm{Diag}(\lambda_1, \dots,\lambda_n).
+\]
+!et
+The matrix $\bm{X}$ can be written in terms of an orthogonal/unitary transformation $\bm{U}$
+!bt
+\[
+\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^T,
+\]
+!et
+with $\bm{U}\bm{U}^T=\bm{I}$ or $\bm{U}\bm{U}^{\dagger}=\bm{I}$.
+
+
+!split
+===== Not all square matrices are diagonalizable =====
+ A matrix like the one discussed above
+!bt
+\[
+\bm{X} = \begin{bmatrix} 
+1&  -1 \\
+1& -1\\
+\end{bmatrix} 
+\]
+!et
+is not diagonalizable, it is a so-called "defective matrix":"https://en.wikipedia.org/wiki/Defective_matrix". It is easy to see that the condition
+$\bm{X}\bm{X}^T=\bm{X}^T\bm{X}$ is not fulfilled. 
+
+
+!split
+===== The SVD, a Fantastic Algorithm =====
+
+
+However, and this is the strength of the SVD algorithm, any general
+matrix $\bm{X}$ can be decomposed in terms of a diagonal matrix and
+two orthogonal/unitary matrices.  The "Singular Value Decompostion
+(SVD) theorem":"https://en.wikipedia.org/wiki/Singular_value_decomposition"
+states that a general $m\times n$ matrix $\bm{X}$ can be written in
+terms of a diagonal matrix $\bm{\Sigma}$ of dimensionality $m\times n$
+and two orthognal matrices $\bm{U}$ and $\bm{V}$, where the first has
+dimensionality $m \times m$ and the last dimensionality $n\times n$.
+
+!split
+===== Examples =====
+We have then
+
+!bt
+\[ 
+\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^T 
+\] 
+!et 
+
+As an example, the above defective matrix can be decomposed as
+
+!bt
+\[
+\bm{X} = \frac{1}{\sqrt{2}}\begin{bmatrix}  1&  1 \\ 1& -1\\ \end{bmatrix} \begin{bmatrix}  2&  0 \\ 0& 0\\ \end{bmatrix}    \frac{1}{\sqrt{2}}\begin{bmatrix}  1&  -1 \\ 1& 1\\ \end{bmatrix}=\bm{U}\bm{\Sigma}\bm{V}^T, 
+\]
+!et
+
+with eigenvalues $\sigma_1=2$ and $\sigma_2=0$. 
+The SVD exits always! 
+
+!split
+===== Singular values =====
+
+The SVD
+decomposition (singular values) gives eigenvalues 
+$\sigma_i\geq\sigma_{i+1}$ for all $i$ and for dimensions larger than $i=p$, the
+eigenvalues (singular values) are zero.
+
+In the general case, where our matrix $\bm{X}$ has dimension
+$n\times p$, the matrix is thus decomposed into an $n\times n$
+orthogonal matrix $\bm{U}$, a $p\times p$ orthogonal matrix $\bm{V}$
+and a diagonal matrix $\bm{\Sigma}$ with $r=\mathrm{min}(n,p)$
+singular values $\sigma_i\geq 0$ on the main diagonal and zeros filling
+the rest of the matrix.  There are at most $p$ singular values
+assuming that $n > p$. 
+
+The columns of $\bm{U}$ are called the left singular vectors while the columns of $\bm{V}$ are the right singular vectors.
+
+!split
+===== Economy-size SVD =====
+
+If we assume that $n > p$, then our matrix $\bm{U}$ has dimension $n
+\times n$. The last $n-p$ columns of $\bm{U}$ become however
+irrelevant in our calculations since they are multiplied with the
+zeros in $\bm{\Sigma}$.
+
+The economy-size decomposition removes extra rows or columns of zeros
+from the diagonal matrix of singular values, $\bm{\Sigma}$, along with the columns
+in either $\bm{U}$ or $\bm{V}$ that multiply those zeros in the expression. 
+Removing these zeros and columns can improve execution time
+and reduce storage requirements without compromising the accuracy of
+the decomposition.
+
+If $n > p$, we keep only the first $p$ columns of $\bm{U}$ and $\bm{\Sigma}$ has dimension $p\times p$. 
+If $p > n$, then only the first $n$ columns of $\bm{V}$ are computed and $\bm{\Sigma}$ has dimension $n\times n$.
+The $n=p$ case is obvious, we retain the full SVD. 
+In general the economy-size SVD leads to less FLOPS and still conserving the desired accuracy.
+
+
+!split
+===== Mathematics of the SVD and implications =====
+
+
+We can SVD decompose our matrix as
+!bt
+\[
+\bm{X}=\bm{U}\bm{\Sigma}\bm{V}^T,
+\]
+!et
+where $\bm{U}$ is an orthogonal matrix of dimension $n\times n$, meaning that $\bm{U}\bm{U}^T=\bm{U}^T\bm{U}=\bm{I}_n$. Here $\bm{I}_n$ is the unit matrix of dimension $n \times n$.
+
+Similarly, $\bm{V}$ is an orthogonal matrix of dimension $p\times p$, meaning that $\bm{V}\bm{V}^T=\bm{V}^T\bm{V}=\bm{I}_p$. Here $\bm{I}_n$ is the unit matrix of dimension $p \times p$.
+
+Finally $\bm{\Sigma}$ contains the singular values $\sigma_i$. This matrix has dimension $n\times p$ and the singular values $\sigma_i$ are all positive. The non-zero values are ordered in descending order, that is
+
+!bt
+\[
+\sigma_0 > \sigma_1 > \sigma_2 > \dots > \sigma_{p-1} > 0. 
+\]
+!et
+
+All values beyond $p-1$ are all zero.
+
+!split
+===== Example Matrix =====
+
+As an example, consider the following $3\times 2$ example for the matrix $\bm{\Sigma}$
+
+!bt
+\[
+\bm{\Sigma}=
+\begin{bmatrix}
+2& 0 \\
+0 & 1 \\
+0 & 0 \\
+\end{bmatrix}
+\]
+!et
+
+The singular values are $\sigma_0=2$ and $\sigma_1=1$. It is common to rewrite the matrix $\bm{\Sigma}$ as
+
+!bt
+\[
+\bm{\Sigma}=
+\begin{bmatrix}
+\bm{\tilde{\Sigma}}\\
+\bm{0}\\
+\end{bmatrix},
+\]
+!et
+
+where
+!bt
+\[
+\bm{\tilde{\Sigma}}=
+\begin{bmatrix}
+2& 0 \\
+0 & 1 \\
+\end{bmatrix},
+\]
+!et
+contains only the singular values.
+
+!split
+===== Small note =====
+
+Note also that
+
+!bt
+\[
+\bm{\Sigma}^T\bm{\Sigma}=
+\begin{bmatrix}
+4& 0 \\
+0 & 1 \\
+\end{bmatrix},
+\]
+!et
+which is a $2\times 2 $ matrix while
+!bt
+\[
+\bm{\Sigma}\bm{\Sigma}^T=
+\begin{bmatrix}
+4& 0 & 0\\
+0 & 1 & 0\\
+0 & 0 & 0\\
+\end{bmatrix},
+\]
+!et
+
+is a $3\times 3 $ matrix. The last row and column of this last matrix
+contain only zeros. 
 
 
 
@@ -452,6 +914,7 @@ to these basis states as our computational basis.
 ===== Definition of Computational basis states =====
 
 # to do: make figures with examples of basis states, hydrogen like systems, harmonic oscillator
+
 Assume we have a two-level system where the two states are represented
 by the state vectors $\vert \phi_0\rangle$ and $\vert \phi_1\rangle$,
 respectively. These states could represent selected or effective
@@ -464,9 +927,6 @@ many-body physics, due to the exploding degrees of freedom, we
 normally search after effective ways by which we can reduce the
 involved dimensionalities to a number of degrees of freedom we can
 handle by a given many-body method.
-
-"See handwritten notes January 17 for more details":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary17.pdf"
-
 
 !split
 ===== Projection operators =====
@@ -1021,463 +1481,4 @@ To be added
 
 
 
-!split
-===== Linear Algebra Methods =====
-
-  * Gaussian elimination, $O(2/3n^3)$ flops, general matrix
-  * LU decomposition, upper triangular and lower tridiagonal matrices, $O(2/3n^3)$ flops, general matrix. Get easily the inverse, determinant and can solve linear equations with back-substitution only, $O(n^2)$ flops
-  * Cholesky decomposition. Real symmetric or hermitian positive definite matrix, $O(1/3n^3)$ flops.
-  * Tridiagonal linear systems, important for differential equations. Normally positive definite and non-singular. $O(8n)$ flops for symmetric. Special case of banded matrices.
-  * Singular value decomposition
-  * the QR method will be discussed in chapter 7 in connection with eigenvalue systems. $O(4/3n^3)$ flops.
-
-!split
-===== LU Decomposition =====
-
-The LU decomposition method means that we can rewrite
-this matrix as the product of two matrices $\mathbf{L}$ and $\mathbf{U}$
-where
-
-!bt
-\[
-   \begin{bmatrix}
-                          a_{11} & a_{12} & a_{13} & a_{14} \\
-                          a_{21} & a_{22} & a_{23} & a_{24} \\
-                          a_{31} & a_{32} & a_{33} & a_{34} \\
-                          a_{41} & a_{42} & a_{43} & a_{44}
-                      \end{bmatrix}
-                      = \begin{bmatrix}
-                              1  & 0      & 0      & 0 \\
-                          l_{21} & 1      & 0      & 0 \\
-                          l_{31} & l_{32} & 1      & 0 \\
-                          l_{41} & l_{42} & l_{43} & 1
-                      \end{bmatrix}
-                        \begin{bmatrix}
-                          u_{11} & u_{12} & u_{13} & u_{14} \\
-                               0 & u_{22} & u_{23} & u_{24} \\
-                               0 & 0      & u_{33} & u_{34} \\
-                               0 & 0      &  0     & u_{44}
-             \end{bmatrix}.
-\]
-!et
-
-!split
-===== LU Decomposition =====
-
-LU decomposition forms the backbone of other algorithms in linear algebra, such as the
-solution of linear equations given by
-
-!bt
-\begin{align}
- a_{11}x_1 +a_{12}x_2 +a_{13}x_3 + a_{14}x_4=&w_1 \nonumber \\
-a_{21}x_1 + a_{22}x_2 + a_{23}x_3 + a_{24}x_4=&w_2 \nonumber \\
-a_{31}x_1 + a_{32}x_2 + a_{33}x_3 + a_{34}x_4=&w_3 \nonumber \\
-a_{41}x_1 + a_{42}x_2 + a_{43}x_3 + a_{44}x_4=&w_4.  \nonumber
-\end{align}
-!et
-The above set of equations is conveniently solved by using LU decomposition as an intermediate step.
-
-The matrix $\mathbf{A}\in \mathbb{R}^{n\times n}$ has an LU factorization if the determinant
-is different from zero. If the LU factorization exists and $\mathbf{A}$ is non-singular, then the LU factorization
-is unique and the determinant is given by
-
-!bt
-\[
-det\{\mathbf{A}\}=det\{\mathbf{LU}\}= det\{\mathbf{L}\}det\{\mathbf{U}\}=u_{11}u_{22}\dots u_{nn}.
-\]
-!et
-
-!split
-===== LU Decomposition, why? =====
-
-There are at least three main advantages with LU decomposition compared with standard Gaussian elimination:
-
-  * It is straightforward to compute the determinant of a matrix
-  * If we have to solve sets of linear equations with the same matrix but with different vectors $\mathbf{y}$, the number of FLOPS is of the order $n^3$.
-  * The inverse is such an operation 
-
-!split
-===== LU Decomposition, linear equations =====
-
-With the LU decomposition it is rather
-simple to solve a system of linear equations
-
-!bt
-\begin{align}
- a_{11}x_1 +a_{12}x_2 +a_{13}x_3 + a_{14}x_4=&w_1 \nonumber \\
-a_{21}x_1 + a_{22}x_2 + a_{23}x_3 + a_{24}x_4=&w_2 \nonumber \\
-a_{31}x_1 + a_{32}x_2 + a_{33}x_3 + a_{34}x_4=&w_3 \nonumber \\
-a_{41}x_1 + a_{42}x_2 + a_{43}x_3 + a_{44}x_4=&w_4. \nonumber
-\end{align}
-!et
-
-This can be written in matrix form as
-
-!bt
-\[ \mathbf{Ax}=\mathbf{w}. \]
-!et
-
-where $\mathbf{A}$ and $\mathbf{w}$ are known and we have to solve for
-$\mathbf{x}$. Using the LU dcomposition we write
-
-!bt
-\[ \mathbf{A} \mathbf{x} \equiv \mathbf{L} \mathbf{U} \mathbf{x} =\mathbf{w}. \]
-!et
-
-!split
-===== LU Decomposition, linear equations =====
-
-The previous equation can be calculated in two steps
-
-!bt
-\[ \mathbf{L} \mathbf{y} = \mathbf{w};\qquad \mathbf{Ux}=\mathbf{y}. \]
-!et
-
-To show that this is correct we use to the LU decomposition
-to rewrite our system of linear equations as
-
-!bt
-\[  \mathbf{LUx}=\mathbf{w}, \]
-!et
-and since the determinant of $\mathbf{L}$ is equal to 1 (by construction
-since the diagonals of $\mathbf{L}$ equal 1) we can use the inverse of
-$\mathbf{L}$ to obtain
-
-!bt
-\[
-   \mathbf{Ux}=\mathbf{L^{-1}w}=\mathbf{y},
-\]
-!et
-which yields the intermediate step
-
-!bt
-\[
-   \mathbf{L^{-1}w}=\mathbf{y}
-\]
-!et
-and as soon as we have $\mathbf{y}$ we can obtain $\mathbf{x}$
-through $\mathbf{Ux}=\mathbf{y}$.
-
-!split
-===== LU Decomposition, why? =====
-
-For our four-dimentional example this takes the form
-
-!bt
-\begin{align}
- y_1=&w_1 \nonumber\\
-l_{21}y_1 + y_2=&w_2\nonumber \\
-l_{31}y_1 + l_{32}y_2 + y_3 =&w_3\nonumber \\
-l_{41}y_1 + l_{42}y_2 + l_{43}y_3 + y_4=&w_4. \nonumber
-\end{align}
-!et
-
-and
-
-!bt
-\begin{align}
- u_{11}x_1 +u_{12}x_2 +u_{13}x_3 + u_{14}x_4=&y_1 \nonumber\\
-u_{22}x_2 + u_{23}x_3 + u_{24}x_4=&y_2\nonumber \\
-u_{33}x_3 + u_{34}x_4=&y_3\nonumber \\
-u_{44}x_4=&y_4  \nonumber
-\end{align}
-!et
-
-This example shows the basis for the algorithm
-needed to solve the set of $n$ linear equations.
-
-!split
-===== LU Decomposition, the inverse of a matrix =====
-
-If the inverse exists then
-
-!bt
-\[
-   \mathbf{A}^{-1}\mathbf{A}=\mathbf{I},
-\]
-!et
-the identity matrix. With an LU decomposed matrix we can rewrite the last equation as
-
-!bt
-\[
-   \mathbf{LU}\mathbf{A}^{-1}=\mathbf{I}.
-\]
-!et
-
-!split
-===== LU Decomposition, the inverse of a matrix =====
-
-If we assume that the first column (that is column 1) of the inverse matrix
-can be written as a vector with unknown entries
-
-!bt
-\[
-    \mathbf{A}_1^{-1}= \begin{bmatrix}
-
-                              a_{11}^{-1} \\
-                              a_{21}^{-1} \\
-                              \dots \\
-                              a_{n1}^{-1} \\
-                    \end{bmatrix},
-\]
-!et
-then we have a linear set of equations
-
-!bt
-\[
-    \mathbf{LU}\begin{bmatrix}
-
-                              a_{11}^{-1} \\
-                              a_{21}^{-1} \\
-                              \dots \\
-                              a_{n1}^{-1} \\
-                    \end{bmatrix} =\begin{bmatrix}
-                               1 \\
-                              0 \\
-                              \dots \\
-                              0 \\
-                    \end{bmatrix}.
-\]
-!et
-
-!split
-===== LU Decomposition, the inverse =====
-
-In a similar way we can compute the unknow entries of the second column,
-
-!bt
-\[
-    \mathbf{LU}\begin{bmatrix}
-
-                              a_{12}^{-1} \\
-                              a_{22}^{-1} \\
-                              \dots \\
-                              a_{n2}^{-1} \\
-                    \end{bmatrix}=\begin{bmatrix}
-                                0 \\
-                              1 \\
-                              \dots \\
-                              0 \\
-                    \end{bmatrix},
-\]
-!et
-and continue till we have solved all $n$ sets of linear equations.
-
-
-
-
-
-
-!split
-===== Basic math of the SVD =====
-
-
-From standard linear algebra we know that a square matrix $\bm{X}$ can
-be diagonalized if and only it is a so-called "normal
-matrix":"https://en.wikipedia.org/wiki/Normal_matrix", that is if
-$\bm{X}\in {\mathbb{R}}^{n\times n}$ we have
-$\bm{X}\bm{X}^T=\bm{X}^T\bm{X}$ or if $\bm{X}\in {\mathbb{C}}^{n\times
-n}$ we have $\bm{X}\bm{X}^{\dagger}=\bm{X}^{\dagger}\bm{X}$.  The
-matrix has then a set of eigenpairs
-
-!bt
-\[
-(\lambda_1,\bm{u}_1),\dots, (\lambda_n,\bm{u}_n),
-\]
-!et
-and the eigenvalues are given by the diagonal matrix
-!bt
-\[
-\bm{\Sigma}=\mathrm{Diag}(\lambda_1, \dots,\lambda_n).
-\]
-!et
-The matrix $\bm{X}$ can be written in terms of an orthogonal/unitary transformation $\bm{U}$
-!bt
-\[
-\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^T,
-\]
-!et
-with $\bm{U}\bm{U}^T=\bm{I}$ or $\bm{U}\bm{U}^{\dagger}=\bm{I}$.
-
-
-!split
-===== Not all square matrices are diagonalizable =====
- A matrix like the one discussed above
-!bt
-\[
-\bm{X} = \begin{bmatrix} 
-1&  -1 \\
-1& -1\\
-\end{bmatrix} 
-\]
-!et
-is not diagonalizable, it is a so-called "defective matrix":"https://en.wikipedia.org/wiki/Defective_matrix". It is easy to see that the condition
-$\bm{X}\bm{X}^T=\bm{X}^T\bm{X}$ is not fulfilled. 
-
-
-!split
-===== The SVD, a Fantastic Algorithm =====
-
-
-However, and this is the strength of the SVD algorithm, any general
-matrix $\bm{X}$ can be decomposed in terms of a diagonal matrix and
-two orthogonal/unitary matrices.  The "Singular Value Decompostion
-(SVD) theorem":"https://en.wikipedia.org/wiki/Singular_value_decomposition"
-states that a general $m\times n$ matrix $\bm{X}$ can be written in
-terms of a diagonal matrix $\bm{\Sigma}$ of dimensionality $m\times n$
-and two orthognal matrices $\bm{U}$ and $\bm{V}$, where the first has
-dimensionality $m \times m$ and the last dimensionality $n\times n$.
-
-!split
-===== Examples =====
-We have then
-
-!bt
-\[ 
-\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^T 
-\] 
-!et 
-
-As an example, the above defective matrix can be decomposed as
-
-!bt
-\[
-\bm{X} = \frac{1}{\sqrt{2}}\begin{bmatrix}  1&  1 \\ 1& -1\\ \end{bmatrix} \begin{bmatrix}  2&  0 \\ 0& 0\\ \end{bmatrix}    \frac{1}{\sqrt{2}}\begin{bmatrix}  1&  -1 \\ 1& 1\\ \end{bmatrix}=\bm{U}\bm{\Sigma}\bm{V}^T, 
-\]
-!et
-
-with eigenvalues $\sigma_1=2$ and $\sigma_2=0$. 
-The SVD exits always! 
-
-!split
-===== Singular values =====
-
-The SVD
-decomposition (singular values) gives eigenvalues 
-$\sigma_i\geq\sigma_{i+1}$ for all $i$ and for dimensions larger than $i=p$, the
-eigenvalues (singular values) are zero.
-
-In the general case, where our matrix $\bm{X}$ has dimension
-$n\times p$, the matrix is thus decomposed into an $n\times n$
-orthogonal matrix $\bm{U}$, a $p\times p$ orthogonal matrix $\bm{V}$
-and a diagonal matrix $\bm{\Sigma}$ with $r=\mathrm{min}(n,p)$
-singular values $\sigma_i\geq 0$ on the main diagonal and zeros filling
-the rest of the matrix.  There are at most $p$ singular values
-assuming that $n > p$. 
-
-The columns of $\bm{U}$ are called the left singular vectors while the columns of $\bm{V}$ are the right singular vectors.
-
-!split
-===== Economy-size SVD =====
-
-If we assume that $n > p$, then our matrix $\bm{U}$ has dimension $n
-\times n$. The last $n-p$ columns of $\bm{U}$ become however
-irrelevant in our calculations since they are multiplied with the
-zeros in $\bm{\Sigma}$.
-
-The economy-size decomposition removes extra rows or columns of zeros
-from the diagonal matrix of singular values, $\bm{\Sigma}$, along with the columns
-in either $\bm{U}$ or $\bm{V}$ that multiply those zeros in the expression. 
-Removing these zeros and columns can improve execution time
-and reduce storage requirements without compromising the accuracy of
-the decomposition.
-
-If $n > p$, we keep only the first $p$ columns of $\bm{U}$ and $\bm{\Sigma}$ has dimension $p\times p$. 
-If $p > n$, then only the first $n$ columns of $\bm{V}$ are computed and $\bm{\Sigma}$ has dimension $n\times n$.
-The $n=p$ case is obvious, we retain the full SVD. 
-In general the economy-size SVD leads to less FLOPS and still conserving the desired accuracy.
-
-
-!split
-===== Mathematics of the SVD and implications =====
-
-
-We can SVD decompose our matrix as
-!bt
-\[
-\bm{X}=\bm{U}\bm{\Sigma}\bm{V}^T,
-\]
-!et
-where $\bm{U}$ is an orthogonal matrix of dimension $n\times n$, meaning that $\bm{U}\bm{U}^T=\bm{U}^T\bm{U}=\bm{I}_n$. Here $\bm{I}_n$ is the unit matrix of dimension $n \times n$.
-
-Similarly, $\bm{V}$ is an orthogonal matrix of dimension $p\times p$, meaning that $\bm{V}\bm{V}^T=\bm{V}^T\bm{V}=\bm{I}_p$. Here $\bm{I}_n$ is the unit matrix of dimension $p \times p$.
-
-Finally $\bm{\Sigma}$ contains the singular values $\sigma_i$. This matrix has dimension $n\times p$ and the singular values $\sigma_i$ are all positive. The non-zero values are ordered in descending order, that is
-
-!bt
-\[
-\sigma_0 > \sigma_1 > \sigma_2 > \dots > \sigma_{p-1} > 0. 
-\]
-!et
-
-All values beyond $p-1$ are all zero.
-
-!split
-===== Example Matrix =====
-
-As an example, consider the following $3\times 2$ example for the matrix $\bm{\Sigma}$
-
-!bt
-\[
-\bm{\Sigma}=
-\begin{bmatrix}
-2& 0 \\
-0 & 1 \\
-0 & 0 \\
-\end{bmatrix}
-\]
-!et
-
-The singular values are $\sigma_0=2$ and $\sigma_1=1$. It is common to rewrite the matrix $\bm{\Sigma}$ as
-
-!bt
-\[
-\bm{\Sigma}=
-\begin{bmatrix}
-\bm{\tilde{\Sigma}}\\
-\bm{0}\\
-\end{bmatrix},
-\]
-!et
-
-where
-!bt
-\[
-\bm{\tilde{\Sigma}}=
-\begin{bmatrix}
-2& 0 \\
-0 & 1 \\
-\end{bmatrix},
-\]
-!et
-contains only the singular values.
-
-!split
-===== Small note =====
-
-Note also that
-
-!bt
-\[
-\bm{\Sigma}^T\bm{\Sigma}=
-\begin{bmatrix}
-4& 0 \\
-0 & 1 \\
-\end{bmatrix},
-\]
-!et
-which is a $2\times 2 $ matrix while
-!bt
-\[
-\bm{\Sigma}\bm{\Sigma}^T=
-\begin{bmatrix}
-4& 0 & 0\\
-0 & 1 & 0\\
-0 & 0 & 0\\
-\end{bmatrix},
-\]
-!et
-
-is a $3\times 3 $ matrix. The last row and column of this last matrix
-contain only zeros. 
 
