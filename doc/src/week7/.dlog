@@ -1,0 +1,211 @@
+*** error: more than one subsection in a slide (insert missing !split):
+% !split
+\subsection{Computing quantum gradients}
+
+Let us implement
+efficient implementations of gradient methods to the derivatives of
+the Hamiltonian expectation values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{minted}[fontsize=\fontsize{9pt}{9pt},linenos=false,mathescape,baselinestretch=1.0,fontfamily=tt,xleftmargin=2mm]{python}
+from  matplotlib import pyplot as plt
+import numpy as np
+from scipy.optimize import minimize
+dim = 2
+Hamiltonian = np.zeros((dim,dim))
+e0 = 0.0
+e1 = 4.0
+Xnondiag = 0.20
+Xdiag = 3.0
+Eigenvalue = np.zeros(dim)
+# setting up the Hamiltonian
+Hamiltonian[0,0] = Xdiag+e0
+Hamiltonian[0,1] = Xnondiag
+Hamiltonian[1,0] = Hamiltonian[0,1]
+Hamiltonian[1,1] = e1-Xdiag
+# diagonalize and obtain eigenvalues, not necessarily sorted
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+# print only the lowest eigenvalue
+print(EigValues[0])
+
+# Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
+X = np.array([[0,1],[1,0]])
+Y = np.array([[0,-1j],[1j,0]])
+Z = np.array([[1,0],[0,-1]])
+# identity matrix
+I = np.array([[1,0],[0,1]])
+
+epsilon = (e0+e1)*0.5; omega = (e0-e1)*0.5
+c = 0.0; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+# print only the lowest eigenvalue
+print(EigValues[0])
+
+# define the rotation matrices
+
+def Rx(theta):
+    return np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
+def Ry(phi):
+    return np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+
+#define basis states
+basis0 = np.array([1,0])
+basis1 = np.array([0,1])
+
+# Computing the expectation value of the energy 
+def Energy(theta,phi):
+    Basis = Ry(phi) @ Rx(theta) @ basis0
+    energy = Basis.conj().T @ Hamiltonian @ Basis
+    return energy
+
+
+# Set up iteration using gradient descent method
+eta = 0.1
+Niterations = 100
+# Random angles using uniform distribution
+theta = 2*np.pi*np.random.rand()
+phi = 2*np.pi*np.random.rand()
+pi2 = 0.5*np.pi
+for iter in range(Niterations):
+    thetagradient = 0.5*(Energy(theta+pi2,phi)-Energy(theta-pi2,phi))
+    phigradient = 0.5*(Energy(theta,phi+pi2)-Energy(theta,phi-pi2))
+    theta -= eta*thetagradient
+    phi -= eta*phigradient
+print(Energy(theta,phi))
+
+
+\end{minted}
+
+
+\subsection{A smarter way of doing this}
+
+The above approach means that we are setting up several matrix-matrix
+and matrix-vector multiplications. Although straight forward it is not
+the most efficient way of doing this, in particular in case the
+matrices become large (and sparse). But there are some more important
+issues.
+
+In a physical realization of these systems we cannot just multiply the
+state with the Hamiltonian. When performing a measurement we can only
+measure in one particular direction. For the computational basis
+states which we have, $\vert 0\rangle$ and $\vert 1\rangle$, we have
+to measure along the bases of the Pauli matrices and reconstruct the
+eigenvalues from these measurements.
+
+From our earlier discussions we know that the Pauli $Z$ matrix has the above basis states as eigen states through
+
+\[
+\bm{\sigma}_z\vert 0 \rangle = \bm{Z}\vert 0 \rangle=+1\vert 0 \rangle,
+\]
+and
+\[
+\bm{\sigma}_z\vert 1 \rangle = \bm{Z}\vert 1 \rangle=-1\vert 1 \rangle,
+\]
+with eigenvalue $-1$.
+
+For the Pauli $X$ matrix on the other hand we have
+\[
+\bm{\sigma}_x\vert 0 \rangle = \bm{X}\vert 0 \rangle=+1\vert 1 \rangle,
+\]
+and
+\[
+\bm{\sigma}_x\vert 1 \rangle = \bm{X}\vert 1 \rangle=-1\vert 0 \rangle,
+\]
+
+with eigenvalues $1$ in both cases. The latter two equations tell us
+that the computational basis we have chosen, and in which we will
+prepare our states, is not an eigenbasis of the $\sigma_x$ matrix.
+
+We will thus try to rewrite the Pauli $X$ matrix in terms of a Pauli $Z$ matrix. Fortunately this can be done using the Hadamard matrix twice, that is
+
+\[
+\bm{X}=\bm{\sigma}_x=\bm{H}\bm{Z}\bm{H}.
+\]
+
+The Pauli $Y$ matrix can be written as
+
+\[
+\bm{Y}=\bm{\sigma}_y=\bm{H}\bm{S}^{\dagger}\bm{Z}\bm{H}\bm{S},
+\]
+
+where $S$ is the phase matrix
+\[
+S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
+\]
+
+
