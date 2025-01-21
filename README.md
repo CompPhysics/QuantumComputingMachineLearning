@@ -23,7 +23,7 @@ themes can be covered:
 - Qbraid at https://www.qbraid.com
 
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
--Permanent Zoom link for the whole semester to be added:
+-Permanent Zoom link for the whole semester is https://msu.zoom.us/j/93773830103, Meeting ID: 937 7383 0103
 
 
 ## January 20-24, 2025. Overview of first week, Basic Notions of Quantum Mechanics
