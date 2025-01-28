@@ -23,7 +23,7 @@ themes can be covered:
 - Qbraid at https://www.qbraid.com
 
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
--Permanent Zoom link for the whole semester is https://msu.zoom.us/j/93773830103, Meeting ID: 937 7383 0103
+-Permanent Zoom link for the whole semester is https://uio.zoom.us/my/mortenhj
 
 
 ## January 20-24, 2025. Overview of first week, Basic Notions of Quantum Mechanics
@@ -32,15 +32,16 @@ themes can be covered:
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
+  - Video of lecture at https://youtu.be/YRobDADb63E
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-  - _Reading recommendation_: 
+  - _Reading recommendation_: Scherer chapter 2 
 
 ## January 27 - January 31, 2025. Composite Systems and Tensor Products
   - Spectral decomposition and measurements
   - Density matrices
   - Simple Hamiltonians and other operators
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
-  - _Reading recommendation_: 
+  - _Reading recommendation_: Scherer chapter 2 and sections 3.1-3.3. Hundt, Quantum Computing for Programmers, chapter 2.1-2.5. Hundt's text is relevant for the programming part where we build from scratch the ingredients we will need.
 
 ## February 3-7, 2025. Density matrices and Measurements
   - Spectral decomposition and measurements
