@@ -24,11 +24,14 @@ o Reminder on spectral Decomposition from last week
 o Bloch sphere and representation of qubits
 o Spectral Decomposition (again), Measurements and Density matrices 
 o Wavefunction collapse as a result of measurement
+o Entaglement and relations to density matrices
 o "Video of lecture to be added":"https://youtu.be/"
 #o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesJanuary24.pdf"
 !eblock
 
-#* _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 3.1-3.3 and Hundt, Quantum Computing for Programmers, chapter  2.1-2.5. Hundt's text is relevant for the programming part where we build from scratch the ingredients we will need.
+!split
+===== Readings =====
+* _Reading recommendation_: Scherer, Mathematics of Quantum Computations, chapter 3.1-3.3 and Hundt, Quantum Computing for Programmers, chapter  2.1-2.5. Hundt's text is relevant for the programming part where we build from scratch the ingredients we will need.
 
 
 #The code examples presented by Keran are at
@@ -261,7 +264,8 @@ and
 !et
 
 !split
-===== The spectral decomposition, from last week =====
+===== The spectral decomposition =====
+
 The results from the previous slide gives us
 the following spectral decomposition of $\bm{A}$
 !bt
@@ -282,19 +286,38 @@ which written out in all its details reads
 !split
 ===== Bloch sphere =====
 
+Classically, in a binary system, the bits take only two distinct
+values, either $0$ or $1$.  The quantum mechanical counterpart is
+given by two state vectors (our simple computational basis)
+$\vert 0 \rangle$ and $\vert 1\rangle $ which can be used to realize the
+superposition
+!bt
+\[
+\vert \psi \rangle = \alpha \vert 0 \rangle +\beta\vert 1\rangle, 
+\]
+!et
+which can be represented using the so-called Bloch sphere, depicted on the next slide (best seen using the jupyter-notebook).
+
 
 !split
 ===== Meet the Bloch sphere =====
+The Bloch shere gives a vialable way to visualize a qubit and itsv possible realizations in terms of the angles $0\le \theta \le \pi$ and
+$0\le \phi \le 2\pi$. 
 !bc pycod
 import numpy as np
 from qiskit.visualization import plot_bloch_vector
-
 plot_bloch_vector([0,1,0], title="New Bloch Sphere")
-
-# You can use spherical coordinates instead of cartesian.                                                                                                            
-
+!ec
+You can use spherical coordinates instead of cartesian ones.
+!bc pycod
 plot_bloch_vector([1, np.pi/2, np.pi/3], coord_type='spherical')
 !ec
+Using the Bloch sphere representation of the qubit $\vert \psi \rangle = \alpha \vert 0 \rangle +\beta\vert 1\rangle$, we can rewrite it as
+!bt
+\[
+\vert \psi \rangle = \cos{(\frac{\theta}{2})} \vert 0 \rangle +\sin{(\frac{\theta}{2})}\exp{(\imath\phi)}\vert 1\rangle, 
+\]
+!et
 
 
 !split
@@ -395,7 +418,7 @@ and
 !et
 
 !split
-===== Superposition state =====
+===== Superposition of states =====
 
 Assume thereafter that we have a state $\vert \psi\rangle$ which is a superposition of the above two qubit states
 !bt
@@ -468,6 +491,7 @@ which results in a projection operator
 \vert \psi \rangle\langle \psi\vert = \begin{bmatrix} \vert \alpha \vert^2 & \alpha\beta^* \\ \alpha^*\beta & \vert\beta\vert^2\end{bmatrix}.
 \]
 !et
+
 !split
 ===== Computing matrix products =====
 We have that
@@ -479,10 +503,14 @@ We have that
 and computing the matrix product $\bm{P}_0\vert\psi\rangle\langle \psi\vert$ gives
 !bt
 \[
-\bm{P}_0\vert\psi\rangle\langle \psi\vert=\begin{bmatrix} 1 & 0 \\ 0 & 0\end{bmatrix}\begin{bmatrix} \vert \alpha \vert^2 & \alpha\beta^* \\ \alpha^*\beta & \vert\beta\vert^2\end{bmatrix}=\begin{bmatrix} \vert \alpha \vert^2 & \alpha\beta^* \\ 0 & 0\end{bmatrix},
+\bm{P}_0\vert\psi\rangle\langle \psi\vert=\begin{bmatrix} 1 & 0 \\ 0 & 0\end{bmatrix}\begin{bmatrix} \vert \alpha \vert^2 & \alpha\beta^* \\ \alpha^*\beta & \vert\beta\vert^2\end{bmatrix}=\begin{bmatrix} \vert \alpha \vert^2 & \alpha\beta^* \\ 0 & 0\end{bmatrix}.
 \]
 !et
-and taking the trace of this matrix, that is computing
+
+!split
+==== Taking the trace =====
+
+Taking the trace of the above matrix, that is computing
 !bt
 \[
 \mathrm{Prob}(\psi(0))=\mathrm{Tr}\left[\bm{P}_0^{\dagger}\bm{P}_0\vert \psi\rangle\langle \psi\vert\right]=\vert \alpha\vert^2,
@@ -511,6 +539,9 @@ which we also could have obtained by computing
 \bm{P}_{\psi(1)}=\langle \psi\vert \bm{P}_1^{\dagger}\bm{P}_1\vert \psi\rangle=\vert \beta\vert^2.
 \]
 !et
+
+!split
+===== Extending the expressions =====
 
 We can now extend these expressions to the complete ensemble of measurements. Using the spectral decomposition we have that the probability of an outcome $p(x)$ is
 !bt
@@ -585,6 +616,7 @@ The subsystems could represent single particles or composite many-particle syste
 
 !split
 ===== Computational basis =====
+
 This leads to the many-body computational basis states
 
 !bt
@@ -633,6 +665,7 @@ Bell states
 
 !split
 ===== The next two  =====
+
 !bt
 \[
 \vert \Psi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 10\rangle +\vert 01\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 0 \\ 1 \\ 1 \\ 0\end{bmatrix},
@@ -651,6 +684,7 @@ It is easy to convince oneself that these states also form an orthonormal basis.
 
 !split
 ===== Measurement =====
+
 Measuring one of the qubits of one of the above Bell states,
 automatically determines, as we will see below, the state of the
 second qubit. To convince ourselves about this, let us assume we perform a measurement on the qubit in system $A$ by introducing the projections with outcomes $0$ or $1$ as
@@ -801,123 +835,45 @@ $\rho_B$, that is we have for a given probability distribution $p_i$
 !et
 
 
+
+
+
+
+
+
+
+
 !split
-===== Two-qubit system and calculation of density matrices and exercise =====
-
-_This part is best seen using the jupyter-notebook_.
-
-The system we discuss here is a continuation of the two qubit example from week 2.
+===== Second exercise set =====
 
 
-This system can be thought of as composed of two subsystems
-$A$ and $B$. Each subsystem has computational basis states
+We bring back the  last two exercises from last week as they are meant to build the basis for
+the two projects we will work on during the semester.  The first
+project deals with implementing the so-called
+_Variational Quantum Eigensolver_ algorithm for finding the eigenvalues and eigenvectors of selected Hamiltonians.
 
+!split
+===== Ex1: One-qubit basis and  Pauli matrices  =====
+
+Write a function which sets up a one-qubit basis and apply the various Pauli matrices to these basis states.
+
+!split
+===== Ex2: Hadamard and Phase gates  =====
+
+Apply the Hadamard and Phase gates to the same one-qubit basis states and study their actions on these states.
+
+
+!split
+===== Ex3: Traces of operators  =====
+
+Prove that the trace is cyclic, that is for three operators $\bm{A}$, $\bm{B}$ and $\bm{C}$, we have
 !bt
 \[
-\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
-\]
-!et
-The subsystems could represent single particles or composite many-particle systems of a given symmetry.
-This leads to the many-body computational basis states
-
-!bt
-\[
-\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
-\]
-!et
-and
-!bt
-\[
-\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
-\]
-!et
-and
-!bt
-\[
-\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
-\]
-!et
-and finally
-!bt
-\[
-\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+\mathrm{Tr}\{\bm{ABC}\}=\mathrm{Tr}\{\bm{CAB}\}=\mathrm{Tr}\{\bm{BCA}\}.
 \]
 !et
 
-These computational basis states define also the eigenstates of the non-interacting  Hamiltonian
-!bt
-\[
-H_0\vert 00 \rangle = \epsilon_{00}\vert 00 \rangle,
-\]
-!et
-!bt
-\[
-H_0\vert 10 \rangle = \epsilon_{10}\vert 10 \rangle,
-\]
-!et
-!bt
-\[
-H_0\vert 01 \rangle = \epsilon_{01}\vert 01 \rangle,
-\]
-!et
-and
-!bt
-\[
-H_0\vert 11 \rangle = \epsilon_{11}\vert 11 \rangle.
-\]
-!et
-The interacting part of the Hamiltonian $H_{\mathrm{I}}$ is given by the tensor product of two $\sigma_x$ and $\sigma_z$  matrices, respectively, that is
-!bt
-\[
-H_{\mathrm{I}}=H_x\sigma_x\otimes\sigma_x+H_z\sigma_z\otimes\sigma_z,
-\]
-!et
-where $H_x$ and $H_z$ are interaction strength parameters. Our final Hamiltonian matrix is given by
-!bt
-\[
-\bm{H}=\begin{bmatrix} \epsilon_{00}+H_z & 0 & 0 & H_x \\
-                       0  & \epsilon_{10}-H_z & H_x & 0 \\
-		       0 & H_x & \epsilon_{01}-H_z & 0 \\
-		       H_x & 0 & 0 & \epsilon_{11} +H_z \end{bmatrix}.
-\] 
-!et
 
-The four eigenstates of the above Hamiltonian matrix can in turn be used to
-define density matrices. As an example, the density matrix of the
-first eigenstate (lowest energy $E_0$) $\Psi_0$ is given by the outerproduct
-
-!bt
-\[
-\rho_0=\left(\alpha_{00}\vert 00 \rangle+\alpha_{10}\vert 10 \rangle+\alpha_{01}\vert 01 \rangle+\alpha_{11}\vert 11 \rangle\right)\left(\alpha_{00}^*\langle 00\vert+\alpha_{10}^*\langle 10\vert+\alpha_{01}^*\langle 01\vert+\alpha_{11}^*\langle 11\vert\right),
-\]
-!et
-
-where the coefficients $\alpha_{ij}$ are the eigenvector coefficients
-resulting from the solution of the above eigenvalue problem. 
-
-
-We can
-then in turn define the density matrix for the subsets $A$ or $B$ as
-
-!bt
-\[
-\rho_A=\mathrm{Tr}_B(\rho_{0})=\langle 0 \vert \rho_{0} \vert 0\rangle_{B}+\langle 1 \vert \rho_{0} \vert 1\rangle_{B},
-\]
-!et
-
-or
-
-!bt
-\[
-\rho_B=\mathrm{Tr}_A(\rho_0)=\langle 0 \vert \rho_{0} \vert 0\rangle_{A}+\langle 1 \vert \rho_{0} \vert 1\rangle_{A}.
-\]
-!et
-
-The density matrices for these subsets can be used to compute the
-so-called von Neumann entropy, which is one of the possible measures
-of entanglement. A pure state has entropy equal zero while entangled
-state have an entropy larger than zero. The von-Neumann entropy is
-defined as
 
 
 
@@ -925,13 +881,7 @@ defined as
 ===== The next lecture  =====
 
 In our next lecture, we will discuss
-o Reminder and review of  entropy and entanglement
+o Discussion of ntropy and entanglement
 o Gates and circuits and how to perform operations on states
 
 "Reading: Chapters 2.1-2.11 of Hundt's text":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/Textbooks/Programming/chapter2.pdf"
-
-
-
-
-
-
