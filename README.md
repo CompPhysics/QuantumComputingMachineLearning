@@ -39,7 +39,7 @@ themes can be covered:
 ## January 27 - January 31, 2025. Composite Systems and Tensor Products
   - Spectral decomposition and measurements
   - Density matrices
-  - Simple Hamiltonians and other operators
+  - Entanglement, pure and mixed states
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer chapter 2 and sections 3.1-3.3. Hundt, Quantum Computing for Programmers, chapter 2.1-2.5. Hundt's text is relevant for the programming part where we build from scratch the ingredients we will need.
 
