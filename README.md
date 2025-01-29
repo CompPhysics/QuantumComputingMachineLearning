@@ -42,6 +42,8 @@ themes can be covered:
   - Entanglement, pure and mixed states
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer chapter 2 and sections 3.1-3.3. Hundt, Quantum Computing for Programmers, chapter 2.1-2.5. Hundt's text is relevant for the programming part where we build from scratch the ingredients we will need.
+  - Video of lecture at https://youtu.be/T7l-rciM0N0
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary29.pdf 
 
 ## February 3-7, 2025. Density matrices and Measurements
   - Spectral decomposition and measurements
