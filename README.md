@@ -46,12 +46,10 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary29.pdf 
 
 ## February 3-7, 2025. Density matrices and Measurements
-  - Spectral decomposition and measurements
-  - Density matrices
-  - Entanglement and Schmidt decomposition
-  - Entropies
+  - Discussion of gates and project 1
+  - Quantum gates and circuits
+  - Developing our own codes for Bell states and comparing with qiskit
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
-  - _Reading recommendation_: 
 
 ## February 10-14, 2025. Entanglement and entropies
   - Entanglement and Schmidt decomposition 
