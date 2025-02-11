@@ -52,15 +52,17 @@ themes can be covered:
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
 
 ## February 10-14, 2025. Entanglement and entropies
+  - Reminder from last week on gates and circuits
+  - One-qubit and two-qubit gates, background and realizations
+  - Simple Hamiltonian systems
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
+  - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections
+2.6-2.11 and 3.1-3.4 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
+
+## February 17-21, 2025.
   - Entanglement and Schmidt decomposition 
   - Entropy as a measurement of entanglement
-  - Introduction to gates and calculations
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-  - _Reading recommendation_: 
-
-## February 17-21, 2025. 
-  - Quantum gates and circuits
-  - Developing our own codes for Bell states and comparing with qiskit
+  - Simple one-qubit and two-qubit Hamiltonians
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
 
 
