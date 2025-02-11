@@ -139,7 +139,25 @@ div.toc p,a {
               ('And without the noise model',
                2,
                None,
-               'and-without-the-noise-model')]}
+               'and-without-the-noise-model'),
+              ('Hamiltonians, one qubit system',
+               2,
+               None,
+               'hamiltonians-one-qubit-system'),
+              ('Rewriting the Hamiltonian',
+               2,
+               None,
+               'rewriting-the-hamiltonian'),
+              ('Using Pauli matrices', 2, None, 'using-pauli-matrices'),
+              ('Selecting parameters', 2, None, 'selecting-parameters'),
+              ('Setting up the matrix', 2, None, 'setting-up-the-matrix'),
+              ('Where are we going?', 2, None, 'where-are-we-going'),
+              ('Possible ansatzes', 2, None, 'possible-ansatzes'),
+              ('More on rotation operators',
+               2,
+               None,
+               'more-on-rotation-operators'),
+              ('Code example', 2, None, 'code-example')]}
 end of tocinfo -->
 
 <body>
@@ -1711,6 +1729,319 @@ plt.show()
   </div>
 </div>
 
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="hamiltonians-one-qubit-system">Hamiltonians, one qubit system </h2>
+
+<p>We start with a simple \( 2\times 2 \) Hamiltonian matrix expressed in
+terms of Pauli \( X \) and \( Z \) matrices, as discussed in the project text as well.
+</p>
+
+<p>We define a  symmetric matrix  \( H\in {\mathbb{R}}^{2\times 2} \)</p>
+$$
+H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
+\end{bmatrix},
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="rewriting-the-hamiltonian">Rewriting the Hamiltonian </h2>
+
+<p>We  let \( H = H_0 + H_I \), where</p>
+$$
+H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
+$$
+
+<p>is a diagonal matrix. Similarly,</p>
+$$
+H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
+$$
+
+<p>where \( V_{ij} \) represent various interaction matrix elements.
+We can view \( H_0 \) as the non-interacting solution
+</p>
+$$
+\begin{equation}
+       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
+\label{_auto2}
+\end{equation}
+$$
+
+<p>and</p>
+$$
+\begin{equation}
+       H_0\vert 1\rangle =E_2\vert 1\rangle,
+\label{_auto3}
+\end{equation}
+$$
+
+<p>where we have defined the orthogonal computational one-qubit basis states \( \vert 0\rangle \) and \( \vert 1\rangle \).</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="using-pauli-matrices">Using Pauli matrices </h2>
+
+<p>We rewrite \( H \) (and \( H_0 \) and \( H_I \))  via Pauli matrices</p>
+$$
+H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
+  + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
+$$
+
+<p>and</p>
+$$
+H_I = c \boldsymbol{I} +\omega_z\sigma_z + \omega_x\sigma_x,
+$$
+
+<p>with \( c = (V_{11}+V_{22})/2 \), \( \omega_z = (V_{11}-V_{22})/2 \) and \( \omega_x = V_{12}=V_{21} \).
+We let our Hamiltonian depend linearly on a strength parameter \( \lambda \)
+</p>
+
+$$
+H=H_0+\lambda H_\mathrm{I},
+$$
+
+<p>with \( \lambda \in [0,1] \), where the limits \( \lambda=0 \) and \( \lambda=1 \)
+represent the non-interacting (or unperturbed) and fully interacting
+system, respectively.  The model is an eigenvalue problem with only
+two available states.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="selecting-parameters">Selecting parameters </h2>
+
+<p>Here we set the parameters \( E_1=0 \),
+\( E_2=4 \), \( V_{11}=-V_{22}=3 \) and \( V_{12}=V_{21}=0.2 \).
+</p>
+
+<p>The non-interacting solutions represent our computational basis.
+Pertinent to our choice of parameters, is that at \( \lambda\geq 2/3 \),
+the lowest eigenstate is dominated by \( \vert 1\rangle \) while the upper
+is \( \vert 0 \rangle \). At \( \lambda=1 \) the \( \vert 0 \rangle \) mixing of
+the lowest eigenvalue is \( 1\% \) while for \( \lambda\leq 2/3 \) we have a
+\( \vert 0 \rangle \) component of more than \( 90\% \).  The character of the
+eigenvectors has therefore been interchanged when passing \( z=2/3 \). The
+value of the parameter \( V_{12} \) represents the strength of the coupling
+between the two states.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="setting-up-the-matrix">Setting up the matrix  </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">from</span>  <span style="color: #008b45; text-decoration: underline">matplotlib</span> <span style="color: #8B008B; font-weight: bold">import</span> pyplot <span style="color: #8B008B; font-weight: bold">as</span> plt
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+dim = <span style="color: #B452CD">2</span>
+Hamiltonian = np.zeros((dim,dim))
+e0 = <span style="color: #B452CD">0.0</span>
+e1 = <span style="color: #B452CD">4.0</span>
+Xnondiag = <span style="color: #B452CD">0.20</span>
+Xdiag = <span style="color: #B452CD">3.0</span>
+Eigenvalue = np.zeros(dim)
+<span style="color: #228B22"># setting up the Hamiltonian</span>
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">0</span>] = Xdiag+e0
+Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>] = Xnondiag
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>] = Hamiltonian[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]
+Hamiltonian[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">1</span>] = e1-Xdiag
+<span style="color: #228B22"># diagonalize and obtain eigenvalues, not necessarily sorted</span>
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #228B22"># Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z</span>
+X = np.array([[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>],[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>]])
+Y = np.array([[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>j],[<span style="color: #B452CD">1</span>j,<span style="color: #B452CD">0</span>]])
+Z = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,-<span style="color: #B452CD">1</span>]])
+<span style="color: #228B22"># identity matrix</span>
+I = np.array([[<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>],[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>]])
+
+epsilon = (e0+e1)*<span style="color: #B452CD">0.5</span>; omega = (e0-e1)*<span style="color: #B452CD">0.5</span>
+c = <span style="color: #B452CD">0.0</span>; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+<span style="color: #228B22"># print only the lowest eigenvalue</span>
+<span style="color: #658b00">print</span>(EigValues[<span style="color: #B452CD">0</span>])
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="where-are-we-going">Where are we going? </h2>
+
+<p>For a one-qubit system we can reach every point on the Bloch sphere
+(as discussed earlier) with a rotation about the \( x \)-axis and the
+\( y \)-axis.
+</p>
+
+<p>We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state \( \vert \psi\rangle \)</p>
+$$
+\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="possible-ansatzes">Possible ansatzes </h2>
+
+<p>We can produce multiple ansatzes for the new state in terms of the
+angles \( \theta \) and \( \phi \).  With these ansatzes we can in turn
+calculate the expectation value of the above Hamiltonian, now
+rewritten in terms of various Pauli matrices (and thereby gates), that is compute
+</p>
+
+$$
+\langle \psi \vert (c+\mathcal{E})\boldsymbol{I} + (\Omega+\omega_z)\boldsymbol{\sigma}_z + \omega_x\boldsymbol{\sigma}_x\vert \psi \rangle.
+$$
+
+<p>We can now set up a series of ansatzes for \( \vert \psi \rangle \) as
+function of the angles \( \theta \) and \( \phi \) and find thereafter the
+variational minimum using for example a gradient descent method.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-on-rotation-operators">More on rotation operators </h2>
+
+<p>To do so, we need to remind ourselves about the mathematical expressions for
+the rotational matrices/operators.
+</p>
+
+$$
+R_x(\theta)=\cos{\frac{\theta}{2}}\boldsymbol{I}-\imath \sin{\frac{\theta}{2}}\boldsymbol{\sigma}_x,
+$$
+
+<p>and</p>
+
+$$
+R_y(\phi)=\cos{\frac{\phi}{2}}\boldsymbol{I}-\imath \sin{\frac{\phi}{2}}\boldsymbol{\sigma}_y.
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="code-example">Code example </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #228B22"># define the rotation matrices</span>
+<span style="color: #228B22"># Define angles theta and phi</span>
+theta = <span style="color: #B452CD">0.5</span>*np.pi; phi = <span style="color: #B452CD">0.2</span>*np.pi
+Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+<span style="color: #228B22">#define basis states</span>
+basis0 = np.array([<span style="color: #B452CD">1</span>,<span style="color: #B452CD">0</span>])
+basis1 = np.array([<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
+
+NewBasis = Ry @ Rx @ basis0
+<span style="color: #658b00">print</span>(NewBasis)
+<span style="color: #228B22"># Compute the expectation value</span>
+<span style="color: #228B22">#Note hermitian conjugation</span>
+Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+<span style="color: #658b00">print</span>(Energy)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Not an impressive results. We set up now a loop over many angles \( \theta \) and \( \phi \) and compute the energies</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #228B22"># define a number of angles</span>
+n = <span style="color: #B452CD">20</span>
+angle = np.arange(<span style="color: #B452CD">0</span>,<span style="color: #B452CD">180</span>,<span style="color: #B452CD">10</span>)
+n = np.size(angle)
+ExpectationValues = np.zeros((n,n))
+<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (n):
+    theta = np.pi*angle[i]/<span style="color: #B452CD">180.0</span>
+    Rx = np.cos(theta*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(theta*<span style="color: #B452CD">0.5</span>)*X
+    <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span> (n):
+        phi = np.pi*angle[j]/<span style="color: #B452CD">180.0</span>
+        Ry = np.cos(phi*<span style="color: #B452CD">0.5</span>)*I-<span style="color: #B452CD">1</span>j*np.sin(phi*<span style="color: #B452CD">0.5</span>)*Y
+        NewBasis = Ry @ Rx @ basis0
+        Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+        Edifference=<span style="color: #658b00">abs</span>(np.real(EigValues[<span style="color: #B452CD">0</span>]-Energy))
+        ExpectationValues[i,j]=Edifference
+
+<span style="color: #658b00">print</span>(np.min(ExpectationValues))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Clearly, this is not the very best way of proceeding. Rather, here we
+would compute the gradient and thereby find the minimum as function of
+the angles \( \theta \) and \( \phi \).  This will lead us to the so-called Variational Quantum Eigensolver to be discussed next week.
+</p>
 
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">

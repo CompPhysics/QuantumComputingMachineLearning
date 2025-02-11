@@ -1238,3 +1238,244 @@ plt.show()
 !ec
 
 
+
+
+!split
+===== Hamiltonians, one qubit system =====
+
+We start with a simple $2\times 2$ Hamiltonian matrix expressed in
+terms of Pauli $X$ and $Z$ matrices, as discussed in the project text as well.
+
+We define a  symmetric matrix  $H\in {\mathbb{R}}^{2\times 2}$
+!bt
+\[
+H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
+\end{bmatrix},
+\]
+!et
+
+!split
+===== Rewriting the Hamiltonian =====
+
+We  let $H = H_0 + H_I$, where
+!bt
+\[
+H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
+\]
+!et
+is a diagonal matrix. Similarly,
+!bt
+\[
+H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
+\]
+!et
+where $V_{ij}$ represent various interaction matrix elements.
+We can view $H_0$ as the non-interacting solution
+!bt
+\begin{equation}
+       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
+\end{equation}
+!et
+and
+!bt
+\begin{equation}
+       H_0\vert 1\rangle =E_2\vert 1\rangle,
+\end{equation}
+!et
+where we have defined the orthogonal computational one-qubit basis states $\vert 0\rangle$ and $\vert 1\rangle$.
+
+!split
+===== Using Pauli matrices =====
+
+We rewrite $H$ (and $H_0$ and $H_I$)  via Pauli matrices
+!bt
+\[
+H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
+  + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
+\]
+!et
+and
+!bt
+\[
+H_I = c \bm{I} +\omega_z\sigma_z + \omega_x\sigma_x,
+\]
+!et
+with $c = (V_{11}+V_{22})/2$, $\omega_z = (V_{11}-V_{22})/2$ and $\omega_x = V_{12}=V_{21}$.
+We let our Hamiltonian depend linearly on a strength parameter $\lambda$
+
+!bt
+\[
+H=H_0+\lambda H_\mathrm{I},
+\]
+!et
+
+with $\lambda \in [0,1]$, where the limits $\lambda=0$ and $\lambda=1$
+represent the non-interacting (or unperturbed) and fully interacting
+system, respectively.  The model is an eigenvalue problem with only
+two available states.
+
+
+!split
+===== Selecting parameters =====
+
+Here we set the parameters $E_1=0$,
+$E_2=4$, $V_{11}=-V_{22}=3$ and $V_{12}=V_{21}=0.2$.
+
+The non-interacting solutions represent our computational basis.
+Pertinent to our choice of parameters, is that at $\lambda\geq 2/3$,
+the lowest eigenstate is dominated by $\vert 1\rangle$ while the upper
+is $\vert 0 \rangle$. At $\lambda=1$ the $\vert 0 \rangle$ mixing of
+the lowest eigenvalue is $1\%$ while for $\lambda\leq 2/3$ we have a
+$\vert 0 \rangle$ component of more than $90\%$.  The character of the
+eigenvectors has therefore been interchanged when passing $z=2/3$. The
+value of the parameter $V_{12}$ represents the strength of the coupling
+between the two states.
+
+!split
+=====  Setting up the matrix  =====
+
+!bc pycod
+from  matplotlib import pyplot as plt
+import numpy as np
+dim = 2
+Hamiltonian = np.zeros((dim,dim))
+e0 = 0.0
+e1 = 4.0
+Xnondiag = 0.20
+Xdiag = 3.0
+Eigenvalue = np.zeros(dim)
+# setting up the Hamiltonian
+Hamiltonian[0,0] = Xdiag+e0
+Hamiltonian[0,1] = Xnondiag
+Hamiltonian[1,0] = Hamiltonian[0,1]
+Hamiltonian[1,1] = e1-Xdiag
+# diagonalize and obtain eigenvalues, not necessarily sorted
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+# print only the lowest eigenvalue
+print(EigValues[0])
+!ec
+
+Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
+
+!bc pycod
+# Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
+X = np.array([[0,1],[1,0]])
+Y = np.array([[0,-1j],[1j,0]])
+Z = np.array([[1,0],[0,-1]])
+# identity matrix
+I = np.array([[1,0],[0,1]])
+
+epsilon = (e0+e1)*0.5; omega = (e0-e1)*0.5
+c = 0.0; omega_z=Xdiag; omega_x = Xnondiag
+Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
+EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+permute = EigValues.argsort()
+EigValues = EigValues[permute]
+# print only the lowest eigenvalue
+print(EigValues[0])
+!ec
+
+
+
+!split
+===== Where are we going? =====
+
+For a one-qubit system we can reach every point on the Bloch sphere
+(as discussed earlier) with a rotation about the $x$-axis and the
+$y$-axis.
+
+We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state $\vert \psi\rangle$
+!bt
+\[
+\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
+\]
+!et
+
+
+!split
+===== Possible ansatzes =====
+
+We can produce multiple ansatzes for the new state in terms of the
+angles $\theta$ and $\phi$.  With these ansatzes we can in turn
+calculate the expectation value of the above Hamiltonian, now
+rewritten in terms of various Pauli matrices (and thereby gates), that is compute
+
+!bt
+\[
+\langle \psi \vert (c+\mathcal{E})\bm{I} + (\Omega+\omega_z)\bm{\sigma}_z + \omega_x\bm{\sigma}_x\vert \psi \rangle.
+\]
+!et
+
+We can now set up a series of ansatzes for $\vert \psi \rangle$ as
+function of the angles $\theta$ and $\phi$ and find thereafter the
+variational minimum using for example a gradient descent method.
+
+
+!split
+===== More on rotation operators =====
+
+To do so, we need to remind ourselves about the mathematical expressions for
+the rotational matrices/operators.
+
+!bt
+\[
+R_x(\theta)=\cos{\frac{\theta}{2}}\bm{I}-\imath \sin{\frac{\theta}{2}}\bm{\sigma}_x,
+\]
+!et
+
+and
+
+!bt
+\[
+R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma}_y.
+\]
+!et
+
+!split
+===== Code example =====
+
+!bc pycod
+# define the rotation matrices
+# Define angles theta and phi
+theta = 0.5*np.pi; phi = 0.2*np.pi
+Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
+Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+#define basis states
+basis0 = np.array([1,0])
+basis1 = np.array([0,1])
+
+NewBasis = Ry @ Rx @ basis0
+print(NewBasis)
+# Compute the expectation value
+#Note hermitian conjugation
+Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+print(Energy)
+!ec
+Not an impressive results. We set up now a loop over many angles $\theta$ and $\phi$ and compute the energies
+!bc pycod
+# define a number of angles
+n = 20
+angle = np.arange(0,180,10)
+n = np.size(angle)
+ExpectationValues = np.zeros((n,n))
+for i in range (n):
+    theta = np.pi*angle[i]/180.0
+    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
+    for j in range (n):
+        phi = np.pi*angle[j]/180.0
+        Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
+        NewBasis = Ry @ Rx @ basis0
+        Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
+        Edifference=abs(np.real(EigValues[0]-Energy))
+        ExpectationValues[i,j]=Edifference
+
+print(np.min(ExpectationValues))
+!ec
+
+Clearly, this is not the very best way of proceeding. Rather, here we
+would compute the gradient and thereby find the minimum as function of
+the angles $\theta$ and $\phi$.  This will lead us to the so-called Variational Quantum Eigensolver to be discussed next week.
+
+
