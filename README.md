@@ -56,8 +56,10 @@ themes can be covered:
   - One-qubit and two-qubit gates, background and realizations
   - Simple Hamiltonian systems
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
-  - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections
-2.6-2.11 and 3.1-3.4 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
+  - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 and 3.1-3.4 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
+  - Video of lecture at https://youtu.be/UcfOVvFyw2E
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary12.pdf
+  
 
 ## February 17-21, 2025.
   - Entanglement and Schmidt decomposition 
