@@ -50,7 +50,6 @@ system doconce format html $name --html_style=bootstrap --pygments_html_style=de
 system doconce format ipynb $name $opt
 
 
-
 # LaTeX Beamer slides
 beamertheme=red_plain
 system doconce format pdflatex $name --latex_title_layout=beamer --latex_table_format=footnotesize $opt
