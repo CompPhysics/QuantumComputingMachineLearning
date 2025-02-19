@@ -67,6 +67,8 @@ themes can be covered:
   - Simple one-qubit and two-qubit Hamiltonians
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5  
   - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11, 3.1-3.4 and 6.11.1-.6.11.3 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
+- Video of lecture at https://youtu.be/caR8AQM6Rwo
+- Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary19.pdf
 
 ## February 24-28, 2025. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
