@@ -886,5 +886,142 @@ For the final term we need just to add the action of the Hadamard matrix and we 
 
 
 
+!split
+===== Expectation Value =====
+The expectation value of an operator $A$ is given as 
 
+!bt
+\[
+\langle \psi\vert A\vert \psi\rangle.
+\]
+!et
+
+On a real quantum computer, this value must be estimated through
+repeated measurements of the state of the qubits on different
+basis. Since the Pauli matrices together with the identity operator $\bm{I}$
+form a basis for the $2 \times 2$ matrices ( $\mathcal{M}_{2\times
+2}$), any operator in this space can be written in terms of a linear
+combination of these operators.
+
+Let $P$ be a Pauli string, then the expectation value of $P$ is given by
+!bt
+\begin{equation}
+	\braket{\psi|P|\psi} = \braket{\psi|U^{\dagger}ZU|\psi}.
+\end{equation}
+!et
+
+One must find a unitary operator $U$ such that $ U^{\dagger}ZU $ is equal to the basis we are trying to measure in the one-qubit case, and $ ZI\ldots I $ in the multiple-qubit case. When the unitary transformation $ U $ is applied to the circuit of which we want to measure the expectation value, the eigenvalues are preserved and the expectation value can be calculated in the new basis.
+
+!split
+===== Single qubit Hamiltonian =====
+
+In general, the one qubit Hamiltonian can be written as 
+!bt
+\begin{equation}
+	H = aI + bX + cY + dZ, \quad a,b,c,d \in \mathbb{C}. 
+\end{equation}
+!et
+Given the following relations relating the Pauli $ X $ and $ Y $ operator with the Pauli $ Z $,
+!bt
+\begin{align}
+	\label{eq:basis-rotation}
+	X = HZH, \\
+	Y = -S^{\dagger}HZHS.
+\end{align}
+!et
+Then the expectation value is 
+!bt
+\begin{align}
+	\braket{\psi|H|\psi} &= a\braket{\psi|I|\psi} + b \braket{\psi|X|\psi} + c \braket{\psi|Y|\psi} + d \braket{\psi|Z|\psi} \\
+			     &= a \underbrace{\braket{\psi|\psi}}_{1} + b \braket{\psi|HZH|\psi} + c \braket{\psi|HS^{\dagger}ZSH|\psi} + d \braket{\psi|Z|\psi}.
+\end{align}
+!et
+
+In the case of a single qubit, to rotate the computation basis to
+another Pauli basis, we simply apply the $H$ gate for when there is an
+$ X $ in the Hamiltonian, and $ S^\dagger$ gate followed by an $ H $
+gate when there is a $ Y $-gate.
+
+
+The computation basis is the Pauli $ Z\underbrace{I \ldots I}_{n-1}$
+basis for an $ n $-qubit quantum circuit.  When there is more than one
+qubit in the system if the operator contains only one non-identity
+operator on the first qubit, then a similar strategy applies --- apply
+the \texttt{H}-gate or the \texttt{Sdag}-gate followed by \texttt{H}
+gate on the first qubit.
+
+In the case where the Pauli string contains more than non-identity, for example, $ZI$ contains only one non-identity operator and $ZZ$ contains two, the \texttt{CNOT} gate must be applied to such qubits to disentangle them. Consider the smallest non-trivial case, the Pauli string $ ZZ $, the unitary transform which rotates the $ ZZ $ basis to the $ ZI $ basis is the $ CNOT_{10} $ gate,
+\[
+CNOT(1,0) =
+\begin{bmatrix} 
+1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+\end{bmatrix} = CNOT(1,0)^{\dagger},  \] 
+and
+\begin{align}
+	CNOT(1,0)(ZZ)CNOT(1,0) &= 
+\begin{bmatrix} 
+1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\ 
+\end{bmatrix} 
+\begin{bmatrix} 
+1 & 0 & 0 & 0 \\
+0 & -1 & 0 & 0 \\
+0 & 0 & -1 & 0 \\
+0 & 0 & 0 & 1 \\
+\end{bmatrix} 
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+\end{bmatrix} \\
+&= 
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & -1 & 0 \\
+0 & 0 & 0 & -1 \\
+\end{bmatrix} = ZI.
+\end{align}
+
+
+
+In cases where the non-identity gates are not in the first positions, a series of SWAP gates are used to swap the state of the qubits with neighbouring qubits,
+
+\begin{align}
+	\label{eq:swap}
+	SWAP(0,1)(IZ)SWAP(0,1) &=  
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+\end{bmatrix}
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & -1 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 0 & -1 \\
+\end{bmatrix}
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+\end{bmatrix} \\
+&=
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & -1 & 0 \\
+0 & 0 & 0 & -1 \\
+\end{bmatrix} = ZI.
+\end{align}
+
+After the rotation, multiple measurements are taken to estimate the state of the qubits, since the eigenvalues are preserved under unitary transformations, the eigenvalues are the same as that of the $ ZI\ldots I $ state. For an $ n $ qubit system, the states $ \ket{0}  $ to $ \ket{2^{n-1}} $ have eigenvalues $ 1 $ and the rest have eigenvalues $ -1 $.
 
