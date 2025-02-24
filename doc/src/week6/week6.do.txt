@@ -238,6 +238,31 @@ variational quantum eigensolver is based on the variational principle:
 
 
 
+
+
+!split
+===== Rayleigh-Ritz variational principle =====
+
+The Rayleigh-Ritz variational principle states that for a given
+Hamiltonian $H$, the expectation value of a trial state or
+just ansatz $\vert \psi \rangle$ puts a lower bound on the ground state
+energy $E_0$.
+
+!bt
+\[
+    \frac{\langle \psi \vert H\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
+\]
+!et
+
+!split
+===== The ansatz =====
+
+The ansatz is typically chosen to be a parameterized superposition of
+basis states that can be varied to improve the energy estimate,
+$\vert \psi\rangle \equiv \vert \psi(\boldsymbol{\theta})\rangle$ where
+$\boldsymbol{\theta} = (\theta_1, \ldots, \theta_M)$ are the $M$
+optimization parameters.
+
 !split
 ===== Expectation value of Hamiltonian =====
 
@@ -256,7 +281,7 @@ H|n\rangle=E_n|n\rangle.
 !split
 ===== Expanding in the eigenstates =====
 
-We can then expand our state $|\psi(\theta)\rangle$ in terms of said eigenstates
+We can then expand our state $|\psi(\theta)\rangle$ in terms of the eigenstates
 
 !bt
 \[
@@ -277,6 +302,7 @@ which implies that we can minimize over the set of angles $\theta$ and arrive at
 \min_\theta \ \langle\psi(\theta)|H|\psi(\theta)\rangle=E_0.
 \]
 !et
+
 
 !split
 ===== Basic steps of the VQE algorithm =====
@@ -301,6 +327,120 @@ FIGURE: [figures/vqe.png, width=700 frac=0.9]
 
 
 
+!split
+===== Rotations =====
+
+To have any flexibility in the
+ansatz $\vert \psi\rangle$, we need to allow for a given parametrization. The most
+common approach is the so-called $R_y$ ansatz, where we apply chained
+operations of rotating around the $y$-axis by $\boldsymbol{\theta} =
+(\theta_1,\ldots,\theta_Q)$ of the Bloch sphere and CNOT operations.
+
+Applications of $y$ rotations
+specifically ensures that our coefficients always remain real, which
+often is satisfactory when dealing with many-body systems. 
+
+
+
+!split
+===== Measurements and more =====
+
+After the ansatz has been constructed, the Hamiltonian must
+be applied. The Hamiltonian must be written in terms of
+Pauli strings in order to perform measurements properly.
+
+To obtain the expectation value
+of the ground state energy, one can measure the expectation value of
+each Pauli string, 
+!bt
+\begin{align*}
+    E(\boldsymbol{\theta}) = \sum_i w_i\langle \psi(\boldsymbol{\theta})\vert P_i \vert \psi(\boldsymbol{\theta})\rangle \equiv \sum_i w_i f_i,
+\end{align*}
+!et
+where $f_i$ is the expectation value of the Pauli string $i$.
+
+
+!split
+===== Collecting data =====
+
+This is estimated statistically by considering measurements in the
+appropriate basis of the operator in the Pauli string.
+
+With $N_0$ and $N_1$ as the number of $0$ and $1$ measurements respectively, we can estimate $f_i$ since 
+!bt
+\begin{align*}
+    f_i = \lim_{N \to \infty} \frac{N_0 - N_1}{N},
+\end{align*}
+!et
+where $N$ as the number of shots (measurements).
+
+Each Pauli string requires it own circuit, where multiple measurements
+of each string is required. Adding the results together with the
+corresponding weights, the ground state energy can be estimated. To
+optimize with respect to  $\boldsymbol{\theta}$, a classical optimizer is often
+applied.
+
+
+!split
+===== Ansatzes =====
+
+Every possible qubit wavefunction $\left| \psi \right\rangle$ can be presented as a vector: 
+!bt
+\[
+\left| \psi \right\rangle = \begin{pmatrix}
+\cos{\left( \theta/2 \right)}\\
+e^{i \varphi} \cdot \sin{\left( \theta/2 \right)}
+\end{pmatrix},
+\]
+!et
+
+where the numbers $\theta$ and $\varphi$ define a point on the unit
+three-dimensional sphere, the so-called  Bloch sphere.
+
+For a random one qubit Hamiltonian, a *good* quantum state preparation
+circuit should be able to generate all possible states on the Bloch
+sphere.
+
+!split
+===== Preparing the states =====
+
+Before quantum state preparation, our qubit is in the $\vert 0\rangle$ state.
+This corresponds to the vertical position of
+the vector in the Bloch sphere. In order to generate any possible
+$\left| \psi \right\rangle$ we will apply $R_x(t_1)$ and $R_y(t_2)$
+gates on the $\left| 0 \right\rangle$ initial state
+!bt
+\[
+R_y(\phi)R_x(\theta) \left| 0 \right\rangle = \left| \psi\right\rangle.
+\]
+!et
+
+The rotation $R_x(\theta)$
+corresponds to the rotation in the Bloch
+sphere around the $x$-axis and $R_y(\phi)$ the rotation around the $y$-axis.
+
+
+!split
+===== Rotations used =====
+
+These two gates with there parameters ($\theta$ and $\phi$) will generate
+for us the trial (ansatz) wavefunctions. The two parameters will be in
+control of the Classical Computer and its optimization model.
+
+!split
+===== Implementing using qiskit =====
+!bc pycod
+import numpy as np
+from random import random
+from qiskit import *
+def quantum_state_preparation(circuit, parameters):
+    q = circuit.qregs[0] # q is the quantum register where the info about qubits is stored
+    circuit.rx(parameters[0], q[0]) # q[0] is our one and only qubit XD
+    circuit.ry(parameters[1], q[0])
+    return circuit
+!ec
+
+
 
 
 !split
@@ -310,7 +450,7 @@ To execute the second step of VQE, we need to understand how
 expectation values of operators can be estimated via quantum computers
 by post-processing measurements of quantum circuits in different
 basis sets. To rotate bases, one uses the basis rotator $R_\sigma$ which is
-defined for each Pauli gate $\sigma$ to be
+defined for each Pauli gate $\sigma$ to be (using the Hadamard rotation $H$ and Phase rotation $S$)
 
 !bt
 \begin{align}
@@ -530,145 +670,6 @@ estimation subroutine within VQE requires $\mathcal{O}(1/\epsilon^2)$
 samples from circuits with depth $\mathcal{O}(1)$.
 
 
-!split
-===== Rayleigh-Ritz variational principle =====
-
-The Rayleigh-Ritz variational principle states that for a given
-Hamiltonian $H$, the expectation value of a trial state or
-just ansatz $\vert \psi \rangle$ puts a lower bound on the ground state
-energy $E_0$.
-
-!bt
-\[
-    \frac{\langle \psi \vert H\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
-\]
-!et
-
-!split
-===== The ansatz =====
-
-The ansatz is typically chosen to be a parameterized superposition of
-basis states that can be varied to improve the energy estimate,
-$\vert \psi\rangle \equiv \vert psi(\boldsymbol{\theta})\rangle$ where
-$\boldsymbol{\theta} = (\theta_1, \ldots, \theta_M)$ are the $M$
-optimization parameters.
-
-
-
-
-!split
-===== Rotations again =====
-
-To have any flexibility in the
-ansatz $\vert \psi\rangle$, we need to allow for parametrization. The most
-common approach is the so-called $R_y$ ansatz, where we apply chained
-operations of rotating around the $y$-axis by $\boldsymbol{\theta} =
-(\theta_1,\ldots,\theta_Q)$ of the Bloch sphere and CNOT operations.
-
-Applications of $y$ rotations
-specifically ensures that our coefficients always remain real, which
-often is satisfactory when dealing with many-body systems. 
-
-
-
-!split
-===== Measurements and more =====
-
-After the ansatz has been constructed, the Hamiltonian must
-be applied. As discussed, the Hamiltonian must be written in terms of
-Pauli strings.
-
-To obtain the expectation value
-of the ground state energy, one can measure the expectation value of
-each Pauli string, 
-!bt
-\begin{align*}
-    E(\boldsymbol{\theta}) = \sum_i w_i\langle \psi(\boldsymbol{\theta})\vert P_i \vert \psi(\boldsymbol{\theta})\rangle \equiv \sum_i w_i f_i,
-\end{align*}
-!et
-where $f_i$ is the expectation value of the Pauli string $i$.
-
-
-!split
-===== Collecting data =====
-
-This is estimated statistically by considering measurements in the
-appropriate basis of the operator in the Pauli string.
-
-With $N_0$ and $N_1$ as the number of $0$ and $1$ measurements respectively, we can estimate $f_i$ since 
-!bt
-\begin{align*}
-    f_i = \lim_{N \to \infty} \frac{N_0 - N_1}{N},
-\end{align*}
-!et
-where $N$ as the number of shots (measurements).
-
-Each Pauli string requires it own circuit, where multiple measurements
-of each string is required. Adding the results together with the
-corresponding weights, the ground state energy can be estimated. To
-optimize with respect to  $\boldsymbol{\theta}$, a classical optimizer is often
-applied.
-
-
-!split
-===== Ansatzes =====
-
-Every possible qubit wavefunction $\left| \psi \right\rangle$ can be presented as a vector: 
-!bt
-\[
-\left| \psi \right\rangle = \begin{pmatrix}
-\cos{\left( \theta/2 \right)}\\
-e^{i \varphi} \cdot \sin{\left( \theta/2 \right)}
-\end{pmatrix},
-\]
-!et
-
-where the numbers $\theta$ and $\varphi$ define a point on the unit
-three-dimensional sphere, the so-called  Bloch sphere.
-
-For a random one qubit Hamiltonian, a *good* quantum state preparation
-circuit should be able to generate all possible states in the Bloch
-sphere.
-
-!split
-===== Preparing the states =====
-
-Before quantum state preparation, our qubit is in the $\vert 0\rangle$ state.
-This corresponds to the vertical position of
-the vector in the Bloch sphere. In order to generate any possible
-$\left| \psi \right\rangle$ we will apply $R_x(t_1)$ and $R_y(t_2)$
-gates on the $\left| 0 \right\rangle$ initial state
-!bt
-\[
-R_y(\phi)R_x(\theta) \left| 0 \right\rangle = \left| \psi\right\rangle.
-\]
-!et
-
-The rotation $R_x(\theta)$
-corresponds to the rotation in the Bloch
-sphere around the $x$-axis and $R_y(\phi)$ the rotation around the $y$-axis.
-
-
-!split
-===== Rotations used =====
-
-These two gates with there parameters ($\theta$ and $\phi$) will generate
-for us the trial (ansatz) wavefunctions. The two parameters will be in
-control of the Classical Computer and its optimization model.
-
-!split
-===== Implementing using qiskit =====
-!bc pycod
-import numpy as np
-from random import random
-from qiskit import *
-def quantum_state_preparation(circuit, parameters):
-    q = circuit.qregs[0] # q is the quantum register where the info about qubits is stored
-    circuit.rx(parameters[0], q[0]) # q[0] is our one and only qubit XD
-    circuit.ry(parameters[1], q[0])
-    return circuit
-!ec
-
 
 !split
 ===== VQE and efficient computations of gradients  =====
@@ -874,6 +875,7 @@ We have
 \end{pmatrix},
 \end{align*}
 !et
+
 !split
 ===== For the other two matrices =====
 
@@ -1026,7 +1028,7 @@ For a one-qubit system we can reach every point on the Bloch sphere
 (as discussed earlier) with a rotation about the $x$-axis and the
 $y$-axis.
 
-We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state $\vert \psi\rangle$
+We can express this mathematically through a a new state $\vert \psi\rangle$
 !bt
 \[
 \vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
