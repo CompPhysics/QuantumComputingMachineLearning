@@ -10,6 +10,7 @@ DATE: February 26, 2025
 !bblock
   o Repetition from last week on gates, measurements and one-qubit systems
   o Introducing the Variational Quantum Eigensolver (VQE) and discussion of project 1
+  o Rewriting the two-qubit Hamiltonian in terms of Pauli matrices
 #  o "Video of lecture to be added":"https://youtu.be/"
 #  o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary21.pdf"
 
@@ -1545,8 +1546,111 @@ plt.show()
 
 
 
+!split
+===== Two-qubit Hamiltonian =====
+
+We end this lecture with a discussion on how to rewrite the two-qubit Hamiltonian rom last week (and project 1)
+!bt
+\[
+\mathcal{H}=\begin{bmatrix} \epsilon_{1}+V_z & 0 & 0 & V_x \\
+                       0  & \epsilon_{2}-V_z & V_x & 0 \\
+		       0 & H_x & \epsilon_{3}-V_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{4} +V_z \end{bmatrix}.
+\] 
+!et
+
+This Hamiltonian can be rewritten in terms of various one-qubit matrices.
+
+!split
+===== Definitions =====
+
+We define
+!bt
+\[
+\epsilon_{II}=\frac{\epsilon_{1}+\epsilon_{2}+\epsilon_{3}+\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZI}=\frac{\epsilon_{1}+\epsilon_{2}-\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{IZ}=\frac{\epsilon_{1}-\epsilon_{2}+\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZZ}=\frac{\epsilon_{1}-\epsilon_{2}-\epsilon_{3}+\epsilon_{4}}{4}.
+\]
+!et
 
 
+!split
+===== The Hamiltonian in terms of Pauli-$\bm{X}$ and Pauli-$\bm{Z}$ matrices =====
+
+With these definitions we can rewrite our two-qubit Hamiltonian as
+!bt
+\[
+\mathcal{H}=\mathcal{H}_0+\mathcal{H}_I
+\]
+!et
+with
+!bt
+\[
+\mathcal{H}_0=\epsilon_{II}\bm{I}\otimes\bm{I}+\epsilon_{ZI}\bm{Z}\otimes\bm{I}+\epsilon_{IZ}\bm{I}\otimes\bm{Z}+\epsilon_{II}+\epsilon_{ZZ}\bm{Z}\otimes\bm{Z},
+\]
+!et
+and
+!bt
+\[
+\mathcal{H}_I=V_z\bm{Z}\otimes\bm{Z}+V_x\bm{X}\otimes\bm{X}.
+\]
+!et
+
+!split
+===== How do we perform measurements? =====
+
+The above tensor products need to rewritten in terms of specific
+transformations so that we can perform the measumrents in the basis of
+the Pauli-$\bm{Z}$ matrices. As we discussed earlier, we need to find
+a transformation of the form
+!bt
+\[
+\mathcal{P}=\bm{U}^{\dagger}\bm{M}\bm{U},
+\]
+!et
+where $\mathcal{P}$ represents some combination of the Pauli matrices and
+the identity matrix, $\bm{U}$ is a unitary matrix and $\bm{M}$
+represents the gate/matrix which performs the measurements, often
+represented by a Pauli-$\bm{Z}$ gate/matrix.
+
+The implementation of these measurements will be discussed next week.
+
+
+!split
+===== Explicit expressions =====
+In order to perform our measurements, will then need the following operators $\bm{U}$
+!bt
+\begin{align*}
+\bm{Z}\otimes\bm{I} & \bm{U}=\bm{I}\otimes\bm{I}\\
+\bm{I}\otimes\bm{Z} & \bm{U}=\text{SWAP}\\
+\bm{Z}\otimes\bm{Z} & \bm{U}=CX_{10}\\
+\bm{X}\otimes\bm{X} & \bm{U}=CX_{10}(\bm{H}\otimes\bm{H}\\
+\end{align*}
+!et
+where we have 
+!bt
+\[
+	\text{CX}_{10} = \begin{bmatrix}
+		0 & 1 & 0 & 0 \\
+		1 & 0 & 0 & 0 \\
+		0 & 0 & 1 & 0 \\
+		0 & 0 & 0 & 1
+	\end{bmatrix}.
+\]
+!et
 
 
 !split
@@ -1558,4 +1662,5 @@ plt.show()
   o Solving problems with more than one qubit and discussion of project 1
   o "Reading suggestion, VQE review article":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
 !eblock
+
 

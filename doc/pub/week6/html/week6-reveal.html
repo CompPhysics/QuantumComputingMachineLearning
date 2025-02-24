@@ -199,7 +199,8 @@ MathJax.Hub.Config({
 <p>
 <ol>
  <p><li> Repetition from last week on gates, measurements and one-qubit systems</li>
- <p><li> Introducing the Variational Quantum Eigensolver (VQE) and discussion of project 1
+ <p><li> Introducing the Variational Quantum Eigensolver (VQE) and discussion of project 1</li>
+ <p><li> Rewriting the two-qubit Hamiltonian in terms of Pauli matrices
 <!-- o <a href="https://youtu.be/" target="_blank">Video of lecture to be added</a> -->
 <!-- o <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary21.pdf" target="_blank">Whiteboard notes</a> --></li>
 </ol>
@@ -2111,6 +2112,126 @@ plt.show()
     </div>
   </div>
 </div>
+</section>
+
+<section>
+<h2 id="two-qubit-hamiltonian">Two-qubit Hamiltonian </h2>
+
+<p>We end this lecture with a discussion on how to rewrite the two-qubit Hamiltonian rom last week (and project 1)</p>
+<p>&nbsp;<br>
+$$
+\mathcal{H}=\begin{bmatrix} \epsilon_{1}+V_z & 0 & 0 & V_x \\
+                       0  & \epsilon_{2}-V_z & V_x & 0 \\
+		       0 & H_x & \epsilon_{3}-V_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{4} +V_z \end{bmatrix}.
+$$
+<p>&nbsp;<br>
+
+<p>This Hamiltonian can be rewritten in terms of various one-qubit matrices.</p>
+</section>
+
+<section>
+<h2 id="definitions">Definitions </h2>
+
+<p>We define</p>
+<p>&nbsp;<br>
+$$
+\epsilon_{II}=\frac{\epsilon_{1}+\epsilon_{2}+\epsilon_{3}+\epsilon_{4}}{4},
+$$
+<p>&nbsp;<br>
+
+<p>&nbsp;<br>
+$$
+\epsilon_{ZI}=\frac{\epsilon_{1}+\epsilon_{2}-\epsilon_{3}-\epsilon_{4}}{4},
+$$
+<p>&nbsp;<br>
+
+<p>&nbsp;<br>
+$$
+\epsilon_{IZ}=\frac{\epsilon_{1}-\epsilon_{2}+\epsilon_{3}-\epsilon_{4}}{4},
+$$
+<p>&nbsp;<br>
+
+<p>&nbsp;<br>
+$$
+\epsilon_{ZZ}=\frac{\epsilon_{1}-\epsilon_{2}-\epsilon_{3}+\epsilon_{4}}{4}.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="the-hamiltonian-in-terms-of-pauli-boldsymbol-x-and-pauli-boldsymbol-z-matrices">The Hamiltonian in terms of Pauli-\( \boldsymbol{X} \) and Pauli-\( \boldsymbol{Z} \) matrices </h2>
+
+<p>With these definitions we can rewrite our two-qubit Hamiltonian as</p>
+<p>&nbsp;<br>
+$$
+\mathcal{H}=\mathcal{H}_0+\mathcal{H}_I
+$$
+<p>&nbsp;<br>
+
+<p>with</p>
+<p>&nbsp;<br>
+$$
+\mathcal{H}_0=\epsilon_{II}\boldsymbol{I}\otimes\boldsymbol{I}+\epsilon_{ZI}\boldsymbol{Z}\otimes\boldsymbol{I}+\epsilon_{IZ}\boldsymbol{I}\otimes\boldsymbol{Z}+\epsilon_{II}+\epsilon_{ZZ}\boldsymbol{Z}\otimes\boldsymbol{Z},
+$$
+<p>&nbsp;<br>
+
+<p>and</p>
+<p>&nbsp;<br>
+$$
+\mathcal{H}_I=V_z\boldsymbol{Z}\otimes\boldsymbol{Z}+V_x\boldsymbol{X}\otimes\boldsymbol{X}.
+$$
+<p>&nbsp;<br>
+</section>
+
+<section>
+<h2 id="how-do-we-perform-measurements">How do we perform measurements? </h2>
+
+<p>The above tensor products need to rewritten in terms of specific
+transformations so that we can perform the measumrents in the basis of
+the Pauli-\( \boldsymbol{Z} \) matrices. As we discussed earlier, we need to find
+a transformation of the form
+</p>
+<p>&nbsp;<br>
+$$
+\mathcal{P}=\boldsymbol{U}^{\dagger}\boldsymbol{M}\boldsymbol{U},
+$$
+<p>&nbsp;<br>
+
+<p>where \( \mathcal{P} \) represents some combination of the Pauli matrices and
+the identity matrix, \( \boldsymbol{U} \) is a unitary matrix and \( \boldsymbol{M} \)
+represents the gate/matrix which performs the measurements, often
+represented by a Pauli-\( \boldsymbol{Z} \) gate/matrix.
+</p>
+
+<p>The implementation of these measurements will be discussed next week.</p>
+</section>
+
+<section>
+<h2 id="explicit-expressions">Explicit expressions </h2>
+<p>In order to perform our measurements, will then need the following operators \( \boldsymbol{U} \)</p>
+<p>&nbsp;<br>
+$$
+\begin{align*}
+\boldsymbol{Z}\otimes\boldsymbol{I} & \boldsymbol{U}=\boldsymbol{I}\otimes\boldsymbol{I}\\
+\boldsymbol{I}\otimes\boldsymbol{Z} & \boldsymbol{U}=\text{SWAP}\\
+\boldsymbol{Z}\otimes\boldsymbol{Z} & \boldsymbol{U}=CX_{10}\\
+\boldsymbol{X}\otimes\boldsymbol{X} & \boldsymbol{U}=CX_{10}(\boldsymbol{H}\otimes\boldsymbol{H}\\
+\end{align*}
+$$
+<p>&nbsp;<br>
+
+<p>where we have </p>
+<p>&nbsp;<br>
+$$
+	\text{CX}_{10} = \begin{bmatrix}
+		0 & 1 & 0 & 0 \\
+		1 & 0 & 0 & 0 \\
+		0 & 0 & 1 & 0 \\
+		0 & 0 & 0 & 1
+	\end{bmatrix}.
+$$
+<p>&nbsp;<br>
 </section>
 
 <section>

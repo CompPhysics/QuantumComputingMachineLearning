@@ -199,6 +199,18 @@ doconce format html week6.do.txt --html_style=bootstrap --pygments_html_style=de
                2,
                None,
                'the-code-for-the-one-qubit-case'),
+              ('Two-qubit Hamiltonian', 2, None, 'two-qubit-hamiltonian'),
+              ('Definitions', 2, None, 'definitions'),
+              ('The Hamiltonian in terms of Pauli-$\\boldsymbol{X}$ and '
+               'Pauli-$\\boldsymbol{Z}$ matrices',
+               2,
+               None,
+               'the-hamiltonian-in-terms-of-pauli-boldsymbol-x-and-pauli-boldsymbol-z-matrices'),
+              ('How do we perform measurements?',
+               2,
+               None,
+               'how-do-we-perform-measurements'),
+              ('Explicit expressions', 2, None, 'explicit-expressions'),
               ('Plans for the week of February March 1',
                2,
                None,
@@ -310,6 +322,11 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#computing-quantum-gradients" style="font-size: 80%;">Computing quantum gradients</a></li>
      <!-- navigation toc: --> <li><a href="#a-smarter-way-of-doing-this" style="font-size: 80%;">A smarter way of doing this</a></li>
      <!-- navigation toc: --> <li><a href="#the-code-for-the-one-qubit-case" style="font-size: 80%;">The code for the one qubit case</a></li>
+     <!-- navigation toc: --> <li><a href="#two-qubit-hamiltonian" style="font-size: 80%;">Two-qubit Hamiltonian</a></li>
+     <!-- navigation toc: --> <li><a href="#definitions" style="font-size: 80%;">Definitions</a></li>
+     <!-- navigation toc: --> <li><a href="#the-hamiltonian-in-terms-of-pauli-boldsymbol-x-and-pauli-boldsymbol-z-matrices" style="font-size: 80%;">The Hamiltonian in terms of Pauli-\( \boldsymbol{X} \) and Pauli-\( \boldsymbol{Z} \) matrices</a></li>
+     <!-- navigation toc: --> <li><a href="#how-do-we-perform-measurements" style="font-size: 80%;">How do we perform measurements?</a></li>
+     <!-- navigation toc: --> <li><a href="#explicit-expressions" style="font-size: 80%;">Explicit expressions</a></li>
      <!-- navigation toc: --> <li><a href="#plans-for-the-week-of-february-march-1" style="font-size: 80%;">Plans for the week of February March 1</a></li>
 
         </ul>
@@ -351,7 +368,8 @@ MathJax.Hub.Config({
 <!-- subsequent paragraphs come in larger fonts, so start with a paragraph -->
 <ol>
  <li> Repetition from last week on gates, measurements and one-qubit systems</li>
- <li> Introducing the Variational Quantum Eigensolver (VQE) and discussion of project 1
+ <li> Introducing the Variational Quantum Eigensolver (VQE) and discussion of project 1</li>
+ <li> Rewriting the two-qubit Hamiltonian in terms of Pauli matrices
 <!-- o <a href="https://youtu.be/" target="_self">Video of lecture to be added</a> -->
 <!-- o <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary21.pdf" target="_self">Whiteboard notes</a> --></li>
 </ol>
@@ -2071,6 +2089,102 @@ plt<span style="color: #666666">.</span>show()
 
 
 <!-- !split -->
+<h2 id="two-qubit-hamiltonian" class="anchor">Two-qubit Hamiltonian </h2>
+
+<p>We end this lecture with a discussion on how to rewrite the two-qubit Hamiltonian rom last week (and project 1)</p>
+$$
+\mathcal{H}=\begin{bmatrix} \epsilon_{1}+V_z & 0 & 0 & V_x \\
+                       0  & \epsilon_{2}-V_z & V_x & 0 \\
+		       0 & H_x & \epsilon_{3}-V_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{4} +V_z \end{bmatrix}.
+$$
+
+<p>This Hamiltonian can be rewritten in terms of various one-qubit matrices.</p>
+
+<!-- !split -->
+<h2 id="definitions" class="anchor">Definitions </h2>
+
+<p>We define</p>
+$$
+\epsilon_{II}=\frac{\epsilon_{1}+\epsilon_{2}+\epsilon_{3}+\epsilon_{4}}{4},
+$$
+
+$$
+\epsilon_{ZI}=\frac{\epsilon_{1}+\epsilon_{2}-\epsilon_{3}-\epsilon_{4}}{4},
+$$
+
+$$
+\epsilon_{IZ}=\frac{\epsilon_{1}-\epsilon_{2}+\epsilon_{3}-\epsilon_{4}}{4},
+$$
+
+$$
+\epsilon_{ZZ}=\frac{\epsilon_{1}-\epsilon_{2}-\epsilon_{3}+\epsilon_{4}}{4}.
+$$
+
+
+<!-- !split -->
+<h2 id="the-hamiltonian-in-terms-of-pauli-boldsymbol-x-and-pauli-boldsymbol-z-matrices" class="anchor">The Hamiltonian in terms of Pauli-\( \boldsymbol{X} \) and Pauli-\( \boldsymbol{Z} \) matrices </h2>
+
+<p>With these definitions we can rewrite our two-qubit Hamiltonian as</p>
+$$
+\mathcal{H}=\mathcal{H}_0+\mathcal{H}_I
+$$
+
+<p>with</p>
+$$
+\mathcal{H}_0=\epsilon_{II}\boldsymbol{I}\otimes\boldsymbol{I}+\epsilon_{ZI}\boldsymbol{Z}\otimes\boldsymbol{I}+\epsilon_{IZ}\boldsymbol{I}\otimes\boldsymbol{Z}+\epsilon_{II}+\epsilon_{ZZ}\boldsymbol{Z}\otimes\boldsymbol{Z},
+$$
+
+<p>and</p>
+$$
+\mathcal{H}_I=V_z\boldsymbol{Z}\otimes\boldsymbol{Z}+V_x\boldsymbol{X}\otimes\boldsymbol{X}.
+$$
+
+
+<!-- !split -->
+<h2 id="how-do-we-perform-measurements" class="anchor">How do we perform measurements? </h2>
+
+<p>The above tensor products need to rewritten in terms of specific
+transformations so that we can perform the measumrents in the basis of
+the Pauli-\( \boldsymbol{Z} \) matrices. As we discussed earlier, we need to find
+a transformation of the form
+</p>
+$$
+\mathcal{P}=\boldsymbol{U}^{\dagger}\boldsymbol{M}\boldsymbol{U},
+$$
+
+<p>where \( \mathcal{P} \) represents some combination of the Pauli matrices and
+the identity matrix, \( \boldsymbol{U} \) is a unitary matrix and \( \boldsymbol{M} \)
+represents the gate/matrix which performs the measurements, often
+represented by a Pauli-\( \boldsymbol{Z} \) gate/matrix.
+</p>
+
+<p>The implementation of these measurements will be discussed next week.</p>
+
+<!-- !split -->
+<h2 id="explicit-expressions" class="anchor">Explicit expressions </h2>
+<p>In order to perform our measurements, will then need the following operators \( \boldsymbol{U} \)</p>
+$$
+\begin{align*}
+\boldsymbol{Z}\otimes\boldsymbol{I} & \boldsymbol{U}=\boldsymbol{I}\otimes\boldsymbol{I}\\
+\boldsymbol{I}\otimes\boldsymbol{Z} & \boldsymbol{U}=\text{SWAP}\\
+\boldsymbol{Z}\otimes\boldsymbol{Z} & \boldsymbol{U}=CX_{10}\\
+\boldsymbol{X}\otimes\boldsymbol{X} & \boldsymbol{U}=CX_{10}(\boldsymbol{H}\otimes\boldsymbol{H}\\
+\end{align*}
+$$
+
+<p>where we have </p>
+$$
+	\text{CX}_{10} = \begin{bmatrix}
+		0 & 1 & 0 & 0 \\
+		1 & 0 & 0 & 0 \\
+		0 & 0 & 1 & 0 \\
+		0 & 0 & 0 & 1
+	\end{bmatrix}.
+$$
+
+
+<!-- !split -->
 <h2 id="plans-for-the-week-of-february-march-1" class="anchor">Plans for the week of February March 1 </h2>
 
 <div class="panel panel-default">
@@ -2084,6 +2198,7 @@ plt<span style="color: #666666">.</span>show()
 </ol>
 </div>
 </div>
+
 
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->
