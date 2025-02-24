@@ -1613,7 +1613,7 @@ and
 ===== How do we perform measurements? =====
 
 The above tensor products need to rewritten in terms of specific
-transformations so that we can perform the measumrents in the basis of
+transformations so that we can perform the measurements in the basis of
 the Pauli-$\bm{Z}$ matrices. As we discussed earlier, we need to find
 a transformation of the form
 !bt
@@ -1627,6 +1627,47 @@ represents the gate/matrix which performs the measurements, often
 represented by a Pauli-$\bm{Z}$ gate/matrix.
 
 The implementation of these measurements will be discussed next week.
+
+!split
+===== Why do we measure on one qubit? First consideration =====
+
+In quantum computing, measurements are typically performed on one
+qubit at a time due to a combination of theoretical, practical, and
+algorithmic considerations:
+
+!bblock Algorithmic Requirements:
+o Adaptive Processing: Many quantum algorithms, such as quantum teleportation or error correction, require mid-circuit measurements. The outcomes determine subsequent operations, necessitating sequential measurements to adapt the circuit dynamically.
+o Partial Information Extraction: Algorithms often need only specific qubits' results (e.g., in Shor's algorithm), making full-system measurements unnecessary.
+!eblock
+
+!split
+===== Why do we measure on one qubit? Second consideration =====
+
+
+!bblock Quantum Mechanical Principles:
+o Collapse and Entanglement: Measuring a qubit collapses its state, potentially affecting entangled qubits. Sequential measurements allow controlled extraction of information while managing entanglement.
+o Measurement Basis: Most algorithms use the computational basis (individual qubit measurements). Joint measurements in entangled bases are possible but require complex setups and are not always needed.
+!eblock
+
+!split
+===== Why do we measure on one qubit? Third consideration =====
+
+
+!bblock Practical Hardware Limitations:
+o Crosstalk and Noise: Simultaneous measurements risk disturbing neighboring qubits due to hardware imperfections, especially in noisy intermediate-scale quantum (NISQ) devices.
+o Readout Constraints: Physical implementations (e.g., superconducting qubits) may have limited readout bandwidth, forcing sequential measurements.
+!eblock
+
+!split
+===== Why do we measure on one qubit? Fourth consideration =====
+
+
+!bblock Resource Management:
+o Qubit Reuse: Ancilla qubits (e.g., in error correction) are measured, reset, and reused, requiring sequential handling to avoid disrupting computational qubits.
+!eblock
+!bblock Conclusion:
+While joint measurements are theoretically possible, the dominant practice of measuring one qubit at a time stems from algorithmic adaptability, hardware limitations, and the need to minimize quantum state disturbance. This approach balances efficiency, practicality, and the constraints of current quantum systems.
+!eblock
 
 
 !split
@@ -1644,13 +1685,15 @@ where we have
 !bt
 \[
 	\text{CX}_{10} = \begin{bmatrix}
-		0 & 1 & 0 & 0 \\
 		1 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 1 \\
 		0 & 0 & 1 & 0 \\
-		0 & 0 & 0 & 1
+		0 & 1 & 0 & 0
 	\end{bmatrix}.
 \]
 !et
+
+
 
 
 !split
