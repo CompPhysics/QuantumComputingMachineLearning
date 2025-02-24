@@ -28,7 +28,7 @@ o "See also the VQE review article by Tilly et al.":"https://www.sciencedirect.c
 
 
 Mathematically, quantum gates are a series of unitary operators in the
-operator space $ \mathcal{H} \otimes \mathcal{H}^{*}$ which evolve the
+operator space defined by our Hamiltonian $\mathcal{H}$ and operators $\mathcal{O}$ which evolve a given initial
 state. The unitary nature preserves the norm of the state vector,
 ensuring the probabilities sum to unity. Since not all gates
 correspond to an observable, they are not necessarily hermitian.
@@ -59,24 +59,24 @@ The Pauli matrices (and gate operations following therefrom) are defined as
 
 The Pauli-$X$ gate is also known as the _NOT_ gate, which flips the state of the qubit.
 !bt
-\begin{align}
+\begin{align*}
 	X\vert 0\rangle &= \vert 1\rangle, \\
 	X\vert 1\rangle &= \vert 0\rangle.	
-\end{align}
+\end{align*}
 !et
 The Pauli-$Y$ gate flips the bit and multiplies the phase by $ i $. 
 !bt
-\begin{align}
+\begin{align*}
 	Y\vert 0\rangle &= i\vert 1\rangle, \\
 	Y\vert 1\rangle &= -i\vert 0\rangle.
-\end{align}
+\end{align*}
 !et
 The Pauli-$Z$ gate multiplies only the phase of $\vert 1\rangle$ by $ -1 $.
 !bt
-\begin{align}
+\begin{align*}
 	Z\vert 0\rangle &= \vert 0\rangle, \\
 	Z\vert 1\rangle &= -\vert 1\rangle.
-\end{align}
+\end{align*}
 !et
 !split
 ===== Hadamard gate =====
@@ -98,24 +98,25 @@ It creates a superposition of the $ \vert 0\rangle $ and $ \vert 1\rangle $ stat
 	H\vert 1\rangle &= \frac{1}{\sqrt{2}} \left( \vert 0\rangle - \vert 1\rangle \right).
 \end{align}
 !et
+Note that we will use $H$ as symbol for the Hadamard gate while we will reserve the notation $\mathcal{H}$ for a given Hamiltonian.
 
 !split
 ===== Phase Gates =====
 The phase gate is usually denoted as $S$ and is defined as
 !bt
-\begin{equation}
+\[
 	S = \begin{pmatrix}
 		1 & 0 \\
 		0 & i
 	\end{pmatrix}.
-\end{equation}
+\]
 !et
 It multiplies only the phase of the $ \vert 1\rangle $ state by $ i $.
 !bt
-\begin{align}
+\begin{align*}
 	S\vert 0\rangle &= \vert 0\rangle, \\
 	S\vert 1\rangle &= i\vert 1\rangle.
-\end{align}
+\end{align*}
 !et
 
 !split
@@ -123,33 +124,33 @@ It multiplies only the phase of the $ \vert 1\rangle $ state by $ i $.
 
 The inverse
 !bt
-\begin{equation}
+\[
 	S^\dagger = \begin{pmatrix}
 		1 & 0 \\
 		0 & -i
 	\end{pmatrix}
-\end{equation}
+\]
 !et
 is known as the $ S^\dagger$ gate which applies an $\imath$ phase shift to $\vert 1\rangle$.
 !bt
-\begin{align}
+\begin{align*}
 	S^\dagger\vert 0\rangle &= \vert 0\rangle, \\
 	S^\dagger\vert 1\rangle &= -i\vert 1\rangle.
-\end{align}
+\end{align*}
 !et
 !split
 ===== Two-qubit gates =====
 
 The CNOT gate is a two-qubit gate which acts on two qubits, a control qubit and a target qubit. The CNOT gate is defined as
 !bt
-\begin{equation}
+\[
 	\text{CNOT} = \begin{pmatrix}
 		1 & 0 & 0 & 0 \\
 		0 & 1 & 0 & 0 \\
 		0 & 0 & 0 & 1 \\
 		0 & 0 & 1 & 0
 	\end{pmatrix}.
-\end{equation}
+\]
 !et
 It is often used to perform linear entanglement on qubits.
 !bt
@@ -165,14 +166,14 @@ It is often used to perform linear entanglement on qubits.
 ===== The SWAP gate =====
 The SWAP gate is a two-qubit gate which swaps the state of two qubits. It is defined as
 !bt
-\begin{equation}
+\[
 	\text{SWAP} = \begin{pmatrix}
 		1 & 0 & 0 & 0 \\
 		0 & 0 & 1 & 0 \\
 		0 & 1 & 0 & 0 \\
 		0 & 0 & 0 & 1
 	\end{pmatrix}.
-\end{equation}
+\]
 !et
 !bt
 \begin{align*}
@@ -185,6 +186,7 @@ The SWAP gate is a two-qubit gate which swaps the state of two qubits. It is def
 
 !split
 ===== Pauli Strings =====
+
 A Pauli string, such as $ XIYZ $ is a tensor product of Pauli matrices acting on different qubits.
 The Pauli string $ XIYZ $ is defined as (from qubit one to qubit four, from left to right)
 !bt 
@@ -201,18 +203,20 @@ Hamiltonians are often rewritten or decomposed in terms of Pauli string as they 
 ===== Variational Quantum Eigensolver =====
 
 One initial algorithm to estimate the eigenenergies of a quantum
-Hamiltonian was "quantum phase estimation":"https://qiskit.org/textbook/ch-algorithms/quantum-phase-estimation.html". In it, one
-encodes the eigenenergies, one binary bit at a time (up to $n$ bits),
-into the complex phases of the quantum states of the Hilbert space for
-$n$ qubits. It does this by applying powers of controlled unitary
-evolution operators to a quantum state that can be expanded in terms
-of the Hamiltonian's eigenvectors of interest. The eigenenergies are
-encoded into the complex phases in such a way that taking the inverse
-quantum Fourier transformation (see Hundt sections 6.1-6.2) of the states into which the
-eigen-energies are encoded results in a measurement probability
-distribution that has peaks around the bit strings that represent a
-binary fraction which corresponds to the eigen-energies of the quantum
-state acted upon by the controlled unitary operators.
+Hamiltonian was "quantum phase
+estimation":"https://qiskit.org/textbook/ch-algorithms/quantum-phase-estimation.html". In
+it, one encodes the eigenenergies, one binary bit at a time (up to $n$
+bits), into the complex phases of the quantum states of the Hilbert
+space for $n$ qubits. It does this by applying powers of controlled
+unitary evolution operators to a quantum state that can be expanded in
+terms of the Hamiltonian's eigenvectors of interest. The eigenenergies
+are encoded into the complex phases in such a way that taking the
+inverse quantum Fourier transformation (see Hundt sections 6.1-6.2) of
+the states into which the eigen-energies are encoded results in a
+measurement probability distribution that has peaks around the bit
+strings that represent a binary fraction which corresponds to the
+eigen-energies of the quantum state acted upon by the controlled
+unitary operators.
 
 
 
@@ -220,21 +224,22 @@ state acted upon by the controlled unitary operators.
 !split
 ===== The VQE =====
 
-While quantum
-phase estimation (QPE) is provably efficient, non-hybrid, and
-non-variational, the number of qubits and length of circuits required
-is too great for our NISQ era quantum computers. Thus, QPE is only
-efficiently applicable to large, fault-tolerant quantum computers that
-likely won't exist in the near, but the far future.
+While quantum phase estimation (QPE) is provably efficient,
+non-hybrid, and non-variational, the number of qubits and length of
+circuits required is too great for our NISQ era quantum
+computers. Thus, QPE is only efficiently applicable to large,
+fault-tolerant quantum computers that likely won't exist in the near,
+but the far future.
 
 Therefore, a different algorithm for finding the eigen-energies of a
 quantum Hamiltonian was put forth in 2014 called the variational
-quantum eigensolver, commonly referred to as "VQE":"https://arxiv.org/abs/2111.05176". The
-algorithm is hybrid, meaning that it requires the use of both a
-quantum computer and a classical computer. It is also variational,
-meaning that it relies, ultimately, on solving an optimization problem
-by varying parameters and thus is not as deterministic as QPE. The
-variational quantum eigensolver is based on the variational principle:
+quantum eigensolver, commonly referred to as
+"VQE":"https://arxiv.org/abs/2111.05176". The algorithm is hybrid,
+meaning that it requires the use of both a quantum computer and a
+classical computer. It is also variational, meaning that it relies,
+ultimately, on solving an optimization problem by varying parameters
+and thus is not as deterministic as QPE. The variational quantum
+eigensolver is based on the variational principle:
 
 
 
