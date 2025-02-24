@@ -296,7 +296,7 @@ We can then expand our state $|\psi(\theta)\rangle$ in terms of the eigenstates
 and insert this in the expression  for the expectation value (note that we drop the denominator in the Rayleigh-Ritz ratio) 
 !bt
 \[
-\langle\psi(\theta)\vert \mathcal{H}\vert\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m\vert\mathcal{H}\vertn \rangle
+\langle\psi(\theta)\vert \mathcal{H}\vert\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m\vert\mathcal{H}\vert n \rangle
 =\sum_{nm}c^*_mc_nE_n\langle m\vert n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n=\sum_{n}\vert c_n\vert^2E_n \geq E_0\sum_{n}\vert c_n\vert^2=E_0,
 \]
 !et
@@ -456,27 +456,28 @@ expectation values of operators can be estimated via quantum computers
 by post-processing measurements of quantum circuits in different
 basis sets. To rotate bases, one uses the basis rotator $R_\sigma$ which is
 defined for each Pauli gate $\sigma$ to be (using the Hadamard rotation $H$ and Phase rotation $S$)
-
+for a Pauli-$X$ matrix
 !bt
-\begin{align}
-R_{\sigma} = H, & \text{if} \ \sigma = X,
-\end{align} label{eq:auto8}
+\[
+X=R_{\sigma}ZR_{\sigma} = HZH
+\]
+!et
+for a Pauli-$Y$ matrix
+!bt
+\[
+Y=R_{\sigma}ZR_{\sigma}=HS^{\dagger}ZHS,
+\]
 !et
 and
 !bt
-\begin{align}
-HS^{\dagger}, & \text{if} \ \sigma = Y,
-\end{align}
-!et
-and
-!bt
-\begin{align}
-I, & \text{if} \ \sigma = Z.
-\end{align}
+\[
+Z=R_{\sigma}ZR_{\sigma}=\bm{I}Z\bm{I}=Z.
+\]
 !et
 
 !split
 ===== Measurements of eigenvalues of the Pauli operators =====
+
 We can show that these rotations allow us to measure the eigenvalues of the Pauli operators. The eigenvectors of the Pauli $X$ gate are
 !bt
 \[
@@ -484,7 +485,7 @@ We can show that these rotations allow us to measure the eigenvalues of the Paul
 \]
 !et
 with eigenvalues $\pm 1$.
-Acting on the eigenstates with the rotation in eq. (ref{eq:auto8}) gives
+Acting on the eigenstates with the rotation gives
 !bt
 \[
 H\vert +\rangle = +1\vert 0\rangle,
@@ -513,7 +514,7 @@ We then have the following expectation value for the Pauli $X$ operator
 \langle \vert X\vert \rangle = \langle \psi\vert X \vert \psi\rangle = |\alpha|^2 - |\beta|^2.
 \]
 !et
-However, we can only measure the qubits in the computational basis. Applying the rotation in eq. (ref{eq:auto8}) to our state gives
+However, we can only measure the qubits in the computational basis. Applying the rotation to our state gives
 !bt
 \[
 H \vert \psi\rangle = \alpha \vert 0\rangle - \beta \vert 1\rangle.
@@ -525,7 +526,7 @@ H \vert \psi\rangle = \alpha \vert 0\rangle - \beta \vert 1\rangle.
 
 This tells us that we are able to estimate $|\alpha|^2$ and
 $|\beta|^2$ (and hence the expectation value of the Pauli $X$
-operator) by using the rotation in eq. (ref{eq:auto8}) and measure the
+operator) by using a rotation and measure the
 resulting state in the computational basis. We can show this for the
 Pauli $Z$ and Pauli $Y$ similarly.
 
@@ -548,14 +549,14 @@ which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$.
 With this, we see that the expectation value of an arbitrary
 Pauli-gate $\sigma$ in the state $\vert\psi\rangle$ can be expressed as a linear combination of probabilities
 !bt
-\begin{align}
+\begin{align*}
 E_{\psi}(\sigma)
 &= \langle \psi\vert\sigma\vert\psi\rangle \nonumber \\
 &=\langle\psi\vert R_{\sigma}^{\dagger}ZR_{\sigma}\vert\psi\rangle =\langle \phi\vert Z\vert \phi\rangle \nonumber \\
 &=\langle\phi\vert\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\langle x\vert\right)\vert\phi\rangle \nonumber \\
 &=\sum_{x\in\{0,1\}}(-1)^x\vert\langle x\vert \phi\rangle\vert^2\nonumber \\
 &=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
-\end{align}
+\end{align*}
 !et
 
 where $\vert \phi\rangle=\vert R_\sigma\phi\rangle$ and
@@ -573,7 +574,7 @@ non-trivially on the set of qubits $Q$ which is a subset of the total
 set of $n$ qubits in the system. Then
 
 !bt
-\begin{align}
+\begin{align*}
 E_{\psi}\left(P\right)
 &=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
 &=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)
@@ -585,14 +586,14 @@ E_{\psi}\left(P\right)
 \left(\bigotimes_{p \in Q}Z_p\right)
 \left(\bigotimes_{q\notin Q}I_q\right)
 \left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
-\end{align}
+\end{align*}
 !et
 
 !split
 ===== Which gives us =====
 
 !bt
-\begin{align}
+\begin{align*}
 E_{\psi}\left(P\right)
 &=
 \langle \phi\vert
@@ -618,7 +619,7 @@ E_{\psi}\left(P\right)
 \\
 &=
 \sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
-\end{align}
+\end{align*}
 !et
 where $\vert \phi\rangle=\vert \bigotimes_{p\in Q}R_{\sigma_p}\psi\rangle$.
 
@@ -696,20 +697,20 @@ terms of Pauli $X$ and $Z$ matrices, as discussed in the project text.
 We define a  symmetric matrix  $H\in {\mathbb{R}}^{2\times 2}$
 !bt
 \[
-H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
+\mathcal{H} = \begin{bmatrix} \mathcal{H}_{11} & \mathcal{H}_{12} \\ \mathcal{H}_{21} & \mathcal{H}_{22}
 \end{bmatrix},
 \]
 !et
-We  let $H = H_0 + H_I$, where
+We  let $\mathcal{H} = \mathcal{H}_0 + \mathcal{H}_I$, where
 !bt
 \[
-H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
+\mathcal{H}_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
 \]
 !et
 is a diagonal matrix. Similarly,
 !bt
 \[
-H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
+\mathcal{H}_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
 \]
 !et
 where $V_{ij}$ represent various interaction matrix elements.
@@ -720,15 +721,15 @@ where $V_{ij}$ represent various interaction matrix elements.
 
 We can view $H_0$ as the non-interacting solution
 !bt
-\begin{equation}
-       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
-\end{equation}
+\[
+       \mathcal{H}_0\vert 0 \rangle =E_1\vert 0 \rangle,
+\]
 !et
 and
 !bt
-\begin{equation}
-       H_0\vert 1\rangle =E_2\vert 1\rangle,
-\end{equation}
+\[
+       \mathcal{H}_0\vert 1\rangle =E_2\vert 1\rangle,
+\]
 !et
 where we have defined the orthogonal computational one-qubit basis states $\vert 0\rangle$ and $\vert 1\rangle$.
 
@@ -737,14 +738,14 @@ where we have defined the orthogonal computational one-qubit basis states $\vert
 We rewrite $H$ (and $H_0$ and $H_I$)  via Pauli matrices
 !bt
 \[
-H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
+\mathcal{H}_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
   + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
 \]
 !et
 and
 !bt
 \[
-H_I = c \bm{I} +\omega_z\sigma_z + \omega_x\sigma_x,
+\mathcal{H}_I = c \bm{I} +\omega_z\sigma_z + \omega_x\sigma_x,
 \]
 !et
 with $c = (V_{11}+V_{22})/2$, $\omega_z = (V_{11}-V_{22})/2$ and $\omega_x = V_{12}=V_{21}$.
@@ -752,7 +753,7 @@ We let our Hamiltonian depend linearly on a strength parameter $\lambda$
 
 !bt
 \[
-H=H_0+\lambda H_\mathrm{I},
+\mathcal{H}=\mathcal{H}_0+\lambda \mathcal{H}_\mathrm{I},
 \]
 !et
 
@@ -835,7 +836,7 @@ We have seen how to rewrite the above $2\times 2$ eiegenvalue problem in terms o
 and the identity matrix $\bm{I}$. Let us make this Hamiltonian that involves only one qubit somewhat more general
 !bt
 \[
-\left\langle H \right\rangle = \left\langle \psi \right| H \left| \psi \right\rangle = a \cdot \left\langle \psi \right| I \left| \psi \right\rangle + b \cdot \left\langle \psi \right| Z \left| \psi \right\rangle + c \cdot \left\langle \psi \right| X \left| \psi \right\rangle + d \cdot \left\langle \psi \right| Y \left| \psi \right\rangle.
+\left\langle \psi \right| \mathcal{H} \left| \psi \right\rangle = a \cdot \left\langle \psi \right| I \left| \psi \right\rangle + b \cdot \left\langle \psi \right| Z \left| \psi \right\rangle + c \cdot \left\langle \psi \right| X \left| \psi \right\rangle + d \cdot \left\langle \psi \right| Y \left| \psi \right\rangle.
 \]
 !et
 
@@ -846,7 +847,7 @@ For the $I$ operator the expectation value is always unity:
 
 !bt
 \[
-\left\langle \psi \right| \bm{I} \left| \psi \right\rangle = \left\langle \psi \right|\left| \psi \right\rangle = 1.
+\left\langle \psi \right| \bm{I} \left| \psi \right\rangle = 1.
 \]
 !et
 Its contribution to the overall expectaction value is thus given by the constant $a$.
@@ -854,7 +855,7 @@ Its contribution to the overall expectaction value is thus given by the constant
 !split
 ===== The Pauli matrices =====
 
-For rest of the Pauli operators, we should make the following remark:
+For rest of the Pauli operators, we make the following remark:
 every one qubit quantum state $\left| \psi \right\rangle$ can be
 represented via different sets of basis vectors:
 
@@ -912,7 +913,16 @@ i
 ===== Analyzing these equations =====
 
 
-The first presented eigenvectors for each Pauli has an eigenvalue equal to $+1$: $Z \left| 0 \right\rangle = +1\left| 0 \right\rangle$, $X \left| + \right\rangle = +1\left| + \right\rangle$, $Y \left| +i \right\rangle = +1\left| +i \right\rangle$. And the second presented eigenvectors for each Pauli has an eigenvalue equal to $-1$: $Z \left| 1 \right\rangle = -1\left| 1 \right\rangle$, $X \left| - \right\rangle = -1\left| - \right\rangle$, $Y \left| -i \right\rangle = -1\left| -i \right\rangle$. Now, let's calculate the expectation values of these Pauli operators: 
+The first presented eigenvectors for each Pauli operator have eigenvalues equal to $+1$: $Z \left| 0 \right\rangle = +1\left| 0 \right\rangle$, $X \left| + \right\rangle = +1\left| + \right\rangle$, $Y \left| +i \right\rangle = +1\left| +i \right\rangle$, respectively.
+
+
+The second eigenvectors for each Pauli operator have eigenvalues equal to $-1$: $Z \left| 1 \right\rangle = -1\left| 1 \right\rangle$, $X \left| - \right\rangle = -1\left| - \right\rangle$, $Y \left| -i \right\rangle = -1\left| -i \right\rangle$, respectively
+
+
+!split
+===== Explicit eigenvalues =====
+
+Now, let's calculate the expectation values of these Pauli operators: 
 
 !bt
 \begin{align*}
@@ -924,65 +934,16 @@ The first presented eigenvectors for each Pauli has an eigenvalue equal to $+1$:
 \end{align*}
 !et
 
-!split
-===== Using the inner products =====
-Here we have taken into account that the inner product of orthonormal vectors is 0 (e.g. $\left\langle 0 \right| \left| 1 \right\rangle = 0$, $\left\langle + \right| \left| - \right\rangle = 0$, $\left\langle +i \right| \left| -i \right\rangle = 0$).
-
-
-But what are these $\left| c \right|^2$s? The ${\left| c_1^z
-\right|}^2$ and ${\left| c_2^z \right|}^2$ are by definition the
-probabilities that after Z basis measurement (measuring is it $\left|
-0 \right\rangle$ or is it $\left| 1 \right\rangle$) the quantum state
-$\left| \psi \right\rangle$ will become $\left| 0 \right\rangle$ or
-$\left| 1 \right\rangle$ respectively.
-
-!split
-===== Rethinking the basis =====
-
-In order to find that value, we should run our program with our trial
-$\left| \psi \right\rangle$ wavefunction and do $Z$ measurement on the
-qubit $N$ times (it is  named *shots* in the code).
-
-The probability
-of finding the qubit after measurment in $\left| 0 \right\rangle$
-state will be equal to ${\left| c_1^z \right|}^2 = \frac{n_0}{N}$,
-where $n_0$ is the number of the $\left| 0 \right\rangle$ state
-measurments. Similarly, ${\left| c_2^z \right|}^2 = \frac{n_1}{N}$,
-where $n_1$ is the number of the $\left| 1 \right\rangle$ state
-measurments.
-
-Thus, the final expectation value will be $\left\langle Z\right\rangle = \frac{n_0 - n_1}{N}$.
-
-
-!split
-===== Measurements =====
-
-For $\left\langle X \right\rangle = \frac{n_+ - n_-}{N}$ and
-$\left\langle Y \right\rangle = \frac{n_{+i} - n_{-i}}{N}$ the
-expectation value estimation procedure stays the same.
-
-Here $n_+$ and $n_-$ are numbers of measurements in X basis that
-corresponds to $\left| + \right\rangle$ or $\left| - \right\rangle$
-outcomes respectively. And $n_{+i}$ and $n_{-i}$ are numbers of
-measurements in $Y$ basis that corresponds to $\left| +i
-\right\rangle$ or $\left| -i \right\rangle$ outcomes respectively.
-
 
 !split
 ===== Computational basis =====
 
-The difficulty comes from the fact that one may have the possibility
-to measure only in the $Z$ basis. To solve this difficulty we still do
-a $Z$ basis measurement, but, before that, we apply specific operators
+The above equations require that we can make measurements in the chosen basis sets.
+
+However, this may not be possible. The difficulty comes  from the fact that one may have the possibility
+to measure only in the $Z$-basis. To solve this difficulty we still do
+a $Z$-basis measurement, but, before that, we apply specific operators
 to the $\left| \psi \right\rangle$ state.
-
-We try to apply such an
-operator that after measuring the probability of $\left| 0
-\right\rangle$ outcome will be equal to the probability of $\left| +
-\right\rangle$ $\left( \left| +i \right\rangle \right)$ outcome.
-
-And the probability of $\left| 1 \right\rangle$ outcome will be equal to
-the probability of $\left| - \right\rangle$ $\left( \left| -i \right\rangle \right)$ outcome.
 
 !split
 ===== Unitary transformation of $\bm{X}$ =====
@@ -990,7 +951,7 @@ the probability of $\left| - \right\rangle$ $\left( \left| -i \right\rangle \rig
 If we use the Hadamard gate
 !bt
 \[
-\bm{H} = \frac{1}{\sqrt{2}}\begin{pmatrix}
+H = \frac{1}{\sqrt{2}}\begin{pmatrix}
 1 & 1\\
 1 & -1
 \end{pmatrix},
@@ -999,7 +960,7 @@ If we use the Hadamard gate
 we can rewrite
 !bt
 \[
-\bm{X}=\bm{H}\bm{Z}\bm{H}.
+X=HZH.
 \]
 !et
 
@@ -1012,15 +973,15 @@ For the one-qubit Hamiltonian we have toyed with till now, we can thus
 rewrite in an easy way the Hamiltonian so that we can perform
 measurements using our favorite computational basis.
 
-The transformation of the Pauli $\bm{X}$ matrix can be generalized, as
-we will see in more detail next week for the two-qubit Hamiltonian and
+The transformation of the Pauli-$\bm{X}$ matrix can be generalized, as
+we will see in more detail below for the two-qubit Hamiltonian and next week for 
 the Lipkin model, to the following expression
 !bt
 \[
-{\cal P}=\bm{U}^{\dagger}\bm{M}\bm{U},
+\mathcal{P}=\bm{U}^{\dagger}\bm{M}\bm{U},
 \]
 !et
-where ${\cal P}$ represents some combination of the Pauli matrices and
+where $\mathcal{P}$ represents some combination of the Pauli matrices and
 the identity matrix, $\bm{U}$ is a unitary matrix and $\bm{M}$
 represents the gate/matrix which performs the measurements, often
 represented by a Pauli $\bm{Z}$ gate/matrix.
