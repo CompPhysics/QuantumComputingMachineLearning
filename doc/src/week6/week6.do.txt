@@ -248,14 +248,14 @@ eigensolver is based on the variational principle:
 !split
 ===== Rayleigh-Ritz variational principle =====
 
-The Rayleigh-Ritz variational principle states that for a given
-Hamiltonian $H$, the expectation value of a trial state or
-just ansatz $\vert \psi \rangle$ puts a lower bound on the ground state
-energy $E_0$.
+Out starting point is the Rayleigh-Ritz variational principle states
+that for a given Hamiltonian $H$, the expectation value of a trial
+state or just ansatz $\vert \psi \rangle$ puts a lower bound on the
+ground state energy $E_0$.
 
 !bt
 \[
-    \frac{\langle \psi \vert H\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
+    \frac{\langle \psi \vert \mathcal{H}\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
 \]
 !et
 
@@ -269,16 +269,16 @@ $\boldsymbol{\theta} = (\theta_1, \ldots, \theta_M)$ are the $M$
 optimization parameters.
 
 !split
-===== Expectation value of Hamiltonian =====
+===== Expectation value of Hamiltonian and the variational principle =====
 
-The expectation value of a Hamiltonian $H$ in a state
+The expectation value of a Hamiltonian $\mathcal{H}$ in a state
 $|\psi(\theta)\rangle$ parameterized by a set of angles $\theta$, is
 always greater than or equal to the minimum eigen-energy $E_0$. To see
-this, let $|n\rangle$ be the eigenstates of $H$, that is
+this, let $|n\rangle$ be the eigenstates of $\mathcal{H}$, that is
 
 !bt
 \[
-H|n\rangle=E_n|n\rangle.
+\mathcal{H}|n\rangle=E_n|n\rangle.
 \]
 !et
 
@@ -293,18 +293,18 @@ We can then expand our state $|\psi(\theta)\rangle$ in terms of the eigenstates
 |\psi(\theta)\rangle=\sum_nc_n|n\rangle,
 \]
 !et
-and plug this into the expectation value to yield
+and insert this in the expression  for the expectation value (note that we drop the denominator in the Rayleigh-Ritz ratio) 
 !bt
 \[
-\langle\psi(\theta)|H|\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m|H|n \rangle
-=\sum_{nm}c^*_mc_nE_n\langle m|n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n=\sum_{n}|c_n|^2E_n \geq E_0\sum_{n}|c_n|^2=E_0,
+\langle\psi(\theta)\vert \mathcal{H}\vert\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m\vert\mathcal{H}\vertn \rangle
+=\sum_{nm}c^*_mc_nE_n\langle m\vert n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n=\sum_{n}\vert c_n\vert^2E_n \geq E_0\sum_{n}\vert c_n\vert^2=E_0,
 \]
 !et
 which implies that we can minimize over the set of angles $\theta$ and arrive at the ground state energy $E_0$
 
 !bt
 \[
-\min_\theta \ \langle\psi(\theta)|H|\psi(\theta)\rangle=E_0.
+\min_\theta \ \langle\psi(\theta)\vert \mathcal{H}\vert \psi(\theta)\rangle=E_0.
 \]
 !et
 
@@ -315,20 +315,20 @@ which implies that we can minimize over the set of angles $\theta$ and arrive at
 Using this fact, the VQE algorithm can be broken down into the following steps
 o Prepare the variational state $|\psi(\theta)\rangle$ on a quantum computer.
 o Measure this circuit in various bases and send these measurements to a classical computer
-o The classical computer post-processes the measurement data to compute the expectation value $\langle\psi(\theta)|H|\psi(\theta)\rangle$
+o The classical computer post-processes the measurement data to compute the expectation value $\langle\psi(\theta)\vert \mathcal{H}\vert \psi(\theta)\rangle$
 o The classical computer varies the parameters $\theta$ according to a classical minimization algorithm and sends them back to the quantum computer which runs step 1 again.
 
 This loop continues until the classical optimization algorithm
 terminates which results in a set of angles $\theta_{\text{min}}$ that
 characterize the ground state $|\phi(\theta_{\text{min}})\rangle$ and
 an estimate for the ground state energy
-$\langle\psi(\theta_{\text{min}})|H|\psi(\theta_{\text{min}})\rangle$.
+$\langle\psi(\theta_{\text{min}})\vert\mathcal{H}\vert\psi(\theta_{\text{min}})\rangle$.
 
 
 !split
 ===== VQE overview =====
 
-FIGURE: [figures/vqe.png, width=700 frac=0.9]
+FIGURE: [figures/vqe.png, width=700 frac=1.0]
 
 
 
@@ -337,11 +337,11 @@ FIGURE: [figures/vqe.png, width=700 frac=0.9]
 
 To have any flexibility in the
 ansatz $\vert \psi\rangle$, we need to allow for a given parametrization. The most
-common approach is the so-called $R_y$ ansatz, where we apply chained
-operations of rotating around the $y$-axis by $\boldsymbol{\theta} =
+common approach is to employ the so-called rotation operations guven by $R_x$, $R_z$ and $R_y$, where we apply chained
+operations of rotating around the various axes by $\boldsymbol{\theta} =
 (\theta_1,\ldots,\theta_Q)$ of the Bloch sphere and CNOT operations.
 
-Applications of $y$ rotations
+Applications of of say the $y$-rotation
 specifically ensures that our coefficients always remain real, which
 often is satisfactory when dealing with many-body systems. 
 
