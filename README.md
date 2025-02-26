@@ -73,6 +73,8 @@ themes can be covered:
 ## February 24-28, 2025. Quantum gates and circuits and Quantum Fourier Transform and Hamiltonians
   - Quantum gates and operations and simple quantum algorithms
   - Discussion of the VQE algorithm and discussions of project 1
+  - Video of lecture at https://youtu.be/13JyMS50beg/
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  March 3-7, 2025. Algorithms for solving quantum mechanical problems.
