@@ -16,196 +16,59 @@ o Work on project 1
 #  o "Reading suggestion, VQE review article":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
 !eblock
 
-!split
-===== Meet the VQE =====
-
-The Variational quantum eigensolver (VQE) is a hybrid quantum-classical
-algorithm that finds the smallest eigenvalue (and corresponding
-eigenvector) of a given Hamiltonian. One of the main applications of
-the algorithm is finding ground state energy of quantum mechanical systems.
-It has a
-big advantage over the quantum phase estimation (QPE) algorithms, that also can be used
-for finding the ground state energy of a molecule.
 
 
 !split
-===== Main advantage =====
-The main advantage
-is that VQE uses much smaller circuit depths (or gates) than
-QPE, what is very important for NISQ (Noisy Intermediate-Scale
-Quantum) era quantum computation. In the NISQ era (now!) we are
-working with qubits that are very noisy because they are not isolated
-from the environment well enough. Thus, there is small and finite time
-to work with qubits until they will be *spoiled*, because of the
-environment, imperfect gates and etc. This restriction gives a big
-advantage to those algorithms (like VQE) that are using small depth
-circuits.
+===== Readings =====
+
+o For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 and 3.1-3.4 of Hundt's book _Quantum Computing for Programmers_, contain most of the relevant information. We will repeat some of the these properties during the first part of the lecture.
+o The VQE algorithm is discussed in Hundt's section 6.11
+o "See also the VQE review article by Tilly et al.":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
+
 
 
 !split
-===== Basic idea =====
+===== Reminder from last week: Variational Quantum Eigensolver =====
 
-The idea of the VQE algorithm is as follows. We have a Hamiltonian that can be expressed by the sum of tensor products of Pauli operators (Pauli terms):
+One initial algorithm to estimate the eigenenergies of a quantum
+Hamiltonian was "quantum phase
+estimation":"https://qiskit.org/textbook/ch-algorithms/quantum-phase-estimation.html". In
+it, one encodes the eigenenergies, one binary bit at a time (up to $n$
+bits), into the complex phases of the quantum states of the Hilbert
+space for $n$ qubits. It does this by applying powers of controlled
+unitary evolution operators to a quantum state that can be expanded in
+terms of the Hamiltonian's eigenvectors of interest. The eigenenergies
+are encoded into the complex phases in such a way that taking the
+inverse quantum Fourier transformation (see Hundt sections 6.1-6.2) of
+the states into which the eigen-energies are encoded results in a
+measurement probability distribution that has peaks around the bit
+strings that represent a binary fraction which corresponds to the
+eigen-energies of the quantum state acted upon by the controlled
+unitary operators.
 
-!bt
-\[
-H = 0.4 \cdot IX + 0.6 \cdot IZ + 0.8 \cdot XY.
-\]
-!et
 
-For a given $\left| \psi \right\rangle$ we want to measure the expectation value of the Hamiltonian:
-
-!bt
-\[
-\left\langle H \right\rangle = \left\langle \psi \right| H \left| \psi \right\rangle = 0.4 \cdot \left\langle \psi \right| IX \left| \psi \right\rangle + 0.6 \cdot \left\langle \psi \right| IZ \left| \psi \right\rangle + 0.8 \cdot \left\langle \psi \right| XY \left| \psi \right\rangle.
-\]
-!et
-
-!split
-===== VQE and quantum circuits =====
-
-How one can see the $\left\langle H \right\rangle$ expectation value
-could be computed by adding the expectation values of its parts (Pauli
-terms). The algorithm does exactly that. It constructs a quantum
-circuit for each Pauli term and computes the expectation value of the
-corresponding Pauli term. Then, the algorithm sums all calculated
-expectation values of Pauli terms and obtains the expectation value of
-$H$. In this algorithm, we will do this routine of estimating the
-expectation value of $H$ over and over again for different trial
-wavefunctions (ansatz states) $\left| \psi \right\rangle$.
 
 
 !split
-===== Varying paramters =====
+===== The VQE =====
 
-It is known that the eigenvector $\left| \psi_g \right\rangle$ that
-minimizes the expectation value $\left\langle H \right\rangle$
-corresponds to the eigenvector of $H$ that has the smallest
-eigenvalue. So, basically we can try all possible trial wavefunctions
-$\left| \psi \right\rangle$s to find the $\left| \psi_g \right\rangle$
-that has the smallest expectation value. Here the question is how we
-create those trial states?
+While quantum phase estimation (QPE) is provably efficient,
+non-hybrid, and non-variational, the number of qubits and length of
+circuits required is too great for our NISQ era quantum
+computers. Thus, QPE is only efficiently applicable to large,
+fault-tolerant quantum computers that likely won't exist in the near,
+but the far future.
 
-!split
-===== Constructing trial states =====
+Therefore, a different algorithm for finding the eigen-energies of a
+quantum Hamiltonian was put forth in 2014 called the variational
+quantum eigensolver, commonly referred to as
+"VQE":"https://arxiv.org/abs/2111.05176". The algorithm is hybrid,
+meaning that it requires the use of both a quantum computer and a
+classical computer. It is also variational, meaning that it relies,
+ultimately, on solving an optimization problem by varying parameters
+and thus is not as deterministic as QPE. The variational quantum
+eigensolver is based on the variational principle:
 
-In the algorithm, the trial states are
-created from a parametrized circuit. By changing the parameters one
-obtains different wavefunctions (ansatz states). If your circuit
-with its parameters is good enough you will have access to the
-subspace of the states that includes the $\left| \psi_g
-\right\rangle$. Otherwise, if the circuit will not have a possibility
-to generate our desired $\left| \psi_g \right\rangle$ it will be
-impossible to find the right solution.
-
-!split
-===== Hybrid opeations =====
-
-The parameters of the state preparation circuit are controlled by a
-classical computer. At each step, the classical computer will change
-the parameters by using some optimization method in order to create an
-ansatz state that will have a smaller expectation value then previous
-ansatz states had. This way the classical computer and the quantum
-computer are working together to archive the goal of the algorithm (to
-find the ground state energy). That's way, VQE is a quantum-classical
-hybrid algorithm.
-
-
-!split
-===== Reminder on technicalities =====
-
-From our earlier discussions we know that the Pauli $Z$ matrix has the
-above basis states as eigen states through
-
-!bt
-\[
-\bm{Z}\vert 0 \rangle=+1\vert 0 \rangle,
-\]
-!et
-and
-!bt
-\[
-\bm{Z}\vert 1 \rangle=-1\vert 1 \rangle,
-\]
-!et
-with eigenvalue $-1$.
-
-!split
-===== Pauli $X$ reminder =====
-
-For the Pauli $X$ matrix on the other hand we have
-!bt
-\[
-\bm{X}\vert 0 \rangle=+1\vert 1 \rangle,
-\]
-!et
-and
-!bt
-\[
-\bm{X}\vert 1 \rangle=-1\vert 0 \rangle,
-\]
-!et
-
-with eigenvalues $1$ in both cases. The latter two equations tell us
-that the computational basis we have chosen, and in which we will
-prepare our states, is not an eigenbasis of the $\bm{X}$ matrix.
-
-!split
-===== Rewriting the Pauli $X$ matrix =====
-
-We rewrite the Pauli $X$ matrix in terms of a Pauli
-$Z$ matrix using the Hadamard matrix
-twice, that is
-
-!bt
-\[
-\bm{X}=\bm{H}\bm{Z}\bm{H}.
-\]
-!et
-
-!split
-===== The Pauli $Y$ matrix =====
-
-The Pauli $Y$ matrix can be written as
-
-!bt
-\[
-\bm{Y}=\bm{H}\bm{S}^{\dagger}\bm{Z}\bm{H}\bm{S},
-\]
-!et
-
-where $S$ is the phase matrix
-!bt
-\[
-S = \begin{bmatrix} 1 & 0 \\ 0 & \imath \end{bmatrix}.
-\]
-!et
-
-
-!split
-===== Rotations =====
-
-Another important set of gates are the _rotation operators_ $R_x, R_y$ and $R_z$.
-By application to a qubit, we can reach any point on the Bloch sphere by usage of all three once. They are expressed as
-!bt
-\begin{align*}
-    \begin{split}
-        R_x(\theta) &= \exp{-iX\theta/2} = \begin{bmatrix}
-            \cos(\theta/2) & -i\sin(\theta/2) \\
-            -i\sin(\theta/2) & \cos(\theta/2)
-        \end{bmatrix}, \\
-        R_y(\theta) &= \exp{-iY\theta/2} = \begin{bmatrix}
-            \cos(\theta/2) & -\sin(\theta/2) \\
-            -\sin(\theta/2) & \cos(\theta/2)
-        \end{bmatrix}, \\
-        R_z(\theta) &= \exp{-iZ\theta/2} = \begin{bmatrix}
-            \exp{-i\theta/2} & 0 \\
-            0 & \exp{i\theta/2}
-        \end{bmatrix}
-    \end{split}
-\end{align*}
-!et
-with all having a period of $4\pi$.
 
 
 
@@ -213,14 +76,14 @@ with all having a period of $4\pi$.
 !split
 ===== Rayleigh-Ritz variational principle =====
 
-The Rayleigh-Ritz variational principle states that for a given
-Hamiltonian $H$, the expectation value of a trial state or
-just ansatz $\vert \psi \rangle$ puts a lower bound on the ground state
-energy $E_0$.
+Out starting point is the Rayleigh-Ritz variational principle states
+that for a given Hamiltonian $H$, the expectation value of a trial
+state or just ansatz $\vert \psi \rangle$ puts a lower bound on the
+ground state energy $E_0$.
 
 !bt
 \[
-    \frac{\langle \psi \vert H\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
+    \frac{\langle \psi \vert \mathcal{H}\vert \psi \rangle}{\langle \psi \vert \psi \rangle} \geq E_0.
 \]
 !et
 
@@ -229,896 +92,123 @@ energy $E_0$.
 
 The ansatz is typically chosen to be a parameterized superposition of
 basis states that can be varied to improve the energy estimate,
-$\vert \psi\rangle \equiv \vert psi(\boldsymbol{\theta})\rangle$ where
+$\vert \psi\rangle \equiv \vert \psi(\boldsymbol{\theta})\rangle$ where
 $\boldsymbol{\theta} = (\theta_1, \ldots, \theta_M)$ are the $M$
 optimization parameters.
 
-
-
-
 !split
-===== Rotations again =====
+===== Expectation value of Hamiltonian and the variational principle =====
 
-To have any flexibility in the
-ansatz $\vert \psi\rangle$, we need to allow for parametrization. The most
-common approach is the so-called $R_y$ ansatz, where we apply chained
-operations of rotating around the $y$-axis by $\boldsymbol{\theta} =
-(\theta_1,\ldots,\theta_Q)$ of the Bloch sphere and CNOT operations.
+The expectation value of a Hamiltonian $\mathcal{H}$ in a state
+$|\psi(\theta)\rangle$ parameterized by a set of angles $\theta$, is
+always greater than or equal to the minimum eigen-energy $E_0$. To see
+this, let $|n\rangle$ be the eigenstates of $\mathcal{H}$, that is
 
-Applications of $y$ rotations
-specifically ensures that our coefficients always remain real, which
-often is satisfactory when dealing with many-body systems. 
-
-
-
-!split
-===== Measurements and more =====
-
-After the ansatz has been constructed, the Hamiltonian must
-be applied. As discussed, the Hamiltonian must be written in terms of
-Pauli strings.
-
-To obtain the expectation value
-of the ground state energy, one can measure the expectation value of
-each Pauli string, 
 !bt
-\begin{align*}
-    E(\boldsymbol{\theta}) = \sum_i w_i\langle \psi(\boldsymbol{\theta})\vert P_i \vert \psi(\boldsymbol{\theta})\rangle \equiv \sum_i w_i f_i,
-\end{align*}
+\[
+\mathcal{H}|n\rangle=E_n|n\rangle.
+\]
 !et
-where $f_i$ is the expectation value of the Pauli string $i$.
 
 
 !split
-===== Collecting data =====
+===== Expanding in the eigenstates =====
 
-This is estimated statistically by considering measurements in the
-appropriate basis of the operator in the Pauli string.
+We can then expand our state $|\psi(\theta)\rangle$ in terms of the eigenstates
 
-With $N_0$ and $N_1$ as the number of $0$ and $1$ measurements respectively, we can estimate $f_i$ since 
 !bt
-\begin{align*}
-    f_i = \lim_{N \to \infty} \frac{N_0 - N_1}{N},
-\end{align*}
+\[
+|\psi(\theta)\rangle=\sum_nc_n|n\rangle,
+\]
 !et
-where $N$ as the number of shots (measurements).
+and insert this in the expression  for the expectation value (note that we drop the denominator in the Rayleigh-Ritz ratio) 
+!bt
+\[
+\langle\psi(\theta)\vert \mathcal{H}\vert\psi(\theta)\rangle=\sum_{nm}c^*_mc_n\langle m\vert\mathcal{H}\vert n \rangle
+=\sum_{nm}c^*_mc_nE_n\langle m\vert n \rangle=\sum_{nm}\delta_{nm}c^*_mc_nE_n=\sum_{n}\vert c_n\vert^2E_n \geq E_0\sum_{n}\vert c_n\vert^2=E_0,
+\]
+!et
+which implies that we can minimize over the set of angles $\theta$ and arrive at the ground state energy $E_0$
 
-Each Pauli string requires it own circuit, where multiple measurements
-of each string is required. Adding the results together with the
-corresponding weights, the ground state energy can be estimated. To
-optimize with respect to  $\boldsymbol{\theta}$, a classical optimizer is often
-applied.
+!bt
+\[
+\min_\theta \ \langle\psi(\theta)\vert \mathcal{H}\vert \psi(\theta)\rangle=E_0.
+\]
+!et
+
 
 !split
-===== The VQE algoritm =====
+===== Basic steps of the VQE algorithm =====
 
-The VQE algorithm consists of several steps, partially done on a classical computer:
-o A parameterized ansatz for the quantum state is implemented on a quantum computer.
-o The ansatz is measured in a given measurement basis.
-o Postprocessing on a classical computer converts the measurement outcomes to an expectation value.
-o Classical minimization algorithms are used to up- date the variational parameters.
+Using this fact, the VQE algorithm can be broken down into the following steps
+o Prepare the variational state $|\psi(\theta)\rangle$ on a quantum computer.
+o Measure this circuit in various bases and send these measurements to a classical computer
+o The classical computer post-processes the measurement data to compute the expectation value $\langle\psi(\theta)\vert \mathcal{H}\vert \psi(\theta)\rangle$
+o The classical computer varies the parameters $\theta$ according to a classical minimization algorithm and sends them back to the quantum computer which runs step 1 again.
 
-
-The updated variational parameters are then sent back to the quantum
-computer, and the process is repeated until the optimal variational
-parameters are found. 
-
+This loop continues until the classical optimization algorithm
+terminates which results in a set of angles $\theta_{\text{min}}$ that
+characterize the ground state $|\phi(\theta_{\text{min}})\rangle$ and
+an estimate for the ground state energy
+$\langle\psi(\theta_{\text{min}})\vert\mathcal{H}\vert\psi(\theta_{\text{min}})\rangle$.
 
 
 !split
 ===== VQE overview =====
 
-FIGURE: [figures/vqe.png, width=700 frac=0.9]
+FIGURE: [figures/vqe.png, width=700 frac=1.0]
+
+
 
 
 !split
-===== Ansatzes =====
+===== Why do we measure on one qubit? First consideration =====
 
-Every possible qubit wavefunction $\left| \psi \right\rangle$ can be presented as a vector: 
-!bt
-\[
-\left| \psi \right\rangle = \begin{pmatrix}
-\cos{\left( \theta/2 \right)}\\
-e^{i \varphi} \cdot \sin{\left( \theta/2 \right)}
-\end{pmatrix},
-\]
-!et
+In quantum computing, measurements are typically performed on one
+qubit at a time due to a combination of theoretical, practical, and
+algorithmic considerations:
 
-where the numbers $\theta$ and $\varphi$ define a point on the unit
-three-dimensional sphere, the so-called  Bloch sphere.
-
-For a random one qubit Hamiltonian, a *good* quantum state preparation
-circuit should be able to generate all possible states in the Bloch
-sphere.
+!bblock Algorithmic Requirements:
+o Adaptive Processing: Many quantum algorithms, such as quantum teleportation or error correction, require mid-circuit measurements. The outcomes determine subsequent operations, necessitating sequential measurements to adapt the circuit dynamically.
+o Partial Information Extraction: Algorithms often need only specific qubits' results (e.g., in Shor's algorithm), making full-system measurements unnecessary.
+!eblock
 
 !split
-===== Preparing the states =====
+===== Why do we measure on one qubit? Second consideration =====
 
-Before quantum state preparation, our qubit is in the $\vert 0\rangle$ state.
-This corresponds to the vertical position of
-the vector in the Bloch sphere. In order to generate any possible
-$\left| \psi \right\rangle$ we will apply $R_x(t_1)$ and $R_y(t_2)$
-gates on the $\left| 0 \right\rangle$ initial state
-!bt
-\[
-R_y(\phi)R_x(\theta) \left| 0 \right\rangle = \left| \psi\right\rangle.
-\]
-!et
 
-The rotation $R_x(\theta)$
-corresponds to the rotation in the Bloch
-sphere around the $x$-axis and $R_y(\phi)$ the rotation around the $y$-axis.
-
+!bblock Quantum Mechanical Principles:
+o Collapse and Entanglement: Measuring a qubit collapses its state, potentially affecting entangled qubits. Sequential measurements allow controlled extraction of information while managing entanglement.
+o Measurement Basis: Most algorithms use the computational basis (individual qubit measurements). Joint measurements in entangled bases are possible but require complex setups and are not always needed.
+!eblock
 
 !split
-===== Rotations used =====
+===== Why do we measure on one qubit? Third consideration =====
 
-These two gates with there parameters ($\theta$ and $\phi$) will generate
-for us the trial (ansatz) wavefunctions. The two parameters will be in
-control of the Classical Computer and its optimization model.
 
-!split
-===== Implementing using qiskit =====
-!bc pycod
-import numpy as np
-from random import random
-from qiskit import *
-def quantum_state_preparation(circuit, parameters):
-    q = circuit.qregs[0] # q is the quantum register where the info about qubits is stored
-    circuit.rx(parameters[0], q[0]) # q[0] is our one and only qubit XD
-    circuit.ry(parameters[1], q[0])
-    return circuit
-!ec
-
+!bblock Practical Hardware Limitations:
+o Crosstalk and Noise: Simultaneous measurements risk disturbing neighboring qubits due to hardware imperfections, especially in noisy intermediate-scale quantum (NISQ) devices.
+o Readout Constraints: Physical implementations (e.g., superconducting qubits) may have limited readout bandwidth, forcing sequential measurements.
+!eblock
 
 !split
-===== VQE and efficient computations of gradients  =====
+===== Why do we measure on one qubit? Fourth consideration =====
 
-We start with a reminder on the VQE method with applications to the
-one-qubit system discussed last week.
 
-Here we revisit the one-qubit system and develop a VQE
-code for studying this system using gradient descent as a method to
-optimize the variational ansatz. 
+!bblock Resource Management:
+o Qubit Reuse: Ancilla qubits (e.g., in error correction) are measured, reset, and reused, requiring sequential handling to avoid disrupting computational qubits.
+!eblock
+!bblock Conclusion:
+While joint measurements are theoretically possible, the dominant practice of measuring one qubit at a time stems from algorithmic adaptability, hardware limitations, and the need to minimize quantum state disturbance. This approach balances efficiency, practicality, and the constraints of current quantum systems.
+!eblock
 
 
-We start with a simple $2\times 2$ Hamiltonian matrix expressed in
-terms of Pauli $X$ and $Z$ matrices, as discussed in the project text.
-
-!split
-===== Symmetric matrix =====
-
-We define a  symmetric matrix  $H\in {\mathbb{R}}^{2\times 2}$
-!bt
-\[
-H = \begin{bmatrix} H_{11} & H_{12} \\ H_{21} & H_{22}
-\end{bmatrix},
-\]
-!et
-We  let $H = H_0 + H_I$, where
-!bt
-\[
-H_0= \begin{bmatrix} E_1 & 0 \\ 0 & E_2\end{bmatrix},
-\]
-!et
-is a diagonal matrix. Similarly,
-!bt
-\[
-H_I= \begin{bmatrix} V_{11} & V_{12} \\ V_{21} & V_{22}\end{bmatrix},
-\]
-!et
-where $V_{ij}$ represent various interaction matrix elements.
-
-
-!split
-===== Non-interacting solution =====
-
-We can view $H_0$ as the non-interacting solution
-!bt
-\begin{equation}
-       H_0\vert 0 \rangle =E_1\vert 0 \rangle,
-\end{equation}
-!et
-and
-!bt
-\begin{equation}
-       H_0\vert 1\rangle =E_2\vert 1\rangle,
-\end{equation}
-!et
-where we have defined the orthogonal computational one-qubit basis states $\vert 0\rangle$ and $\vert 1\rangle$.
-
-!split
-===== Rewriting with Pauli matrices =====
-We rewrite $H$ (and $H_0$ and $H_I$)  via Pauli matrices
-!bt
-\[
-H_0 = \mathcal{E} I + \Omega \sigma_z, \quad \mathcal{E} = \frac{E_1
-  + E_2}{2}, \; \Omega = \frac{E_1-E_2}{2},
-\]
-!et
-and
-!bt
-\[
-H_I = c \bm{I} +\omega_z\sigma_z + \omega_x\sigma_x,
-\]
-!et
-with $c = (V_{11}+V_{22})/2$, $\omega_z = (V_{11}-V_{22})/2$ and $\omega_x = V_{12}=V_{21}$.
-We let our Hamiltonian depend linearly on a strength parameter $\lambda$
-
-!bt
-\[
-H=H_0+\lambda H_\mathrm{I},
-\]
-!et
-
-with $\lambda \in [0,1]$, where the limits $\lambda=0$ and $\lambda=1$
-represent the non-interacting (or unperturbed) and fully interacting
-system, respectively.
-
-
-!split
-===== Selecting parameters =====
-
-The model is an eigenvalue problem with only
-two available states.
-
-Here we set the parameters $E_1=0$,
-$E_2=4$, $V_{11}=-V_{22}=3$ and $V_{12}=V_{21}=0.2$.
-
-The non-interacting solutions represent our computational basis.
-Pertinent to our choice of parameters, is that at $\lambda\geq 2/3$,
-the lowest eigenstate is dominated by $\vert 1\rangle$ while the upper
-is $\vert 0 \rangle$. At $\lambda=1$ the $\vert 0 \rangle$ mixing of
-the lowest eigenvalue is $1\%$ while for $\lambda\leq 2/3$ we have a
-$\vert 0 \rangle$ component of more than $90\%$.  The character of the
-eigenvectors has therefore been interchanged when passing $z=2/3$. The
-value of the parameter $V_{12}$ represents the strength of the coupling
-between the two states.
-
-!split
-=====  Setting up the matrix =====
-This part is best seen using the jupyter-notebook
-
-!bc pycod
-from  matplotlib import pyplot as plt
-import numpy as np
-dim = 2
-Hamiltonian = np.zeros((dim,dim))
-e0 = 0.0
-e1 = 4.0
-Xnondiag = 0.20
-Xdiag = 3.0
-Eigenvalue = np.zeros(dim)
-# setting up the Hamiltonian
-Hamiltonian[0,0] = Xdiag+e0
-Hamiltonian[0,1] = Xnondiag
-Hamiltonian[1,0] = Hamiltonian[0,1]
-Hamiltonian[1,1] = e1-Xdiag
-# diagonalize and obtain eigenvalues, not necessarily sorted
-EigValues, EigVectors = np.linalg.eig(Hamiltonian)
-permute = EigValues.argsort()
-EigValues = EigValues[permute]
-# print only the lowest eigenvalue
-print(EigValues[0])
-!ec
-
-Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
-
-!bc pycod
-# Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
-X = np.array([[0,1],[1,0]])
-Y = np.array([[0,-1j],[1j,0]])
-Z = np.array([[1,0],[0,-1]])
-# identity matrix
-I = np.array([[1,0],[0,1]])
-
-epsilon = (e0+e1)*0.5; omega = (e0-e1)*0.5
-c = 0.0; omega_z=Xdiag; omega_x = Xnondiag
-Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
-EigValues, EigVectors = np.linalg.eig(Hamiltonian)
-permute = EigValues.argsort()
-EigValues = EigValues[permute]
-# print only the lowest eigenvalue
-print(EigValues[0])
-!ec
-
-
-!split
-===== Measurements and computational basis =====
-
-We have seen how to rewrite the above $2\times 2$ eiegenvalue problem in terms of a Hamiltonian defined by Pauli $\bm{X}$ and $\bm{Z}$ matrices,
-and the identity matrix $\bm{I}$. Let us make this Hamiltonian that involves only one qubit somewhat more general
-!bt
-\[
-\left\langle H \right\rangle = \left\langle \psi \right| H \left| \psi \right\rangle = a \cdot \left\langle \psi \right| I \left| \psi \right\rangle + b \cdot \left\langle \psi \right| Z \left| \psi \right\rangle + c \cdot \left\langle \psi \right| X \left| \psi \right\rangle + d \cdot \left\langle \psi \right| Y \left| \psi \right\rangle.
-\]
-!et
-
-!split
-===== Expectation value of $\bm{I}$ =====
-
-For the $I$ operator the expectation value is always unity:
-
-!bt
-\[
-\left\langle \psi \right| \bm{I} \left| \psi \right\rangle = \left\langle \psi \right|\left| \psi \right\rangle = 1.
-\]
-!et
-Its contribution to the overall expectaction value is thus given by the constant $a$.
-
-!split
-===== The Pauli matrices =====
-
-For rest of the Pauli operators, we should make the following remark:
-every one qubit quantum state $\left| \psi \right\rangle$ can be
-represented via different sets of basis vectors:
-
-!bt
-\[
-\left| \psi \right\rangle = c_1^z \cdot \left| 0 \right\rangle + c_2^z \cdot \left| 1 \right\rangle = c_1^x \cdot \left| + \right\rangle + c_2^x \cdot \left| - \right\rangle = c_1^y \cdot \left| +i \right\rangle + c_2^y \cdot \left| -i \right\rangle.
-\]
-!et
-
-!split
-===== In more detail =====
-We have
-!bt
-\begin{align*}
-&\text{Z eigenvectors} \qquad
-\left| 0 \right\rangle = \begin{pmatrix}
-1\\
-0
-\end{pmatrix},
-&&\left| 1 \right\rangle = \begin{pmatrix}
-0\\
-1
-\end{pmatrix},
-\end{align*}
-!et
-!split
-===== For the other two matrices =====
-
-!bt
-\begin{align*}
-&\text{X eigenvectors} \qquad
-\left| + \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
-1\\
-1
-\end{pmatrix},
-&&\left| - \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
-1\\
--1
-\end{pmatrix},
-\\
-&\text{Y eigenvectors} \qquad
-\left| +i \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
-1\\
-i
-\end{pmatrix}, 
-&&\left| -i \right\rangle = \frac{1}{\sqrt{2}} \begin{pmatrix}
-1\\
--i
-\end{pmatrix}.
-\end{align*}
-!et
-
-!split
-===== Analyzing these equations =====
-
-
-The first presented eigenvectors for each Pauli has an eigenvalue equal to $+1$: $Z \left| 0 \right\rangle = +1\left| 0 \right\rangle$, $X \left| + \right\rangle = +1\left| + \right\rangle$, $Y \left| +i \right\rangle = +1\left| +i \right\rangle$. And the second presented eigenvectors for each Pauli has an eigenvalue equal to $-1$: $Z \left| 1 \right\rangle = -1\left| 1 \right\rangle$, $X \left| - \right\rangle = -1\left| - \right\rangle$, $Y \left| -i \right\rangle = -1\left| -i \right\rangle$. Now, let's calculate the expectation values of these Pauli operators: 
-
-!bt
-\begin{align*}
-\left\langle \psi \right| Z \left| \psi \right\rangle &= \left( {c_1^z}^* \cdot \left\langle 0 \right| + {c_2^z}^* \cdot \left\langle 1 \right| \right) Z \left( c_1^z \cdot \left| 0 \right\rangle + c_2^z \cdot \left| 1 \right\rangle \right) = {\left| c_1^z \right|}^2 - {\left| c_2^z \right|}^2,
-\\
-\left\langle \psi \right| X \left| \psi \right\rangle &= \left( {c_1^x}^* \cdot \left\langle + \right| + {c_2^x}^* \cdot \left\langle - \right| \right) X \left( c_1^x \cdot \left| + \right\rangle + c_2^x \cdot \left| - \right\rangle \right) = {\left| c_1^x \right|}^2 - {\left| c_2^x \right|}^2,
-\\
-\left\langle \psi \right| Y \left| \psi \right\rangle &= \left( {c_1^y}^* \cdot \left\langle +i \right| + {c_2^y}^* \cdot \left\langle -i \right| \right) Y \left( c_1^y \cdot \left| +i \right\rangle + c_2^y \cdot \left| -i \right\rangle \right) = {\left| c_1^y \right|}^2 - {\left| c_2^y \right|}^2.
-\end{align*}
-!et
-
-!split
-===== Using the inner products =====
-Here we have taken into account that the inner product of orthonormal vectors is 0 (e.g. $\left\langle 0 \right| \left| 1 \right\rangle = 0$, $\left\langle + \right| \left| - \right\rangle = 0$, $\left\langle +i \right| \left| -i \right\rangle = 0$).
-
-
-But what are these $\left| c \right|^2$s? The ${\left| c_1^z
-\right|}^2$ and ${\left| c_2^z \right|}^2$ are by definition the
-probabilities that after Z basis measurement (measuring is it $\left|
-0 \right\rangle$ or is it $\left| 1 \right\rangle$) the quantum state
-$\left| \psi \right\rangle$ will become $\left| 0 \right\rangle$ or
-$\left| 1 \right\rangle$ respectively.
-
-!split
-===== Rethinking the basis =====
-
-In order to find that value, we should run our program with our trial
-$\left| \psi \right\rangle$ wavefunction and do $Z$ measurement on the
-qubit $N$ times (it is  named *shots* in the code).
-
-The probability
-of finding the qubit after measurment in $\left| 0 \right\rangle$
-state will be equal to ${\left| c_1^z \right|}^2 = \frac{n_0}{N}$,
-where $n_0$ is the number of the $\left| 0 \right\rangle$ state
-measurments. Similarly, ${\left| c_2^z \right|}^2 = \frac{n_1}{N}$,
-where $n_1$ is the number of the $\left| 1 \right\rangle$ state
-measurments.
-
-Thus, the final expectation value will be $\left\langle Z\right\rangle = \frac{n_0 - n_1}{N}$.
-
-
-!split
-===== Measurements =====
-
-For $\left\langle X \right\rangle = \frac{n_+ - n_-}{N}$ and
-$\left\langle Y \right\rangle = \frac{n_{+i} - n_{-i}}{N}$ the
-expectation value estimation procedure stays the same.
-
-Here $n_+$ and $n_-$ are numbers of measurements in X basis that
-corresponds to $\left| + \right\rangle$ or $\left| - \right\rangle$
-outcomes respectively. And $n_{+i}$ and $n_{-i}$ are numbers of
-measurements in $Y$ basis that corresponds to $\left| +i
-\right\rangle$ or $\left| -i \right\rangle$ outcomes respectively.
-
-
-!split
-===== Computational basis =====
-
-The difficulty comes from the fact that one may have the possibility
-to measure only in the $Z$ basis. To solve this difficulty we still do
-a $Z$ basis measurement, but, before that, we apply specific operators
-to the $\left| \psi \right\rangle$ state.
-
-We try to apply such an
-operator that after measuring the probability of $\left| 0
-\right\rangle$ outcome will be equal to the probability of $\left| +
-\right\rangle$ $\left( \left| +i \right\rangle \right)$ outcome.
-
-And the probability of $\left| 1 \right\rangle$ outcome will be equal to
-the probability of $\left| - \right\rangle$ $\left( \left| -i \right\rangle \right)$ outcome.
-
-!split
-===== Unitary transformation of $\bm{X}$ =====
-
-If we use the Hadamard gate
-!bt
-\[
-\bm{H} = \frac{1}{\sqrt{2}}\begin{pmatrix}
-1 & 1\\
-1 & -1
-\end{pmatrix},
-\]
-!et
-we can rewrite
-!bt
-\[
-\bm{X}=\bm{H}\bm{Z}\bm{H}.
-\]
-!et
-
-The Hadamard gate/matrix is a unitary matrix with the property that $\bm{H}^2=\bm{I}$.
-
-!split
-===== Generalizing =====
-
-For the one-qubit Hamiltonian we have toyed with till now, we can thus
-rewrite in an easy way the Hamiltonian so that we can perform
-measurements using our favorite computational basis.
-
-The transformation of the Pauli $\bm{X}$ matrix can be generalized, as
-we will see in more detail next week for the two-qubit Hamiltonian and
-the Lipkin model, to the following expression
-!bt
-\[
-{\cal P}=\bm{U}^{\dagger}\bm{M}\bm{U},
-\]
-!et
-where ${\cal P}$ represents some combination of the Pauli matrices and
-the identity matrix, $\bm{U}$ is a unitary matrix and $\bm{M}$
-represents the gate/matrix which performs the measurements, often
-represented by a Pauli $\bm{Z}$ gate/matrix.
-
-
-!split
-===== Implementing the VQE =====
-
-For a one-qubit system we can reach every point on the Bloch sphere
-(as discussed earlier) with a rotation about the $x$-axis and the
-$y$-axis.
-
-We can express this mathematically through the following operations (see whiteboard for the drawing), giving us a new state $\vert \psi\rangle$
-!bt
-\[
-\vert\psi\rangle = R_y(\phi)R_x(\theta)\vert 0 \rangle.
-\]
-!et
-
-!split
-===== Multiple ansatzes =====
-
-We can produce multiple ansatzes for the new state in terms of the
-angles $\theta$ and $\phi$.  With these ansatzes we can in turn
-calculate the expectation value of the above Hamiltonian, now
-rewritten in terms of various Pauli matrices (and thereby gates), that is compute
-
-!bt
-\[
-\langle \psi \vert (c+\mathcal{E})\bm{I} + (\Omega+\omega_z)\bm{\sigma}_z + \omega_x\bm{\sigma}_x\vert \psi \rangle.
-\]
-!et
-
-!split
-===== Rotations again =====
-
-We can now set up a series of ansatzes for $\vert \psi \rangle$ as
-function of the angles $\theta$ and $\phi$ and find thereafter the
-variational minimum using for example a gradient descent method.
-
-To do so, we need to remind ourselves about the mathematical expressions for
-the rotational matrices/operators.
-
-!bt
-\[
-R_x(\theta)=\cos{\frac{\theta}{2}}\bm{I}-\imath \sin{\frac{\theta}{2}}\bm{\sigma}_x,
-\]
-!et
-
-and
-
-!bt
-\[
-R_y(\phi)=\cos{\frac{\phi}{2}}\bm{I}-\imath \sin{\frac{\phi}{2}}\bm{\sigma}_y.
-\]
-!et
-
-!split
-===== Simple code =====
-
-!bc pycod
-# define the rotation matrices
-# Define angles theta and phi
-theta = 0.5*np.pi; phi = 0.2*np.pi
-Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
-Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
-#define basis states
-basis0 = np.array([1,0])
-basis1 = np.array([0,1])
-
-NewBasis = Ry @ Rx @ basis0
-print(NewBasis)
-# Compute the expectation value
-#Note hermitian conjugation
-Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
-print(Energy)
-!ec
-Not an impressive results. We set up now a loop over many angles $\theta$ and $\phi$ and compute the energies
-!bc pycod
-# define a number of angles
-n = 20
-angle = np.arange(0,180,10)
-n = np.size(angle)
-ExpectationValues = np.zeros((n,n))
-for i in range (n):
-    theta = np.pi*angle[i]/180.0
-    Rx = np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
-    for j in range (n):
-        phi = np.pi*angle[j]/180.0
-        Ry = np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
-        NewBasis = Ry @ Rx @ basis0
-        Energy = NewBasis.conj().T @ Hamiltonian @ NewBasis
-        Edifference=abs(np.real(EigValues[0]-Energy))
-        ExpectationValues[i,j]=Edifference
-
-print(np.min(ExpectationValues))
-!ec
-
-Clearly, this is not the best way of proceeding. Rather, here we
-could try to find the optimal values for the parameters $\theta$ and
-$\phi$ through computation of their respective gradients and thereby
-find the minimum as function of the optimal angles $\hat{\theta}$ and
-$\hat{\phi}$.
-
-Let us now implement a classical gradient descent algorithm to the computation of the energies. 
-We will follow closely  URL:"https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331" in order to calculate gradients of the Hamiltonian.
-
-
-!split
-===== Gradient descent and calculations of gradients =====
-
-In order to optimize the VQE ansatz, we need to compute derivatives
-with respect to the variational parameters.  Here we develop first a
-simpler approach tailored to the one-qubit case. For this particular
-case, we have defined an ansatz in terms of the Pauli rotation
-matrices.
-
-!split
-===== Setting up gradients =====
-
-These define an arbitrary one-qubit state on the Bloch
-sphere through the expression
-
-!bt
-\[
-\vert\psi\rangle = \vert \psi(\theta,\phi)\rangle =R_y(\phi)R_x(\theta)\vert 0 \rangle.
-\]
-!et
-Each of these rotation matrices can be written in a more general form as
-!bt
-\[
-R_{i}(\gamma)=\exp{-(\imath\frac{\gamma}{2}\sigma_i)}=\cos{(\frac{\gamma}{2})}\bm{I}-\imath\sin{(\frac{\gamma}{2})}\bm{\sigma}_i,
-\]
-!et
-where $\sigma_i$ is one of the Pauli matrices $\sigma_{x,y,z}$. 
-
-!split
-===== Derivatives =====
-
-It is easy to see that the derivative with respect to $\gamma$ is
-!bt
-\[
-\frac{\partial R_{i}(\gamma)}{\partial \gamma}=-\frac{\gamma}{2}\bm{\sigma}_i R_{i}(\gamma).
-\]
-!et
-
-!split
-===== Derivatives of the expectation value of the Hamiltonian =====
-
-We can now calculate the derivative of the expectation value of the
-Hamiltonian in terms of the angles $\theta$ and $\phi$. We have two
-derivatives 
-!bt
-\[
-\frac{\partial}{\partial \theta}\left[\langle \psi(\theta,\phi) \vert \bm{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \theta}\left[\langle\bm{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \bm{H}(-\frac{\imath}{2}\bm{\sigma}_x\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c},
-\]
-!et
-and
-!bt
-\[
-\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \bm{H}\vert \psi(\theta,\phi)\rangle\right]=\frac{\partial}{\partial \phi}\left[\langle\bm{H}(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \bm{H}(-\frac{\imath}{2}\bm{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
-\]
-!et
-
-
-!split
-===== Two addtional expectation values =====
-
-This means that we have to calculate two additional expectation values
-in addition to the expectation value of the Hamiltonian itself.  If we
-stay with an ansatz for the single qubit states given by the above
-rotation operators, we can, following for example "the article by
-Maria Schuld et
-al":"https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.032331",
-show that the derivative of the expectation value of the Hamiltonian
-can be written as (we focus only on a given angle $\phi$)
-
-!bt
-\[
-\frac{\partial}{\partial \phi}\left[\langle\bm{H}(\phi)\rangle\right]=\frac{1}{2}\left[\langle\bm{H}(\phi+\frac{\pi}{2})\rangle-\langle\bm{H}(\phi-\frac{\pi}{2})\rangle\right].
-\]
-!et
-
-
-!split
-===== Rotations again and again =====
-To see this, consider again the definition of the rotation operators.
-We can write these operators as
-
-!bt
-\[
-R_i(\phi)=\exp{-\imath(\phi \bm{\sigma}_i)},
-\]
-!et
-with $\bm{sigma}_i$, with $\bm{\sigma}_i$ being any of the Pauli
-matrices $X$, $Y$ and $Z$. The latter can be generalized to other
-unitary matrices as well.
-The derivative with respect to $\phi$ gives
-!bt
-\[
-\frac{\partial R_i(\phi)}{\partial \phi}=-\frac{\imath}{2} \bm{\sigma}_i\exp{-\imath(\phi \bm{\sigma}_i)}=-\frac{\imath}{2} \bm{\sigma} R_i(\phi).
-\]
-!et
-
-
-!split
-===== Bloch sphere math =====
-
-Our ansatz for a general one-qubit state on the Bloch sphere contains the product of a rotation around the $x$-axis and the $y$-axis. In the derivation here we focus only on one angle however. Our ansatz is then given by
-
-!bt
-\[
-\vert \psi \rangle = R_i(\phi)\vert 0 \rangle,
-\]
-!et
-and the expectation value of our Hamiltonian is
-
-!bt
-\[
-\langle \psi \vert \hat{H}\vert \psi \rangle = \langle 0 \vert R_i(\phi)^{\dagger} \hat{H}R_i(\phi)\vert 0\rangle. 
-\]
-!et
-
-
-!split
-===== Derivatives =====
-
-Our derivative with respect to the angle $\phi$ has a similar structure, that is
-!bt
-\[
-\frac{\partial }{\partial \phi}\left[\langle \psi(\theta,\phi) \vert \bm{H}\vert \psi(\theta,\phi)\rangle\right]=\langle \psi(\theta,\phi) \vert \bm{H}(-\frac{\imath}{2}\bm{\sigma}_y\vert \psi(\theta,\phi)\rangle+\hspace{0.1cm}\mathrm{h.c}. 
-\]
-!et
-
-!split
-===== Rewriting =====
-
-In order to rewrite the equation of the derivative,
-the following relation is useful
-!bt
-\[
-\langle \psi \vert \hat{A}^{\dagger}\hat{B}\hat{C}\vert \psi \rangle = \frac{1}{2}\left[
-\langle \psi \vert (\hat{A}+\hat{C})^{\dagger}\hat{B}(\bm{A}+\hat{C})\vert \psi \rangle-\langle \psi \vert (\hat{A}-\hat{C})^{\dagger}\hat{B}(\bm{A}-\hat{C})\vert \psi \rangle\right],
-\]
-!et
-
-where $\hat{A}$, $\hat{B}$ and $\hat{C}$ are arbitrary hermitian
-operators.
-
-!split
-===== Final manipulations =====
-
-If we identify these operators as $\hat{A}=\bm{I}$, with
-$\bm{I}$ being the unit operator, $\hat{B}=\hat{H}$ our Hamiltonian,
-and $\hat{C}=-\imath \bm{\sigma}_i/2$, we obtain the following
-expression for the expectation value of the derivative (excluding the hermitian conjugate)
-
-!bt
-\[
-\langle \psi \vert \bm{I}^{\dagger}\hat{H}(-\frac{\imath}{2}\bm{\sigma}_i\vert \psi \rangle = \frac{1}{2}\left[
-\langle \psi \vert (\bm{I}-\frac{\imath}{2} \bm{\sigma}_i)^{\dagger}\hat{H}(\bm{I}-\frac{\imath}{2} \bm{\sigma}_i)\vert \psi \rangle-\langle \psi \vert (\bm{I}+\frac{\imath}{2} \bm{\sigma}_i)^{\dagger}\hat{H}(\bm{I}+\frac{\imath}{2} \bm{\sigma}_i)\vert \psi \rangle\right].
-\]
-!et
-
-!split
-===== The expressions to implement =====
-
-If we then use that the rotation matrices can be rewritten as
-!bt
-\[
-R_{i}(\phi)=\exp{-(\imath\frac{\phi}{2}\sigma_i)}=\cos{(\frac{\phi}{2})}\bm{I}-\imath\sin{(\frac{\phi}{2})}\bm{\sigma}_i,
-\]
-!et
-we see that if we set the angle to $\phi=\pi/2$, we have 
-!bt
-\[
-R_{i}(\frac{\pi}{2})=\cos{(\frac{\pi}{4})}\bm{I}-\imath\sin{(\frac{\pi}{4})}\bm{\sigma}_i=\frac{1}{\sqrt{2}}\left(\bm{I}-\frac{\imath}{2} \bm{\sigma}_i\right).
-\]
-!et
-
-
-!split
-===== Final expression =====
-
-This means that we can write
-!bt
-\[
-\langle \psi \vert \bm{I}^{\dagger}\hat{H}(-\frac{\imath}{2}\bm{\sigma}_i\vert \psi \rangle = \frac{1}{2}\left[
-\langle \psi \vert R_i(\frac{\pi}{2})^{\dagger}\hat{H}R_i(\frac{\pi}{2})\vert \psi \rangle-\langle \psi \vert R_i(-\frac{\pi}{2})^{\dagger}\hat{H}R_i(-\frac{\pi}{2})^{\dagger}\vert \psi \rangle\right]=\frac{1}{2}(\langle\hat{H}(\phi+\frac{\pi}{2})\rangle-\langle\hat{H}(\phi-\frac{\pi}{2})\rangle).
-\]
-!et
 
 
 
 
 !split
-===== Basics of gradient descent and stochastic gradient descent =====
-
-In order to implement the above equations, we need to remind the
-reader about basic elements of various optimization approaches. Our
-main focus here will be various gradient descent approaches and quasi-Newton methods like Broyden's algorithm and variations thereof.
-
-This material is covered by the lectures from "FYS4411 on gradient optimization":"https://github.com/CompPhysics/ComputationalPhysics2/blob/gh-pages/doc/pub/week6/ipynb/week6.ipynb"
-
-
-!split
-===== Computing quantum gradients  =====
-
-Let us implement
-efficient implementations of gradient methods to the derivatives of
-the Hamiltonian expectation values.
-
-!bc pycod
-from  matplotlib import pyplot as plt
-import numpy as np
-from scipy.optimize import minimize
-dim = 2
-Hamiltonian = np.zeros((dim,dim))
-e0 = 0.0
-e1 = 4.0
-Xnondiag = 0.20
-Xdiag = 3.0
-Eigenvalue = np.zeros(dim)
-# setting up the Hamiltonian
-Hamiltonian[0,0] = Xdiag+e0
-Hamiltonian[0,1] = Xnondiag
-Hamiltonian[1,0] = Hamiltonian[0,1]
-Hamiltonian[1,1] = e1-Xdiag
-# diagonalize and obtain eigenvalues, not necessarily sorted
-EigValues, EigVectors = np.linalg.eig(Hamiltonian)
-permute = EigValues.argsort()
-EigValues = EigValues[permute]
-# print only the lowest eigenvalue
-print(EigValues[0])
-
-# Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z
-X = np.array([[0,1],[1,0]])
-Y = np.array([[0,-1j],[1j,0]])
-Z = np.array([[1,0],[0,-1]])
-# identity matrix
-I = np.array([[1,0],[0,1]])
-
-epsilon = (e0+e1)*0.5; omega = (e0-e1)*0.5
-c = 0.0; omega_z=Xdiag; omega_x = Xnondiag
-Hamiltonian = (epsilon+c)*I+(omega_z+omega)*Z+omega_x*X
-EigValues, EigVectors = np.linalg.eig(Hamiltonian)
-permute = EigValues.argsort()
-EigValues = EigValues[permute]
-# print only the lowest eigenvalue
-print(EigValues[0])
-
-# define the rotation matrices
-
-def Rx(theta):
-    return np.cos(theta*0.5)*I-1j*np.sin(theta*0.5)*X
-def Ry(phi):
-    return np.cos(phi*0.5)*I-1j*np.sin(phi*0.5)*Y
-
-#define basis states
-basis0 = np.array([1,0])
-basis1 = np.array([0,1])
-
-# Computing the expectation value of the energy 
-def Energy(theta,phi):
-    Basis = Ry(phi) @ Rx(theta) @ basis0
-    energy = Basis.conj().T @ Hamiltonian @ Basis
-    return energy
-
-
-# Set up iteration using gradient descent method
-eta = 0.1
-Niterations = 100
-# Random angles using uniform distribution
-theta = 2*np.pi*np.random.rand()
-phi = 2*np.pi*np.random.rand()
-pi2 = 0.5*np.pi
-for iter in range(Niterations):
-    thetagradient = 0.5*(Energy(theta+pi2,phi)-Energy(theta-pi2,phi))
-    phigradient = 0.5*(Energy(theta,phi+pi2)-Energy(theta,phi-pi2))
-    theta -= eta*thetagradient
-    phi -= eta*phigradient
-print(Energy(theta,phi))
-
-!ec
-
-!split
-===== A smarter way of doing this =====
-
-The above approach means that we are setting up several matrix-matrix
-and matrix-vector multiplications. Although straight forward it is not
-the most efficient way of doing this, in particular in case the
-matrices become large (and sparse). But there are some more important
-issues.
-
-In a physical realization of these systems we cannot just multiply the
-state with the Hamiltonian. When performing a measurement we can only
-measure in one particular direction. For the computational basis
-states which we have, $\vert 0\rangle$ and $\vert 1\rangle$, we have
-to measure along the bases of the Pauli matrices and reconstruct the
-eigenvalues from these measurements.
-
-
-!split
-===== The code for the one qubit case (code developed by August Gude, 2023) =====
+===== The code for the one qubit case  =====
 !bc pycod
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1170,7 +260,7 @@ plt.show()
 This was the standard eigenvalue problem. Let us now switch to our own implementation of the VQE.
 
 !bc pycod
-from src.qc import *
+from qc import *
 
 def prepare_state(theta, phi, target = None):
     I = np.eye(2)
@@ -1279,8 +369,1396 @@ plt.show()
 
 
 !split
-===== Plans for next week =====
-!bblock
-o Introducing the Lipkin model
-o Solving problems with more than one qubit and discussion of project 1
-!eblock
+===== Two-qubit Hamiltonian =====
+
+We end this lecture with a discussion on how to rewrite the two-qubit Hamiltonian rom last week (and project 1)
+!bt
+\[
+\mathcal{H}=\begin{bmatrix} \epsilon_{1}+V_z & 0 & 0 & V_x \\
+                       0  & \epsilon_{2}-V_z & V_x & 0 \\
+		       0 & H_x & \epsilon_{3}-V_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{4} +V_z \end{bmatrix}.
+\] 
+!et
+
+This Hamiltonian can be rewritten in terms of various one-qubit matrices.
+
+!split
+===== Definitions =====
+
+We define
+!bt
+\[
+\epsilon_{II}=\frac{\epsilon_{1}+\epsilon_{2}+\epsilon_{3}+\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZI}=\frac{\epsilon_{1}+\epsilon_{2}-\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{IZ}=\frac{\epsilon_{1}-\epsilon_{2}+\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZZ}=\frac{\epsilon_{1}-\epsilon_{2}-\epsilon_{3}+\epsilon_{4}}{4}.
+\]
+!et
+
+
+!split
+===== The Hamiltonian in terms of Pauli-$\bm{X}$ and Pauli-$\bm{Z}$ matrices =====
+
+With these definitions we can rewrite our two-qubit Hamiltonian as
+!bt
+\[
+\mathcal{H}=\mathcal{H}_0+\mathcal{H}_I
+\]
+!et
+with
+!bt
+\[
+\mathcal{H}_0=\epsilon_{II}\bm{I}\otimes\bm{I}+\epsilon_{ZI}\bm{Z}\otimes\bm{I}+\epsilon_{IZ}\bm{I}\otimes\bm{Z}+\epsilon_{ZZ}\bm{Z}\otimes\bm{Z},
+\]
+!et
+and
+!bt
+\[
+\mathcal{H}_I=V_z\bm{Z}\otimes\bm{Z}+V_x\bm{X}\otimes\bm{X}.
+\]
+!et
+
+!split
+===== How do we perform measurements? =====
+
+The above tensor products need to rewritten in terms of specific
+transformations so that we can perform the measurements in the basis of
+the Pauli-$\bm{Z}$ matrices. As we discussed earlier, we need to find
+a transformation of the form
+!bt
+\[
+\mathcal{P}=\bm{U}^{\dagger}\bm{M}\bm{U},
+\]
+!et
+where $\mathcal{P}$ represents some combination of the Pauli matrices and
+the identity matrix, $\bm{U}$ is a unitary matrix and $\bm{M}$
+represents the gate/matrix which performs the measurements, often
+represented by a Pauli-$\bm{Z}$ gate/matrix.
+
+The implementation of these measurements will be discussed next week.
+
+
+!split
+===== Explicit expressions =====
+In order to perform our measurements, will then need the following operators $\bm{U}$
+!bt
+\begin{align*}
+\bm{Z}\otimes\bm{I}\hspace{1cm} & \bm{U}=\bm{I}\otimes\bm{I}\\
+\bm{I}\otimes\bm{Z}\hspace{1cm} & \bm{U}=\text{SWAP}\\
+\bm{Z}\otimes\bm{Z}\hspace{1cm} & \bm{U}=CX_{10}\\
+\bm{X}\otimes\bm{X}\hspace{1cm} & \bm{U}=CX_{10}(\bm{H}\otimes\bm{H})\\
+\end{align*}
+!et
+where we have 
+!bt
+\[
+	\text{CX}_{10} = \begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 1 \\
+		0 & 0 & 1 & 0 \\
+		0 & 1 & 0 & 0
+	\end{bmatrix}.
+\]
+!et
+
+
+
+!split
+===== Lipkin model =====
+
+We will study a schematic model (the Lipkin model, see Nuclear
+Physics _62_ (1965) 188), for the interaction among  $2$ and more 
+fermions that can occupy two different energy levels.
+
+
+
+
+For four fermions, the case we consider first here, each levels has
+degeneration $d=4$, leading to different total spin values.  The two
+levels have quantum numbers $\sigma=\pm 1$, with the upper level
+having $2\sigma=+1$ and energy $\varepsilon_{1}= \varepsilon/2$. The
+lower level has $2\sigma=-1$ and energy
+$\varepsilon_{2}=-\varepsilon/2$. That is, the lowest single-particle
+level has negative spin projection (or spin down), while the upper
+level has spin up.  In addition, the substates of each level are
+characterized by the quantum numbers $p=1,2,3,4$.
+
+
+
+
+We define the single-particle states (for the four fermion case which we will work on here)
+!bt
+\[
+\vert u_{\sigma =-1,p}\rangle=a_{-p}^{\dagger}\vert 0\rangle
+\hspace{1cm}
+\vert u_{\sigma =1,p}\rangle=a_{+p}^{\dagger}\vert 0\rangle.
+\]
+!et
+The single-particle states span an orthonormal basis.
+The Hamiltonian of the system is given by
+
+!bt
+\[
+\begin{array}{ll}
+\hat{H}=&\hat{H}_{0}+\hat{H}_{1}+\hat{H}_{2}\\
+&\\
+\hat{H}_{0}=&\frac{1}{2}\varepsilon\sum_{\sigma ,p}\sigma
+a_{\sigma,p}^{\dagger}a_{\sigma ,p}\\
+&\\
+\hat{H}_{1}=&\frac{1}{2}V\sum_{\sigma ,p,p'}
+a_{\sigma,p}^{\dagger}a_{\sigma ,p'}^{\dagger}
+a_{-\sigma ,p'}a_{-\sigma ,p}\\
+&\\
+\hat{H}_{2}=&\frac{1}{2}W\sum_{\sigma ,p,p'}
+a_{\sigma,p}^{\dagger}a_{-\sigma ,p'}^{\dagger}
+a_{\sigma ,p'}a_{-\sigma ,p}\\
+&\\
+\end{array}
+\]
+!et
+where $V$ and $W$ are constants. The operator 
+$H_{1}$ can move pairs of fermions
+while $H_{2}$ is a spin-exchange term. The latter
+moves a pair of fermions from a state $(p\sigma ,p' -\sigma)$ to a state
+$(p-\sigma ,p'\sigma)$.
+
+
+We are going to rewrite the above Hamiltonian in terms of so-called  quasispin operators
+!bt
+\[
+\begin{array}{ll}
+\hat{J}_{+}=&\sum_{p}
+a_{p+}^{\dagger}a_{p-}\\
+&\\
+\hat{J}_{-}=&\sum_{p}
+a_{p-}^{\dagger}a_{p+}\\
+&\\
+\hat{J}_{z}=&\frac{1}{2}\sum_{p\sigma}\sigma
+a_{p\sigma}^{\dagger}a_{p\sigma}\\
+&\\
+\hat{J}^{2}=&J_{+}J_{-}+J_{z}^{2}-J_{z}\\
+&\\
+\end{array}
+\]
+!et
+We show here that these operators obey the commutation relations for angular momentum.
+
+
+
+
+We can in turn express $\hat{H}$ in terms of the above quasispin operators and the number operator
+!bt
+\[
+\hat{N}=\sum_{p\sigma}
+a_{p\sigma}^{\dagger}a_{p\sigma}.
+\]
+!et
+
+We have the following quasispin operators
+!bt
+\begin{align}
+J_{\pm} = \sum_p a_{p\pm}^\dagger a_{p\mp},
+label{eq:Jpm} \\
+J_{z} = \frac{1}{2}\sum_{p,\sigma} \sigma a_{p\sigma}^\dagger a_{p\sigma},
+label{eq:Jz} \\
+J^{2} = J_+ J_- + J_z^2 - J_z,
+label{eq:J2}
+\end{align}
+!et
+and we want to compute the commutators
+!bt
+\[
+[J_z,J_\pm], \quad [J_+,J_-], \quad [J^2,J_\pm] \quad \text{og} \quad 
+[J^2,J_z].
+\]
+!et
+
+Let us start with the first one and inserting for  $J_z$ and $J_\pm$ given by the equations (ref{eq:Jz}) and (ref{eq:Jpm}), respectively, we obtain
+!bt
+\begin{align*}
+[J_z,J_\pm] &= J_z J_\pm - J_\pm J_z \\
+%
+&= \left( \frac{1}{2}\sum_{p,\sigma} \sigma a_{p\sigma}^\dagger a_{p\sigma} \right)
+\left( \sum_{p'} a_{p'\pm}^\dagger a_{p'\mp} \right) -
+\left( \sum_{p'} a_{p'\pm}^\dagger a_{p'\mp} \right)
+\left( \frac{1}{2}\sum_{p,\sigma} \sigma a_{p\sigma}^\dagger a_{p\sigma} \right) \\
+&= \frac{1}{2} \sum_{p,p',\sigma} \sigma \left( a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} - a_{p'\pm}^\dagger a_{p'\mp} a_{p\sigma}^\dagger a_{p\sigma} \right).
+\end{align*}
+!et
+Using the commutation relations for the creation and annihilation operators
+!bt
+\begin{align}
+\{ a_l,a_k \} &= 0, label{eq:al,ak} \\
+\{ a_l^\dagger , a_k^\dagger \} &= 0, label{eq:ald,akd} \\
+\{ a_l^\dagger , a_k \} &= \delta_{lk}, label{eq:ald,ak}
+\end{align}
+!et
+in order to move the operators in the right product to be in the same order as those in the lefthand product
+!bt
+\begin{align*}
+[J_z,J_\pm] &= \frac{1}{2} \sum_{p,p',\sigma} \sigma \left(
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger \left( \delta_{p' p} \delta_{\mp \sigma} - a_{p\sigma}^\dagger a_{p'\mp} \right) a_{p\sigma} \right) \\
+&= \frac{1}{2} \sum_{p,p',\sigma} \sigma \left(
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger \delta_{p' p} \delta_{\mp \sigma} a_{p\sigma} +
+a_{p'\pm}^\dagger a_{p\sigma}^\dagger a_{p'\mp} a_{p\sigma} \right), \\
+\end{align*}
+!et
+which results in
+!bt
+\begin{align*}
+[J_z,J_\pm]
+&= \frac{1}{2} \sum_{p,p',\sigma} \sigma \left(
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger \delta_{pp'} \delta_{\mp \sigma} a_{p\sigma} +
+a_{p\sigma}^\dagger a_{p'\pm}^\dagger a_{p\sigma} a_{p'\mp} \right) \\
+&= \frac{1}{2} \sum_{p,p',\sigma} \sigma \left(
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger \delta_{pp'} \delta_{\mp \sigma} a_{p\sigma} +
+a_{p\sigma}^\dagger \left( \delta_{pp'} \delta_{\pm \sigma} - a_{p\sigma} a_{p'\pm}^\dagger \right) a_{p'\mp} \right) \\
+&= \frac{1}{2} \sum_{p,p',\sigma} \sigma \left(
+a_{p\sigma}^\dagger \delta_{pp'} \delta_{\pm \sigma} a_{p'\mp} -
+a_{p'\pm}^\dagger \delta_{pp'} \delta_{\mp \sigma} a_{p\sigma} \right). \\
+\end{align*}
+!et
+The last equality leads to
+!bt
+\begin{align*}
+[J_z,J_\pm] &= \frac{1}{2} \sum_p \left(
+(\pm 1) a_{p\pm}^\dagger a_{p\mp} - (\mp 1)
+a_{p\pm}^\dagger a_{p\mp} \right) =
+\pm \frac{1}{2} \sum_p \left(
+a_{p\pm}^\dagger a_{p\mp} + (\pm 1)
+a_{p\pm}^\dagger a_{p\mp} \right) \\
+&= \pm \sum_p a_{p\pm}^\dagger a_{p\mp} = \pm J_\pm,
+\end{align*}
+!et
+where the last results follows from comparing with Eq.~(ref{eq:Jpm}).
+
+We can then continue with the next commutation relation, using Eq.~(ref{eq:Jpm}),
+!bt
+\begin{align*}
+[J_+,J_-] &= J_+ J_- - J_- J_+ \\
+&= \left( \sum_p a_{p'+}^\dagger a_{p-} \right)
+\left( \sum_{p'} a_{p'-}^\dagger a_{p'+} \right) -
+\left( \sum_{p'} a_{p'-}^\dagger a_{p'+} \right)
+\left( \sum_p a_{p+}^\dagger a_{p-} \right) \\
+&= \sum_{p,p'} \left(
+a_{p'+}^\dagger a_{p-} a_{p'-}^\dagger a_{p'+} -
+a_{p'-}^\dagger a_{p'+} a_{p+}^\dagger a_{p-} \right) \\
+&= \sum_{p,p'} \left(
+a_{p'+}^\dagger a_{p-} a_{p'-}^\dagger a_{p'+} -
+a_{p'-}^\dagger \left( \delta_{++} \delta_{pp'} -
+a_{p+}^\dagger a_{p'+} \right) a_{p-} \right) \\
+&= \sum_{p,p'} \left(
+a_{p'+}^\dagger a_{p-} a_{p'-}^\dagger a_{p'+} -
+a_{p'-}^\dagger \delta_{pp'} a_{p-} +
+a_{p'-}^\dagger a_{p+}^\dagger a_{p'+} a_{p-} \right) \\
+&= \sum_{p,p'} \left(
+a_{p'+}^\dagger a_{p-} a_{p'-}^\dagger a_{p'+} -
+a_{p'-}^\dagger \delta_{pp'} a_{p-} +
+a_{p+}^\dagger a_{p'-}^\dagger a_{p-} a_{p'+} \right) \\
+&= \sum_{p,p'} \left(
+a_{p'+}^\dagger a_{p-} a_{p'-}^\dagger a_{p'+} -
+a_{p'-}^\dagger \delta_{pp'} a_{p-} +
+a_{p+}^\dagger \left( \delta_{--} \delta_{pp'} -
+a_{p-} a_{p'-}^\dagger \right) a_{p'+} \right) \\
+&= \sum_{p,p'} \left(
+a_{p+}^\dagger \delta_{pp'} a_{p'+} -
+a_{p'-}^\dagger \delta_{pp'} a_{p-} \right), \\
+\end{align*}
+!et
+which results in
+!bt
+\[
+[J_+,J_-] = \sum_p \left(
+a_{p+}^\dagger a_{p+} -
+a_{p-}^\dagger a_{p-} \right) = 2J_z,
+\]
+!et
+It is straightforward to show that
+!bt
+\[
+[J^2, J_\pm] = [J_+ J_- + J_z^2 - J_z, J_\pm] =
+[J_+ J_-, J_\pm] + [J_z^2, J_\pm] - [J_z, J_\pm].
+\]
+!et
+Using the relations
+!bt
+\begin{align}
+[AB,C] &= A[B,C] + [A,C]B, label{eq:ab,c} \\
+[A,BC] &= [A,B]C + B[A,C], label{eq:a,bc}
+\end{align}
+!et
+we obtain
+!bt
+\[
+[J^2, J_\pm] =
+J_+ [J_-,J_\pm] + [J_+,J_\pm] J_- + J_z [J_z,J_\pm] + [J_z,J_\pm] J_z - [J_z,J_\pm].
+\]
+!et
+Finally, from the above it follows that
+!bt
+\begin{align*}
+[J^2, J_+] &= -2J_+ J_z + J_z [J_z,J_+] + [J_z,J_+] J_z - [J_z,J_+] \\
+&= -2J_+ J_z + J_z J_+ + J_+ J_z - J_+ \\
+&= -2J_+ J_z + J_+ + J_+ J_z + J_+ J_z - J_+ = 0,
+\end{align*}
+!et
+and
+!bt
+\begin{align*}
+[J^2, J_-] &= 2J_z J_- + J_z [J_z,J_-] + [J_z,J_-] J_z - [J_z,J_-] \\
+&= 2J_z J_- - J_z J_- - J_- J_z + J_- \\
+&= J_z J_- - (J_z J_- + J_-) + J_- = 0.
+\end{align*}
+!et
+Our last commutator is given by
+!bt
+\begin{align*}
+[J^2,J_z] &= [J_+ J_- + J_z^2 - J_z, J_z] \\
+&= [J_+ J_-, J_z] + [J_z^2, J_z] - [J_z, J_z] \\
+&= J_+ [J_-, J_z] + [J_+,J_z] J_- \\
+&= J_+ J_- - J_+ J_- = 0
+\end{align*}
+!et
+Summing up we have
+!bt
+\begin{align}
+[J_z, J_\pm] &= \pm J_\pm, label{eq:kJzJpm} \\
+[J_+, J_-] &= 2J_z, label{eq:kJpJm} \\
+[J^2, J_\pm] &= 0, label{eq:kJ2Jpm} \\
+[J^2,J_z] &= 0, label{eq:kJ2Jz}
+\end{align}
+!et
+which are the standard commutation relations for angular (or orbital) momentum $L_\pm$, $L_z$ og $L^2$.
+
+!split
+===== Rewriting the Hamiltonian =====
+
+We wrote the above Hamiltonian as
+
+!bt
+\[
+H = H_0 + H_1 +H_2,
+\]
+!et
+with 
+!bt
+\[
+H_0 = \frac{1}{2} \varepsilon \sum_{p\sigma}\sigma a_{p\sigma}^{\dagger}a_{p\sigma},
+\]
+!et
+and
+!bt
+\[
+H_1 = \frac{1}{2} V \sum_{p,p',\sigma} a_{p\sigma}^\dagger a_{p'\sigma}^\dagger a_{p'-\sigma} a_{p-\sigma},
+\]
+!et
+and
+!bt
+\[
+H_{2} = \frac{1}{2} W \sum_{p,p',\sigma}a_{p\sigma}^\dagger a_{p'-\sigma}^\dagger a_{p'\sigma}a_{p-\sigma}.
+\]
+!et
+We will now rewrite the Hamiltonian in terms of the above quasi-spin operators and the number operator 
+!bt
+\begin{equation}
+N = \sum_{p,\sigma} a_{p\sigma}^\dagger a_{p\sigma}.
+label{eq:N}
+\end{equation}
+!et
+Going through each term of the Hamiltonian and using the expressions for the quasi-spin operators we obtain
+!bt
+\begin{equation}
+H_0 = \varepsilon J_z.
+label{eq:H0ny}
+\end{equation}
+!et
+Moving over to $H_1$ and using the anti-commutation relations (ref{eq:al,ak}) through (ref{eq:ald,ak}) we obtain
+!bt
+\begin{align*}
+H_1 &= \frac{1}{2} V \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p'\sigma}^\dagger a_{p'-\sigma} a_{p-\sigma} \\
+&= \frac{1}{2} V \sum_{p,p',\sigma}
+-a_{p\sigma}^\dagger a_{p'\sigma}^\dagger a_{p-\sigma} a_{p'-\sigma} \\
+&= \frac{1}{2} V \sum_{p,p',\sigma}
+-a_{p\sigma}^\dagger \left( \delta_{pp'} \delta_{\sigma -\sigma} - a_{p-\sigma} a_{p'\sigma}^\dagger \right) a_{p'-\sigma} \\
+&= \frac{1}{2} V \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p-\sigma} a_{p'\sigma}^\dagger a_{p'-\sigma} \\
+\end{align*}
+!et
+Rewriting the sum  over $\sigma$ we arrive at
+!bt
+\begin{align*}
+H_1 &= \frac{1}{2} V\sum_{p,p'}
+a_{p+}^\dagger a_{p-} a_{p'+}^\dagger a_{p'-} +
+a_{p-}^\dagger a_{p+} a_{p'-}^\dagger a_{p'+} \\
+&= \frac{1}{2} V \left[ \sum_p \left( a_{p+}^\dagger a_{p-} \right)
+\sum_{p'} \left( a_{p'+}^\dagger a_{p'-} \right) +
+\sum_p \left( a_{p-}^\dagger a_{p+} \right)
+\sum_{p'} \left( a_{p'-}^\dagger a_{p'+} \right) \right] \\
+&= \frac{1}{2} V \left[ J_+ J_+ + J_- J_- \right] = \frac{1}{2} V \left[ J_+^2 + J_-^2 \right] ,
+\end{align*}
+!et
+which leads to
+!bt
+\begin{equation}
+H_1 = \frac{1}{2} V \left( J_+^2 + J_-^2 \right).
+label{eq:H1ny}
+\end{equation}
+!et
+Finally, we rewrite the last term
+!bt
+\begin{align*}
+H_2 &= \frac{1}{2} W \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p'-\sigma}^\dagger a_{p'\sigma} a_{p-\sigma} \\
+&= \frac{1}{2} W \sum_{p,p',\sigma}
+-a_{p\sigma}^\dagger a_{p'-\sigma}^\dagger a_{p-\sigma} a_{p'\sigma} \\
+&= \frac{1}{2} W \sum_{p,p',\sigma}
+-a_{p\sigma}^\dagger \left( \delta_{pp'} \delta_{-\sigma -\sigma} -
+a_{p-\sigma} a_{p'-\sigma}^\dagger \right) a_{p'\sigma} \\
+&= \frac{1}{2} W \sum_{p,p',\sigma}
+-a_{p\sigma}^\dagger \delta_{pp'} a_{p'\sigma} +
+a_{p\sigma}^\dagger a_{p-\sigma} a_{p'-\sigma}^\dagger a_{p'\sigma} \\
+&= \frac{1}{2} W \left( -\sum_{p,\sigma}
+a_{p\sigma}^\dagger a_{p\sigma} +
+\sum_{p,p',\sigma} a_{p\sigma}^\dagger a_{p-\sigma} a_{p'-\sigma}^\dagger a_{p'\sigma} \right) \\
+\end{align*}
+!et
+Using the expression for the number operator we obtain
+!bt
+\begin{align*}
+\sum_{p,p',\sigma} a_{p\sigma}^\dagger a_{p-\sigma} a_{p'-\sigma}^\dagger a_{p'\sigma}
+&= \sum_{p,p'} a_{p+}^\dagger a_{p-} a_{p'-}^\dagger a_{p'+} +
+a_{p-}^\dagger a_{p+} a_{p'+}^\dagger a_{p'-} \\
+&= \sum_p \left( a_{p+}^\dagger a_{p-} \right)
+\sum_{p'} \left( a_{p'-}^\dagger a_{p'+} \right) +
+\sum_p \left( a_{p-}^\dagger a_{p+} \right)
+\sum_{p'} \left( a_{p'+}^\dagger a_{p'-} \right) \\
+&= J_+ J_- + J_- J_+,
+\end{align*}
+!et
+resulting in
+!bt
+\begin{equation}
+H_2 = \frac{1}{2} W \left( -N + J_+ J_- + J_- J_+ \right).
+label{eq:H2ny}
+\end{equation}
+!et
+We have thus expressed the Hamiltonian in term of the quasi-spin operators.
+Below, we will show how we can rewrite these expressions in terms of Pauli $X$, $Y$ and $Z$ matrices.
+
+!split
+===== Commutation relations for the Hamiltonian =====
+
+
+The above expressions can in turn be used to show that the Hamiltonian
+commutes with the various quasi-spin operators. This leads to quantum
+numbers which are conserved.  Let us first show that $[H,J^2]=0$,
+which means that $J$ is a so-called *good* quantum number and that the
+total spin is a conserved quantum number.
+
+We have
+!bt
+\begin{align*}
+[H,J^2] &= [H_0 + H_1 + H_2,J^2] \\
+&= [H_0,J^2] + [H_1,J^2] + [H_2,J^2] \\
+&= \varepsilon [J_z,J^2] + \frac{1}{2} V [J_+^2 + J_-^2,J^2] +
+\frac{1}{2} W [-N + J_+ J_- + J_- J_+,J^2]. \\
+\end{align*}
+!et
+We have previously shown that
+!bt
+\[
+[H,J^2] = \frac{1}{2} V \left( [J_+^2,J^2] + [J_-^2,J^2] \right) +
+\frac{1}{2} W \left( -[N,J^2] + [J_+ J_-,J^2] + [J_- J_+, J^2] \right)
+\]
+!et
+Using that $[J_\pm,J^2] = 0$, it follows that $[J_\pm^2,J^2] = 0$. We can then see that $[J_+ J_-,J^2] = 0$ and $[J_- J_+, J^2] = 0$ which leads to
+!bt
+\begin{align*}
+[H,J^2] &= -\frac{1}{2} W [N,J^2] \\
+&= \frac{1}{2} W \left( -[N,J_+ J_-] - [N,J_z^2] + [N,J_z] \right) \\
+&= \frac{1}{2} W \left( -[N,J_+]J_- - J_+[N,J_-] - [N,J_z]J_z - J_z[N,J_z] + [N,J_z] \right).
+\end{align*}
+!et
+Combining with the number operator we have
+!bt
+\begin{align*}
+[N,J_\pm] &= N J_\pm - J_\pm N \\
+&= \left( \sum_{p,\sigma} a_{p\sigma}^\dagger a_{p\sigma} \right)
+\left( \sum_{p'} a_{p'\pm}^\dagger a_{p'\mp} \right) -
+\left( \sum_{p'} a_{p'\pm}^\dagger a_{p'\mp} \right)
+\left( \sum_{p,\sigma} a_{p\sigma}^\dagger a_{p\sigma} \right) \\
+&= \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger a_{p'\mp} a_{p\sigma}^\dagger a_{p\sigma} \\
+&= \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger \left( \delta_{\mp \sigma} \delta_{pp'} - a_{p\sigma}^\dagger a_{p'\mp} \right) a_{p\sigma} \\
+&= \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} -
+a_{p'\pm}^\dagger \delta_{\mp \sigma} \delta_{pp'} a_{p\sigma} +
+a_{p'\pm}^\dagger a_{p\sigma}^\dagger a_{p'\mp} a_{p\sigma} \\
+&= \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} +
+a_{p\sigma}^\dagger a_{p'\pm}^\dagger a_{p\sigma} a_{p'\mp} -
+\sum_{p} a_{p\pm}^\dagger  a_{p\mp} \\
+&= \sum_{p,p',\sigma}
+a_{p\sigma}^\dagger a_{p\sigma} a_{p'\pm}^\dagger a_{p'\mp} +
+a_{p\sigma}^\dagger \left( \delta_{pp'} \delta_{\pm \sigma} -
+a_{p\sigma} a_{p'\pm}^\dagger \right) a_{p'\mp} -
+\sum_{p} a_{p\pm}^\dagger  a_{p\mp} \\
+&= \sum_p a_{p\pm}^\dagger a_{p\mp} -
+\sum_{p} a_{p\pm}^\dagger  a_{p\mp} = 0. \\
+\end{align*}
+!et
+We obtain then
+!bt
+\begin{align*}
+[N,J_z] &= N J_z - J_z N \\
+&= \left( \sum_{p,\sigma} a_{p\sigma}^\dagger a_{p\sigma} \right)
+\left( \frac{1}{2}\sum_{p',\sigma} \sigma a_{p'\sigma}^\dagger a_{p'\sigma} \right) -
+\left( \frac{1}{2}\sum_{p',\sigma} \sigma a_{p'\sigma}^\dagger a_{p'\sigma} \right)
+\left( \sum_{p,\sigma} a_{p\sigma}^\dagger a_{p\sigma} \right) \\
+&= \sum_{p,p',\sigma} 
+\sigma a_{p\sigma}^\dagger a_{p\sigma} a_{p'\sigma}^\dagger a_{p'\sigma} -
+\sigma a_{p'\sigma}^\dagger a_{p'\sigma} a_{p\sigma}^\dagger a_{p\sigma} = 0,
+\end{align*}
+!et
+which leads to
+!bt
+\begin{equation}
+[H,J^2] = 0,
+label{eq:kHJ2}
+\end{equation}
+!et
+and $J$ is a good quantum number.
+
+===== Constructing the Hamiltonian matrix for $J=2$ =====
+
+We start with the state (unique) where all spins point down
+!bt
+\begin{equation}
+\vert 2,-2\rangle = a_{1-}^{\dagger} a_{2-}^{\dagger}
+a_{3-}^{\dagger} a_{4-}^{\dagger} \vert 0\rangle
+label{eq:2,-2}
+\end{equation}
+!et
+which is a state with  $J_z = -2$ and $J = 2$. (we label the states as $\vert J,J_z\rangle$). For $J = 2$ we have the spin projections $J_z = -2,-1,0,1,2$.
+We can use the lowering and raising operators for spin in order to define the other states
+!bt
+\begin{align}
+J_+ \vert J,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z + 1)} \vert J,J_z + 1\rangle,
+label{eq:J+ket} \\
+J_- \vert J,J_z\rangle &= \sqrt{J(J+1) - J_z(J_z - 1)} \vert J,J_z - 1\rangle.
+label{eq:J-ket}
+\end{align}
+!et
+We can then construct all other states with $J=2$ using the raising operator
+$J_+$ on $\vert 2,-2\rangle$
+!bt
+\[
+J_+ \vert 2,-2\rangle = \sqrt{2(2+1) - (-2)(-2+1)} \vert 2,-2+1\rangle =\sqrt{6 - 2} \vert 2,-1\rangle = 2\vert 2,-1\rangle,
+\]
+!et
+which gives
+!bt
+\begin{align}
+\vert 2,-1\rangle &= \frac{1}{2} J_+ \vert 2,-2\rangle \notag \\
+&= \frac{1}{2} \sum_p a_{p+}^\dagger a_{p-} a_{1-}^{\dagger} a_{2-}^{\dagger}
+a_{3-}^{\dagger} a_{4-}^{\dagger} \vert 0\rangle \notag \\
+&= \frac{1}{2} \left(
+a_{1+}^{\dagger} a_{2-}^{\dagger} a_{3-}^{\dagger} a_{4-}^{\dagger} +
+a_{1-}^{\dagger} a_{2+}^{\dagger} a_{3-}^{\dagger} a_{4-}^{\dagger} +
+a_{1-}^{\dagger} a_{2-}^{\dagger} a_{3+}^{\dagger} a_{4-}^{\dagger} +
+a_{1-}^{\dagger} a_{2-}^{\dagger} a_{3-}^{\dagger} a_{4+}^{\dagger}
+\right) \vert 0\rangle. label{eq:2,-1}
+\end{align}
+!et
+We can construct all the other states in the same way. That is
+!bt
+\[
+J_+ \vert 2,-1\rangle = \sqrt{2(2+1) - (-1)(-1+1)} \vert 2,-1+1\rangle = \sqrt{6} \vert 2,0\rangle,
+\]
+!et
+which results in
+!bt
+\begin{equation}
+\begin{aligned}
+\vert 2,0\rangle &= \frac{1}{\sqrt{6}} \left(
+a_{1+}^{\dagger} a_{2+}^{\dagger} a_{3-}^{\dagger} a_{4-}^{\dagger} +
+a_{1+}^{\dagger} a_{2-}^{\dagger} a_{3+}^{\dagger} a_{4-}^{\dagger} +
+a_{1+}^{\dagger} a_{2-}^{\dagger} a_{3-}^{\dagger} a_{4+}^{\dagger} +
+a_{1-}^{\dagger} a_{2+}^{\dagger} a_{3+}^{\dagger} a_{4-}^{\dagger} + \right. \\
+&\quad\,\, \left.
+a_{1-}^{\dagger} a_{2+}^{\dagger} a_{3-}^{\dagger} a_{4+}^{\dagger} +
+a_{1-}^{\dagger} a_{2-}^{\dagger} a_{3+}^{\dagger} a_{4+}^{\dagger} \right) \vert 0\rangle
+\end{aligned}
+label{eq:2,0}
+\end{equation}
+!et
+The two remaining states are
+!bt
+\begin{equation}
+\vert2,1\rangle  = \frac{1}{2} \left(
+a_{1+}^{\dagger} a_{2+}^{\dagger} a_{3+}^{\dagger} a_{4-}^{\dagger} +
+a_{1+}^{\dagger} a_{2+}^{\dagger} a_{3-}^{\dagger} a_{4+}^{\dagger} +
+a_{1+}^{\dagger} a_{2-}^{\dagger} a_{3+}^{\dagger} a_{4+}^{\dagger} +
+a_{1-}^{\dagger} a_{2+}^{\dagger} a_{3+}^{\dagger} a_{4+}^{\dagger}
+ \right).
+label{eq:2,1}
+\end{equation}
+!et
+and
+!bt
+\begin{equation}
+\vert 2,2\rangle  = a_{1+}^{\dagger} a_{2+}^{\dagger} a_{3+}^{\dagger} a_{4+}^{\dagger} \vert 0\rangle.
+label{eq:2,2}
+\end{equation}
+!et
+
+These five states can in turn be used as computational basis states in
+order to define the Hamiltonian matrix to be diagonalized.
+The matrix elements are given by $\langle J,J_z \vert H \vert J',J_z' \rangle$.
+The
+Hamiltonian is hermitian and we obtain after all this labor of ours
+
+
+
+!bt
+\begin{equation}
+H_{J = 2} =
+\begin{bmatrix}
+-2\varepsilon & 0 & \sqrt{6}V & 0 & 0 \\
+0 & -\varepsilon + 3W & 0 & 3V & 0 \\
+\sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
+0 & 3V & 0 & \varepsilon + 3W & 0 \\
+0 & 0 & \sqrt{6}V & 0 & 2\varepsilon
+\end{bmatrix}
+label{eq:HJ=2}
+\end{equation}
+!et
+
+
+
+We can now select a set of parameters and diagonalize the above matrix. We select $\epsilon = 2$, $V = -1/3$, $W = -1/4$ and our matrix becoes
+!bt
+\[ H_{J=2}^{(1)} =
+\begin{bmatrix}
+-4 & 0 & -\sqrt{6}/3 & 0 & 0 \\
+0 & -2 - 3/4 & 0 & -1 & 0 \\
+-\sqrt{6}/3 & 0 & -1 & 0 & -\sqrt{6}/3 \\
+0 & -1 & 0 & 2 + -3/4 & 0 \\
+0 & 0 & -\sqrt{6}/3 & 0 & 4
+\end{bmatrix}, \]
+!et
+which gives the eigenvalue
+!bt
+\[ D = \begin{bmatrix}
+-4.21288 &  0 &  0 &  0 &  0 \\
+0 & -2.98607  & 0  & 0  & 0 \\
+0 &  0 & -0.91914  & 0  & 0 \\
+0 &  0 & 0   & 1.48607  & 0 \\
+0 &  0  & 0  & 0  & 4.13201
+\end{bmatrix}. \]
+!et
+The lowest state has an admixture of basis states given by
+!bt
+\[ \vert \psi_0\rangle = 0.96735\vert2,-2\rangle + 0.25221\vert 2,0\rangle + 0.02507\vert 2,2\rangle,
+\]
+!et
+with energy $E_0 = -4.21288$.
+
+We can now change the parameters to
+$\varepsilon = 2$, $V = -4/3$, $W = -1$. Our matrix reads then
+!bt
+\[ H_{J=2}^{(2)} =
+\begin{bmatrix}
+-4 & 0 & -4\sqrt{6}/3 & 0 & 0 \\
+0 & -5 & 0 & -4 & 0 \\
+-4\sqrt{6}/3 & 0 & -4 & 0 & -4\sqrt{6}/3 \\
+0 & -4 & 0 & -1 & 0 \\
+0 & 0 & -4\sqrt{6}/3 & 0 & 4
+\end{bmatrix}, \]
+!et
+with the following eigenvalues
+!bt
+\[ D = \begin{bmatrix}
+-7.75122 &  0 &  0 &  0  & 0 \\
+0 & -7.47214  & 0  & 0  & 0 \\
+0 &  0  & -1.55581 &  0  & 0 \\
+0 &  0  & 0  & 1.47214  & 0 \\
+0 &  0  & 0  & 0  & 5.30704
+\end{bmatrix}. \]
+!et
+The new ground state (lowest state) has the following admixture of computational basis states
+!bt
+\[ \vert \psi_0\rangle = 0.64268\vert 2,-2\rangle + 0.73816\vert 2,0\rangle + 0.20515 \vert 2,2\rangle, \]
+!et
+with energy $E_0 = -7.75122$.
+
+For the first set of parameters, the likelihood for observing the
+system in the computational basis state $\vert 2,-2 \rangle$ is rather
+large. This is expected since the interaction matrix elements are
+smaller than the single-particle energies.  For the second case, with
+larger matrix elements, we see a much stronger mixing of the other
+states, again as expected due to the ratio of the interaction matrix
+elements and the single-particle energies.
+
+
+
+!split
+===== Reminder from last week on Expectation values =====
+
+To execute the second step of VQE, we need to understand how
+expectation values of operators can be estimated via quantum computers
+by post-processing measurements of quantum circuits in different
+basis. To rotate bases, one uses the basis rotator $R_\sigma$ which is
+defined for each Pauli gate $\sigma$ to be
+
+!bt
+\begin{align}
+R_{\sigma} = H, & \text{if} \ \sigma = X,
+\end{align} label{eq:auto8}
+!et
+and
+!bt
+\begin{align}
+HS^{\dagger}, & \text{if} \ \sigma = Y,
+\end{align}
+!et
+and
+!bt
+\begin{align}
+I, & \text{if} \ \sigma = Z.
+\end{align}
+!et
+
+
+We can show that these rotations allow us to measure the eigenvalues of the Pauli operators. The eigenvectors of the Pauli $X$ gate are
+!bt
+\[
+\vert\pm\rangle = \frac{\vert 0\rangle \pm \vert 1\rangle}{\sqrt{2}},
+\]
+!et
+with eigenvalues $\pm 1$.
+Acting on the eigenstates with the rotation in eq. (ref{eq:auto8}) gives
+!bt
+\[
+H\vert +\rangle = +1\vert 0\rangle,
+\]
+!et
+and
+!bt
+\[
+H\vert -\rangle = -1\vert 1\rangle.
+\]
+!et
+Any single-qubit state can be written as a linear combination of these eigenvectors,
+!bt
+\[
+\vert \psi\rangle = \alpha \vert +\rangle + \beta \vert -\rangle.
+\]
+!et
+We then have the following expectation value for the Pauli $X$ operator
+!bt
+\[
+\\angle X\rangle  = \langle \psi\vert X \vert \psi\rangle = |\alpha|^2 - |\beta|^2.
+\]
+!et
+However, we can only measure the qubits in the computational basis. Applying the rotation in eq. (ref{eq:auto8}) to our state gives
+!bt
+\[
+H \vert \psi\rangle = \alpha \vert 0\rangle - \beta \vert 1\rangle.
+\]
+!et
+
+This tells us that we are able to estimate $|\alpha|^2$ and
+$|\beta|^2$ (and hence the expectation value of the Pauli $X$
+operator) by using the rotation in eq. (ref{eq:auto8}) and measure the
+resulting state in the computational basis. We can show this for the
+Pauli $Z$ and Pauli $Y$ similarly.
+
+
+
+Note the following identity of the basis rotator
+!bt
+\[
+R^\dagger_\sigma Z R_\sigma = \sigma,
+\]
+!et
+which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$. With this, we see that the expectation value of an arbitrary
+Pauli-gate $\sigma$ in the state $\vert\psi\rangle$ can be expressed as a linear combination of probabilities
+!bt
+\begin{align}
+E_{\psi}(\sigma)
+&= \langle \psi\vert\sigma\vert\psi\rangle \nonumber \\
+&=\langle\psi\vert R_{\sigma}^{\dagger}ZR_{\sigma}\vert\psi\rangle =\langle \phi\vert Z\vert \phi\rangle \nonumber \\
+&=\langle\phi\vert\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\langle x\vert\right)\vert\phi\rangle \nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^x\vert\langle x\vert \phi\rangle\vert^2\nonumber \\
+&=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
+\end{align}
+!et
+
+where $\vert \phi\rangle=\vert R_\sigma\phi\rangle$ and
+$P(\vert \phi\rangle\to\vert x\rangle$ is the probability that the state
+$\vert \phi\rangle$ collapses to the state $\vert x\rangle$ when measured. This can
+be extended to any arbitrary Pauli string: consider the string of
+Pauli operators $P=\bigotimes_{p\in Q}\sigma_p$ which acts
+non-trivially on the set of qubits $Q$ which is a subset of the total
+set of $n$ qubits in the system. Then
+
+!bt
+\begin{align}
+E_{\psi}\left(P\right)
+&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
+&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
+&=\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}Z_pR_{\sigma_p}\right)
+\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
+&=
+\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}\right)
+\left(\bigotimes_{p \in Q}Z_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)
+\left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
+\\
+&=
+\langle \phi\vert
+\left(\bigotimes_{p \in Q}Z_p\right)
+\left(\bigotimes_{q\notin Q}I_q\right)
+\vert \phi\rangle \nonumber \\
+&=
+\langle \phi\vert
+\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\vert x_p\rangle\langle x_p\vert\right)
+\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\vert y_q\rangle\langle y_q\vert\right)
+\vert \phi\rangle 
+\nonumber 
+\\
+&=
+\langle \phi\vert
+\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert x\rangle\langle x\vert\right)
+\vert \phi\rangle 
+\nonumber 
+\\
+&=
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert\langle x\vert\vert \phi\rangle\vert^2
+\nonumber 
+\\
+&=
+\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
+\end{align}
+!et
+
+where $\vert \phi\rangle=\vert \bigotimes_{p\in
+Q}R_{\sigma_p}\psi\rangle$. Finally, because the expectation value is
+linear
+!bt
+\begin{align}
+E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
+\end{align}
+!et
+one can estimate any observable that can be written as a linear combination of Pauli-string terms. 
+
+!split
+===== Measurement =====
+
+To estimate the probability $P(\vert \phi\rangle\to \vert x\rangle)$ from the
+formalism above, one prepares the state $\vert \phi\rangle$ on a quantum
+computer and measures it, and then we repeat this process (prepare and
+measure) several times. The probability $P(\vert \phi\rangle\to \vert x\rangle)$ is
+estimated to be the number of times that one measures the bit-string
+$x$ divided by the total number of measurements that one makes; that
+is
+
+
+!bt
+\begin{align}
+P(\vert \phi\rangle\to \vert x\rangle\rangle \approx \sum_{m=1}^M\frac{x_m}{M},
+\end{align}
+!et
+where $x_m=1$
+if the result of measurement is $x$ and  $0$ if the result of measurement is not $x$.
+
+By the law of large numbers the approximation approaches equality as
+$M$ goes to infinity
+
+!bt
+\begin{align}
+P(\vert \phi\rangle\to \vert x\rangle) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
+\end{align}
+!et
+
+As we obviously do not have infinite time nor infinite quantum
+computers (which could be run in parallel), we must truncate our
+number of measurement $M$ to a finite, but sufficiently large
+number. More precisely, for precision $\epsilon$, each expectation
+estimation subroutine within VQE requires $\mathcal{O}(1/\epsilon^2)$
+samples from circuits with depth $\mathcal{O}(1)$.
+
+
+
+
+!split
+===== Quantum computing and solving  the eigenvalue problem for the Lipkin model =====
+
+
+We turn now to a simpler variant of the Lipkin model without the $W$-term and a total spin of $J=1$ only as maximum value of the spin.
+This corresponds to a system with $N=2$ particles (fermions in our case).
+Our Hamiltonian is given by the quasispin operators (see below) 
+!bt
+\[
+     \hat{H} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
+\]
+!et
+
+As discussed earlier
+the quasispin operators act like lowering and raising angular momentum
+operators.
+
+With these properties we can calculate the Hamiltonian
+matrix for the Lipkin model by computing the various matrix elements
+!bt
+\begin{equation}
+\langle JJ_z|H|JJ_z'\rangle,
+\end{equation}
+!et
+where the non-zero elements are given by
+!bt
+\[
+\begin{split}
+\langle JJ_z|H|JJ_z'\rangle & = \epsilon J_z\\
+\langle JJ_z|H|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H|JJ_z'\rangle \\ &= -\frac{1}{2}VC,
+\end{split}
+\]
+!et
+where $C$ is the Clebsch-Gordan coefficients (from the raising and lowering operators) one gets when
+$J_{\pm}^2$ operates on the state $|JJ_z\rangle$.  Using the above
+definitions we can calculate the exact solution to the Lipkin model.
+ 
+With the $V$-interaction terms, we obtain the following Hamiltonian matrix
+!bt
+\begin{equation}
+\begin{pmatrix}-\epsilon & 0 & -V\\
+ 0&0&0\\
+ -V&0&\epsilon
+\end{pmatrix}
+\end{equation}
+!et
+
+The following _python_ code sets up the above matrix and finds the pertinent eigenvalues.
+
+!bc pycod
+import numpy as np
+import qiskit
+from qiskit.visualization import circuit_drawer
+from qiskit.quantum_info import Statevector
+from matplotlib.pyplot import figure
+from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister, Aer, assemble
+from qiskit.providers.aer.noise import NoiseModel
+import pylatexenc
+from qiskit.algorithms import VQE
+from qiskit.utils import QuantumInstance
+from qiskit.opflow import X, Z, I, Y
+from qiskit.circuit import Parameter
+from qiskit.algorithms.optimizers import ADAM
+from qiskit.opflow import AerPauliExpectation
+from qiskit import IBMQ
+import cmath
+import pandas as pd
+from scipy.sparse import diags
+import numpy.linalg as LA
+import matplotlib.pyplot as plt
+from IPython.display import Image
+import warnings
+warnings.filterwarnings('ignore')
+pi=np.pi
+!ec
+
+
+!bc pycod 
+#function that sorts eigenvalues with its eigenvectors in accending order
+def eigen(A):
+    eigenValues, eigenVectors = LA.eig(A)
+    idx = np.argsort(eigenValues)
+    eigenValues = eigenValues[idx]
+    eigenVectors = eigenVectors[:,idx]
+    return (eigenValues, eigenVectors) 
+
+#one body expectation value
+def one_body(E,N):
+  k = N/2
+  m = np.arange(-k,k+1,1) # Since the collective space is Omega+1
+  return E*np.diag(m) #return a matrix where its diagonal elemens are epsilon*K_0
+
+#two body expectation value
+def two_body(V,N):
+  k = N/2
+  m = np.arange(-k,k+1,1)
+  left =np.zeros(len(m)-2,dtype=complex)
+  right = np.zeros(len(m)-2,dtype=complex)
+  diag = np.zeros(len(m),dtype=complex)
+  for i in range(len(left)):
+    CG = cmath.sqrt(k*(k+1)-(m[i]+2)*(m[i]+1))*cmath.sqrt(k*(k+1)-m[i]*(m[i]+1)) #calculate Clebsch-Gordan Coefficients 
+    left[i] = CG
+    right[i] = CG
+  k = [left,diag,right]
+  offset = [-2,0,2]
+  return -0.5*V*diags(k,offset).toarray() #return a matrix where its off digonal elements are (1/2)V(K^2_+ + K^2_-)
+
+#full expectation value
+def quasi_spin(E,V,N):
+  ob = one_body(E,N)
+  tb = two_body(V,N)
+  H = ob+tb 
+  e,v = eigen(H) # find the eigenvalues of the Hamiltonian
+  return e,H
+
+#converts chi to V
+def Vp(E,omega,chi):
+  return (chi*E)/(omega-1)
+
+!ec
+
+
+!bc pycod 
+#parameters
+E = 1
+chi = np.arange(0,2.1,0.1)
+omega = 2
+
+EV0 = []
+EV1 = []
+EV2 = []
+Ham = []
+for i in chi:
+  v = Vp(E,omega,i)
+  EigenV,H = quasi_spin(E,v,omega) #return eigenvalues and Hamiltonian
+  Ham.append(H)
+  EV0.append(EigenV[0])
+  EV1.append(EigenV[1])
+  EV2.append(EigenV[2])
+!ec
+
+
+!bc pycod 
+matrix = pd.DataFrame(Ham[5].real)
+print('Hamiltonian matrix')
+matrix.head()
+!ec
+
+
+!bc pycod 
+plt.plot(chi,EV0)
+plt.plot(chi,EV1)
+plt.plot(chi,EV2)
+plt.xlabel('$\chi$')
+plt.ylabel('Energy')
+plt.title('$\Omega=2$ exact Lipkin Model')
+!ec
+
+
+===== Quantum Circuit, rewriting the Lipkin model in terms of Pauli matrices =====
+
+To solve the Lipkin model on a quantum computer we have to solve
+Schrodinger's equation. To achieve this, we will use the Variational
+Quantum Eigensolver (VQE) discussed earlier.
+
+Before we proceed however, we need to rewrite the quasispin operators in terms of Pauli spin matrices/operators.
+
+
+We take the liberty here of reminding you of some of the derivations done previously.
+
+We defined the number operator as
+!bt
+\[
+N=\sum_{n\sigma}a^\dagger_{n\sigma}a_{n\sigma},
+\]
+!et
+
+which commutes with the Lipkin Hamiltonian. This can be seen by
+examining the Lipkin model Hamiltonian and noticing that the one-body
+part simply counts particles while the two-body term moves particles
+in pairs. Thus, the Hamiltonian conserves particle number. To find
+more symmetries we rewrote the Lipkin Hamiltonian in terms of $SU(2)$ quasispin
+operators
+!bt
+\begin{align}
+H = \epsilon J_z + \frac{1}{2}V(J^2_++J^2_-),
+\end{align}
+!et
+via the mappings
+!bt
+\[
+J_z=\sum_{n}j_z^{(n)},
+\]
+!et
+and
+!bt
+\[
+J_\pm=\sum_nj^{(n)}_{\pm},
+\]
+!et
+where we have the onebody operators
+!bt
+\[
+j_z^{(n)}=\frac{1}{2}\sum_{\sigma}\sigma a^\dagger_{n\sigma}a_{n\sigma},
+\]
+!et
+and
+!bt
+\[
+j^{(n)}_{\pm}=a^\dagger_{n\pm}a_{n\mp}.
+\]
+!et
+
+These operators obey the $SU(2)$ commutation relations
+
+!bt
+\[
+[J_+,J_-]=2J_z,
+\]
+!et
+and
+!bt
+\[
+[J_z,J_\pm]=\pm J_\pm.
+\]
+!et
+Here the ladder operators are defined as $J_{\pm}= J_x\pm iJ_y$. With this rewriting, we can see that the total spin operator $J^2$, which is defined as 
+!bt
+\[
+J^2= J^2_x+J^2_y+J^2_z =
+\frac{1}{2}\{J_+,J_-\}+J_z^2,
+\]
+!et
+commutes with the Hamiltonian since the Hamiltonian.
+We note also that the rotation operator
+!bt
+\[
+R=e^{i\phi J_z},
+\]
+!et
+commutes with the Hamiltonian, which can be explained as follows. Writing $J_z$ as
+!bt
+\[
+J_z=\frac{1}{2}(N_+-N_-),
+\]
+!et
+where $N_\pm=\sum_{n\pm}a^\dagger_{n\pm}a_{n\pm}$, allows us to see that it measures half the difference between the number of particles in the upper and lower levels. Thus, the possible eigenvalues $r$ of the signature operator are
+!bt
+\begin{align}
+r=+1, & j_z=2n \\
+r=+i, & j_z=2n+\frac{1}{2} \\
+r=-1, & j_z=2n+1 \\
+r=-i, & j_z=2n+\frac{3}{2} \\
+\end{align}
+!et
+
+for $n\in\mathbb{Z}$. Note that $r$ is real or imaginary if the number
+of particles $N$ is even or odd, respectively. Since, as discussed
+above, the Lipkin Hamiltonian conserves $N$, $r$ cannot jump between
+being real and imaginary. Additionally, because particles must be
+moved in pairs, and $J_z$ measures half the difference between
+particles in the upper and lower levels, $j_z$ can only change by as
+
+!bt
+\[
+j_z\rightarrow \frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
+\]
+!et
+or $j_z\rightarrow J_z\pm2n$.
+
+To solve the Lipkin model with a quantum computer, the first step is
+to map the system to a set of qubits. We will restrict ourselves here
+to the half-filled case where the number of particles $N$ equals the
+degeneracy of the states $\Omega$. One could assign each possible
+state $(n,\sigma)$ a qubit such that the qubit being in the state
+$\vert 1\rangle$ or $\vert 0\rangle$ would imply that the state
+$(n,\sigma)$ is occupied or unoccupied, respectively. This mapping
+scheme (which we will call occupation mapping) requires 2$\Omega$
+qubits.
+
+
+However, because there are only two energy levels in the Lipkin model,
+any other natural mapping is possible. In this mapping scheme (which
+we will call level mapping) each doublet ($(n,+1)$, $(n,-1)$) would be
+assigned a qubit such that the qubit being in the state $\vert 0\rangle$ or
+$\vert 1\rangle$ would imply that the particle is in the $(n,+1)$ or $(n,-1)$
+state, respectively. Note that these are the only two possible
+configurations of the doublet as we are restricting ourselves to the
+half-filled case and the Lipkin Hamiltonian only moves particles
+between energy levels, not degenerate states. Thus the level mapping
+only requires $\Omega$ qubits which is half that of the occupation
+mapping. Additionally, any ansatz that would restrict the minimization
+search to the correct subspace of constant Hamming weight $N$ requires
+at most, only two qubit gates. This is because moving a pair of
+particles in this scheme only changes the state of two doublets (and
+therefore qubits). That is, it only takes a two-qubit gate to change
+between the states $\vert 00\rangle$ and $\vert 11\rangle$, for example. As an
+efficient decomposition two-qubit gates is known, the ansatz for this
+mapping would be shorter (and thus less noisy) than that of the
+previous mapping.
+
+One could imagine a third mapping scheme which would require even less
+qubits in which each of the possible states in the spin basis
+$\vert JJ_z\rangle$ is mapped to a single qubit. In this spin mapping, there
+are only $2J+1$ possible states (since $J_z=-J,-J+1,...,J-1,J$) for
+each value of $J$. And, since the Hamiltonian is block diagonal (with
+a different block for each $J$) the eigenvalues of the Hamiltonian are
+simply the eigenvalues of each block, which may be calculated
+separately. Since the maximum value of $J$ is $J_{\text{max}}=N/2$,
+the largest number of qubits would be
+$2J_{\text{max}}+1=N+1$. However, $\left\lfloor N/2 \right\rfloor$
+different circuit would need to be used for minimization for all
+possible values of $J$, to explore the entire Hilbert space. (The
+minimum of the set of minimum energies that each circuit finds would
+be the ground state energy of the entire system.) This increases,
+linearly, the amount of time required to find the ground state energy.
+
+After reviewing the three possible mappings, it is our view that the
+level mapping is the best suited for NISQ era
+devices given its low qubit count and ability to search the entire
+relevant Hilbert space with one circuit (which reduces time to
+solution) and the fact that at most, only two-qubit gates are required
+of the ansatz, leading to shorter depth (and thus less noisy)
+circuits.
+
+The Hamiltonian takes the form
+
+!bt
+\begin{align}
+H=\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
+\end{align}
+!et
+
+Plugging the mapping from the total $J$ operators to the individual one-body $j$ operators yields
+
+!bt
+\begin{align}
+H &= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\left[\left(\sum_nj^{(n)}_{+}\right)^2+\left(\sum_nj^{(n)}_{-}\right)^2\right]
+\\
+&= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\sum_{n,m}\left(j^{(n)}_+j^{(m)}_++j^{(n)}_-j^{(m)}_-\right)
+\\
+&= \epsilon\sum_{n}j_z^{(n)} + 2V\sum_{n<m}\left(j^{(n)}_xj^{(m)}_x-j^{(n)}_yj^{(m)}_y\right),
+\end{align}
+!et
+where we have used the definitions
+!bt
+\[
+j_{\pm}^{(n)}=j_x^{(n)}\pm ij_y^{(n)}.
+\]
+!et
+To convert to Pauli matrices, we make the transformations
+!bt
+\[
+j_x^{(n)} \rightarrow X_n/2,
+\]
+!et
+and
+!bt
+\[
+j_y^{(n)} \rightarrow Y_n/2,
+\]
+!et
+and finally
+!bt
+\[
+j_z^{(n)} \rightarrow Z_n/2,
+\]
+!et
+which preserve the above $SU(2)$  commutation relations.
+The factor of $1/2$
+is due to the eigenvalues of the Pauli matrices being $\pm 1$
+while we are dealing with spin $1/2$ particles.
+
+This transforms our Hamiltonian into
+!bt
+\[
+H=\frac{1}{2}\epsilon\sum_{k=1}^nZ_k+\frac{1}{2}V\sum_{n\neq j=1}^N(X_kX_j-Y_kY_j).
+\]
+!et
+
+With this form, we can clearly see that the first (one-body) term in
+the Hamiltonian returns the energy $-\epsilon/2$ or $+\epsilon/2$ if
+the qubit representing the particle of a doublet is in the ground
+($\vert 1\rangle$) or excited ($\vert 0\rangle$) state,
+respectively. The action of the second (two-body) term in the
+Hamiltonian can be determined by noting that
+!bt
+\begin{align}
+\frac{1}{2}(XX-YY)\vert 00\rangle &= \vert 11\rangle,
+\\
+\frac{1}{2}(XX-YY)\vert 01\rangle &= 0,
+\\
+\frac{1}{2}(XX-YY)\vert 10\rangle &= 0,
+\\
+\frac{1}{2}(XX-YY)\vert 11\rangle &= \vert 00\rangle.
+\end{align}
+!et
+
+That is, the two-body term moves a pair of particles between the
+ground states $\vert 00\rangle$ and the excited states $\vert
+11\rangle$ of their respective doublets.
+
+To construct an efficient ansatz, we must determine the subspace
+within which the Hamiltonian lives. To begin, note that particles are
+only ever moved between energy levels in pairs.
+Further,
+note that the Hamiltonian's coefficients ($\epsilon$ and $V$) are
+state independent (do not depend on the indices $n$ or $m$) as the
+states labeled by these indices are degenerate and thus have the same
+energy level. Thus, the Hamiltonian treats all states with the same
+number of excited particles (Hamming weight of the state) as the
+same. Therefore, the following ansatz forms exactly cover the subspace
+within which the $N$-degenerate Hamiltonian explores:
+
+!bt
+\begin{align}
+\vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
+\\
+\vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
+\end{align}
+!et
+
+Here $\vert D^n_k\rangle$ represents a Dicke state which is defined as equal superposition of all $n$-qubit states with Hamming weight $k$. That is
+
+!bt
+\begin{align}
+\vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
+\end{align}
+!et
+
+where $h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\}$. There are two ways we can think of to prepare such ansatz: The first is to prepare them exactly as it is known how to deterministically prepare Dicke states with linear depth. The reference provides an algorithm for preparing a set of gates $U^n_k$ that prepares a Dicke state from a product state of Hamming weight $k$; that is
+!bt
+\begin{align}
+U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
+\end{align}
+!et
+It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the $k=6$ case, as an example) is discussed next week.
+
+
+
+
+
+
+
+
+
+
+
