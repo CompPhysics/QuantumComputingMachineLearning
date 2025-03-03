@@ -451,15 +451,174 @@ represented by a Pauli-$\bm{Z}$ gate/matrix.
 
 
 !split
-===== Explicit expressions =====
-In order to perform our measurements we  need the following operators $\bm{U}$
+===== Rewriting our strings of Pauli matrices =====
+
+
+
+As discussed last week and reviewed above, to perform a measurement,
+it is often useful to rewrite the string of Pauli matrices in a
+specific order or to simplify the expression.
+
+Consider a string of Pauli matrices of the form:
 !bt
-\begin{align*}
-\bm{Z}\otimes\bm{I}\hspace{1cm} & \bm{U}=\bm{I}\otimes\bm{I}\\
-\bm{I}\otimes\bm{Z}\hspace{1cm} & \bm{U}=\text{SWAP}\\
-\bm{Z}\otimes\bm{Z}\hspace{1cm} & \bm{U}=CX_{10}\\
-\bm{X}\otimes\bm{X}\hspace{1cm} & \bm{U}=CX_{10}(\bm{H}\otimes\bm{H})\\
-\end{align*}
+\[
+P = \sigma_{i_1} \otimes \sigma_{i_2} \otimes \cdots \otimes \sigma_{i_n},
+\]
+!et
+where each $\sigma_{i_k}$ is one of the Pauli matrices $\bm{X}$, $\bm{Y}$, $\bm{Z}$, or the identity matrix $\bm{I}$.
+
+!split
+===== Rewriting the string of matrices =====
+
+To rewrite this string for measurement purposes, follow these steps:
+!bblock Commute and reorder:
+Use the commutation relations of the Pauli matrices to reorder the string. The commutation relations are:
+!bt
+\[
+[\sigma_i, \sigma_j] = 2i \epsilon_{ijk} \sigma_k,
+\]
+where $\epsilon_{ijk}$ is the Levi-Civita symbol. This allows you to move certain Pauli matrices to the left or right in the string.
+!et
+!eblock
+!bblock Simplify using identities:
+Use the fact that $\sigma_i^2 = I$ and $\sigma_i \sigma_j = -\sigma_j \sigma_i$ for $i \neq j$ to simplify the expression. For example:
+!bt
+\[
+\sigma_x \sigma_y = -\sigma_y \sigma_x = i \sigma_z.
+\]
+!et
+!eblock
+!split
+===== More rewriting tricks =====
+
+!bblock Group terms:
+Group terms that are easier to measure together. For example, if you have a term like $\sigma_x \otimes \sigma_x$, you can measure both qubits in the $X$-basis simultaneously.
+!eblock
+!bblock Diagonalize if necessary:
+If the final expression is not diagonal, you may need to apply a unitary transformation to diagonalize it before measurement. For example,to measure $\sigma_x$, you can apply the Hadamard gate $H$ to transform it into $\sigma_z$:
+!bt
+\[
+H \sigma_x H = \sigma_z.
+\]
+!et
+!bblock
+!split
+===== Example =====
+
+A simple example is 
+!bt
+\[
+\bm{P} = \bm{X} \bm{Y} \otimes bm{Z}.
+\]
+!et
+To rewrite this for measurement we use the commutation relations to reorder the terms if needed.
+Then we eimplify using identities:
+!bt
+\[
+\bm{X} \bm{Y} = i \bm{Z}.
+\]
+!et
+
+We obtain then 
+!bt
+\[
+\bm{P} = (i \bm{Z}) \otimes \bm{Z} = i (\bm{Z} \otimes \bm{Z}).
+\]
+!et
+
+!split
+===== The $\bm{Z}\otimes \bm{I}$ term =====
+
+The explicit matrix is 
+!bt
+\[
+\bm{Z}\otimes \bm{I} = \begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & -1 & 0 \\
+		0 & 0 & 0 & -1
+	\end{bmatrix}.
+\]
+!et
+
+When we perform a measurement on the first qubit, we see that this
+matrix gives us the correct eigenvalues for the first qubit (but not
+for the second one). To see this multiply the above matrix with our
+computational basis states, that is the states $\vert 00\rangle =\vert 0\rangle
+\times \vert 0\rangle$, $\vert 01 \rangle$, $\vert 10\rangle$ and
+$\vert 11\rangle$.
+
+!split
+===== The specific eigenvalues =====
+
+Multiplying with the $\vert 00\rangle$ state we get
+!bt
+\[
+\bm{Z}\otimes \bm{I} = \begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & -1 & 0 \\
+		0 & 0 & 0 & -1
+	\end{bmatrix}\begin{bmatrix} 1\\ 0 \\ 0 \\ 0\end{bmatrix}=\begin{bmatrix} 1\\ 0 \\ 0 \\ 0\end{bmatrix},
+\]
+!et
+and 
+!bt
+\[
+\bm{Z}\otimes \bm{I} = \begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & -1 & 0 \\
+		0 & 0 & 0 & -1
+	\end{bmatrix}\begin{bmatrix} 0\\ 0 \\ 1 \\ 0\end{bmatrix}=-1\begin{bmatrix} 0\\ 0 \\ 1 \\ 0\end{bmatrix}.
+\]
+!et
+We don't get the correct eigenvalues if we perform the measurement on the second qubits!
+
+!split
+===== The $\bm{I}\otimes \bm{Z}$ term =====
+
+Our strategy is to rewrite all the strings of Pauli operators via
+specific unitary transformations in order to obtain a final operator
+$\bm{P}=\bm{Z}_1\bm{I}_2\dots\bm{I}_N$, where the subscripts indicate
+the various qubits. We can then perform the measurement on the first qubit only.
+
+We can rewrite $\bm{I}\otimes \bm{Z}$ via the SWAP gate
+!bt
+\[
+\text{SWAP} = \begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 1 & 0 & 0 \\
+		0 & 0 & 0 & 1
+	\end{bmatrix}.
+\]
+!et
+We have then that
+!bt
+\[
+\bm{P}=\text{SWAP}^{\dagger}(\bm{I}\otimes\bm{Z})\text{SWAP}=\bm{Z}\otimes\bm{I}.
+\]
+!et
+
+We note that the original $\bm{I}\otimes \bm{Z}$ does not give the
+correct eigenvalues when measured on the first qubit. Try this as an exercise.
+
+
+
+!split
+===== The $\bm{Z}\otimes \bm{Z}$ term =====
+
+This term gives the correct eigenvalue when operating on the first
+qubit. In principle thus we don't need to rewrite string of operators.
+However, let us rewrite it via a unitary transformation in
+order to have $\bm{P}=\bm{Z}\otimes\bm{I}$.  To do so, consider the
+transformation
+
+!bt
+\[
+\bm{P}= CX_{10}^{\dagger}(\bm{Z}\otimes\bm{Z})CX_{10},
+\]
 !et
 where we have 
 !bt
@@ -474,10 +633,77 @@ where we have
 !et
 
 !split
+===== Performing the transformation =====
+
+Performing the operation gives
+!bt
+\[
+\bm{P}= CX_{10}^{\dagger}(\bm{Z}\otimes\bm{Z})CX_{10}=\begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+		0 & 1 & 0 & 0 \\
+		0 & 0 & -1 & 0 \\
+		0 & 0 & 0 & -1
+	\end{bmatrix}=\bm{Z}\otimes\bm{I},
+\]
+!et
+
+which allows us to transform the original tensor product
+$\bm{Z}\otimes \bm{Z}$ into a matrix where we perform the measurement
+in the basis of the first qubit.
+
+To see this, act with $\bm{P}$ on the states $\vert 00\rangle =\vert
+0\rangle \times \vert 0\rangle$, $\vert 01 \rangle$, $\vert 10\rangle$
+and $\vert 11\rangle$.
+
+!split
+===== More terms =====
+
+Let us look at the $\bm{X}\otimes \bm{X}$.
+This term can be rewritten as
+
+!bt
+\[
+\bm{P}= (CX_{10}(\bm{H}\otimes\bm{H}))^{\dagger}(\bm{X}\otimes\bm{X})(CX_{10}(\bm{H}\otimes\bm{H})),
+\]
+!et
+which results in 
+!bt
+\[
+	\begin{bmatrix}
+		1 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 1 \\
+		0 & 0 & 1 & 0 \\
+		0 & 1 & 0 & 0
+	\end{bmatrix}.
+\]
+!et
+
+
+!split
+===== Explicit expressions =====
+In order to perform our measurements for our simple two-qubit Hamiltonian
+we  need the following unitary transformations $\bm{U}$
+!bt
+\begin{align*}
+\bm{Z}\otimes\bm{I}\hspace{1cm} & \bm{U}=\bm{I}\otimes\bm{I}\\
+\bm{I}\otimes\bm{Z}\hspace{1cm} & \bm{U}=\text{SWAP}\\
+\bm{Z}\otimes\bm{Z}\hspace{1cm} & \bm{U}=CX_{10}\\
+\bm{X}\otimes\bm{X}\hspace{1cm} & \bm{U}=CX_{10}(\bm{H}\otimes\bm{H})\\
+\end{align*}
+!et
+
+!split
 ===== More complete list and derivations of expressions for strings of operators =====
 
 For a two qubit system we list here the possible transformations 
-
+!bt
+\begin{align*}
+\bm{Z}\otimes\bm{I}\hspace{1cm} & \bm{U}=\bm{I}\otimes\bm{I}\\
+\bm{I}\otimes\bm{Z}\hspace{1cm} & \bm{U}=\text{SWAP}\\
+\bm{Z}\otimes\bm{Z}\hspace{1cm} & \bm{U}=CX_{10}\\
+\bm{X}\otimes\bm{X}\hspace{1cm} & \bm{U}=CX_{10}(\bm{H}\otimes\bm{H})\\
+\end{align*}
+!et
 
 !split
 ===== Lipkin model =====
