@@ -79,7 +79,11 @@ themes can be covered:
 
 ##  March 3-7, 2025. Algorithms for solving quantum mechanical problems.
   - VQE and adaptive VQE, Variational Quantum Eigensolver and discussion of codes
-  - Simulations of  of Hamiltonians, focus on the one-qubit Hamiltonian
+  - Simulations of  of Hamiltonians, focus on the one- and two-qubit Hamiltonians
+  - Start discussions of Lipkin model
+  - Video of lecture at https://youtu.be/jGtcEc85VbE
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch5.pdf
+  
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
