@@ -681,201 +681,10 @@ elements and the single-particle energies.
 
 
 !split
-===== Reminder from last week on Expectation values =====
-
-To execute the second step of VQE, we need to understand how
-expectation values of operators can be estimated via quantum computers
-by post-processing measurements of quantum circuits in different
-basis. To rotate bases, one uses the basis rotator $R_\sigma$ which is
-defined for each Pauli gate $\sigma$ to be
-
-!bt
-\begin{align}
-R_{\sigma} = H, & \text{if} \ \sigma = X,
-\end{align} label{eq:auto8}
-!et
-and
-!bt
-\begin{align}
-HS^{\dagger}, & \text{if} \ \sigma = Y,
-\end{align}
-!et
-and
-!bt
-\begin{align}
-I, & \text{if} \ \sigma = Z.
-\end{align}
-!et
-
-
-We can show that these rotations allow us to measure the eigenvalues of the Pauli operators. The eigenvectors of the Pauli $X$ gate are
-!bt
-\[
-\vert\pm\rangle = \frac{\vert 0\rangle \pm \vert 1\rangle}{\sqrt{2}},
-\]
-!et
-with eigenvalues $\pm 1$.
-Acting on the eigenstates with the rotation in eq. (ref{eq:auto8}) gives
-!bt
-\[
-H\vert +\rangle = +1\vert 0\rangle,
-\]
-!et
-and
-!bt
-\[
-H\vert -\rangle = -1\vert 1\rangle.
-\]
-!et
-Any single-qubit state can be written as a linear combination of these eigenvectors,
-!bt
-\[
-\vert \psi\rangle = \alpha \vert +\rangle + \beta \vert -\rangle.
-\]
-!et
-We then have the following expectation value for the Pauli $X$ operator
-!bt
-\[
-\\angle X\rangle  = \langle \psi\vert X \vert \psi\rangle = |\alpha|^2 - |\beta|^2.
-\]
-!et
-However, we can only measure the qubits in the computational basis. Applying the rotation in eq. (ref{eq:auto8}) to our state gives
-!bt
-\[
-H \vert \psi\rangle = \alpha \vert 0\rangle - \beta \vert 1\rangle.
-\]
-!et
-
-This tells us that we are able to estimate $|\alpha|^2$ and
-$|\beta|^2$ (and hence the expectation value of the Pauli $X$
-operator) by using the rotation in eq. (ref{eq:auto8}) and measure the
-resulting state in the computational basis. We can show this for the
-Pauli $Z$ and Pauli $Y$ similarly.
-
-
-
-Note the following identity of the basis rotator
-!bt
-\[
-R^\dagger_\sigma Z R_\sigma = \sigma,
-\]
-!et
-which follows from the fact that $HZH=X$ and $SXS^\dagger=Y$. With this, we see that the expectation value of an arbitrary
-Pauli-gate $\sigma$ in the state $\vert\psi\rangle$ can be expressed as a linear combination of probabilities
-!bt
-\begin{align}
-E_{\psi}(\sigma)
-&= \langle \psi\vert\sigma\vert\psi\rangle \nonumber \\
-&=\langle\psi\vert R_{\sigma}^{\dagger}ZR_{\sigma}\vert\psi\rangle =\langle \phi\vert Z\vert \phi\rangle \nonumber \\
-&=\langle\phi\vert\left(\sum_{x\in\{0,1\}}(-1)^x\vert x\rangle\langle x\vert\right)\vert\phi\rangle \nonumber \\
-&=\sum_{x\in\{0,1\}}(-1)^x\vert\langle x\vert \phi\rangle\vert^2\nonumber \\
-&=\sum_{x\in\{0,1\}}(-1)^xP(\vert \phi\rangle\to\vert x\rangle),
-\end{align}
-!et
-
-where $\vert \phi\rangle=\vert R_\sigma\phi\rangle$ and
-$P(\vert \phi\rangle\to\vert x\rangle$ is the probability that the state
-$\vert \phi\rangle$ collapses to the state $\vert x\rangle$ when measured. This can
-be extended to any arbitrary Pauli string: consider the string of
-Pauli operators $P=\bigotimes_{p\in Q}\sigma_p$ which acts
-non-trivially on the set of qubits $Q$ which is a subset of the total
-set of $n$ qubits in the system. Then
-
-!bt
-\begin{align}
-E_{\psi}\left(P\right)
-&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)\vert \psi\rangle \nonumber \\
-&=\langle \psi\vert\left(\bigotimes_{p\in Q}\sigma_p\right)
-\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
-&=\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}Z_pR_{\sigma_p}\right)
-\left(\bigotimes_{q\notin Q}I_q\right)\vert \psi\rangle \nonumber \\
-&=
-\langle \psi\vert\left(\bigotimes_{p \in Q}R_{\sigma_p}^{\dagger}\right)
-\left(\bigotimes_{p \in Q}Z_p\right)
-\left(\bigotimes_{q\notin Q}I_q\right)
-\left(\bigotimes_{p \in Q}R_{\sigma_p}\right)\vert \psi\rangle \nonumber 
-\\
-&=
-\langle \phi\vert
-\left(\bigotimes_{p \in Q}Z_p\right)
-\left(\bigotimes_{q\notin Q}I_q\right)
-\vert \phi\rangle \nonumber \\
-&=
-\langle \phi\vert
-\left(\bigotimes_{p\in Q}\sum_{x_p\in\{0_p,1_p\}}(-1)^{x_p}\vert x_p\rangle\langle x_p\vert\right)
-\left(\bigotimes_{q\notin Q}\sum_{y_q\in\{0_q,1_q\}}\vert y_q\rangle\langle y_q\vert\right)
-\vert \phi\rangle 
-\nonumber 
-\\
-&=
-\langle \phi\vert
-\left(\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert x\rangle\langle x\vert\right)
-\vert \phi\rangle 
-\nonumber 
-\\
-&=
-\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}\vert\langle x\vert\vert \phi\rangle\vert^2
-\nonumber 
-\\
-&=
-\sum_{x\in\{0,1\}^n}(-1)^{\sum_{p\in Q}x_p}P(\vert \phi\rangle\to\vert x\rangle),
-\end{align}
-!et
-
-where $\vert \phi\rangle=\vert \bigotimes_{p\in
-Q}R_{\sigma_p}\psi\rangle$. Finally, because the expectation value is
-linear
-!bt
-\begin{align}
-E_\psi\left(\sum_{m}\lambda_mP_m\right) = \sum_m\lambda_mE_\psi(P_m),
-\end{align}
-!et
-one can estimate any observable that can be written as a linear combination of Pauli-string terms. 
-
-!split
-===== Measurement =====
-
-To estimate the probability $P(\vert \phi\rangle\to \vert x\rangle)$ from the
-formalism above, one prepares the state $\vert \phi\rangle$ on a quantum
-computer and measures it, and then we repeat this process (prepare and
-measure) several times. The probability $P(\vert \phi\rangle\to \vert x\rangle)$ is
-estimated to be the number of times that one measures the bit-string
-$x$ divided by the total number of measurements that one makes; that
-is
-
-
-!bt
-\begin{align}
-P(\vert \phi\rangle\to \vert x\rangle\rangle \approx \sum_{m=1}^M\frac{x_m}{M},
-\end{align}
-!et
-where $x_m=1$
-if the result of measurement is $x$ and  $0$ if the result of measurement is not $x$.
-
-By the law of large numbers the approximation approaches equality as
-$M$ goes to infinity
-
-!bt
-\begin{align}
-P(\vert \phi\rangle\to \vert x\rangle) = \lim_{M\to\infty}\sum_{m=1}^M\frac{x_m}{M}.
-\end{align}
-!et
-
-As we obviously do not have infinite time nor infinite quantum
-computers (which could be run in parallel), we must truncate our
-number of measurement $M$ to a finite, but sufficiently large
-number. More precisely, for precision $\epsilon$, each expectation
-estimation subroutine within VQE requires $\mathcal{O}(1/\epsilon^2)$
-samples from circuits with depth $\mathcal{O}(1)$.
-
-
-
-
-!split
 ===== Quantum computing and solving  the eigenvalue problem for the Lipkin model =====
 
 
-We turn now to a simpler variant of the Lipkin model without the $W$-term and a total spin of $J=1$ only as maximum value of the spin.
+We will study a simpler variant of the Lipkin model without the $W$-term and a total spin of $J=1$ only as maximum value of the spin.
 This corresponds to a system with $N=2$ particles (fermions in our case).
 Our Hamiltonian is given by the quasispin operators (see below) 
 !bt
@@ -1162,39 +971,7 @@ configurations of the doublet as we are restricting ourselves to the
 half-filled case and the Lipkin Hamiltonian only moves particles
 between energy levels, not degenerate states. Thus the level mapping
 only requires $\Omega$ qubits which is half that of the occupation
-mapping. Additionally, any ansatz that would restrict the minimization
-search to the correct subspace of constant Hamming weight $N$ requires
-at most, only two qubit gates. This is because moving a pair of
-particles in this scheme only changes the state of two doublets (and
-therefore qubits). That is, it only takes a two-qubit gate to change
-between the states $\vert 00\rangle$ and $\vert 11\rangle$, for example. As an
-efficient decomposition two-qubit gates is known, the ansatz for this
-mapping would be shorter (and thus less noisy) than that of the
-previous mapping.
-
-One could imagine a third mapping scheme which would require even less
-qubits in which each of the possible states in the spin basis
-$\vert JJ_z\rangle$ is mapped to a single qubit. In this spin mapping, there
-are only $2J+1$ possible states (since $J_z=-J,-J+1,...,J-1,J$) for
-each value of $J$. And, since the Hamiltonian is block diagonal (with
-a different block for each $J$) the eigenvalues of the Hamiltonian are
-simply the eigenvalues of each block, which may be calculated
-separately. Since the maximum value of $J$ is $J_{\text{max}}=N/2$,
-the largest number of qubits would be
-$2J_{\text{max}}+1=N+1$. However, $\left\lfloor N/2 \right\rfloor$
-different circuit would need to be used for minimization for all
-possible values of $J$, to explore the entire Hilbert space. (The
-minimum of the set of minimum energies that each circuit finds would
-be the ground state energy of the entire system.) This increases,
-linearly, the amount of time required to find the ground state energy.
-
-After reviewing the three possible mappings, it is our view that the
-level mapping is the best suited for NISQ era
-devices given its low qubit count and ability to search the entire
-relevant Hilbert space with one circuit (which reduces time to
-solution) and the fact that at most, only two-qubit gates are required
-of the ansatz, leading to shorter depth (and thus less noisy)
-circuits.
+mapping.
 
 The Hamiltonian takes the form
 
@@ -1272,48 +1049,6 @@ Hamiltonian can be determined by noting that
 That is, the two-body term moves a pair of particles between the
 ground states $\vert 00\rangle$ and the excited states $\vert
 11\rangle$ of their respective doublets.
-
-To construct an efficient ansatz, we must determine the subspace
-within which the Hamiltonian lives. To begin, note that particles are
-only ever moved between energy levels in pairs.
-Further,
-note that the Hamiltonian's coefficients ($\epsilon$ and $V$) are
-state independent (do not depend on the indices $n$ or $m$) as the
-states labeled by these indices are degenerate and thus have the same
-energy level. Thus, the Hamiltonian treats all states with the same
-number of excited particles (Hamming weight of the state) as the
-same. Therefore, the following ansatz forms exactly cover the subspace
-within which the $N$-degenerate Hamiltonian explores:
-
-!bt
-\begin{align}
-\vert \psi_{\text{even}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k}\vert D^n_{2k}\rangle,
-\\
-\vert \psi_{\text{odd}}\rangle&=\sum_{k=0}^{\lfloor n/2 \rfloor}c_{2k+1}\vert D^n_{2k+1}\rangle.
-\end{align}
-!et
-
-Here $\vert D^n_k\rangle$ represents a Dicke state which is defined as equal superposition of all $n$-qubit states with Hamming weight $k$. That is
-
-!bt
-\begin{align}
-\vert D^n_k\rangle= \frac{1}{\sqrt{{n \choose k}}}\sum_{x\in h^n_k}\vert x\rangle,
-\end{align}
-!et
-
-where $h^n_k= \{\vert x\rangle \ | \ \text{l}(x) = n, \ \text{wt}(x) = k\}$. There are two ways we can think of to prepare such ansatz: The first is to prepare them exactly as it is known how to deterministically prepare Dicke states with linear depth. The reference provides an algorithm for preparing a set of gates $U^n_k$ that prepares a Dicke state from a product state of Hamming weight $k$; that is
-!bt
-\begin{align}
-U^n_k\vert 1\rangle^{\otimes k}\vert 0\rangle^{\otimes n-k}=\vert D^n_k\rangle.
-\end{align}
-!et
-It then describes how to one can create an arbitrary superposition of Dicke states, which we modify here to restrict ourselves to a Hamming weight of constant parity. The circuit to construct such a state (for the $k=6$ case, as an example) is discussed next week.
-
-
-
-
-
-
 
 
 
@@ -1530,13 +1265,6 @@ Following the same procedure as above, we have finally
 \]
 !et
 
-
-!split
-===== Background material on VQE and transformations into a computational basis =====
-
-The review of Tilly et al., see URL:"https://discovery.ucl.ac.uk/id/eprint/10157639/1/1-s2.0-S0370157322003118-main.pdf" (Physics Reports _986_, 1 (2022)), gives examples on how to arrive at the equations (see section 5.2) listed in the tables here. The article gives also an excellent overview of the VQE method.
-
-See also Hundt section 6.11.
 
 !split
 ===== Transforming Pauli and identity matrices =====
