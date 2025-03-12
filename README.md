@@ -88,9 +88,10 @@ themes can be covered:
 
 
 ##  March 10-14, 2025. Solving quantum mechanical problems
-  - Discrete Fourier transforms and fast Fourier transform
-  - Quantum Fourier transforms
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
+  - Lipkin model and VQE
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
+  - Video of lecture at https://youtu.be/hdUnJcJGigw
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch12.pdf
 
 
 ## March 17-21, 2025. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
