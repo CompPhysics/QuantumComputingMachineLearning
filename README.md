@@ -94,13 +94,16 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch12.pdf
 
 
-## March 17-21, 2025. Second quantization and Hamiltonians for quantum computing, discussion of the Lipkin model
-  - Quantum Fourier Transforms, algorithm and implementation
-  - Quantum phase estimation algorithm
+## March 17-21, 2025. Discussions of project 1 and work on the VQE
+  - Lipkin model and VQE
+  - Discussion of project 1 and work on finalizing project
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 24-28, 2025
-  - TBA
+  - Quantum Fourier Transforms, algorithm and implementation
+  - Quantum phase estimation algorithm
+- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
+
 
 
 ## March 31-April 4, 2025

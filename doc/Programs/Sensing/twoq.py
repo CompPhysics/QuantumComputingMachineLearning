@@ -37,14 +37,7 @@ counts = result.get_counts(qc)
 print("Measurement results:")
 for state, count in counts.items():
     print(f"{state}: {count}")
-
 """
-Here's a breakdown of the code:
-
-1. We import the necessary libraries from Qiskit, a popular open-source software development kit for working with quantum computers.
-2. We define the number of qubits to be 2.
-3. We create a quantum circuit with the specified number of qubits.
-4. We apply a Hadamard gate to the first qubit to create a superposition.
 5. We apply a CNOT gate to entangle the two qubits.
 6. We apply a time-dependent field to the system by rotating the second qubit around the Z-axis with a field strength that varies sinusoidally over time.
 7. We measure the qubits and execute the circuit on a simulator.
