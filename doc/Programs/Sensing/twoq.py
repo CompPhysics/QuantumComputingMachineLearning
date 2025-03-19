@@ -1,47 +1,66 @@
 import numpy as np
-from qiskit import QuantumCircuit, execute, Aer
+import matplotlib.pyplot as plt
 
-# Define the number of qubits
-num_qubits = 2
+# Define parameters
+B = 1.0  # Strength of the magnetic field (in arbitrary units)
+omega = B  # Frequency associated with the magnetic field
 
-# Create a quantum circuit with the specified number of qubits
-qc = QuantumCircuit(num_qubits)
+# Create basis states |00>, |01>, |10>, |11>
+basis_00 = np.array([1, 0, 0, 0])   # |00>
+basis_01 = np.array([0, 1, 0, 0])   # |01>
+basis_10 = np.array([0, 0, 1, 0])   # |10>
+basis_11 = np.array([0, 0, 0, 1])   # |11>
 
-# Apply a Hadamard gate to the first qubit to create a superposition
-qc.h(0)
+# Create an entangled state (Bell state) |Φ+> = (|00> + |11>) / sqrt(2)
+entangled_state = (basis_00 + basis_11) / np.sqrt(2)
 
-# Apply a CNOT gate to entangle the two qubits
-qc.cx(0, 1)
+# Define Pauli matrices
+sigma_z = np.array([[1, 0], [0, -1]])
+identity = np.eye(2)
 
-# Apply a time-dependent field to the system
-time = np.linspace(0, 10, 101)
-field_strength = 0.1 * np.sin(2 * np.pi * time)
+# Constructing the Hamiltonian H = -ω/2 * (σz ⊗ I + I ⊗ σz)
+H_z_I = -omega / 2 * np.kron(sigma_z, identity)    # σz ⊗ I
+I_H_z = -omega / 2 * np.kron(identity, sigma_z)    # I ⊗ σz
+H = H_z_I + I_H_z                                   # Total Hamiltonian
 
-for t, B in zip(time, field_strength):
-    # Apply a rotation around the Z-axis with the time-dependent field strength
-    qc.rz(B, 1)
-    qc.barrier()
+# Time evolution parameters
+t_list = np.linspace(0, 10, num=100)               # Time from t=0 to t=10
+dt = t_list[1] - t_list[0]
 
-# Measure the qubits
-qc.measure_all()
+def evolve(state):
+    """Evolve quantum state under Hamiltonian."""
+    return np.dot(expm(-1j * H * dt), state)
 
-# Execute the circuit on a simulator
-backend = Aer.get_backend('qasm_simulator')
-job = execute(qc, backend, shots=1024)
-result = job.result()
+# Evolve the initial state over time
+result_states = []
+current_state = entangled_state.copy()
 
-# Get the measurement counts
-counts = result.get_counts(qc)
+for _ in t_list:
+    result_states.append(current_state)
+    current_state = evolve(current_state)
 
-# Print the measurement results
-print("Measurement results:")
-for state, count in counts.items():
-    print(f"{state}: {count}")
+# Calculate probabilities of measuring specific states: P(|00>) and P(|11>)
+probabilities_00 = [abs(np.dot(basis_00.conj(), state))**2 for state in result_states]
+probabilities_11 = [abs(np.dot(basis_11.conj(), state))**2 for state in result_states]
+
+# Output results
+print("Probabilities of measuring |00>: ", probabilities_00)
+print("Probabilities of measuring |11>: ", probabilities_11)
+
+# Plotting results using matplotlib
+plt.plot(t_list, probabilities_00,label='Probability of |00>')
+plt.plot(t_list, probabilities_11,label='Probability of |11>')
+plt.xlabel('Time')
+plt.ylabel('Probability')
+plt.title('Quantum Sensing Simulation')
+plt.legend()
+plt.show()
+
 """
-5. We apply a CNOT gate to entangle the two qubits.
-6. We apply a time-dependent field to the system by rotating the second qubit around the Z-axis with a field strength that varies sinusoidally over time.
-7. We measure the qubits and execute the circuit on a simulator.
-8. We print the measurement results, showing the counts for each possible measurement outcome.
-
-This code can be used as a starting point for quantum sensing applications, where the time-dependent field can be used to probe the environment and detect changes or anomalies. The entanglement between the qubits can enhance the sensitivity of the measurement, making it a powerful tool for various quantum sensing applications.
+### Explanation:
+- **Basis States:** We define four basis states corresponding to two qubits.
+- **Entanglement Creation:** The Bell state \(|\Phi^+\rangle\) is created manually.
+- **Hamiltonian Definition:** The Hamiltonian \(H\) combines contributions from both qubits affected by a static magnetic field.
+- **State Evolution:** A function `evolve` computes the new quantum state at each time step using matrix exponentiation to apply the unitary operator derived from the Hamiltonian.
+- **Measurement Probabilities:** Finally we compute measurement probabilities for \(|00\rangle\) and \(|11\rangle\).
 """
