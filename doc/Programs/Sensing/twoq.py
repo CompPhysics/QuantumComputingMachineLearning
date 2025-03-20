@@ -29,7 +29,7 @@ dt = t_list[1] - t_list[0]
 
 def evolve(state):
     """Evolve quantum state under Hamiltonian."""
-    return np.dot(expm(-1j * H * dt), state)
+    return np.dot(np.linalg.expm(-1j * H * dt), state)
 
 # Evolve the initial state over time
 result_states = []

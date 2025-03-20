@@ -1,5 +1,5 @@
 import numpy as np
-from qiskit import QuantumCircuit, execute, Aer
+from qiskit import QuantumCircuit#, execute, Aer
 
 # Define the number of qubits
 num_qubits = 2
