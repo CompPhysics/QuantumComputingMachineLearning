@@ -1,0 +1,212 @@
+
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\usepackage{amsmath, amsfonts}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{qcircuit}
+\usepackage{caption}
+
+\title[QML with NN]{Quantum Machine Learning with Neural Networks}
+\author{Morten Hjorth-Jensen}
+\institute{University of Oslo}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Overview of QML}
+\begin{frame}{Quantum Machine Learning Landscape}
+  \begin{itemize}
+    \item Quantum Data and Classical Data: \( |\psi\rangle \) vs vectors \( \mathbf{x} \in \mathbb{R}^n \)
+    \item Categories:
+    \begin{itemize}
+        \item Quantum-enhanced classical ML
+        \item Quantum-native ML algorithms
+        \item Hybrid quantum-classical ML
+    \end{itemize}
+    \item Resource-aware quantum learning models
+  \end{itemize}
+\end{frame}
+
+\section{Quantum Computing Recap}
+\begin{frame}{Quantum States and Gates}
+  \begin{itemize}
+    \item Qubit: \( |\psi\rangle = \alpha|0\rangle + \beta|1\rangle \), \( |\alpha|^2 + |\beta|^2 = 1 \)
+    \item Common Gates:
+    \[
+        H = \frac{1}{\sqrt{2}}\begin{bmatrix}1 & 1\\ 1 & -1\end{bmatrix}, \quad
+        X = \begin{bmatrix}0 & 1\\ 1 & 0\end{bmatrix}
+    \]
+    \item Entanglement via CNOT and multi-qubit systems
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Quantum Circuit Example}
+\[\Qcircuit @C=1em @R=.7em {
+  \lstick{|0\rangle} & \gate{H} & \ctrl{1} & \qw \\
+  \lstick{|0\rangle} & \qw      & \targ   & \qw
+}\]
+\begin{itemize}
+  \item Bell state: \( \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle) \)
+\end{itemize}
+\end{frame}
+
+\section{Neural Networks and Representational Capacity}
+\begin{frame}{Classical Neural Networks Review}
+  \begin{itemize}
+    \item Universal approximation theorem
+    \item Layer-wise structure: \( y = \sigma(Wx + b) \)
+    \item Deep networks and expressivity
+    \item Limitations in high-dimensional feature space
+  \end{itemize}
+\end{frame}
+
+\section{Quantum Neural Networks (QNN)}
+\begin{frame}{What is a QNN?}
+  \begin{itemize}
+    \item Quantum analog of classical NNs using PQCs
+    \item Data encoding + entangling + variational layer
+    \item Output via observable measurements
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Generic QNN Architecture}
+\begin{center}
+%  \includegraphics[width=0.85\linewidth]{qnn_diagram.png}
+\end{center}
+\captionof{figure}{QNN: Feature map + variational layers + measurement}
+\end{frame}
+
+\section{Variational Quantum Circuits (VQCs)}
+\begin{frame}{Variational Quantum Circuits}
+  \begin{itemize}
+    \item PQCs with parameters \( \theta \)
+    \item Optimize: \( C(\theta) = \langle \psi(\theta)| \hat{H} |\psi(\theta)\rangle \)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Circuit Example: Ansatz Layer}
+\[\Qcircuit @C=1em @R=.7em {
+  \lstick{|x_1\rangle} & \gate{R_Y(x_1)} & \multigate{1}{Entangle} & \gate{R_Y(\theta_1)} & \qw \\
+  \lstick{|x_2\rangle} & \gate{R_Y(x_2)} & \ghost{Entangle}       & \gate{R_Y(\theta_2)} & \qw
+}\]
+\end{frame}
+
+\section{Training QNNs}
+\begin{frame}{Training and Optimization}
+  \begin{itemize}
+    \item Gradient via Parameter Shift Rule:
+    \[ \frac{\partial \langle O \rangle}{\partial \theta} =
+    \frac{\langle O \rangle_{\theta + \pi/2} - \langle O \rangle_{\theta - \pi/2}}{2} \]
+  \end{itemize}
+\end{frame}
+
+\section{Applications}
+\begin{frame}{Applications of QML + NN}
+  \begin{itemize}
+    \item Quantum-enhanced classification
+    \item QGANs, Quantum autoencoders
+    \item Anomaly detection, Quantum RL
+  \end{itemize}
+\end{frame}
+
+\section{Open Challenges}
+\begin{frame}{Challenges in QNNs}
+  \begin{itemize}
+    \item Hardware limitations, barren plateaus
+    \item Hybrid training instability
+  \end{itemize}
+\end{frame}
+
+\section{Conclusion and Future Work}
+\begin{frame}{Future Directions}
+  \begin{itemize}
+    \item Efficient hybrid architectures
+    \item Adaptive QNNs and better ansätze
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Thank You!}
+  \centering
+  \Huge Questions?
+\end{frame}
+
+
+% Section: Quantum Convolutional Neural Networks
+\section{Quantum Convolutional Neural Networks (QCNNs)}
+\begin{frame}{QCNN Architecture}
+  \begin{itemize}
+    \item Inspired by classical CNNs for hierarchical feature extraction.
+    \item Layers include quantum convolution and pooling operations.
+    \item Reduce qubit counts while preserving quantum information.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{QCNN Example Circuit}
+\begin{itemize}
+  \item Quantum convolution applies parameterized gates to pairs of qubits.
+  \item Pooling reduces the system size, e.g., via measurement or entanglement filtering.
+\end{itemize}
+\begin{center}
+%  \includegraphics[width=0.75\linewidth]{qcnn_diagram.png}
+\end{center}
+\captionof{figure}{Illustrative QCNN circuit with convolution and pooling layers.}
+\end{frame}
+
+% Section: Quantum Generative Adversarial Networks
+\section{Quantum GANs (QGANs)}
+\begin{frame}{Quantum GAN Framework}
+  \begin{itemize}
+    \item Combines quantum generator and classical or quantum discriminator.
+    \item Generator learns to produce quantum states matching target distribution.
+    \item Applications: quantum state preparation, data augmentation.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{QGAN Architecture}
+\begin{center}
+%  \includegraphics[width=0.8\linewidth]{qgan_diagram.png}
+\end{center}
+\captionof{figure}{Example QGAN setup with a quantum generator and classical discriminator.}
+\end{frame}
+
+% Section: Benchmark Results
+\section{Benchmark Results and Performance}
+\begin{frame}{Benchmarks in QML Research}
+  \begin{itemize}
+    \item Performance metrics: classification accuracy, fidelity, loss convergence.
+    \item Datasets: quantum-enhanced MNIST, quantum chemistry datasets.
+    \item Notable results:
+    \begin{itemize}
+      \item QNN classifiers outperform classical on small quantum datasets.
+      \item QCNNs demonstrate improved generalization with fewer qubits.
+      \item QGANs achieve state fidelity > 95\% on target distributions.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example Benchmark Table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Model & Dataset & Accuracy (\%) & Qubits Used \\
+\hline
+QNN & Iris (Quantum Enc.) & 94.3 & 4 \\
+QCNN & Quantum MNIST & 89.7 & 6 \\
+QGAN & Quantum States & 95.5 (Fidelity) & 5 \\
+\hline
+\end{tabular}
+\end{center}
+\captionof{table}{Sample benchmark results for QNN, QCNN, and QGAN models.}
+\end{frame}
+
+\end{document}
