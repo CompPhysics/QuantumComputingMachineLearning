@@ -1,0 +1,170 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\usepackage{amsmath, amsfonts}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{qcircuit}
+\usepackage{caption}
+
+\title[QML with NN]{Quantum Machine Learning with Neural Networks}
+\author{M Hjorth-Jensen}
+\institute{University of Oslo}
+\date{\today}
+
+\begin{document}
+
+% Title Slide
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Outline
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+% Section 1
+\section{Overview of QML}
+\begin{frame}{Quantum Machine Learning Landscape}
+  \begin{itemize}
+    \item Quantum Data and Classical Data: \( |\psi\rangle \) vs vectors \( \mathbf{x} \in \mathbb{R}^n \)
+    \item Categories:
+    \begin{itemize}
+        \item Quantum-enhanced classical ML
+        \item Quantum-native ML algorithms
+        \item Hybrid quantum-classical ML
+    \end{itemize}
+    \item Resource-aware quantum learning models
+  \end{itemize}
+\end{frame}
+
+% Section 2
+\section{Quantum Computing Recap}
+\begin{frame}{Quantum States and Gates}
+  \begin{itemize}
+    \item Qubit: \( |\psi\rangle = \alpha|0\rangle + \beta|1\rangle \), \( |\alpha|^2 + |\beta|^2 = 1 \)
+    \item Common Gates:
+    \[
+        H = \frac{1}{\sqrt{2}}\begin{bmatrix}1 & 1\\ 1 & -1\end{bmatrix}, \quad
+        X = \begin{bmatrix}0 & 1\\ 1 & 0\end{bmatrix}
+    \]
+    \item Entanglement via CNOT and multi-qubit systems
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Quantum Circuit Example}
+\[
+\Qcircuit @C=1em @R=.7em {
+  \lstick{|0\rangle} & \gate{H} & \ctrl{1} & \qw \\
+  \lstick{|0\rangle} & \qw      & \targ   & \qw
+}
+\]
+\begin{itemize}
+  \item This circuit creates a Bell state: \( \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle) \)
+  \item Essential for encoding correlations
+\end{itemize}
+\end{frame}
+
+% Section 3
+\section{Neural Networks and Representational Capacity}
+\begin{frame}{Classical Neural Networks Review}
+  \begin{itemize}
+    \item Universal approximation theorem
+    \item Layer-wise structure: \( y = \sigma(Wx + b) \)
+    \item Deep networks and expressivity
+    \item Limitations in high-dimensional feature space
+  \end{itemize}
+\end{frame}
+
+% Section 4
+\section{Quantum Neural Networks (QNN)}
+\begin{frame}{What is a QNN?}
+  \begin{itemize}
+    \item Quantum analog of classical NNs using parameterized quantum circuits (PQC)
+    \item Data encoding layer + entangling layer + variational layer
+    \item Output is measurement of observables
+    \item Trainable parameters: gate angles \( \theta \)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Generic QNN Architecture}
+\begin{center}
+  \includegraphics[width=0.85\linewidth]{qnn_diagram.png} % Replace with your QNN diagram
+\end{center}
+\captionof{figure}{Example architecture of a QNN: Feature map + variational layers + measurement}
+\end{frame}
+
+% Section 5
+\section{Variational Quantum Circuits (VQCs)}
+\begin{frame}{Variational Quantum Circuits}
+  \begin{itemize}
+    \item PQCs parameterized by \( \theta \)
+    \item Optimization via classical optimizer (e.g., COBYLA, SPSA, Adam)
+    \item Objective: minimize loss \( L(\theta) \) based on expectation values
+    \item Cost function: \( C(\theta) = \langle \psi(\theta)| \hat{H} |\psi(\theta)\rangle \)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Circuit Example: Ansatz Layer}
+\[
+\Qcircuit @C=1em @R=.7em {
+  \lstick{|x_1\rangle} & \gate{R_Y(x_1)} & \multigate{1}{Entangle} & \gate{R_Y(\theta_1)} & \qw \\
+  \lstick{|x_2\rangle} & \gate{R_Y(x_2)} & \ghost{Entangle}       & \gate{R_Y(\theta_2)} & \qw
+}
+\]
+\begin{itemize}
+  \item Hybrid encoding: data \( x_i \) and learnable parameters \( \theta_i \)
+  \item Can be scaled for deeper architectures
+\end{itemize}
+\end{frame}
+
+% Section 6
+\section{Training QNNs}
+\begin{frame}{Training and Optimization}
+  \begin{itemize}
+    \item Gradient-based: Parameter Shift Rule
+    \[
+    \frac{\partial \langle O \rangle}{\partial \theta} =
+    \frac{\langle O \rangle_{\theta + \pi/2} - \langle O \rangle_{\theta - \pi/2}}{2}
+    \]
+    \item Cost landscapes can suffer from barren plateaus
+    \item Mitigation via tailored ansatz or local cost functions
+  \end{itemize}
+\end{frame}
+
+% Section 7
+\section{Applications}
+\begin{frame}{Applications of QML + NN}
+  \begin{itemize}
+    \item Quantum-enhanced image and speech classification
+    \item Anomaly detection in quantum systems
+    \item Quantum generative adversarial networks (QGANs)
+    \item Quantum autoencoders for data compression
+  \end{itemize}
+\end{frame}
+
+% Section 8
+\section{Open Challenges}
+\begin{frame}{Challenges in QNNs}
+  \begin{itemize}
+    \item Hardware constraints: decoherence, limited qubits
+    \item Barren plateau problem in deep PQCs
+    \item Lack of general-purpose quantum optimizers
+    \item Scaling to larger problem instances
+  \end{itemize}
+\end{frame}
+
+% Section 9
+\section{Conclusion and Future Work}
+\begin{frame}{Future Directions}
+  \begin{itemize}
+    \item Efficient hybrid architectures
+    \item Adaptive circuit learning
+    \item Near-term QML benchmarks
+    \item Fault-tolerant QML pipelines
+  \end{itemize}
+\end{frame}
+
+
+\end{document}
