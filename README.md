@@ -102,6 +102,8 @@ themes can be covered:
 ## March 24-28, 2025
   - Quantum Fourier Transforms, algorithm and implementation
   - Quantum phase estimation algorithm
+  - Video of lecture at https://youtu.be/UHqBk1eQT6E
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch26.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
