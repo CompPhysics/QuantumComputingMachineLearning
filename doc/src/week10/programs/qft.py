@@ -1,42 +1,38 @@
-import matplotlib.pyplot as plt
 import numpy as np
-from math import pi
-from qiskit import *
-from qiskit.circuit import QuantumCircuit, ParameterVector
-from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
-from qiskit.tools.visualization import circuit_drawer
+from qiskit import QuantumCircuit, Aer, execute
 
-q = QuantumRegister(4)
-qc = QuantumCircuit(q)
-#-------------------
-qc.h(0)
-qc.cu1(pi/2,q[1],q[0])
-qc.cu1(pi/4,q[2],q[0])
-qc.cu1(pi/8,q[3],q[0])
-#-------------------
-qc.barrier()
-qc.h(1)
-qc.cu1(pi/2,q[2],q[1])
-qc.cu1(pi/4,q[3],q[1])
-#-------------------
-qc.barrier()
-qc.h(2)
-qc.cu1(pi/2,q[3],q[2])
-#-------------------
-qc.barrier()
-qc.h(3)
-#-------------------
-qc.draw(output='mpl')
+def qft(circuit, n):
+    """Apply the Quantum Fourier Transform to the first n qubits in the circuit."""
+    # Apply Hadamard gates and controlled rotations
+    for j in range(n):
+        circuit.h(j)
+        for k in range(j + 1, n):
+            circuit.cp(np.pi / 2**(k - j), k, j)
 
-# Import Aer
-from qiskit import Aer
+    # Swap the qubits to reverse their order
+    for i in range(n // 2):
+        circuit.swap(i, n - i - 1)
 
-# Run the quantum circuit on a statevector simulator backend
+# Number of qubits
+n = 4
+
+# Create a quantum circuit with n qubits
+qc = QuantumCircuit(n)
+
+# Apply QFT to the quantum circuit
+qft(qc, n)
+
+# Draw the resulting circuit
+print("Quantum Circuit for QFT:")
+print(qc.draw(output='text'))
+
+# Run the quantum circuit on a statevector simulator backend                                                                                                                                  
 backend = Aer.get_backend('statevector_simulator')
 
-# Create a Quantum Program for execution
+# Execute the quantum circuit and get results                                                                                                                                                      
 job = execute(qc, backend)
 result = job.result()
 
-outputstate = result.get_statevector(qc, decimals=3)
-print(outputstate)
+output_state_vector = result.get_statevector()
+print("\nOutput State Vector:")
+print(output_state_vector)
