@@ -1,0 +1,337 @@
+\documentclass{beamer}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{algorithm,algorithmic}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+   backgroundcolor=\color{backcolour},   
+   commentstyle=\color{codegreen},
+   keywordstyle=\color{magenta},
+   numberstyle=\tiny\color{codegray},
+   stringstyle=\color{codepurple},
+   basicstyle=\footnotesize\ttfamily,
+   breakatwhitespace=false,         
+   breaklines=true,                 
+   captionpos=b,                    
+   keepspaces=true,                 
+   numbers=left,                    
+   numbersep=5pt,                  
+   showspaces=false,                
+   showstringspaces=false,
+   showtabs=false,                  
+   tabsize=2,
+   language=Python
+}
+
+\title{Fast Fourier Transform (FFT) Algorithm}
+\author{Morten HJ}
+\date{Old notes from Comp Phys on FFT}
+
+\usetheme{Madrid}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\section{Introduction}
+
+\begin{frame}{Motivation}
+  \begin{itemize}
+  \item The Fourier Transform is a fundamental tool in signal processing, physics, engineering, and applied mathematics
+  \item Direct computation of the Discrete Fourier Transform (DFT) is computationally expensive: $O(N^2)$
+  \item The Fast Fourier Transform (FFT) reduces this to $O(N \log N)$
+  \item Applications include:
+    \begin{itemize}
+    \item Signal processing (audio, image, video)
+    \item Solving partial differential equations
+    \item Polynomial multiplication
+    \item Data compression
+    \item Spectral analysis
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Historical Context}
+  \begin{itemize}
+  \item First discovered by Gauss in 1805 (unpublished) for calculating asteroid orbits
+  \item Rediscovered by Cooley and Tukey in 1965
+  \item Popularized with the advent of digital computers
+  \item One of the most important numerical algorithms of the 20th century
+  \end{itemize}
+\end{frame}
+
+\section{Mathematical Foundations}
+
+\begin{frame}{Discrete Fourier Transform (DFT)}
+  The DFT of a sequence $x[n]$ of length $N$ is defined as:
+  \[ X[k] = \sum_{n=0}^{N-1} x[n] e^{-j 2\pi k n / N}, \quad k = 0,1,\ldots,N-1 \]
+  where:
+  \begin{itemize}
+  \item $x[n]$ is the input sequence (time domain)
+  \item $X[k]$ is the output sequence (frequency domain)
+  \item $N$ is the number of samples
+  \item $j = \sqrt{-1}$ is the imaginary unit
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Inverse DFT}
+  The inverse transform is given by:
+  \[ x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j 2\pi k n / N}, \quad n = 0,1,\ldots,N-1 \]
+  \begin{block}{Key Properties}
+    \begin{itemize}
+    \item Linearity: $a x_1[n] + b x_2[n] \leftrightarrow a X_1[k] + b X_2[k]$
+    \item Periodicity: $X[k+N] = X[k]$
+    \item Symmetry: For real $x[n]$, $X[N-k] = X^*[k]$
+    \item Convolution: Multiplication in one domain equals convolution in the other
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{FFT Algorithm}
+
+\begin{frame}{FFT Basic Idea}
+  \begin{itemize}
+  \item Exploits symmetry and periodicity of the complex exponential
+  \item Decimates the DFT computation into smaller DFTs
+  \item Most common approach: Cooley-Tukey algorithm (radix-2)
+  \item Requires $N$ to be a power of 2 (can be generalized)
+  \end{itemize}
+  \begin{center}
+%    \includegraphics[width=0.5\textwidth]{butterfly.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Divide and Conquer Approach}
+  Split the DFT sum into even and odd terms:
+  \begin{align*}
+    X[k] &= \sum_{n=0}^{N-1} x[n] W_N^{kn} \\
+    &= \sum_{m=0}^{N/2-1} x[2m] W_N^{k(2m)} + \sum_{m=0}^{N/2-1} x[2m+1] W_N^{k(2m+1)} \\
+    &= \sum_{m=0}^{N/2-1} x_{\text{even}}[m] W_{N/2}^{km} + W_N^k \sum_{m=0}^{N/2-1} x_{\text{odd}}[m] W_{N/2}^{km} \\
+    &= E[k] + W_N^k O[k]
+  \end{align*}
+  where $W_N = e^{-j 2\pi/N}$ is the twiddle factor.
+\end{frame}
+
+\begin{frame}{Recursive Structure}
+  \begin{itemize}
+  \item The DFT of size $N$ is decomposed into:
+    \begin{itemize}
+    \item Two DFTs of size $N/2$ (even and odd terms)
+    \item $O(N)$ complex multiplications and additions
+    \end{itemize}
+  \item Applying this recursively gives $O(N \log N)$ complexity
+  \end{itemize}
+  \begin{center}
+%    \includegraphics[width=0.7\textwidth]{fft_recursion.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Butterfly Operation}
+  The basic computational unit of the FFT:
+  \begin{center}
+%    \includegraphics[width=0.5\textwidth]{butterfly_diagram.png}
+  \end{center}
+  Mathematically:
+  \begin{align*}
+    X[m] &= E[m] + W_N^m O[m] \\
+    X[m+N/2] &= E[m] - W_N^m O[m]
+  \end{align*}
+\end{frame}
+
+\section{Implementation}
+
+\begin{frame}{Pseudocode for Radix-2 FFT}
+  \begin{algorithm}[H]
+    \begin{algorithmic}[1]
+      \REQUIRE $N$ is a power of 2, $x$ is input array of size $N$
+      \IF{$N == 1$}
+      \RETURN $x$
+      \ENDIF
+      \STATE $x_{\text{even}} \gets [x[0], x[2], \ldots, x[N-2]]$
+      \STATE $x_{\text{odd}} \gets [x[1], x[3], \ldots, x[N-1]]$
+      \STATE $E \gets \text{FFT}(x_{\text{even}})$
+      \STATE $O \gets \text{FFT}(x_{\text{odd}})$
+      \STATE $W_N \gets e^{-2\pi j / N}$
+      \STATE $W \gets 1$
+      \FOR{$k = 0$ to $N/2 - 1$}
+      \STATE $X[k] \gets E[k] + W \cdot O[k]$
+      \STATE $X[k + N/2] \gets E[k] - W \cdot O[k]$
+      \STATE $W \gets W \cdot W_N$
+      \ENDFOR
+      \RETURN $X$
+    \end{algorithmic}
+    \caption{Recursive Radix-2 FFT}
+  \end{algorithm}
+\end{frame}
+
+\begin{frame}[fragile]{Python Implementation}
+  \begin{lstlisting}
+    import numpy as np
+
+    def fft(x):
+    N = len(x)
+    if N == 1:
+    return x
+    even = fft(x[::2])
+    odd = fft(x[1::2])
+    T = [np.exp(-2j * np.pi * k / N) * odd[k]
+      for k in range(N // 2)]
+    return [even[k] + T[k] for k in range(N // 2)] + \
+    [even[k] - T[k] for k in range(N // 2)]
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Iterative Implementation}
+  \begin{itemize}
+  \item Recursive implementation has overhead
+  \item More efficient: iterative version with bit-reversal permutation
+  \item Three main steps:
+    \begin{enumerate}
+    \item Bit-reverse the input array
+    \item Perform butterfly operations at each level
+    \item Combine results
+    \end{enumerate}
+  \end{itemize}
+\end{frame}
+
+\section{Complexity Analysis}
+
+\begin{frame}{Computational Complexity}
+  \begin{itemize}
+  \item Let $N = 2^m$
+  \item At each level $k$ ($k = 1$ to $m$):
+    \begin{itemize}
+    \item $2^{k-1}$ butterfly operations
+    \item Each butterfly has 1 complex multiplication and 2 additions
+    \item Total operations per level: $N/2$ butterflies $\times$ 3 operations
+    \end{itemize}
+  \item Total levels: $\log_2 N$
+  \item Total operations: $\frac{3}{2} N \log_2 N$
+  \item Thus, complexity is $O(N \log N)$ vs. $O(N^2)$ for DFT
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Comparison with Direct Computation}
+  For $N = 1024$:
+  \begin{itemize}
+  \item Direct DFT: $N^2 = 1,048,576$ complex multiplications
+  \item FFT: $\frac{N}{2} \log_2 N = 5120$ complex multiplications
+  \item Speedup factor: ~205 times
+  \end{itemize}
+  \begin{center}
+    \begin{tabular}{|c|c|c|}
+      \hline
+      $N$ & DFT Operations & FFT Operations \\
+      \hline
+      32 & 1,024 & 80 \\
+      64 & 4,096 & 192 \\
+      128 & 16,384 & 448 \\
+      256 & 65,536 & 1,024 \\
+      512 & 262,144 & 2,304 \\
+      1024 & 1,048,576 & 5,120 \\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\section{Variations and Extensions}
+
+\begin{frame}{Different FFT Algorithms}
+  \begin{itemize}
+  \item \textbf{Radix-2}: Most common, requires $N$ power of 2
+  \item \textbf{Radix-4}: More efficient for certain architectures
+  \item \textbf{Mixed-radix}: For arbitrary $N$ (prime factor algorithm)
+  \item \textbf{Bluestein's algorithm}: For arbitrary $N$ (Chirp-Z transform)
+  \item \textbf{Winograd FFT}: Minimizes multiplications
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Multidimensional FFT}
+  \begin{itemize}
+  \item Separable transform: Apply 1D FFT along each dimension
+  \item For 2D image of size $M \times N$:
+    \[ X[k,l] = \sum_{m=0}^{M-1} \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi (km/M + ln/N)} \]
+  \item Computed as:
+    \begin{enumerate}
+    \item Apply 1D FFT to each row ($M \times O(N \log N)$)
+    \item Apply 1D FFT to each column ($N \times O(M \log M)$)
+    \end{enumerate}
+  \item Total complexity: $O(MN \log MN)$
+  \end{itemize}
+\end{frame}
+
+\section{Applications}
+
+\begin{frame}{Practical Applications}
+  \begin{itemize}
+  \item \textbf{Signal Processing}:
+    \begin{itemize}
+    \item Filtering (convolution via multiplication in frequency domain)
+    \item Spectral analysis
+    \item Audio compression (MP3, AAC)
+    \end{itemize}
+  \item \textbf{Image Processing}:
+    \begin{itemize}
+    \item JPEG compression (2D FFT on 8x8 blocks)
+    \item Filtering and enhancement
+    \item Feature extraction
+    \end{itemize}
+  \item \textbf{Numerical Analysis}:
+    \begin{itemize}
+    \item Solving PDEs (spectral methods)
+    \item Fast polynomial multiplication
+    \end{itemize}
+  \item \textbf{Other Fields}:
+    \begin{itemize}
+    \item Quantum computing (QFT)
+%      \option{Medical imaging (MRI reconstruction)
+      \item Astronomy (interferometry)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Polynomial Multiplication}
+  \begin{itemize}
+  \item Multiply two polynomials $A(x)$ and $B(x)$ of degree $n-1$
+  \item Naive approach: $O(n^2)$ operations
+  \item Using FFT:
+    \begin{enumerate}
+    \item Evaluate $A$ and $B$ at $2n$ points using FFT ($O(n \log n)$)
+    \item Pointwise multiply the results ($O(n)$)
+    \item Interpolate to get coefficients using inverse FFT ($O(n \log n)$)
+    \end{enumerate}
+  \item Total complexity: $O(n \log n)$
+  \end{itemize}
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}{Summary}
+  \begin{itemize}
+  \item FFT is an efficient algorithm to compute the DFT
+  \item Reduces complexity from $O(N^2)$ to $O(N \log N)$
+  \item Based on divide-and-conquer strategy
+  \item Numerous applications across science and engineering
+  \item Modern implementations (FFTW) are highly optimized
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Further Reading}
+  \begin{itemize}
+  \item Cooley, J. W.; Tukey, J. W. (1965). ``An algorithm for the machine calculation of complex Fourier series''. Math. Comput. 19: 297-301.
+  \item Brigham, E. O. (1988). \textit{The Fast Fourier Transform and Its Applications}. Prentice-Hall.
+  \item Van Loan, C. (1992). \textit{Computational Frameworks for the Fast Fourier Transform}. SIAM.
+  \item FFTW: http://www.fftw.org/
+  \item Numerical Recipes in C: The Art of Scientific Computing
+  \end{itemize}
+\end{frame}
+
+\end{document}
