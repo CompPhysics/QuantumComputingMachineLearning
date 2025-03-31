@@ -1,283 +1,314 @@
 !split
-===== QFT, short review from last week =====
-
-o QFTs are the quantum analogue of the Discrete Fourier Transform (DFT).
-o They play a crucial role in quantum algorithms like Shor’s Algorithm and the Quantum Phase Estimation (QPE) algorithm
-o QFTs provide an *exponential speedup* over classical Fourier Transform methods.
-
-
-
-!split
-===== Mathematical Definition of QFT =====
-QFT on an n-qubit register:
+===== Introduction to Quantum Phase Estimation (QPE) =====
+The QPE is a fundamental quantum algorithm used to estimate the phase $\phi$ in eigenvalue equations of unitary operators.
+Given a unitary operator $U$ and an eigenvector $| \psi \rangle$ such that:
 !bt
 \[
-\text{QFT} |x\rangle = \frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n-1} e^{2\pi i x k / 2^n} |k\rangle
+U | \psi \rangle = \exp{2\pi i \phi} | \psi \rangle
 \]
 !et
-where $x$ is the computational basis state.
+the goal of QPE is to estimate $\phi$.
+
+The QPE provides an estimate of $\phi$ with high probability. It is a
+crucial subroutine for algorithms like
+o Shor's factoring algorithm and
+o quantum many-body simulations.
 
 !split
-===== Advantage 1: Exponential Speedup =====
-o Classical Discrete Fourier Transforms (DFTs) require $O(N^2)$ operations.
-o The Fast Fourier Transforms (FFTs) improve this to $O(N \log N)$ operations.
-o QFTs reduce complexity to $O((\log N)^2)$ using quantum gates.
+===== Mathematical Background =====
 
-!split
-===== Advantage 2: Quantum Parallelism =====
-QFTs act on a *superposition* of states, processing all inputs simultaneously.
-This is crucial in algorithms like:
-o Shor’s Algorithm for factoring large numbers.
-o Quantum Phase Estimation (QPE) for eigenvalue extraction.
-
-!split
-===== Advantage 3: Compact Circuit Implementation =====
-
-o QFTs require only *Hadamard gates and controlled-phase gates*.
-o QFTs are highly efficient for *quantum hardware*.
-
-!split
-===== Advantage 4: Applications in Quantum Computing =====
-o \textbf{Shor’s Algorithm:} Uses QFT to find periodicity in modular exponentiation.
-o \textbf{Quantum Phase Estimation (QPE):} Extracts eigenvalues of unitary matrices.
-o \textbf{Quantum Signal Processing:} Enables spectral analysis on quantum data.
-
-!split
-===== Advantage 5: Reduced Memory Complexity =====
-
-o Classical DFTs require $O(N)$ space.
-o QFTs store Fourier-transformed coefficients *implicitly* in qubit amplitudes.
-o Only $O(n)$ qubits are needed for a size $N = 2^n$ transformation.
-
-!split
-===== Advantage 6: Quantum Signal Processing =====
-QFTs enable applications such as:
-o Quantum spectral analysis.
-o Quantum image processing.
-o Quantum filtering and denoising.
-
-These can enhance AI, cryptography, and data processing.
-
-% QFT Circuit Example
-\begin{frame}{Quantum Fourier Transform Circuit}
-    \begin{center}
-        \[
-        \Qcircuit @C=1em @R=0.7em {
-            & \qw & \gate{H} & \ctrl{1} & \ctrl{2} & \gate{R_3} & \qw & \rstick{\text{QFT output}} \\
-            & \qw & \qw      & \gate{H} & \ctrl{1} & \gate{R_2} & \qw & \rstick{\text{QFT output}} \\
-            & \qw & \qw      & \qw      & \gate{H} & \qw        & \qw & \rstick{\text{QFT output}}
-        }
-        \]
-    \end{center}
-\end{frame}
-
-
-
-
-\begin{frame}{Introduction to Quantum Phase Estimation (QPE)}
-    \begin{itemize}
-        \item QPE is a fundamental quantum algorithm used to estimate the phase $\phi$ in eigenvalue equations of unitary operators.
-        \item Given a unitary operator $U$ and an eigenvector $| \psi \rangle$ such that:
-        \[
-        U | \psi \rangle = e^{2\pi i \phi} | \psi \rangle
-        \]
-        the goal of QPE is to estimate $\phi$.
-        \item Applications:
-        \begin{itemize}
-            \item Shor's factoring algorithm
-            \item Hamiltonian simulation
-            \item Quantum chemistry
-        \end{itemize}
-    \end{itemize}
-\end{frame}
-
-% Slide: Quantum Circuit
-\begin{frame}{Quantum Circuit for QPE}
-    \centering
-    \begin{quantikz}
-        \lstick[wires=1]{$n$ qubits} & \gate{H} & \qwbundle{n} & \ctrl{1} & \qw & \qw & \gate{\text{QFT}^{\dagger}} & \meter{} \\
-        \lstick[wires=1]{1 qubit} & \qw & \qw & \gate{U^{2^j}} & \qw & \qw & \qw & \qw
-    \end{quantikz}
-    \begin{itemize}
-        \item The first register contains $n$ qubits initialized to $|0\rangle$.
-        \item Hadamard gates create a superposition state.
-        \item Controlled-$U^{2^j}$ operations apply phase shifts.
-        \item The inverse Quantum Fourier Transform (QFT) extracts phase information.
-    \end{itemize}
-\end{frame}
-
-% Slide: State Evolution
-\begin{frame}{State Evolution in QPE}
-    \begin{itemize}
-        \item Initial state:
-        \[
-        | \psi_0 \rangle = | 0 \rangle^{\otimes n} \otimes | \psi \rangle
-        \]
-        \item After Hadamard transform:
-        \[
-        \frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} | k \rangle | \psi \rangle
-        \]
-        \item Applying controlled-$U$ gates:
-        \[
-        \frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} | k \rangle U^k | \psi \rangle
-        \]
-        Since $U | \psi \rangle = e^{2\pi i \phi} | \psi \rangle$, this becomes:
-        \[
-        \frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} e^{2\pi i k \phi} | k \rangle | \psi \rangle
-        \]
-    \end{itemize}
-\end{frame}
-
-% Slide: Inverse QFT
-\begin{frame}{Inverse Quantum Fourier Transform (QFT)}
-    \begin{itemize}
-        \item The QFT maps computational basis states to phase-encoded states:
-        \[
-        | k \rangle \to \frac{1}{\sqrt{2^n}} \sum_{j=0}^{2^n - 1} e^{2\pi i k j / 2^n} | j \rangle
-        \]
-        \item Applying inverse QFT reveals the phase $\phi$ as a binary fraction.
-    \end{itemize}
-    \centering
-    \begin{tikzpicture}
-%        \node (qft) at (0,0) {\includegraphics[width=0.7\textwidth]{qft_diagram.png}};
-    \end{tikzpicture}
-\end{frame}
-
-% Slide: Example Computation
-\begin{frame}{Example: Phase of a Simple Unitary}
-    \begin{itemize}
-        \item Consider $U = \begin{bmatrix} 1 & 0 \\ 0 & e^{2\pi i / 8} \end{bmatrix}$, which has eigenvalues $e^{2\pi i \phi}$ with $\phi = 1/8$.
-        \item Using 3 qubits for precision:
-        \[
-        \phi = 0.001_2 = \frac{1}{8}
-        \]
-        \item Measurement should give result $\phi = 0.001$ (binary).
-    \end{itemize}
-\end{frame}
-
-% Slide: Applications of QPE
-\begin{frame}{Applications of QPE}
-    \begin{itemize}
-        \item \textbf{Shor's Algorithm}: Finds the period of a modular function.
-        \item \textbf{Hamiltonian Simulation}: Extracts energy eigenvalues for molecular systems.
-        \item \textbf{Quantum Metrology}: Improves phase measurement precision.
-    \end{itemize}
-\end{frame}
-
-% Slide: Error Analysis
-\begin{frame}{Error Analysis and Precision}
-    \begin{itemize}
-        \item The precision of QPE depends on the number of qubits used.
-        \item Probability of failure decreases exponentially with $n$ qubits.
-        \[
-        P_{\text{error}} \approx \frac{1}{2^{2n}}
-        \]
-        \item Noise and decoherence can impact accuracy, requiring error correction.
-    \end{itemize}
-\end{frame}
-
-% Slide: Conclusion
-\begin{frame}{Conclusion}
-    \begin{itemize}
-        \item QPE is a key quantum subroutine for extracting eigenphases.
-        \item Involves controlled unitary operations and inverse QFT.
-        \item Essential for algorithms like Shor's and Hamiltonian simulation.
-    \end{itemize}
-\end{frame}
-
-
-\section{Introduction}
-Quantum Phase Estimation (QPE) is a fundamental quantum algorithm that estimates the eigenphase $\phi$ of a unitary operator $U$. Given an eigenstate $\ket{\psi}$ satisfying:
-\begin{equation}
-    U\ket{\psi} = e^{2\pi i \phi} \ket{\psi},
-\end{equation}
-QPE provides an estimate of $\phi$ with high probability. It is a crucial subroutine for algorithms like Shor's factoring algorithm and quantum simulations.
-
-% Mathematical Background
-\section{Mathematical Background}
 The goal of QPE is to estimate the phase $\phi \in [0,1)$ where:
-\begin{equation}
-    U\ket{\psi} = e^{2\pi i \phi} \ket{\psi}.
-\end{equation}
+!bt
+\[
+    U\vert \psi\rangle = \exp{2\pi i \phi} \vert\psi\rangle.
+\]
+!et
 
-\subsection{Quantum Fourier Transform (QFT)}
-The Quantum Fourier Transform (QFT) on $n$ qubits is defined as:
-\begin{equation}
-    \ket{x} \rightarrow \frac{1}{\sqrt{2^n}}\sum_{y=0}^{2^n-1} e^{2\pi i xy / 2^n}\ket{y}.
-\end{equation}
-QFT is essential for extracting phase information in QPE.
+The Quantum Fourier Transform on $n$ qubits is defined as (see above):
+!bt
+\[
+    \vert x\rangle \rightarrow \frac{1}{\sqrt{2^n}}\sum_{y=0}^{2^n-1} e^{2\pi i xy / 2^n}\vert y\rangle.
+\]
+!et
+The QFT is essential for extracting phase information in QPE.
 
-\newpage
+!split
+===== Quantum Circuit and Working =====
 
-% Quantum Circuit and Working
-\section{Quantum Circuit and Working}
 The quantum circuit for QPE consists of two quantum registers:
-\begin{itemize}
-    \item The first register with $n$ qubits is initialized to $\ket{0}^{\otimes n}$.
-    \item The second register is initialized to the eigenstate $\ket{\psi}$ of $U$.
-\end{itemize}
+o The first register with $n$ qubits is initialized to $\vert 0\rangle^{\otimes n}$.
+o second register is initialized to the eigenstate $\vert\psi\rangle$ of $U$.
 
-\begin{figure}[h!]
-    \centering
-    \begin{quantikz}
-        \lstick{$\ket{0}^{\otimes n}$} & \gate{H} & \ctrl{1} & \gate{QFT^\dagger} & \meter{} \\
-        \lstick{$\ket{\psi}$} & \qw & \gate{U^{2^j}} & \qw & \qw
-    \end{quantikz}
-    \caption{Quantum Phase Estimation Circuit}
-\end{figure}
+Figure to be added
 
-% Derivation of the Algorithm
-\section{Derivation of the Algorithm}
-\subsection{Step 1: Initialization}
+!split
+===== Derivation of the Algorithm, Step 1: Initialization =====
+!bblock 
 The system starts in the state:
-\begin{equation}
-    \ket{0}^{\otimes n} \otimes \ket{\psi}.
-\end{equation}
+!bt
+\[
+\vert 0 \rangle ^{\otimes n} \otimes \vert\psi\rangle .
+\]
+!et
 Applying Hadamard gates to the first register creates a superposition:
-\begin{equation}
-    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} \ket{k}\otimes \ket{\psi}.
-\end{equation}
-
-\subsection{Step 2: Controlled Unitary Operations}
+!bt
+\[
+    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} \vert k \rangle \otimes \vert\psi\rangle .
+\]
+!et
+!eblock
+!split
+===== Step 2: Controlled Unitary Operations =====
 Controlled-$U^{2^j}$ gates apply the operation $U$ with exponential powers:
-\begin{equation}
-    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} \ket{k} \otimes U^k\ket{\psi}.
-\end{equation}
-For eigenstate $\ket{\psi}$, this becomes:
-\begin{equation}
-    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} e^{2\pi i \phi k}\ket{k} \otimes \ket{\psi}.
-\end{equation}
+!bblock
+!bt
+\[
+    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} \vert k \rangle  \otimes U^k\vert\psi\rangle .
+\]
+!et
+For eigenstate $\vert\psi\rangle $, this becomes:
+!bt
+\[
+    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} e^{2\pi i \phi k}\vert k \rangle  \otimes \vert\psi\rangle .
+\]
+!et
+!eblock
 
-\subsection{Step 3: Quantum Fourier Transform (QFT)}
+!split
+=====  Step 3: Quantum Fourier Transform (QFT) =====
+
+!bblock 
 Applying QFT to the first register transforms the state to:
-\begin{equation}
-    \sum_{k=0}^{2^n -1} c_k \ket{k},
-\end{equation}
+!bt
+\[
+    \sum_{k=0}^{2^n -1} c_k \vert k \rangle ,
+\]
+!et
 where coefficients $c_k$ are peaked near $k \approx 2^n \phi$.
 
-\subsection{Step 4: Measurement}
+!eblock
+!split
+=====  Step 4: Measurement =====
+!bblock
 Measuring the first register gives an $n$-bit estimate of $\phi$ with high probability.
+!eblock
 
-\newpage
+!split
+===== Simple code which implements the QPE =====
+!bc pycode
+import numpy as np
+def hadamard(n):
+   # Creates an n-qubit Hadamard gate as a matrix.
+   H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+   H_n = H
+   for _ in range(n - 1):
+       H_n = np.kron(H_n, H)  # Tensor product to expand Hadamard gate
+   return H_n
 
-% Applications
-\section{Applications of QPE}
-QPE is a foundational algorithm with several key applications:
-\begin{itemize}
-    \item \textbf{Factoring and Cryptography:} Integral to Shor's algorithm for integer factoring.
-    \item \textbf{Quantum Simulations:} Estimating eigenvalues of Hamiltonians in quantum chemistry.
-    \item \textbf{Amplitude Estimation:} Enhances algorithms like Grover's search.
-\end{itemize}
+def qft(n):
+   # Creates an n-qubit Quantum Fourier Transform (QFT) matrix.
+   N = 2**n
+   omega = np.exp(2j * np.pi / N)
+   qft_matrix = np.array([[omega**(i * j) for j in range(N)] for i in range(N)]) / np.sqrt(N)
+   return qft_matrix
 
-% Challenges and Practical Considerations
-\section{Challenges and Practical Considerations}
-\begin{itemize}
-    \item \textbf{Qubit Requirements:} Requires a large number of qubits for high precision.
-    \item \textbf{Gate Depth:} Controlled-$U^{2^j}$ operations increase gate complexity.
-    \item \textbf{Noise Sensitivity:} Errors in QFT or controlled gates impact accuracy.
-\end{itemize}
+def inverse_qft(n):
+   # Creates an n-qubit inverse Quantum Fourier Transform (QFT†) matrix.
+   return np.conj(qft(n)).T  # Hermitian transpose of QFT
 
-% Conclusion
-\section{Conclusion}
-Quantum Phase Estimation is a powerful quantum algorithm for extracting phase information of unitary operators. It forms the foundation for many advanced quantum algorithms and demonstrates the power of quantum Fourier transforms in computational tasks.
+def controlled_unitary(U, control, target, n):
+   # Creates an n-qubit controlled unitary matrix
+   I = np.eye(2**n)  # Identity matrix
+   CU = np.copy(I)
+   for i in range(2**n):
+       if (i >> control) & 1:  # Check if control qubit is |1⟩
+           CU[i, :] = np.kron(np.eye(2**target), U).dot(I[i, :])
+   return CU
 
+def apply_gate(state, gate):
+   # Applies a gate (matrix) to a quantum state (vector).
+   return gate @ state
+
+def measure(state):
+   # Simulates measurement by computing probability distribution
+   probabilities = np.abs(state) ** 2
+   return np.argmax(probabilities)  # Return the most probable outcome
+
+def qpe(unitary, phi, num_counting_qubits):
+   # Simulates the Quantum Phase Estimation algorithm.
+   n = num_counting_qubits
+   total_qubits = n + 1
+   dim = 2**total_qubits
+
+   # Step 1: Initialize state |0...0⟩ ⊗ |ψ⟩
+   state = np.zeros(dim, dtype=complex)
+   state[0] = 1  # |00...0⟩
+
+   # Step 2: Apply Hadamard to counting qubits
+   H_n = hadamard(n)
+   state = apply_gate(state.reshape(2**n, 2), H_n).reshape(dim)
+
+   # Step 3: Apply controlled-U^2^j operations
+   for j in range(n):
+       power = 2**j
+       U_power = np.linalg.matrix_power(unitary, power)
+       CU = controlled_unitary(U_power, j, n, total_qubits)
+       state = apply_gate(state, CU)
+
+   # Step 4: Apply inverse QFT
+   IQFT = inverse_qft(n)
+   state = apply_gate(state.reshape(2**n, 2), IQFT).reshape(dim)
+
+   # Step 5: Measure and return estimated phase
+   measurement_result = measure(state)
+   return measurement_result / (2**n)  # Convert binary to decimal
+
+# Define the unitary U with phase φ = 1/3
+phi = 1/3
+U = np.array([[1, 0], [0, np.exp(2j * np.pi * phi)]])  # Phase gate
+
+# Run QPE
+num_counting_qubits = 3  # More qubits give higher precision
+estimated_phi = qpe(U, phi, num_counting_qubits)
+print(f"Estimated phase: {estimated_phi}")
+print(f"Actual phase: {phi}")
+!ec
+
+!split
+===== Code which implements the QPE using Qiskit =====
+!bc pycode
+from qiskit import QuantumCircuit, Aer, transpile, assemble, execute
+from qiskit.visualization import plot_histogram
+import numpy as np
+
+def qpe(unitary, num_counting_qubits):
+   """
+   Quantum Phase Estimation Algorithm.
+   Args:
+       unitary (QuantumCircuit): The unitary operator whose phase we estimate.
+       num_counting_qubits (int): Number of qubits in the counting register.
+
+   Returns:
+       QuantumCircuit: QPE quantum circuit
+   """
+   n = num_counting_qubits
+   qc = QuantumCircuit(n + 1, n)  # n counting qubits + 1 eigenstate qubit
+   # Step 1: Apply Hadamard to counting qubits
+   for qubit in range(n):
+       qc.h(qubit)
+   # Step 2: Apply controlled-U^2^j operations
+   for j in range(n):
+       power = 2**j
+       controlled_U = unitary.control(1).power(power)
+       qc.append(controlled_U, [j] + [n])  # Control: j, Target: n
+   # Step 3: Apply inverse QFT
+   qc.append(qft_dagger(n), range(n))
+   # Step 4: Measure counting qubits
+   qc.measure(range(n), range(n))
+   return qc
+
+def qft_dagger(n):
+   """Creates an inverse Quantum Fourier Transform (QFT†) circuit."""
+   qc = QuantumCircuit(n)
+   for qubit in range(n//2):
+       qc.swap(qubit, n-qubit-1)
+   for j in range(n):
+       for m in range(j):
+           qc.cp(-np.pi / (2**(j-m)), m, j)
+       qc.h(j)
+   return qc
+# Define the unitary U with phase phi = 1/3
+phi = 1/3
+U = QuantumCircuit(1)
+U.p(2 * np.pi * phi, 0)  # Phase gate
+# Number of counting qubits
+num_counting_qubits = 3
+# Generate QPE circuit
+qpe_circuit = qpe(U, num_counting_qubits)
+# Simulate the circuit
+simulator = Aer.get_backend('qasm_simulator')
+compiled_circuit = transpile(qpe_circuit, simulator)
+qobj = assemble(compiled_circuit)
+result = simulator.run(qobj).result()
+# Get measurement results
+counts = result.get_counts()
+# Plot histogram of results
+plot_histogram(counts)
+!ec
+
+
+!split
+===== Code which implements the QPE using PennyLane =====
+
+!bc pycode
+import pennylane as qml
+import numpy as np
+def qft(n):
+   # Applies the inverse Quantum Fourier Transform (QFT†) circuit
+   for i in range(n):
+       qml.Hadamard(wires=i)
+       for j in range(i):
+           qml.CPhase(-np.pi / (2 ** (i - j)), wires=[j, i])
+   for i in range(n // 2):
+       qml.SWAP(wires=[i, n - i - 1])
+
+def controlled_unitary(U, control, target):
+   # Applies a controlled-unitary operation
+   qml.ctrl(U, control=control)(wires=target)
+
+
+def qpe(phi, num_counting_qubits):
+   # Quantum Phase Estimation circuit in PennyLane.
+   total_qubits = num_counting_qubits + 1
+   dev = qml.device("default.qubit", wires=total_qubits, shots=1000)
+   @qml.qnode(dev)
+   def circuit():
+       # Initialize the counting register in |0> and eigenstate register in |1>
+       qml.PauliX(wires=num_counting_qubits)  # Set last qubit to |1>
+       # Apply Hadamard to counting qubits
+       for qubit in range(num_counting_qubits):
+           qml.Hadamard(wires=qubit)
+       # Apply controlled-U^2^j operations
+       for j in range(num_counting_qubits):
+           power = 2**j
+           U = qml.RZ(2 * np.pi * phi, wires=num_counting_qubits)  # Phase shift
+           controlled_unitary(U, control=j, target=num_counting_qubits)
+       # Apply inverse QFT
+       qft(num_counting_qubits)
+       # Measure counting qubits
+       return qml.sample(wires=range(num_counting_qubits))
+   # Run the circuit
+   samples = circuit()
+   # Convert measurement results to decimal phase estimate
+   binary_result = "".join(map(str, samples[0]))  # Take the first sample
+   estimated_phi = int(binary_result, 2) / (2 ** num_counting_qubits)
+   return estimated_phi
+# Define the phase φ
+phi = 1/3
+# Number of counting qubits (higher gives better precision)
+num_counting_qubits = 3
+# Run QPE
+estimated_phi = qpe(phi, num_counting_qubits)
+print(f"Estimated phase: {estimated_phi}")
+print(f"Actual phase: {phi}")
+!ec
+
+!split
+===== Applications of QPE =====
+
+The QPE is a foundational algorithm with several key applications:
+o \textbf{Factoring and Cryptography:} Integral to Shor's algorithm for integer factoring.
+o \textbf{Quantum Simulations:} Estimating eigenvalues of Hamiltonians in many-body physics.
+o \textbf{Amplitude Estimation:} Enhances algorithms like Grover's search.
+
+!split
+===== Challenges and Practical Considerations =====
+
+o \textbf{Qubit Requirements:} Requires a large number of qubits for high precision.
+o \textbf{Gate Depth:} Controlled-$U^{2^j}$ operations increase gate complexity.
+o \textbf{Noise Sensitivity:} Errors in QFT or controlled gates impact accuracy.
+
+It is a powerful quantum algorithm for extracting phase information of
+unitary operators. It forms the foundation for many advanced quantum
+algorithms and demonstrates the power of quantum Fourier transforms in
+computational tasks. For many-body simulations it is however not as efficient as the VQE algorithm.
