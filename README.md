@@ -40,7 +40,7 @@ themes can be covered:
   - Spectral decomposition and measurements
   - Density matrices
   - Entanglement, pure and mixed states
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
+v- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week2  
   - _Reading recommendation_: Scherer chapter 2 and sections 3.1-3.3. Hundt, Quantum Computing for Programmers, chapter 2.1-2.5. Hundt's text is relevant for the programming part where we build from scratch the ingredients we will need.
   - Video of lecture at https://youtu.be/T7l-rciM0N0
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesJanuary29.pdf 
@@ -109,23 +109,30 @@ themes can be covered:
 
 
 ## March 31-April 4, 2025
-  - TBA
+  - Discrete Fourier transforms (DFTs, reminder from last week) ) and the fast Fourier Transform (FFT)
+  - Quantum Fourier transforms (QFTs), reminder from last week
+  - Setting up circuits for QFTs
+  - Quantum phase estimation algorithm (QPE)
+- Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
 
 ## April 7-11, 2025
-  - TBA
+  - Setting up circuits for QFTs
+  - Quantum phase estimation algorithm (QPE)
+- Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
+
 
 ## April 14-18, 2025, Public holidays in Norway no classes
 
 ## April 21-15, 2025
-  - TBA
+  - Quantum Machine Learning
 
 
 ## April 28-May 2, 2025
-  - TBA
+  - Quantum machine learning
 
 ## May 5-9, 2025
-  - TBA
+  - Quantum machine learning
 
 ## May 12-16, 2025
-  - TBA
+  - Quantum machine learning
   - Summary of course
