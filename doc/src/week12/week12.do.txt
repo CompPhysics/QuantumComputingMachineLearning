@@ -6,8 +6,152 @@ DATE: April 9
 ===== Plans for the week of April 7-11, 2025 =====
 
 !bblock 
-o TBA
-o "Video of lecture TBA":"https://youtu.be/"
+o Quantum phase estimation algorithm, final derivation and discussions
+o Brief discussion of Shor's algorithm
+o Reading recommendation: Hundt section 6.4 for the QPE and section 6.5 for Shor's algorithm
+#o "Video of lecture TBA":"https://youtu.be/"
 #o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesApril10.pdf"
 !eblock
+
+!split
+===== Reminder on the Quantum Fourier transform =====
+
+!split
+===== Quantum phase estimation algorithm =====
+
+!split
+===== Brief overview of Shor's algorithm =====
+
+o Shor's algorithm is a quantum algorithm for integer factorization.
+o It efficiently factors large integers by leveraging quantum period finding.
+o Exponential speedup over the best-known classical algorithms.
+o Breaks RSA encryption, which relies on the difficulty of factoring.
+
+!split
+===== Some history =====
+
+Shor's algorithm, introduced by Peter Shor in 1994, revolutionized the
+field of cryptography. It demonstrated that a quantum computer could
+solve integer factorization and the discrete logarithm problem
+efficiently, posing a significant threat to classical cryptosystems
+such as RSA.
+
+!split
+===== Problem Statement =====
+
+The objective of Shor's algorithm is to factorize a large composite
+integer \( N \) into its prime factors. Given \( N = p \times q \),
+where \( p \) and \( q \) are unknown distinct primes, the problem of
+factorization can be reduced to finding an integer \( a \) such that
+\( 1 < a < N \) and \( \gcd(a, N) = 1 \).
+
+!split
+===== Reduction to Order-Finding =====
+
+The key reduction in Shor's algorithm lies in transforming
+factorization into an order-finding problem:
+
+o Choose a random integer \( a \) such that \( 1 < a < N \) and \( \gcd(a, N) = 1 \).
+o Determine the smallest positive integer \( r \) such that \( a^r \equiv 1 \pmod{N} \).
+
+The integer \( r \) is known as the \textit{order} of \( a \) modulo
+\( N \), and it helps in discovering the factors of \( N \).
+
+!split
+===== Continued Fraction Expansion =====
+
+After obtaining the rational approximation from the quantum algorithm,
+classical computation using continued fraction expansion aids in
+deducing the correct order \( r \).
+
+
+
+!split
+===== Basics of number theory =====
+
+o The problem: Factor an integer $N$ into its prime factors.
+o Reduce factoring to period finding $f(x) = a^x \mod N$, where $a$ is randomly chosen such that $\gcd(a, N) = 1$.
+o The period $r$ satisfies $a^r \equiv 1 \mod N$.
+o Once $r$ is known, factors are given by $\gcd(a^{r/2} \pm 1, N)$.
+
+!split
+===== QFTs again =====
+
+The Quantum Fourier Transform is crucial to Shor's algorithm. It
+leverages quantum parallelism and interference to efficiently estimate
+the periodicity of a function.
+!bt
+\[
+\text{QFT}: \vert x\rangle \mapsto \frac{1}{\sqrt{2^n}} \sum_{y=0}^{2^n-1} e^{2\pi ixy/2^n} \vert y\rangle
+\]
+!et
+
+The quantum part of Shor's algorithm is designed to find the period \(
+r \) of the modular exponentiation function \( f(x) = a^x \bmod N \):
+
+
+!split
+===== Quantum Period Finding =====
+Quantum Period Finding: Key to Shor's Algorithm
+
+o Quantum subroutine for finding the period $r$ of $f(x)$.
+o Similar to Quantum Phase Estimation (QPE).
+o Uses two quantum registers:
+  * First register: Superposition of all possible inputs $x$.
+  * Second register: Computes $f(x) = a^x \mod N$.
+
+!split
+===== Applying Quantum Fourier Transform (QFT) =====
+
+o The QFT is applied to the first register after the controlled unitary operations.
+o Peaks in the measurement correspond to multiples of $1/r$.
+o Post-processing classically determines $r$ by continued fractions.
+
+
+
+!split
+===== Classical Post-Processing =====
+
+o Once $r$ is found, factors of $N$ are computed by $\gcd(a^{r/2} \pm 1, N)$.
+o If $r$ is odd or $a^{r/2} \equiv -1 \mod N$, try a different $a$.
+o With high probability, this yields a non-trivial factor of $N$.
+
+!split
+=====  Complexity and Practical Considerations =====
+
+o Quantum Complexity: Polynomial in $\log N$.
+o Classical Best Known: Sub-exponential (Number Field Sieve).
+o Quantum Advantage: Exponential speedup over classical algorithms.
+o Practical Challenges: Quantum error correction, large qubit counts.
+
+
+!split
+===== Error Analysis and Success Probability =====
+
+The probability that a randomly chosen \( a \) leads to successful
+factoring is generally greater than 50\%. The quantum component
+requires carefully managed resources for high precision.
+
+
+Error correction is crucial, as any errors in operations or QFT can
+significantly impact the accuracy of period estimation and the
+eventual factorization.
+
+
+!split
+===== Summarizing Shor's algorithm =====
+
+Shor's algorithm is a central  quantum algorithm demonstrating
+exponential speedup over classical counterparts. It brought both
+excitement for potential quantum advancements and a reconsideration of
+current cryptographic standards.
+
+o Shor's algorithm is a groundbreaking quantum algorithm for factoring.
+o Combines quantum period finding with classical number theory.
+o Highlights the potential of quantum computing to break RSA.
+
+
+
+
+
 
