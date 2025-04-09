@@ -123,16 +123,15 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
 
 ## April 14-18, 2025, Public holidays in Norway no classes
 
-## April 21-15, 2025
-  - Quantum Machine Learning
+## April 21-15, 2025 Quantum Machine Learning
+  - Basics of quantum machine learning and discussion of support vector machines
 
+## April 28-May 2, 2025 Quantum machine learning
+  - Quantum support vector machines
 
-## April 28-May 2, 2025
-  - Quantum machine learning
-
-## May 5-9, 2025
-  - Quantum machine learning
+## May 5-9, 2025 Quantum Machine Learning
+  - Quantum machine learning and quantum neural networks
 
 ## May 12-16, 2025
-  - Quantum machine learning
+  - Quantum machine learning and quantum Boltzmann machines
   - Summary of course
