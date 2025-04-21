@@ -210,6 +210,9 @@ The case with two well-separated classes only can be understood in an
 intuitive way in terms of lines in a two-dimensional space separating
 the two classes (see figure below).
 
+!split
+===== Basic mathematics =====
+
 The basic mathematics behind the SVM is however less familiar to most of us. 
 It relies on the definition of hyperplanes and the
 definition of a _margin_ which separates classes (in case of
@@ -317,9 +320,14 @@ The aim of the SVM algorithm is to find a hyperplane in a
 $p$-dimensional space, where $p$ is the number of features that
 distinctly classifies the data points.
 
-In a $p$-dimensional space, a hyperplane is what we call an affine subspace of dimension of $p-1$.
-As an example, in two dimension, a hyperplane is simply as straight line while in three dimensions it is 
-a two-dimensional subspace, or stated simply, a plane. 
+In a $p$-dimensional space, a hyperplane is what we call an affine
+subspace of dimension of $p-1$.  As an example, in two dimension, a
+hyperplane is simply as straight line while in three dimensions it is
+a two-dimensional subspace, or stated simply, a plane.
+
+
+!split
+===== Two-dimensional case =====
 
 In two dimensions, with the variables $x_1$ and $x_2$, the hyperplane is defined as
 !bt
@@ -357,6 +365,10 @@ of dimension $n\times p$, where $n$ represents the observations for each feature
 \bm{x}_i = \begin{bmatrix} x_{i1} \\ x_{i2} \\ \dots \\ \dots \\ x_{ip} \end{bmatrix}.
 \]
 !et
+
+!split
+===== More details =====
+
 If the above condition is not met for a given vector $\bm{x}_i$ we have 
 !bt
 \[
@@ -380,7 +392,9 @@ y_i\left(b+w_1x_{i1}+w_2x_{i2}+\dots +w_px_{ip}\right) > 0.
 \]
 !et
 
-When we try to separate hyperplanes, if it exists, we can use it to construct a natural classifier: a test observation is assigned a given class depending on which side of the hyperplane it is located.
+When we try to separate hyperplanes, if it exists, we can use it to
+construct a natural classifier: a test observation is assigned a given
+class depending on which side of the hyperplane it is located.
 
 !split 
 ===== The two-dimensional case ===== 
@@ -393,6 +407,9 @@ plane that has the maximum margin, i.e the maximum distance between
 data points of both classes. Maximizing the margin distance provides
 some reinforcement so that future data points can be classified with
 more confidence.
+
+!split
+===== Linear classifier =====
 
 What a linear classifier attempts to accomplish is to split the
 feature space into two half spaces by placing a hyperplane between the
@@ -438,7 +455,10 @@ C(\bm{w},b) = -\sum_{i\in M} y_i(\bm{w}^T\bm{x}_i+b).
 \]
 !et
 
-We could now for example define all values $y_i =1$ as misclassified in case we have $\bm{w}^T\bm{x}_i+b < 0$ and the opposite if we have $y_i=-1$. Taking the derivatives gives us
+We could now for example define all values $y_i =1$ as misclassified
+in case we have $\bm{w}^T\bm{x}_i+b < 0$ and the opposite if we have
+$y_i=-1$. Taking the derivatives gives us
+
 !bt
 \[
 \frac{\partial C}{\partial b} = -\sum_{i\in M} y_i,
@@ -469,22 +489,18 @@ and
 where $\eta$ is our by now well-known learning rate. 
 
 
-!split
-===== Code Example =====
 
-The equations we discussed above can be coded rather easily (the
-framework is similar to what we developed for logistic
-regression). We are going to set up a simple case with two classes only and we want to find a line which separates them the best possible way.
-!bc pycod
-
-!ec
 
 !split
 ===== Problems with the Simpler Approach =====
 
+The equations we discussed above can be coded rather easily (the
+framework is similar to what has been  developed for say logistic
+regression).
+
 
 There are however problems with this approach, although it looks
-pretty straightforward to implement. When running the above code, we see that we can easily end up with many diffeent lines which separate the two classes.
+pretty straightforward to implement. When running such a code, we see that we can easily end up with many diffeent lines which separate the two classes.
 
 
 For small
@@ -509,7 +525,11 @@ y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, p.
 !et
 All points are thus at a signed distance from the decision boundary defined by the line $L$. The parameters $b$ and $w_1$ and $w_2$ define this line. 
 
-We seek thus the largest value $M$ defined by
+!split
+===== Largest value $M$ =====
+
+
+We seek the largest value $M$ defined by
 !bt
 \[
 \frac{1}{\vert \vert \bm{w}\vert\vert}y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, n, 
@@ -556,6 +576,10 @@ due to
 df = \frac{\partial f}{\partial x}dx+\frac{\partial f}{\partial y}dy+\frac{\partial f}{\partial z}dz.
 \]
 !et
+
+!split
+===== Not all variables are indepenent of each other =====
+
 In many problems the variables $x,y,z$ are often subject to constraints (such as those above for the margin)
 so that they are no longer all independent. It is possible at least in principle to use each 
 constraint to eliminate one variable
@@ -575,6 +599,10 @@ the variables $x,y,z$
 d\phi = \frac{\partial \phi}{\partial x}dx+\frac{\partial \phi}{\partial y}dy+\frac{\partial \phi}{\partial z}dz =0.
 \]
 !et
+
+!split
+===== Only two independent variables =====
+
 Now we cannot set anymore
 !bt
 \[
@@ -610,6 +638,10 @@ Our multiplier is chosen so that
 \]
 !et
 
+
+!split
+===== More details =====
+
 We need to remember that we took $dx$ and $dy$ to be arbitrary and thus we must have
 !bt
 \[
@@ -634,7 +666,7 @@ If we have a set of constraints $\phi_k$ we have the equations
 !et
 
 !split
-===== Setting up the Problem =====
+===== Setting up the problem =====
 In order to solve the above problem, we define the following Lagrangian function to be minimized 
 !bt
 \[
@@ -642,6 +674,10 @@ In order to solve the above problem, we define the following Lagrangian function
 \]
 !et
 where $\lambda_i$ is a so-called Lagrange multiplier subject to the condition $\lambda_i \geq 0$.
+
+
+!split
+===== Setting up derivaties =====
 
 Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
 !bt
@@ -662,6 +698,10 @@ Inserting these constraints into the equation for ${\cal L}$ we obtain
 \]
 !et
 subject to the constraints $\lambda_i\geq 0$ and $\sum_i\lambda_iy_i=0$. 
+
+!split
+===== Karush-Kuhn-Tucker condition =====
+
 We must in addition satisfy the "Karush-Kuhn-Tucker":"https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions" (KKT) condition
 !bt
 \[
@@ -724,6 +764,9 @@ or if we write it out in terms of the support vectors only, with $N_s$ being the
 b = \frac{1}{N_s}\sum_{j\in N_s}\left(y_j-\sum_{i=1}^n\lambda_iy_i\bm{x}_i^T\bm{x}_j\right).
 \]
 !et
+
+!split
+===== Classifier equations =====
 With our hyperplane coefficients we can use our classifier to assign any observation by simply using 
 !bt
 \[
@@ -756,9 +799,15 @@ y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i,
 \]
 !et
 with the requirement $\xi_i\geq 0$. The total violation is now $\sum_i\xi$. 
-The value $\xi_i$ in the constraint the last constraint corresponds to the  amount by which the prediction
-$y_i(\bm{w}^T\bm{x}_i+b)=1$ is on the wrong side of its margin. Hence by bounding the sum $\sum_i \xi_i$,
-we bound the total amount by which predictions fall on the wrong side of their margins.
+
+!split
+===== Misclassification =====
+
+The value $\xi_i$ in the constraint the last constraint corresponds to
+the amount by which the prediction $y_i(\bm{w}^T\bm{x}_i+b)=1$ is on
+the wrong side of its margin. Hence by bounding the sum $\sum_i
+\xi_i$, we bound the total amount by which predictions fall on the
+wrong side of their margins.
 
 Misclassifications occur when $\xi_i > 1$. Thus bounding the total sum by some value $C$ bounds in turn the total number of
 misclassifications.
@@ -781,6 +830,9 @@ y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i \hspace{0.1cm}\forall i,
 !et
 with the requirement $\xi_i\geq 0$.
 
+!split
+===== Derivatives with respect to $b$ and $\bm{w}$ =====
+
 Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
 !bt
 \[
@@ -799,6 +851,10 @@ and
 \lambda_i = C-\gamma_i \hspace{0.1cm}\forall i.
 \]
 !et
+
+!split
+===== New constraints =====
+
 Inserting these constraints into the equation for ${\cal L}$ we obtain the same equation as before
 !bt
 \[
@@ -897,7 +953,8 @@ plt.show()
 !split
 ===== The equations =====
 
-Suppose we define a polynomial transformation of degree two only (we continue to live in a plane with $x_i$ and $y_i$ as variables)
+Suppose we define a polynomial transformation of degree two only (we
+continue to live in a plane with $x_i$ and $y_i$ as variables)
 !bt
 \[
 z = \phi(x_i) =\left(x_i^2, y_i^2, \sqrt{2}x_iy_i\right).
@@ -917,6 +974,10 @@ y_i(\bm{w}^T\bm{z}_i+b)= 1 \hspace{0.1cm}\forall i,
 \]
 !et
 from which we also find $b$.
+
+!split
+===== Defining the kernel =====
+
 To compute $\bm{z}_i^T\bm{z}_j$ we define the kernel $K(\bm{x}_i,\bm{x}_j)$ as
 !bt
 \[
@@ -929,6 +990,9 @@ For the above example, the kernel reads
 K(\bm{x}_i,\bm{x}_j)=[x_i^2, y_i^2, \sqrt{2}x_iy_i]^T\begin{bmatrix} x_j^2 \\ y_j^2 \\ \sqrt{2}x_jy_j \end{bmatrix}=x_i^2x_j^2+2x_ix_jy_iy_j+y_i^2y_j^2.
 \]
 !et
+
+!split
+===== Kernel trick =====
 
 We note that this is nothing but the dot product of the two original
 vectors $(\bm{x}_i^T\bm{x}_j)^2$. Instead of thus computing the
@@ -965,6 +1029,8 @@ subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =
 $\bm{y}=[y_1,y_2,\dots,y_n]$. 
 If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
 
+!split
+===== Convex optimization =====
 We can rewrite this (see the solutions below) in terms of a convex optimization problem of the type
 !bt
 \begin{align*}
@@ -978,7 +1044,7 @@ $0\leq \lambda_i$ and $\lambda_i \leq C$. These two inequalities define then the
 
 
 !split
-===== Different kernels and Mercer's theorem =====
+===== Different kernels =====
 
 There are several popular kernels being used. These are
 o Linear: $K(\bm{x},\bm{y})=\bm{x}^T\bm{y}$,
@@ -986,6 +1052,10 @@ o Polynomial: $K(\bm{x},\bm{y})=(\bm{x}^T\bm{y}+\gamma)^d$,
 o Gaussian Radial Basis Function: $K(\bm{x},\bm{y})=\exp{\left(-\gamma\vert\vert\bm{x}-\bm{y}\vert\vert^2\right)}$,
 o Tanh: $K(\bm{x},\bm{y})=\tanh{(\bm{x}^T\bm{y}+\gamma)}$,
 and many other ones.
+
+
+!split
+===== Mercer's theorem =====
 
 An important theorem for us is "Mercer's
 theorem":"https://en.wikipedia.org/wiki/Mercer%27s_theorem".  The
@@ -1218,8 +1288,9 @@ subject to some constraints for say a selected set $i=1,2,\dots, n$.
 In our case we are optimizing with respect to the Lagrangian multipliers $\lambda_i$, and the
 vector $\bm{\lambda}=[\lambda_1, \lambda_2,\dots, \lambda_n]$ is the optimization variable we are dealing with.
 
-In our case we are particularly interested in a class of optimization problems called convex optmization problems. 
-In our discussion on gradient descent methods we discussed at length the definition of a convex function. 
+In our case we are particularly interested in a class of optimization
+problems called convex optmization problems.
+
 
 Convex optimization problems play a central role in applied mathematics and we recommend strongly "Boyd and Vandenberghe's text on the topics":"http://web.stanford.edu/~boyd/cvxbook/".
 
@@ -1268,6 +1339,10 @@ Let us show how to perform the optmization using a simple case. Assume we want t
     &3x+4y  \leq  80.  \\ \nonumber
 \end{align*}
 !et
+
+!split
+===== Rewriting in terms of vectors and matrices =====
+
 The minimization problem can be rewritten in terms of vectors and matrices as (with $x$ and $y$ being the unknowns)
 !bt
 \[
@@ -1280,6 +1355,10 @@ Similarly, we can now set up the inequalities (we need to change $\geq$ to $\leq
 \begin{bmatrix} -1 & 0 \\ 0 & -1 \\ -1 & -3 \\ 2 & 5 \\ 3 & 4\end{bmatrix}\begin{bmatrix} x \\ y\end{bmatrix} \preceq \begin{bmatrix}0 \\ 0\\ -15 \\ 100 \\ 80\end{bmatrix}.
 \]
 !et
+
+!split
+===== Rewriting inequalities =====
+
 We have collapsed all the inequalities into a single matrix $\bm{G}$. We see also that our matrix 
 !bt
 \[
@@ -1337,9 +1416,6 @@ Using the _CVXOPT_ library, the matrix $P$ would then be defined by the above ma
 
 
 !split
-===== Support vector machines for regression =====
-
-Material will be added here.
-
-
-
+===== Plans for next week =====
+o Discussion of quantum support vector machines
+o Introducing quantum neural networks
