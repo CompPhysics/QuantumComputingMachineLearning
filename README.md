@@ -126,6 +126,8 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
 
 ## April 21-15, 2025 Quantum Machine Learning
   - Basics of quantum machine learning and discussion of support vector machines
+  - Video of lecture at https://youtu.be/C36Kg4eaO7A
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf  
 
 ## April 28-May 2, 2025 Quantum machine learning
   - Quantum support vector machines
