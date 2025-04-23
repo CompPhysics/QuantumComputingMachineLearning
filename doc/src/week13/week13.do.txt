@@ -1415,8 +1415,122 @@ With  the slack constants this leads to the additional constraint $0\leq \lambda
 Using the _CVXOPT_ library, the matrix $P$ would then be defined by the above matrix while the KKT conditions would all be collected by the matrix $G$.
 
 
+!split
+===== Quantum SVMs =====
+
+The idea of a classical SVM is that we have a set of points
+that are in either one group or another and we want to find a line that
+separates these two groups. This line can be linear, but it can also be
+much more complex, which can be achieved by the use of Kernels.
+
+!split
+===== What will we need in the case of a quantum computer? =====
+
+!bblock
+We will have to translate the classical data point \(\vec{x}\)
+into a quantum datapoint \(\vert \Phi{(\vec{x})} \rangle\). This can
+be achieved by a circuit $\mathcal{U}\_\{\Phi(\vec{x})\} \vert 0\rangle$.
+
+
+Here \(\Phi()\) could be any classical function applied
+on the classical data \(\vec{x}\).
+!eblock
+!bblock 
+We need a parameterized quantum circuit \(W( \theta )\) that
+processes the data in a way that in the end we
+can apply a measurement that returns a classical value \(-1\) or
+\(1\) for each classical input \(\vec{x}\) that indentifies the label
+of the classical data.
+!eblock
+
+
+!split
+===== The most general ansatz =====
+
+Following these steps we can define an ansatz for this kind of problem
+which is \(W(\theta) \mathcal{U}_{\Phi}(\vec{x}) \vert 0 \rangle\).
+
+These kind of ansatz are called quantum variational circuits.
+
+!split
+===== Quantum SVM =====
+
+In the case of a quantum SVM we will only used the quantum feature maps
+\(\mathcal{U}_{\Phi(\vec{x})}\) to translate the classical data into
+quantum states and build the Kernel of the SVM out of these quantum
+states. After calculating the Kernel matrix on the quantum computer we
+can train the Quantum SVM the same way as the classical SVM.
+
+
+!split
+===== Defining the Quantum Kernel =====
+
+The idea of the quantum kernel is exactly the same as in the classical
+case. We take the inner product
+\(K(\vec{x}, \vec{z}) = \vert \langle \Phi (\vec{x}) \vert \Phi(\vec{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\vec{x})}^{t} \mathcal{U}_{\Phi(\vec{z})} \vert 0^n \rangle\),
+but now with the quantum feature maps \(\mathcal{U}_{\Phi(\vec{x})}\).
+The idea is that if we choose a quantum feature maps that is not easy to
+simulate with a classical computer we might obtain a quantum advantage.
+
+
+!split
+===== Side note =====
+
+There is no proof yet that the QSVM brings a quantum
+advantage, but the argument the authors of
+URL:"https://arxiv.org/pdf/1804.11326.pdf" make, is that there is
+for sure no advantage if we use feature maps that are easy to simulate
+classically, because then we would not need a quantum computer to
+construct the Kernel.
+
+!split
+===== Feature map =====
+
+For the feature maps we use the ansatz
+!bt
+\[
+\mathcal{U}_{\Phi(x)} = U_{\Phi(x)} \otimes H^{\otimes n},
+\]
+!et
+where
+!bt
+\[
+U_{\Phi(x)} = \exp \left( i \sum_{S \in n} \phi_S(x) \prod_{i \in S} Z_i \right),
+\]
+!et
+which simplifies a lot when we (like in URL:"https://arxiv.org/pdf/1804.11326.pdf") only consider
+\(S \leq 2\) interactions, which means we only let two qubits interact
+at a time. For \(S \leq 2\) the product \(\prod_{i \in S}\) only leads
+to interactions \(Z_i Z_j\) and non interacting terms \(Z_i\). And the
+sum \(\sum_{S \in n}\) over all these terms that are possible with \(n\)
+qubits.
+
+!split
+===== Classical functions =====
+
+Finally we define the classical functions \(\phi_i(\vec{x}) = x_i\) and
+\(\phi_{i,j}(\vec{x}) = (\pi - x_i)( \pi- x_j)\).
+
+If we write this ansatz for 2 qubits and \(S \leq 2\) we see how it
+simplifies:
+!bt
+\[
+U_{\Phi(x)} = \exp \left(i \left(x_1 Z_1 + x_2 Z_2 + (\pi - x_1)( \pi- x_2) Z_1 Z_2 \right) \right).
+\]
+!et
+We won't get into details to much here, why we would take this ansatz.
+It is simply an ansatz that is simple enough an leads to good results.
+
+Finally we can define a depth of these circuits. Depth 2 means we repeat
+this ansatz two times. Which means our feature map becomes
+\(U_{\Phi(x)} \otimes H^{\otimes n} \otimes U_{\Phi(x)} \otimes H^{\otimes n}\)
+
 
 !split
 ===== Plans for next week =====
-o Discussion of quantum support vector machines
+o Discussion of quantum support vector machines and quantum kernels
 o Introducing quantum neural networks
+
+
+
+
