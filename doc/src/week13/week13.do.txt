@@ -9,7 +9,7 @@ DATE: April 23
 !bblock Quantum Machine Learning (QML)
   o Introduction to QML
   o Support Vector Machines (SVM, classical machine learning approach)
-  o Quantum Support Vector Machine Learning (QSVM)
+  o Quantum Support Vector Machine Learning (QSVM), short intro
   o Video of lecture at URL:"https://youtu.be/C36Kg4eaO7A"
   o Whiteboard notes at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf"  
 !eblock
@@ -1443,108 +1443,6 @@ can apply a measurement that returns a classical value \(-1\) or
 of the classical data.
 !eblock
 
-
-!split
-===== The most general ansatz =====
-
-Following these steps we can define an ansatz for this kind of problem
-which is
-!bt
-\[
-W(\theta) \mathcal{U}_{\Phi}(\vec{x}) \vert 0 \rangle.
-\]
-!et
-
-These kind of ansatzes are called quantum variational circuits.
-
-!split
-===== Quantum SVM =====
-
-In the case of a quantum SVM we will only use the quantum feature maps
-!bt
-\[
-\mathcal{U}_{\Phi(\vec{x})},
-\]
-!et
-to translate the classical data into
-quantum states and build the Kernel of the SVM out of these quantum
-states. After calculating the Kernel matrix on the quantum computer we
-can train the Quantum SVM the same way as the classical SVM.
-
-
-!split
-===== Defining the Quantum Kernel =====
-
-The idea of the quantum kernel is exactly the same as in the classical
-case. We take the inner product
-!bt
-\[
-K(\vec{x}, \vec{z}) = \vert \langle \Phi (\vec{x}) \vert \Phi(\vec{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\vec{x})}^{t} \mathcal{U}_{\Phi(\vec{z})} \vert 0^n \rangle,
-\]
-!et
-but now with the quantum feature maps
-!bt
-\[
-\mathcal{U}_{\Phi(\vec{x})}.
-\]
-!et
-
-The idea is that if we choose a quantum feature maps that is not easy
-to simulate with a classical computer we might obtain a quantum
-advantage.
-
-
-!split
-===== Side note =====
-
-There is no proof yet that the QSVM brings a quantum
-advantage, but the argument the authors of
-URL:"https://arxiv.org/pdf/1804.11326.pdf" make, is that there is
-for sure no advantage if we use feature maps that are easy to simulate
-classically, because then we would not need a quantum computer to
-construct the Kernel.
-
-!split
-===== Feature map =====
-
-For the feature maps we use the ansatz
-!bt
-\[
-\mathcal{U}_{\Phi(x)} = U_{\Phi(x)} \otimes H^{\otimes n},
-\]
-!et
-where
-!bt
-\[
-U_{\Phi(x)} = \exp \left( i \sum_{S \in n} \phi_S(x) \prod_{i \in S} Z_i \right),
-\]
-!et
-which simplifies a lot when we (like in URL:"https://arxiv.org/pdf/1804.11326.pdf") only consider
-\(S \leq 2\) interactions, which means we only let two qubits interact
-at a time. For \(S \leq 2\) the product \(\prod_{i \in S}\) only leads
-to interactions \(Z_i Z_j\) and non interacting terms \(Z_i\). And the
-sum \(\sum_{S \in n}\) over all these terms that are possible with \(n\)
-qubits.
-
-!split
-===== Classical functions =====
-
-Finally we define the classical functions \(\phi_i(\vec{x}) = x_i\) and
-\(\phi_{i,j}(\vec{x}) = (\pi - x_i)( \pi- x_j)\).
-
-If we write this ansatz for 2 qubits and \(S \leq 2\) we see how it
-simplifies:
-!bt
-\[
-U_{\Phi(x)} = \exp \left(i \left(x_1 Z_1 + x_2 Z_2 + (\pi - x_1)( \pi- x_2) Z_1 Z_2 \right) \right).
-\]
-!et
-We won't get into details to much here, why we would take this ansatz.
-It is simply an ansatz that is simple enough an leads to good results.
-
-Finally we can define a depth of these circuits. Depth 2 means we repeat
-this ansatz two times. Which means our feature map becomes
-\(U_{\Phi(x)} \otimes H^{\otimes n} \otimes U_{\Phi(x)} \otimes H^{\otimes n}\)
 
 
 !split
