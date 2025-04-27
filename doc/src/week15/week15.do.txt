@@ -5,9 +5,451 @@ DATE: May 7, 2025
 
 !split
 ===== Plan for the week of May 5-9 =====
-!bblock 
- o TBA
+!bblock
+o Variational Quantum Circuits (VQCs) 
+o Quantum neural networks (QNNs)
+ * Training QNNs and Loss Landscapes
+ * Implementing QNNs with PennyLane
 #  o "Video of lecture at":"https://youtu.be/OZdyky8UYdk"
 #  o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesMay8.pdf"
 !eblock
+
+!split
+===== Quantum Machine Learning: Quantum Neural Networks and Variational Circuits =====
+
+
+The Variational Quantum Algorithm (VQA) is a 
+Variational Quantum Circuit (VQC), that is  a quantum circuit with tunable
+parameters and which is trained using a classical optimizer.  In practice, a
+VQC (also called a Parameterized Quantum Circuit (PQC)) is used as a
+Quantum Neural Network (QNN): data are encoded into quantum states, a
+parameterized circuit is applied, and measurements yield outputs.
+For example, Abbas et al. showed that certain QNNs can exhibit higher
+effective dimension (and thus capacity to generalize) than comparable
+classical networks , suggesting a potential quantum advantage.
+
+
+!split
+===== Structure of lecture =====
+
+This lecture introduces the theory and practice of QNNs and VQCs at an
+intermediate level.  We will develop the mathematical foundations
+(state preparation, parameterized unitaries, measurement), discuss
+optimization and training challenges, and work through practical code
+examples using PennyLane.
+
+
+!split
+===== Variational Quantum Circuits =====
+
+
+Variational Quantum Algorithms (VQAs) are hybrid schemes where a
+quantum circuit with adjustable parameters is trained by a classical
+optimizer .  In this framework, a Variational Quantum Circuit (VQC)
+typically has three parts : (i) a state preparation or feature map
+that encodes classical input $\mathbf{x}$ into a quantum state; (ii) a
+parameterized circuit $W(\boldsymbol\theta)$ (often called the ansatz)
+that depends on trainable parameters $\boldsymbol\theta$; and (iii) a
+measurement that extracts a classical output from the final quantum
+state.
+
+
+
+For example, given an input vector $\mathbf{x}=(x_1,\dots,x_n)$, we prepare the initial state
+
+$$|\psi_{\rm in}\rangle = U(\mathbf{x})|0\rangle^{\otimes n},$$
+
+where $U(\mathbf{x})$ is a unitary (possibly composed of rotations) that depends on the data .  We then apply the variational circuit $W(\boldsymbol\theta)$, often built as a product of layers $V_j(\theta_j)$, so that the final state is
+
+$$|\Psi(\mathbf{x};\boldsymbol\theta)\rangle = W(\boldsymbol\theta),U(\mathbf{x}),|0\rangle^{\otimes n}.$$
+
+For instance, one common ansatz is the hardware-efficient circuit: layers of parameterized single-qubit rotations and entangling gates (like CNOTs) repeated several times.  The structure of $W(\boldsymbol\theta)$ can dramatically affect the circuit’s expressivity and trainability.
+
+
+
+To produce a scalar or vector output, we measure one or more observables $\hat B_k$ on the final state.  The network’s output is given by the expectation values:
+
+$$f_k(\mathbf{x};\boldsymbol\theta) ;=; \langle \Psi(\mathbf{x};\boldsymbol\theta) | \hat B_k | \Psi(\mathbf{x};\boldsymbol\theta)\rangle.$$
+
+Equivalently, with $|\Psi(\mathbf{x};\boldsymbol\theta)\rangle = W(\boldsymbol\theta)U(\mathbf{x})|0\rangle$, one has
+
+$$f_k(\mathbf{x};\boldsymbol\theta) = \langle 0|U(\mathbf{x})^\dagger W(\boldsymbol\theta)^\dagger ,\hat B_k, W(\boldsymbol\theta) U(\mathbf{x}),|0\rangle.$$
+
+Commonly $\hat B$ is a Pauli operator (e.g. $Z$ on one qubit).  In practice one runs many shots on quantum hardware or simulates this circuit classically to estimate $\langle \hat B_k\rangle$ .
+
+
+
+In summary, a variational quantum model $f(\mathbf{x};\boldsymbol\theta)$ maps inputs to outputs via the hybrid quantum-classical procedure.  During training, the classical optimizer adjusts $\boldsymbol\theta$ (e.g. by gradient descent) to minimize a cost function (like mean-squared error) defined on a dataset.  Because the mapping is inherently quantum, these models can, in principle, harness the high-dimensional Hilbert space for richer representations.  (However, unlike classical deep nets, VQCs may face unique challenges such as gradient vanishing, which we discuss later .)
+
+
+
+Mathematical Example. For concreteness, consider a 2-qubit circuit.  A simple encoding is $U(\mathbf{x})=R_x(x_1)\otimes R_x(x_2)$, and a variational layer is $V(\boldsymbol\theta)=R_y(\theta_1)\otimes R_y(\theta_2), \text{CNOT}(0,1)$ (apply $R_y$ on each qubit then entangle).  After applying $W(\boldsymbol\theta)=V(\boldsymbol\theta)$ to $|0,0\rangle$, we measure $\hat B=Z\otimes I$ on qubit 0.  The output is
+
+$$f(\mathbf{x};\boldsymbol\theta) = \langle 0,0|,U(\mathbf{x})^\dagger,V(\boldsymbol\theta)^\dagger, (Z\otimes I), V(\boldsymbol\theta),U(\mathbf{x}),|0,0\rangle.$$
+
+This $f(x;\theta)$ is then compared to the target in a cost function for optimization.
+
+
+
+Key Points (Chapter 1):
+
+
+
+A VQC is a quantum circuit with trainable parameters acting on a quantum state; it is central to near-term QML (hybrid quantum-classical) .
+Data encoding and ansatz design determine a VQC’s expressivity.  Simple encodings use rotations (e.g. $R_x(x_i)$) on each qubit , while more complex feature maps may exploit entanglement.
+The circuit output is obtained via expectation values of observables (e.g. Pauli-Z), yielding a differentiable function $f(\mathbf{x};\boldsymbol\theta)$ .
+
+
+
+
+Exercises (Chapter 1):
+
+
+
+Compute the state $|\Psi(\mathbf{x};\boldsymbol\theta)\rangle$ explicitly for a 1-qubit VQC with $U(x)=R_x(x)$ and $W(\theta)=R_y(\theta)$. What is $\langle Z\rangle$ as a function of $x,\theta$?
+Draw (or describe) a hardware-efficient ansatz for 3 qubits with 2 layers of rotations and CNOTs. How many parameters does it have?
+For the above ansatz, derive the effect of each layer on the state’s parameters.
+
+
+
+
+
+
+Chapter 2: Quantum Neural Networks (QNNs)
+
+
+
+
+
+Quantum Neural Networks (QNNs) are essentially multi-layer VQCs that mimic classical neural network architectures .  One can think of each layer as adding a nonlinear quantum neuron to the network.  A simple QNN is a sequence of encoding and variational layers.  More structured architectures also exist, such as Quantum Convolutional Neural Networks (QCNNs) and Quantum Long-Short Term Memory networks.  In a QCNN, for example, qubits are entangled in a localized pattern to mimic convolution and pooling .
+
+
+
+
+
+Input Encoding
+
+
+
+
+
+A crucial aspect of any QNN is how classical data $\mathbf{x}\in\mathbb{R}^d$ are embedded into a quantum state.  Common strategies include:
+
+
+
+Basis Encoding: Map each bit of $\mathbf{x}$ (or feature) to a qubit state $|0\rangle$ or $|1\rangle$. Simple but limited to binary data.
+Angle (Amplitude) Encoding: Use rotation gates to encode real values, e.g. $R_x(x_i)$ or $R_y(x_i)$ on qubit $i$.  (Example: in [50], the author encodes a 2D input by $qml.RX(x[0],0)$ and $qml.RX(x[1],1)$ .)
+Amplitude Encoding: Embed $\mathbf{x}$ into the amplitudes of a multi-qubit state (exponentially compact, but requires complex circuits to prepare).
+Data Re-uploading: Re-encode input at multiple layers interspersed with trainable gates, effectively increasing expressivity.
+
+
+
+
+The choice of feature map affects performance: no single encoding is best for all tasks.  Often one uses a problem-inspired map or random feature circuits, then lets the optimizer adjust the ansatz.
+
+
+
+
+
+QNN Architecture and Models
+
+
+
+
+
+A general QNN can be viewed as a parameterized unitary $U(\mathbf{x},\boldsymbol\theta)$ acting on $n$ qubits, followed by measurements.  Fig. 2 (placeholder) might depict a generic QNN with several layers of trainable gates. Each layer can entangle qubits, building up complexity. The output is then a (classical) vector of measured values, analogous to the output layer in a classical network.
+
+
+
+A simple feedforward QNN structure is:
+
+
+
+Embedding Layer: Convert $\mathbf{x}$ to $|0\rangle^{\otimes n}$ via $U(\mathbf{x})$.
+Variational Layers: Repeat $L$ blocks of parameterized gates $W(\boldsymbol\theta^{(l)})$ (each block may act on all or subsets of qubits).
+Measurement: Measure selected qubits or observables to obtain the output predictions $f(\mathbf{x};\boldsymbol\theta)$.
+
+
+
+
+For example, a 2-layer QNN on 2 qubits might apply encoding $R_x(x_1)\otimes R_x(x_2)$, then apply $W(\theta^{(1)})$, then again encoding (or not), then $W(\theta^{(2)})$, and finally measure. In classification tasks, one typically assigns a label based on the sign of $\langle Z\rangle$ or uses multiple measurements for multi-class outputs.
+
+
+
+Notably, even though QNNs operate on exponentially large Hilbert spaces, their actual power is subject of research. Abbas et al. introduce the notion of effective dimension and argue that some QNNs can outperform classical networks in terms of trainability and generalization .  However, other studies point out that QNNs may suffer from trainability issues, as we will see.
+
+
+
+
+
+Training Output and Loss
+
+
+
+
+
+Given a QNN with output $f(\mathbf{x};\boldsymbol\theta)$ (a real number or vector of real values), one must define a loss function to train on data. Common choices are the mean squared error (MSE) for regression or cross-entropy for classification.  For a training set ${\mathbf{x}i,y_i}$, the MSE loss is
+
+$$L(\boldsymbol\theta) = \frac{1}{N} \sum{i=1}^N \bigl(f(\mathbf{x}i;\boldsymbol\theta) - y_i\bigr)^2.$$
+
+One then computes gradients $\nabla{\boldsymbol\theta}L$ and updates parameters via gradient descent or other optimizers.
+
+
+
+Example (Variational Classifier): A binary classifier can output $f(\mathbf{x};\boldsymbol\theta)=\langle Z_0\rangle$ on qubit 0, and predict label $+1$ if $f\ge0$, else $-1$.  In [50], a code snippet defines such a classifier and uses a square loss .  We will build similar models in Chapter 4.
+
+
+
+
+
+Exercise: Variational Layer Algebra
+
+
+
+
+
+As a warm-up problem, consider two qubits with single-qubit rotations $R_y(\alpha)$ on each qubit followed by a CNOT. Show that this two-qubit gate can create entanglement if $\alpha$ is not a multiple of $\pi$.  (Hint: apply it to $|00\rangle$ and compute the resulting state.)  This demonstrates how trainable gates can correlate qubits, enriching the model.
+
+
+
+Key Points (Chapter 2):
+
+
+
+A QNN is implemented by layering VQCs; it generalizes neural networks to quantum circuits .
+Encoding maps classical features to quantum states (e.g. via rotation gates ).
+The ansatz (variational layers) defines the network’s expressive power; depth and entanglement matter.
+Output is given by expectation(s) of measured observables, which are compared against targets via a classical loss function.
+
+
+
+
+
+
+Chapter 3: Training QNNs and Loss Landscapes
+
+
+
+
+
+Training a QNN involves optimizing a nonconvex quantum circuit cost function.  Like classical neural networks, one typically uses gradient-based methods.  However, VQCs have unique features:
+
+
+
+Gradient Computation: Gradients $\partial f/\partial\theta_j$ are obtained using the parameter-shift rule.  For many gates $e^{-i\theta P/2}$ (with $P$ a Pauli), one can compute
+$$\frac{\partial}{\partial\theta}\langle B\rangle
+= \frac{1}{2}\Bigl[\langle B\rangle_{\theta+\pi/2} - \langle B\rangle_{\theta-\pi/2}\Bigr],$$
+where $\langle B\rangle_{\theta\pm\pi/2}$ are expectation values evaluated at shifted parameter values.  This formula allows exact gradients by two circuit evaluations per parameter (independent of circuit size).  PennyLane automatically applies parameter-shift rule when you call backward on a QNode .
+Optimizers: One can use gradient descent or more advanced optimizers (Adam, SPSA, etc.). PennyLane provides a qml.GradientDescentOptimizer and others.  Gradients flow through the classical loss into the quantum circuit via the parameter-shift trick. In our code examples (Chapter 4) we will see this in action.
+Barren Plateaus: A major challenge is the barren plateau phenomenon .  In deep or highly entangled circuits, the loss landscape can become extremely flat: gradients vanish exponentially with system size.  As Anschuetz and Kiani note, variational models often become untrainable due to vanishing gradients in deep layers .  Even surprisingly, their work shows that shallow circuits may still have very few “good” local minima near the global optimum .  In practice, this means random initialization of a deep QNN often leads to tiny gradients, stalling training.
+Mitigation Strategies: Researchers propose various remedies to avoid or alleviate barren plateaus.  Examples include layerwise training (training a few layers at a time), smart initialization (e.g. initializing most gates to identity, as in [14]), and ansatz design (using problem-inspired or shallow circuits to avoid global entanglement).  Another approach uses local cost functions: measuring local observables rather than global ones can reduce gradient concentration.  These strategies are active research areas, but remain crucial for making QNN training feasible on near-term devices.
+Loss Landscape Visualization: One can imagine the loss function $L(\boldsymbol\theta)$ over the parameter space.  Unlike convex classical problems, this landscape may have many local minima and saddle points.  Barren plateaus correspond to regions where $\nabla L\approx 0$ almost everywhere.  Even if plateaus are avoided, poor minima can still trap the optimizer .  In practice, careful tuning of learning rates and adding small random noise can help escape shallow minima.
+
+
+
+
+Key Points (Chapter 3):
+
+
+
+QNN training uses classical optimizers on circuit outputs, with gradients given by the parameter-shift rule .
+Barren plateaus (vanishing gradients) are a central obstacle in deep circuits .
+Mitigation includes shallow ansatz, structured circuits, and smart initialization.
+Always monitor training and consider multiple random restarts to find good minima.
+
+
+
+
+Exercises (Chapter 3):
+
+
+
+Compute a gradient by hand: For a circuit with one qubit and $f(\theta)=\langle0|R_y(\theta)^\dagger Z R_y(\theta)|0\rangle$, use the parameter-shift rule to compute $df/d\theta$.
+Explore barren plateaus: Numerically evaluate $\partial f/\partial\theta$ for a simple 5-qubit random circuit as depth increases. Observe the trend of gradient norms. What does this suggest?
+Optimizer effects: Implement a small QNN (2 qubits) and train with both SGD and Adam optimizers. Compare convergence speed.
+
+
+
+
+
+
+Chapter 4: Implementing QNNs with PennyLane
+
+
+
+
+
+PennyLane is a software library for hybrid quantum-classical computation. It provides QNodes, differentiable quantum functions that can be integrated with Python ML frameworks.  Here we illustrate building and training a simple variational quantum classifier using PennyLane (inspired by [50]).
+
+import pennylane as qml
+from pennylane import numpy as np
+
+# Create a 2-qubit simulator device
+dev = qml.device('default.qubit', wires=2)
+
+# Define a feature map (state preparation) circuit
+def feature_map(x):
+    qml.RX(x[0], wires=0)
+    qml.RX(x[1], wires=1)
+
+# Define a variational (trainable) layer
+def variational_layer(params):
+    # params is a list of 4 angles for 2 qubits
+    qml.Rot(params[0], params[1], params[2], wires=0)
+    qml.Rot(params[3], params[0], params[1], wires=1)
+    qml.CNOT(wires=[0,1])
+
+# Define the QNode: quantum classifier circuit
+@qml.qnode(dev)
+def qclassifier(params, x=None):
+    # encode data into quantum state
+    feature_map(x)
+    # apply two variational layers
+    variational_layer(params[0:4])
+    variational_layer(params[4:8])
+    # measure expectation of Z on qubit 0
+    return qml.expval(qml.PauliZ(wires=0))
+In this code:
+
+
+
+We instantiate a 2-qubit device dev.
+feature_map(x) encodes the 2-dimensional input x using $R_x$ rotations .
+variational_layer(params) is a block of trainable gates (here two Rot gates and a CNOT).
+The @qml.qnode(dev) decorator turns the Python function qclassifier into a quantum node that returns the expectation value of $Z$ .
+We apply two such layers (with 8 parameters total) to increase expressivity.
+
+
+
+
+Next, we define a cost function and train:
+
+# Example training data (X: inputs, Y: binary labels {+1,-1})
+X = np.array([[0.1, 0.2], [1.5, -0.7], [0.3, 0.8], [0.9, 0.4]])
+Y = np.array([1, -1, 1, -1])
+
+# Mean squared error cost
+def cost_fn(params):
+    preds = [qclassifier(params, x=x) for x in X]
+    return np.mean((preds - Y)**2)
+
+# Initialize parameters (8 angles) randomly
+init_params = np.random.randn(8, requires_grad=True)
+
+# Choose an optimizer
+opt = qml.GradientDescentOptimizer(stepsize=0.1)
+
+# Training loop
+params = init_params
+for epoch in range(30):
+    params = opt.step(cost_fn, params)
+    if epoch % 5 == 0:
+        loss = cost_fn(params)
+        print(f"Epoch {epoch}, loss = {loss:.4f}")
+This training loop uses PennyLane’s GradientDescentOptimizer which automatically computes gradients of cost_fn w.r.t. params using the parameter-shift rule.  One monitors the loss to verify improvement.  In practice, more advanced optimizers (Adam, QNG, etc.) or batch training may be used.  The printed output shows the loss decreasing over epochs (assuming a learnable model).
+
+
+
+Note: All operations are differentiable because we imported pennylane.numpy as np.  This ensures that backpropagation through the QNode and classical operations works seamlessly .
+
+
+
+Visualization. (Placeholder) One could plot the training loss vs. epochs or the decision boundary learned by the QNN.
+
+
+
+Key Points (Chapter 4):
+
+
+
+PennyLane’s qml.qnode decorator converts a quantum circuit into a function whose gradients can be computed automatically .
+We combine the feature map and variational layers inside a single QNode to form a model.
+The cost function compares the QNN’s output to labels; optimization is done classically.
+PennyLane allows seamless mixing of quantum nodes and classical Python code, facilitating experimentation.
+
+
+
+
+Exercises (Chapter 4):
+
+
+
+Modify the above code to use qml.AdamOptimizer and compare training convergence.
+Extend the circuit by adding a third qubit (use wires=3) and corresponding rotations. How does this affect the model’s capacity?
+Implement a simple dataset (e.g. points arranged in XOR pattern) and train the QNN. Evaluate its classification accuracy.
+
+
+
+
+
+
+Chapter 5: Applications and Examples
+
+
+
+
+
+Quantum neural networks and VQCs have been explored in various contexts.  Here we briefly mention some notable examples (the field is rapidly growing):
+
+
+
+Quantum Classification and Regression: As demonstrated above, QNNs can classify classical data points by learning decision boundaries in Hilbert space .  Extensions include multiclass classification, embedding kernels, and combining classical-quantum pipelines.
+Quantum Approximate Optimization Algorithm (QAOA): Though not a neural network per se, QAOA is a VQA for combinatorial optimization. It can be seen as a special case where the Hamiltonian objective is minimized by a parameterized circuit. PennyLane supports QAOA out of the box.
+Variational Quantum Eigensolver (VQE): Another hybrid algorithm for finding ground-state energies; useful in quantum chemistry. While not ML, it uses similar VQC training techniques.
+Quantum Generative Models: Variational circuits can be trained to produce quantum states resembling a target distribution (Quantum GANs, Quantum Boltzmann Machines). This is an active research area.
+Quantum Reinforcement Learning: Researchers have proposed using QNNs as function approximators (policy or value functions) in RL. Some works embed classical observations into quantum states and train QNNs by classical RL algorithms.
+Quantum Kernel Methods: Instead of a neural net, one can use VQCs to define kernels for classical kernel machines. PennyLane provides modules for quantum kernel evaluation.
+Hardware Demonstrations: Small-scale QML experiments have been run on IBM, Google, and IonQ devices. These serve as proof-of-concept for the hybrid model.
+
+
+
+
+Each application comes with domain-specific twists, but all rely on the core ideas of Chapters 1–4: encoding data, parameterized circuits, measurement, and classical optimization.  As hardware improves, more complex QML tasks (e.g. image recognition, chemistry simulations, finance models) may become feasible.
+
+
+
+Exercises (Chapter 5):
+
+
+
+Explore a known QML demo (e.g. PennyLane’s Iris dataset classifier or QAOA example). Report on its performance and limitations.
+(Advanced) Propose how a QNN could be used in a simple reinforcement learning problem (e.g. balancing a cart-pole). Outline the state encoding and possible circuit architecture.
+Read about Quantum GANs or Quantum Kernel methods and summarize how VQCs are used in those contexts (no coding required).
+
+
+
+
+
+
+References
+
+
+
+
+
+A. Abbas et al., “The power of quantum neural networks,” Nature Comput. Sci. 1, 403–409 (2021) .
+E. Anschuetz and B. Kiani, “Quantum variational algorithms are swamped with traps,” Nat. Commun. 13, 7760 (2022) .
+J. Zhang et al. (Wells Fargo Quantum Research), arXiv:2412.12484 (2024) – discusses QNN architectures and variational circuits .
+J. Millet et al., “Variational quantum circuits for machine learning: an application for detecting weak signals,” Appl. Sci. 11, 6427 (2021) .
+M. Zhao et al., “A tutorial on quantum machine learning and quantum neural networks,” arXiv:2504.16131 (2025) .
+D. M. Houshmand, Quantum Machine Learning Lecture Notes, (online, 2023) . (Tutorial using PennyLane QNNs.)
+PennyLane documentation and tutorials: 〈https://pennylane.ai〉 (for code examples and parameter-shift rules).
+
+
+
+
+
+
+Index
+
+
+
+
+
+Variational quantum circuit (VQC): A quantum circuit with trainable parameters, core to hybrid QML (Ch. 1).
+Quantum neural network (QNN): A VQC-based model analogous to a classical neural network (Ch. 2).
+Feature map / Encoding: Method to embed classical data into quantum states (Ch. 2).
+Parameter-shift rule: A technique to compute analytic gradients in VQCs (Ch. 3).
+Barren plateau: A phenomenon of vanishing gradients in deep VQCs (Ch. 3) .
+PennyLane: A software library for implementing differentiable quantum circuits (Ch. 4).
 
