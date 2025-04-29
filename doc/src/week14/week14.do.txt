@@ -94,6 +94,8 @@ analyze data in exponentially-large Hilbert spaces, accessible only
 through state overlaps, see for example Maria Schuld,
 Supervised quantum machine learning models are kernel methods, at URL:"arXiv:2101.11020"
 
+!split
+===== More on quantun SVMs =====
 
 Schuld shows that supervised
 quantum models can be reformulated as SVMs whose kernels compute the
@@ -102,39 +104,7 @@ QSVMs can leverage the expressive power of quantum state space to
 potentially separate data that classical kernels struggle with.
 
 
-!split
-===== Classical Support Vector Machines (SVMs) =====
 
-Support Vector Machines (SVM) are supervised learning algorithms used
-for classification tasks, and regression tasks as well. The main goal
-of SVMs is to find the optimal separating hyperplane (in
-high-dimensional space) that provides a maximum margin between
-classes.
-
-!split
-===== First mathematical formulation of SVMs (formal details below) =====
-
-For a dataset \((\bm{x}_i, y_i)\) where \(\bm{x}_i \in
-\mathbb{R}^n\) and \(y_i \in \{-1, 1\}\), the decision boundary is
-defined as:
-!bt
-\[
-f(\bm{x}) = \bm{w} \cdot \bm{x} + b = 0.
-\]
-!et
-
-The goal is to optimize
-!bt
-\[
-\min_{\bm{w}, b} \frac{1}{2} \vert\bm{w}||^2,
-\]
-!et
-subject to
-!bt
-\[
-y_i (\bm{w} \cdot \bm{x}_i + b) \geq 1, \quad \forall i
-\]
-!et
 
 !split
 ===== Kernels and more =====
@@ -208,9 +178,6 @@ Advantage: Efficient sampling in complex probability distributions.
 
 
 
-!split
-===== Plans for next week =====
-o Quantum neural networks
 
 
 
@@ -234,8 +201,685 @@ computations costly.  This sets the stage for using quantum computers
 to estimate kernels or implement SVMs more efficiently.
 
 
+!split
+===== Reminders from last week =====
 
 
+
+!split
+===== What is a hyperplane? =====
+
+The aim of the SVM algorithm is to find a hyperplane in a
+$p$-dimensional space, where $p$ is the number of features that
+distinctly classifies the data points.
+
+In a $p$-dimensional space, a hyperplane is what we call an affine
+subspace of dimension of $p-1$.  As an example, in two dimension, a
+hyperplane is simply as straight line while in three dimensions it is
+a two-dimensional subspace, or stated simply, a plane.
+
+
+
+!split
+===== Introducing the margin =====
+
+Last week we defined the so-called margin between classes of 
+ a binary problem.
+
+We derived aa margin $M$ with $\bm{w}$ normalized to
+$\vert\vert \bm{w}\vert\vert =1$ subject to the condition
+
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, p. 
+\]
+!et
+All points are thus at a signed distance from the decision boundary defined by the line $L$. The parameters $b$ and $w_1$ and $w_2$ define this line. 
+
+!split
+===== Largest value $M$ =====
+
+
+We seek the largest value $M$ defined by
+!bt
+\[
+\frac{1}{\vert \vert \bm{w}\vert\vert}y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, n, 
+\]
+!et
+or just 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) \geq M\vert \vert \bm{w}\vert\vert \hspace{0.1cm}\forall i. 
+\]
+!et
+If we scale the equation so that $\vert \vert \bm{w}\vert\vert = 1/M$, we have to find the minimum of 
+$\bm{w}^T\bm{w}=\vert \vert \bm{w}\vert\vert$ (the norm) subject to the condition
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) \geq 1 \hspace{0.1cm}\forall i.
+\]
+!et
+
+We have thus defined our margin as the invers of the norm of
+$\bm{w}$. We want to minimize the norm in order to have a as large as
+possible margin $M$.
+
+!split
+===== Setting up the problem =====
+
+In order to solve the above problem, we define the following Lagrangian function to be minimized 
+!bt
+\[
+{\cal L}(\lambda,b,\bm{w})=\frac{1}{2}\bm{w}^T\bm{w}-\sum_{i=1}^n\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b)-1\right],
+\]
+!et
+where $\lambda_i$ is a so-called Lagrange multiplier subject to the condition $\lambda_i \geq 0$.
+
+
+!split
+===== Setting up derivaties =====
+
+Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial b} = -\sum_{i} \lambda_iy_i=0,
+\]
+!et
+and 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial \bm{w}} = 0 = \bm{w}-\sum_{i} \lambda_iy_i\bm{x}_i.
+\]
+!et
+Inserting these constraints into the equation for ${\cal L}$ we obtain
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+\]
+!et
+subject to the constraints $\lambda_i\geq 0$ and $\sum_i\lambda_iy_i=0$. 
+
+!split
+===== Karush-Kuhn-Tucker condition =====
+
+We must in addition satisfy the "Karush-Kuhn-Tucker":"https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions" (KKT) condition
+!bt
+\[
+\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b) -1\right] \hspace{0.1cm}\forall i.
+\]
+!et
+o If $\lambda_i > 0$, then $y_i(\bm{w}^T\bm{x}_i+b)=1$ and we say that $x_i$ is on the boundary.
+o If $y_i(\bm{w}^T\bm{x}_i+b)> 1$, we say $x_i$ is not on the boundary and we set $\lambda_i=0$. 
+When $\lambda_i > 0$, the vectors $\bm{x}_i$ are called support vectors. They are the vectors closest to the line (or hyperplane) and define the margin $M$. 
+
+!split
+===== The problem to solve =====
+
+We can rewrite 
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+\]
+!et
+and its constraints in terms of a matrix-vector problem where we minimize w.r.t. $\lambda$ the following problem
+!bt
+\[
+\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1\bm{x}_1^T\bm{x}_1 & y_1y_2\bm{x}_1^T\bm{x}_2 & \dots & \dots & y_1y_n\bm{x}_1^T\bm{x}_n \\
+y_2y_1\bm{x}_2^T\bm{x}_1 & y_2y_2\bm{x}_2^T\bm{x}_2 & \dots & \dots & y_1y_n\bm{x}_2^T\bm{x}_n \\
+\dots & \dots & \dots & \dots & \dots \\
+\dots & \dots & \dots & \dots & \dots \\
+y_ny_1\bm{x}_n^T\bm{x}_1 & y_ny_2\bm{x}_n^T\bm{x}_2 & \dots & \dots & y_ny_n\bm{x}_n^T\bm{x}_n \\
+\end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
+\]
+!et
+subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
+$\bm{y}=[y_1,y_2,\dots,y_n]$. 
+
+
+!split
+===== The last steps =====
+
+Solving the above problem, yields the values of $\lambda_i$.
+To find the coefficients of your hyperplane we need simply to compute 
+!bt
+\[
+\bm{w}=\sum_{i} \lambda_iy_i\bm{x}_i.
+\]
+!et
+With our vector $\bm{w}$ we can in turn find the value of the intercept $b$ (here in two dimensions) via 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1,
+\]
+!et
+resulting in
+!bt
+\[
+b = \frac{1}{y_i}-\bm{w}^T\bm{x}_i,
+\]
+!et
+or if we write it out in terms of the support vectors only, with $N_s$ being their number,  we have
+!bt
+\[
+b = \frac{1}{N_s}\sum_{j\in N_s}\left(y_j-\sum_{i=1}^n\lambda_iy_i\bm{x}_i^T\bm{x}_j\right).
+\]
+!et
+
+!split
+===== Classifier equations =====
+With our hyperplane coefficients we can use our classifier to assign any observation by simply using 
+!bt
+\[
+y_i = \mathrm{sign}(\bm{w}^T\bm{x}_i+b).
+\]
+!et
+Below we discuss how to find the optimal values of $\lambda_i$. Before we proceed however, we discuss now the so-called soft classifier. 
+
+!split
+===== A soft classifier =====
+
+Till now, the margin is strictly defined by the support vectors. This defines what is called a hard classifier, that is the margins are well defined.
+
+Suppose now that classes overlap in feature space, as shown in the
+figure here. One way to deal with this problem before we define the
+so-called _kernel approach_, is to allow a kind of slack in the sense
+that we allow some points to be on the wrong side of the margin.
+
+We introduce thus the so-called _slack_ variables $\bm{\xi} =[\xi_1,x_2,\dots,x_n]$ and 
+modify our previous equation
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1,
+\]
+!et
+to 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i,
+\]
+!et
+with the requirement $\xi_i\geq 0$. The total violation is now $\sum_i\xi$. 
+
+!split
+===== Misclassification =====
+
+The value $\xi_i$ in the constraint the last constraint corresponds to
+the amount by which the prediction $y_i(\bm{w}^T\bm{x}_i+b)=1$ is on
+the wrong side of its margin. Hence by bounding the sum $\sum_i
+\xi_i$, we bound the total amount by which predictions fall on the
+wrong side of their margins.
+
+Misclassifications occur when $\xi_i > 1$. Thus bounding the total sum by some value $C$ bounds in turn the total number of
+misclassifications.
+
+!split
+===== Soft optmization problem =====
+
+
+This has in turn the consequences that we change our optmization problem to finding the minimum of 
+!bt
+\[
+{\cal L}=\frac{1}{2}\bm{w}^T\bm{w}-\sum_{i=1}^n\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b)-(1-\xi_)\right]+C\sum_{i=1}^n\xi_i-\sum_{i=1}^n\gamma_i\xi_i,
+\]
+!et
+subject to 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i \hspace{0.1cm}\forall i,
+\]
+!et
+with the requirement $\xi_i\geq 0$.
+
+!split
+===== Derivatives with respect to $b$ and $\bm{w}$ =====
+
+Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial b} = -\sum_{i} \lambda_iy_i=0,
+\]
+!et
+and 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial \bm{w}} = 0 = \bm{w}-\sum_{i} \lambda_iy_i\bm{x}_i, 
+\]
+!et
+and
+!bt
+\[
+\lambda_i = C-\gamma_i \hspace{0.1cm}\forall i.
+\]
+!et
+
+!split
+===== New constraints =====
+
+Inserting these constraints into the equation for ${\cal L}$ we obtain the same equation as before
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+\]
+!et
+but now subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ and $0\leq\lambda_i \leq C$. 
+We must in addition satisfy the Karush-Kuhn-Tucker condition which now reads
+!bt
+\[
+\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_)\right]=0 \hspace{0.1cm}\forall i,
+\]
+!et
+!bt
+\[
+\gamma_i\xi_i = 0,
+\]
+!et
+and 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_) \geq 0 \hspace{0.1cm}\forall i.
+\]
+!et
+
+!split
+===== Kernels and non-linearity =====
+
+The cases we have studied till now, were all characterized by two classes
+with a close to linear separability. The classifiers we have described
+so far find linear boundaries in our input feature space. It is
+possible to make our procedure more flexible by exploring the feature
+space using other basis expansions such as higher-order polynomials,
+wavelets, splines etc.
+
+If our feature space is not easy to separate, as shown in the figure
+here, we can achieve a better separation by introducing more complex
+basis functions. The ideal would be, as shown in the next figure, to, via a specific transformation to 
+obtain a separation between the classes which is almost linear. 
+
+The change of basis, from $x\rightarrow z=\phi(x)$ leads to the same type of equations to be solved, except that
+we need to introduce for example a polynomial transformation to a two-dimensional training set.
+
+!bc pycod
+import numpy as np
+import os
+
+np.random.seed(42)
+
+# To plot pretty figures
+import matplotlib
+import matplotlib.pyplot as plt
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
+
+
+from sklearn.svm import SVC
+from sklearn import datasets
+
+
+
+X1D = np.linspace(-4, 4, 9).reshape(-1, 1)
+X2D = np.c_[X1D, X1D**2]
+y = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0])
+
+plt.figure(figsize=(11, 4))
+
+plt.subplot(121)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.plot(X1D[:, 0][y==0], np.zeros(4), "bs")
+plt.plot(X1D[:, 0][y==1], np.zeros(5), "g^")
+plt.gca().get_yaxis().set_ticks([])
+plt.xlabel(r"$x_1$", fontsize=20)
+plt.axis([-4.5, 4.5, -0.2, 0.2])
+
+plt.subplot(122)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.axvline(x=0, color='k')
+plt.plot(X2D[:, 0][y==0], X2D[:, 1][y==0], "bs")
+plt.plot(X2D[:, 0][y==1], X2D[:, 1][y==1], "g^")
+plt.xlabel(r"$x_1$", fontsize=20)
+plt.ylabel(r"$x_2$", fontsize=20, rotation=0)
+plt.gca().get_yaxis().set_ticks([0, 4, 8, 12, 16])
+plt.plot([-4.5, 4.5], [6.5, 6.5], "r--", linewidth=3)
+plt.axis([-4.5, 4.5, -1, 17])
+plt.subplots_adjust(right=1)
+plt.show()
+
+!ec
+
+
+
+!split
+===== The equations =====
+
+Suppose we define a polynomial transformation of degree two only (we
+continue to live in a plane with $x_i$ and $y_i$ as variables)
+!bt
+\[
+z = \phi(x_i) =\left(x_i^2, y_i^2, \sqrt{2}x_iy_i\right).
+\]
+!et
+
+With our new basis, the equations we solved earlier are basically the same, that is we have now (without the slack option for simplicity)
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{z}_i^T\bm{z}_j,
+\]
+!et
+subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$, and for the support vectors
+!bt
+\[
+y_i(\bm{w}^T\bm{z}_i+b)= 1 \hspace{0.1cm}\forall i,
+\]
+!et
+from which we also find $b$.
+
+!split
+===== Defining the kernel =====
+
+To compute $\bm{z}_i^T\bm{z}_j$ we define the kernel $K(\bm{x}_i,\bm{x}_j)$ as
+!bt
+\[
+K(\bm{x}_i,\bm{x}_j)=\bm{z}_i^T\bm{z}_j= \phi(\bm{x}_i)^T\phi(\bm{x}_j).
+\]
+!et
+For the above example, the kernel reads
+!bt
+\[
+K(\bm{x}_i,\bm{x}_j)=[x_i^2, y_i^2, \sqrt{2}x_iy_i]^T\begin{bmatrix} x_j^2 \\ y_j^2 \\ \sqrt{2}x_jy_j \end{bmatrix}=x_i^2x_j^2+2x_ix_jy_iy_j+y_i^2y_j^2.
+\]
+!et
+
+!split
+===== Kernel trick =====
+
+We note that this is nothing but the dot product of the two original
+vectors $(\bm{x}_i^T\bm{x}_j)^2$. Instead of thus computing the
+product in the Lagrangian of $\bm{z}_i^T\bm{z}_j$ we simply compute
+the dot product $(\bm{x}_i^T\bm{x}_j)^2$.
+
+
+This leads to the so-called
+kernel trick and the result leads to the same as if we went through
+the trouble of performing the transformation
+$\phi(\bm{x}_i)^T\phi(\bm{x}_j)$ during the SVM calculations.
+
+
+!split
+===== The problem to solve =====
+Using our definition of the kernel We can rewrite again the Lagrangian
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{z}_j,
+\]
+!et
+subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ in terms of a convex optimization problem
+!bt
+\[
+\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1K(\bm{x}_1,\bm{x}_1) & y_1y_2K(\bm{x}_1,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_1,\bm{x}_n) \\
+y_2y_1K(\bm{x}_2,\bm{x}_1) & y_2y_2(\bm{x}_2,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_2,\bm{x}_n) \\
+\dots & \dots & \dots & \dots & \dots \\
+\dots & \dots & \dots & \dots & \dots \\
+y_ny_1K(\bm{x}_n,\bm{x}_1) & y_ny_2K(\bm{x}_n\bm{x}_2) & \dots & \dots & y_ny_nK(\bm{x}_n,\bm{x}_n) \\
+\end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
+\]
+!et
+subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
+$\bm{y}=[y_1,y_2,\dots,y_n]$. 
+If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
+
+!split
+===== Convex optimization =====
+We can rewrite this (see the solutions below) in terms of a convex optimization problem of the type
+!bt
+\begin{align*}
+    &\mathrm{min}_{\lambda}\hspace{0.2cm} \frac{1}{2}\bm{\lambda}^T\bm{P}\bm{\lambda}+\bm{q}^T\bm{\lambda},\\ \nonumber
+    &\mathrm{subject\hspace{0.1cm}to} \hspace{0.2cm} \bm{G}\bm{\lambda} \preceq \bm{h} \hspace{0.2cm} \wedge \bm{A}\bm{\lambda}=f.
+\end{align*}
+!et
+Below we discuss how to solve these equations. Here we note that the matrix $\bm{P}$ has matrix elements $p_{ij}=y_iy_jK(\bm{x}_i,\bm{x}_j)$.
+Given a kernel $K$ and the targets $y_i$ this matrix is easy to set up. The constraint $\bm{y}^T\bm{\lambda}=0$ leads to $f=0$ and $\bm{A}=\bm{y}$. How to set up the matrix $\bm{G}$ is discussed later. Here note that the inequalities $0\leq \lambda_i \leq C$ can be split up into
+$0\leq \lambda_i$ and $\lambda_i \leq C$. These two inequalities define then the matrix $\bm{G}$ and the vector $\bm{h}$.
+
+
+!split
+===== Different kernels =====
+
+There are several popular kernels being used. These are
+o Linear: $K(\bm{x},\bm{y})=\bm{x}^T\bm{y}$,
+o Polynomial: $K(\bm{x},\bm{y})=(\bm{x}^T\bm{y}+\gamma)^d$,
+o Gaussian Radial Basis Function: $K(\bm{x},\bm{y})=\exp{\left(-\gamma\vert\vert\bm{x}-\bm{y}\vert\vert^2\right)}$,
+o Tanh: $K(\bm{x},\bm{y})=\tanh{(\bm{x}^T\bm{y}+\gamma)}$,
+and many other ones.
+
+
+!split
+===== Mercer's theorem =====
+
+An important theorem for us is "Mercer's
+theorem":"https://en.wikipedia.org/wiki/Mercer%27s_theorem".  The
+theorem states that if a kernel function $K$ is symmetric, continuous
+and leads to a positive semi-definite matrix $\bm{P}$ then there
+exists a function $\phi$ that maps $\bm{x}_i$ and $\bm{x}_j$ into
+another space (possibly with much higher dimensions) such that
+
+!bt
+\[
+K(\bm{x}_i,\bm{x}_j)=\phi(\bm{x}_i)^T\phi(\bm{x}_j).
+\]
+!et
+
+So you can use $K$ as a kernel since you know $\phi$ exists, even if
+you don’t know what $\phi$ is. 
+
+Note that some frequently used kernels (such as the Sigmoid kernel)
+don’t respect all of Mercer’s conditions, yet they generally work well
+in practice.
+
+
+!split
+===== The moons example =====
+!bc pycod
+from __future__ import division, print_function, unicode_literals
+
+import numpy as np
+np.random.seed(42)
+
+import matplotlib
+import matplotlib.pyplot as plt
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
+
+
+from sklearn.svm import SVC
+from sklearn import datasets
+
+
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+
+
+from sklearn.datasets import make_moons
+X, y = make_moons(n_samples=100, noise=0.15, random_state=42)
+
+def plot_dataset(X, y, axes):
+    plt.plot(X[:, 0][y==0], X[:, 1][y==0], "bs")
+    plt.plot(X[:, 0][y==1], X[:, 1][y==1], "g^")
+    plt.axis(axes)
+    plt.grid(True, which='both')
+    plt.xlabel(r"$x_1$", fontsize=20)
+    plt.ylabel(r"$x_2$", fontsize=20, rotation=0)
+
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+plt.show()
+
+from sklearn.datasets import make_moons
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+
+polynomial_svm_clf = Pipeline([
+        ("poly_features", PolynomialFeatures(degree=3)),
+        ("scaler", StandardScaler()),
+        ("svm_clf", LinearSVC(C=10, loss="hinge", random_state=42))
+    ])
+
+polynomial_svm_clf.fit(X, y)
+
+def plot_predictions(clf, axes):
+    x0s = np.linspace(axes[0], axes[1], 100)
+    x1s = np.linspace(axes[2], axes[3], 100)
+    x0, x1 = np.meshgrid(x0s, x1s)
+    X = np.c_[x0.ravel(), x1.ravel()]
+    y_pred = clf.predict(X).reshape(x0.shape)
+    y_decision = clf.decision_function(X).reshape(x0.shape)
+    plt.contourf(x0, x1, y_pred, cmap=plt.cm.brg, alpha=0.2)
+    plt.contourf(x0, x1, y_decision, cmap=plt.cm.brg, alpha=0.1)
+
+plot_predictions(polynomial_svm_clf, [-1.5, 2.5, -1, 1.5])
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+
+plt.show()
+
+
+from sklearn.svm import SVC
+
+poly_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="poly", degree=3, coef0=1, C=5))
+    ])
+poly_kernel_svm_clf.fit(X, y)
+
+poly100_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="poly", degree=10, coef0=100, C=5))
+    ])
+poly100_kernel_svm_clf.fit(X, y)
+
+plt.figure(figsize=(11, 4))
+
+plt.subplot(121)
+plot_predictions(poly_kernel_svm_clf, [-1.5, 2.5, -1, 1.5])
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+plt.title(r"$d=3, r=1, C=5$", fontsize=18)
+
+plt.subplot(122)
+plot_predictions(poly100_kernel_svm_clf, [-1.5, 2.5, -1, 1.5])
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+plt.title(r"$d=10, r=100, C=5$", fontsize=18)
+
+plt.show()
+
+def gaussian_rbf(x, landmark, gamma):
+    return np.exp(-gamma * np.linalg.norm(x - landmark, axis=1)**2)
+
+gamma = 0.3
+
+x1s = np.linspace(-4.5, 4.5, 200).reshape(-1, 1)
+x2s = gaussian_rbf(x1s, -2, gamma)
+x3s = gaussian_rbf(x1s, 1, gamma)
+
+XK = np.c_[gaussian_rbf(X1D, -2, gamma), gaussian_rbf(X1D, 1, gamma)]
+yk = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0])
+
+plt.figure(figsize=(11, 4))
+
+plt.subplot(121)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.scatter(x=[-2, 1], y=[0, 0], s=150, alpha=0.5, c="red")
+plt.plot(X1D[:, 0][yk==0], np.zeros(4), "bs")
+plt.plot(X1D[:, 0][yk==1], np.zeros(5), "g^")
+plt.plot(x1s, x2s, "g--")
+plt.plot(x1s, x3s, "b:")
+plt.gca().get_yaxis().set_ticks([0, 0.25, 0.5, 0.75, 1])
+plt.xlabel(r"$x_1$", fontsize=20)
+plt.ylabel(r"Similarity", fontsize=14)
+plt.annotate(r'$\mathbf{x}$',
+             xy=(X1D[3, 0], 0),
+             xytext=(-0.5, 0.20),
+             ha="center",
+             arrowprops=dict(facecolor='black', shrink=0.1),
+             fontsize=18,
+            )
+plt.text(-2, 0.9, "$x_2$", ha="center", fontsize=20)
+plt.text(1, 0.9, "$x_3$", ha="center", fontsize=20)
+plt.axis([-4.5, 4.5, -0.1, 1.1])
+
+plt.subplot(122)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.axvline(x=0, color='k')
+plt.plot(XK[:, 0][yk==0], XK[:, 1][yk==0], "bs")
+plt.plot(XK[:, 0][yk==1], XK[:, 1][yk==1], "g^")
+plt.xlabel(r"$x_2$", fontsize=20)
+plt.ylabel(r"$x_3$  ", fontsize=20, rotation=0)
+plt.annotate(r'$\phi\left(\mathbf{x}\right)$',
+             xy=(XK[3, 0], XK[3, 1]),
+             xytext=(0.65, 0.50),
+             ha="center",
+             arrowprops=dict(facecolor='black', shrink=0.1),
+             fontsize=18,
+            )
+plt.plot([-0.1, 1.1], [0.57, -0.1], "r--", linewidth=3)
+plt.axis([-0.1, 1.1, -0.1, 1.1])
+    
+plt.subplots_adjust(right=1)
+
+plt.show()
+
+
+x1_example = X1D[3, 0]
+for landmark in (-2, 1):
+    k = gaussian_rbf(np.array([[x1_example]]), np.array([[landmark]]), gamma)
+    print("Phi({}, {}) = {}".format(x1_example, landmark, k))
+
+rbf_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="rbf", gamma=5, C=0.001))
+    ])
+rbf_kernel_svm_clf.fit(X, y)
+
+
+from sklearn.svm import SVC
+
+gamma1, gamma2 = 0.1, 5
+C1, C2 = 0.001, 1000
+hyperparams = (gamma1, C1), (gamma1, C2), (gamma2, C1), (gamma2, C2)
+
+svm_clfs = []
+for gamma, C in hyperparams:
+    rbf_kernel_svm_clf = Pipeline([
+            ("scaler", StandardScaler()),
+            ("svm_clf", SVC(kernel="rbf", gamma=gamma, C=C))
+        ])
+    rbf_kernel_svm_clf.fit(X, y)
+    svm_clfs.append(rbf_kernel_svm_clf)
+
+plt.figure(figsize=(11, 7))
+
+for i, svm_clf in enumerate(svm_clfs):
+    plt.subplot(221 + i)
+    plot_predictions(svm_clf, [-1.5, 2.5, -1, 1.5])
+    plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+    gamma, C = hyperparams[i]
+    plt.title(r"$\gamma = {}, C = {}$".format(gamma, C), fontsize=16)
+
+plt.show()
+
+!ec
+
+
+!split
+===== Quantum SVMs =====
+
+The idea of a classical SVM is that we have a set of points
+that are in either one group or another and we want to find a line that
+separates these two groups. This line can be linear, but it can also be
+much more complex, which can be achieved by the use of Kernels.
 
 
 !split
@@ -277,6 +921,7 @@ k(\bm{x},\bm{x}{\prime}) = \bigl\vert \langle \phi(\bm{x}) \mid \phi(\bm{x}{\pri
 \]
 !et
 
+
 !split
 ===== Quantum kernels  =====
 
@@ -311,6 +956,113 @@ K_{ij} \;=\; k(\bm{x}_i,\bm{x}_j) \;=\; \bigl\vert \langle \phi(\bm{x}_i)\mid\ph
 
 This forms a positive semidefinite kernel matrix $K$ on the dataset,
 just as in classical SVMs.
+
+
+
+!split
+===== What will we need in the case of a quantum computer? =====
+
+!bblock
+We will have to translate the classical data point \(\vec{x}\)
+into a quantum datapoint \(\vert \Phi{(\vec{x})} \rangle\). This can
+be achieved by a circuit $\mathcal{U}_{\Phi(\vec{x})} \vert 0\rangle$.
+
+
+Here $\Phi()$ could be any classical function applied
+on the classical data $\vec{x}$.
+!eblock
+!bblock 
+We need a parameterized quantum circuit $W(\theta)$ that
+processes the data in a way that in the end we
+can apply a measurement that returns a classical value \(-1\) or
+\(1\) for each classical input \(\vec{x}\) that indentifies the label
+of the classical data.
+!eblock
+
+
+!split
+===== The most general ansatz =====
+
+Following these steps we can define an ansatz for this kind of problem
+which is
+!bt
+\[
+W(\theta) \mathcal{U}_{\Phi}(\vec{x}) \vert 0 \rangle.
+\]
+!et
+
+These kind of ansatzes are called quantum variational circuits.
+
+!split
+===== Quantum SVM =====
+
+In the case of a quantum SVM we will only use the quantum feature maps
+!bt
+\[
+\mathcal{U}_{\Phi(\vec{x})},
+\]
+!et
+to translate the classical data into
+quantum states and build the Kernel of the SVM out of these quantum
+states. After calculating the Kernel matrix on the quantum computer we
+can train the Quantum SVM the same way as the classical SVM.
+
+
+!split
+===== Defining the Quantum Kernel =====
+
+The idea of the quantum kernel is exactly the same as in the classical
+case. We take the inner product
+!bt
+\[
+K(\vec{x}, \vec{z}) = \vert \langle \Phi (\vec{x}) \vert \Phi(\vec{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\vec{x})}^{t} \mathcal{U}_{\Phi(\vec{z})} \vert 0^n \rangle,
+\]
+!et
+but now with the quantum feature maps
+!bt
+\[
+\mathcal{U}_{\Phi(\vec{x})}.
+\]
+!et
+
+The idea is that if we choose a quantum feature maps that is not easy
+to simulate with a classical computer we might obtain a quantum
+advantage.
+
+
+!split
+===== Side note =====
+
+There is no proof yet that the QSVM brings a quantum
+advantage, but the argument the authors of
+URL:"https://arxiv.org/pdf/1804.11326.pdf" make, is that there is
+for sure no advantage if we use feature maps that are easy to simulate
+classically, because then we would not need a quantum computer to
+construct the Kernel.
+
+!split
+===== Feature map =====
+
+For the feature maps we use the ansatz
+!bt
+\[
+\mathcal{U}_{\Phi(x)} = U_{\Phi(x)} \otimes H^{\otimes n},
+\]
+!et
+where
+!bt
+\[
+U_{\Phi(x)} = \exp \left( i \sum_{S \in n} \phi_S(x) \prod_{i \in S} Z_i \right),
+\]
+!et
+which simplifies a lot when we (like in URL:"https://arxiv.org/pdf/1804.11326.pdf") only consider
+$S \leq 2$ interactions, which means we only let two qubits interact
+at a time. For $S \leq 2$ the product $\prod_{i \in S}$ only leads
+to interactions $Z_i Z_j$ and non interacting terms $Z_i$. And the
+sum $\sum_{S \in n}$ over all these terms that are possible with $n$
+qubits.
+
+
 
 
 !split
@@ -364,6 +1116,7 @@ def kernel_circuit(x1, x2):
 
 !split
 ===== What happens =====
+
 Here, _AngleEmbedding(x1)_ encodes the vector _x1_ into two qubits via
 rotations, and qml.adjoint applies the inverse embedding for _x2_.  The
 output probability of measuring the $\vert 00\rangle$ state is exactly the
@@ -465,15 +1218,6 @@ typically done by classical SVM software using the quantum-computed
 kernel matrix.  This _hybrid_ approach leverages quantum hardware
 where it’s needed (kernel evaluation) and classical hardware for
 optimization.  
-
-
-
-Quantum Kernel Formula: Starting from a feature map circuit $U(\bm{x})$, show explicitly how to compute $k(\bm{x},\bm{x}’) = \vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$ by a quantum circuit and measurements.  (Hint: prepare $\vert \phi(\bm{x})\rangle$, apply $U(\bm{x}’)^\dagger$, measure probability of $\vert 0\cdots0\rangle$.)
-Properties of Quantum Kernels: Prove that the quantum kernel $K(\bm{x},\bm{x}’) = \vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$ is positive semidefinite (i.e. a valid Mercer kernel).
-Example Calculation: Consider a single-qubit angle embedding $\vert \phi(x)\rangle = \cos(x/2)\vert 0\rangle + \sin(x/2)\vert 1\rangle$.  Compute the kernel $k(x,x’) = \vert \langle\phi(x)\vert \phi(x’)\rangle\vert ^2$ in closed form.  What function of $x,x’$ do you get?
-Entangled Feature Map: Suppose $n=2$ qubits and define $U(\bm{x}) = R_X(x_1)\otimes R_X(x_2)$ (no entanglement).  What classical kernel does this correspond to?  (Hint: write the state $\vert \phi(\bm{x})\rangle$ and compute the inner product.)
-Expressivity: Discuss qualitatively why entangling gates in $U(\bm{x})$ might allow a richer kernel than product states.  (Optional: Find a small example where an entangling feature map separates data that no product embedding could.)
-
 
 
 
@@ -669,7 +1413,7 @@ construct a QSVM: define a quantum feature map, compute the kernel
 matrix, and train a classical SVM using scikit-learn.
 
 !split
-===== Setting Up PennyLane =====
+===== Setting up PennyLane =====
 
 
 
@@ -852,193 +1596,95 @@ o Hyperparameters: The QSVM has hyperparameters (e.g. SVM regularization $C$) th
 
 !split
 ===== PennyLane implementations =====
+
 In summary, implementing QSVM with PennyLane involves four steps:
 o choose a feature map and implement it as a QNode;
 o define a kernel function via that QNode;
 o compute kernel matrices with qml.kernels;
 o train/predict using an SVM with the precomputed kernels.
 
-!split
-===== Example Applications (Simple Datasets) =====
-
-We illustrate QSVM on simple datasets to see how it performs and what
-it learns.  We use the pipeline from Chapter 4.  For visualization, we
-consider 2D synthetic data which can be plotted.
-
-!split
-===== Toy Classification (Circles and Moons) =====
-
-A common toy problem is concentric circles: two circles of points in
-the plane.  Linearly this is not separable, but a nonlinear kernel
-(like RBF or a suitable quantum map) can separate them.  We generate
-data:
-
-!bc pycod
-from sklearn.datasets import make_circles
-X, y = make_circles(n_samples=100, factor=0.3, noise=0.05)
-y = 2*y - 1  # convert to +-1 labels
-!ec
-
-We then train a QSVM with a simple quantum kernel.  For visualization,
-we can plot the points and decision boundary.  Typically, a quantum
-kernel with an entangling map will succeed in separating the circles,
-similar to an RBF kernel.  (If one uses a linear kernel instead, it
-will fail.)
-
-
-
-Example: Using a 2-qubit entangled feature map $U(\bm{x})=R_Y(x_0)\text{CNOT} R_Y(x_1)\text{CNOT}$, we find that the QSVM achieves near-perfect accuracy on this dataset.  A contour plot of the decision function shows concentric-level separation.
-
-
-
 
 !split
 ===== Iris Dataset =====
 
+!bc pycod
+# Quantum Kernel SVM on Iris (Setosa vs Versicolor) using PennyLane and scikit-learn
 
+import pennylane as qml
+from pennylane import numpy as np
+from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
 
+# Load Iris dataset and select two classes (0: setosa, 1: versicolor)
+iris = datasets.load_iris()
+X = iris.data
+y = iris.target
+mask = y != 2  # drop class '2' (virginica)
+X = X[mask]
+y = y[mask]
 
+# Standardize features and reduce to 2 dimensions via PCA
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+pca = PCA(n_components=2)
+X_reduced = pca.fit_transform(X_scaled)
 
-The Iris dataset is a classic benchmark.  It has 3 classes of 50
-points each, in 4D.  We take a two-class subset (e.g. Iris-versicolor
-vs Iris-virginica) to make a binary problem.  We can compare classical
-SVM vs QSVM:
+# Split into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(
+   X_reduced, y, test_size=0.2, random_state=42
+)
+# Define quantum device and feature map (angle encoding on 2 qubits)
+n_qubits = 2
+dev = qml.device('default.qubit', wires=n_qubits)
 
+@qml.qnode(dev)
+def feature_map(x):
+   # Encode 2 features into rotation angles
+   for i in range(n_qubits):
+       qml.RY(x[i] * np.pi, wires=i)
+   # Optional: add entanglement (e.g., ZZ interaction)
+   qml.CNOT(wires=[0, 1])
+   qml.RZ((x[0] + x[1]) * np.pi, wires=1)
+   qml.CNOT(wires=[0, 1])
+   return qml.state()
 
+# Compute quantum kernel (fidelity) between two feature vectors
+def quantum_kernel(x1, x2):
+   # Compute state vectors for each input
+   state1 = feature_map(x1)
+   state2 = feature_map(x2)
+   # Kernel = |<phi(x1)|phi(x2)>|^2
+   overlap = np.vdot(state1, state2)
+   return np.abs(overlap) ** 2
 
-Classical SVM: with RBF kernel, we typically get ~95-100% accuracy on the binary Iris problem.
-QSVM: using a 2-qubit angle embedding (mapping 4 features to 2 qubits via simple rotations) and RBF on output, one might get similar accuracy.
+# Build kernel (Gram) matrices for training and test sets
+n_train = len(X_train)
+n_test = len(X_test)
+kernel_train = np.zeros((n_train, n_train))
+for i in range(n_train):
+   for j in range(n_train):
+       kernel_train[i, j] = quantum_kernel(X_train[i], X_train[j])
 
+kernel_test = np.zeros((n_test, n_train))
+for i in range(n_test):
+   for j in range(n_train):
+       kernel_test[i, j] = quantum_kernel(X_test[i], X_train[j])
 
+# Train SVM with precomputed quantum kernel
+svm = SVC(kernel='precomputed')
+svm.fit(kernel_train, y_train)
 
+# Predict on test set and evaluate
+y_pred = svm.predict(kernel_test)
+acc = accuracy_score(y_test, y_pred)
+print("Test Accuracy:", acc)
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-In practice, many have found that on Iris, a simple RBF classical kernel already saturates performance, so QSVM typically matches it.  To illustrate a difference, one can reduce data to 2D and look for small improvements or just use it as an example of applying QSVM to a real dataset.
-
-
-Dimensionality: QSVM feature maps often require mapping $d$-dimensional input to some number of qubits $n_q$.  One may use $n_q=\lceil \log_2 d\rceil$ (amplitude encoding) or $n_q=d$ (one feature per qubit).  Too many qubits increases circuit depth.
-Normalization: Quantum gates assume angles or amplitudes; scaling data into $[0,2\pi]$ or $[-1,1]$ may be needed.
-Train/Test Split: Always evaluate QSVM like any classifier (e.g. 80/20 train-test split, cross-validation).
-Compare to classical: Try standard kernels (linear, RBF) as baseline.  QSVM is interesting only if it outperforms or provides insight beyond them.
-
-
-
-
-In summary, these examples show how to apply QSVM end-to-end.  For each, the steps are: choose/normalize data → define feature map in PennyLane → compute kernel matrix → train SVM → evaluate and plot.
-
-
-
-
-
-!split
-===== Quantum SVMs =====
-
-The idea of a classical SVM is that we have a set of points
-that are in either one group or another and we want to find a line that
-separates these two groups. This line can be linear, but it can also be
-much more complex, which can be achieved by the use of Kernels.
-
-!split
-===== What will we need in the case of a quantum computer? =====
-
-!bblock
-We will have to translate the classical data point \(\vec{x}\)
-into a quantum datapoint \(\vert \Phi{(\vec{x})} \rangle\). This can
-be achieved by a circuit $\mathcal{U}_{\Phi(\vec{x})} \vert 0\rangle$.
-
-
-Here $\Phi()$ could be any classical function applied
-on the classical data $\vec{x}$.
-!eblock
-!bblock 
-We need a parameterized quantum circuit $W(\theta)$ that
-processes the data in a way that in the end we
-can apply a measurement that returns a classical value \(-1\) or
-\(1\) for each classical input \(\vec{x}\) that indentifies the label
-of the classical data.
-!eblock
-
-
-!split
-===== The most general ansatz =====
-
-Following these steps we can define an ansatz for this kind of problem
-which is
-!bt
-\[
-W(\theta) \mathcal{U}_{\Phi}(\vec{x}) \vert 0 \rangle.
-\]
-!et
-
-These kind of ansatzes are called quantum variational circuits.
-
-!split
-===== Quantum SVM =====
-
-In the case of a quantum SVM we will only use the quantum feature maps
-!bt
-\[
-\mathcal{U}_{\Phi(\vec{x})},
-\]
-!et
-to translate the classical data into
-quantum states and build the Kernel of the SVM out of these quantum
-states. After calculating the Kernel matrix on the quantum computer we
-can train the Quantum SVM the same way as the classical SVM.
-
-
-!split
-===== Defining the Quantum Kernel =====
-
-The idea of the quantum kernel is exactly the same as in the classical
-case. We take the inner product
-!bt
-\[
-K(\vec{x}, \vec{z}) = \vert \langle \Phi (\vec{x}) \vert \Phi(\vec{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\vec{x})}^{t} \mathcal{U}_{\Phi(\vec{z})} \vert 0^n \rangle,
-\]
-!et
-but now with the quantum feature maps
-!bt
-\[
-\mathcal{U}_{\Phi(\vec{x})}.
-\]
-!et
-
-The idea is that if we choose a quantum feature maps that is not easy
-to simulate with a classical computer we might obtain a quantum
-advantage.
-
-
-!split
-===== Side note =====
-
-There is no proof yet that the QSVM brings a quantum
-advantage, but the argument the authors of
-URL:"https://arxiv.org/pdf/1804.11326.pdf" make, is that there is
-for sure no advantage if we use feature maps that are easy to simulate
-classically, because then we would not need a quantum computer to
-construct the Kernel.
-
-!split
-===== Feature map =====
-
-For the feature maps we use the ansatz
-!bt
-\[
-\mathcal{U}_{\Phi(x)} = U_{\Phi(x)} \otimes H^{\otimes n},
-\]
-!et
-where
-!bt
-\[
-U_{\Phi(x)} = \exp \left( i \sum_{S \in n} \phi_S(x) \prod_{i \in S} Z_i \right),
-\]
-!et
-which simplifies a lot when we (like in URL:"https://arxiv.org/pdf/1804.11326.pdf") only consider
-$S \leq 2$ interactions, which means we only let two qubits interact
-at a time. For $S \leq 2$ the product $\prod_{i \in S}$ only leads
-to interactions $Z_i Z_j$ and non interacting terms $Z_i$. And the
-sum $\sum_{S \in n}$ over all these terms that are possible with $n$
-qubits.
+!ec
 
 !split
 ===== Classical functions =====
@@ -1061,3 +1707,6 @@ this ansatz two times. Which means our feature map becomes
 $U_{\Phi(x)} \otimes H^{\otimes n} \otimes U_{\Phi(x)} \otimes H^{\otimes n}$.
 
 
+!split
+===== Plans for next week =====
+o Quantum neural networks
