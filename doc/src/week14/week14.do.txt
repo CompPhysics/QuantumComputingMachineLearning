@@ -1092,7 +1092,7 @@ evaluate such kernels systematically .
 
 A quantum feature map
 $\bm{x}\mapsto\vert \phi(\bm{x})\rangle$ combined with the kernel
-$k(\bm{x},\bm{x}’)=\vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$
+$K(\bm{x},\bm{x}’)=\vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$
 defines a QSVM kernel.  The intuition is that the quantum device is
 implicitly computing a rich similarity measure via its
 high-dimensional state space.
@@ -1110,7 +1110,7 @@ robustness_.
 There are many choices for $U(\bm{x})$.  Common simple maps include:
 
 !bblock Angle (or rotation) embedding:
-For an $n$-dimensional feature vector $\bm{x}=(x_1,\dots,x_n)$, apply single-qubit rotations $\mathrm{R}_X(x_i)$ or $\mathrm{R}Y(x_i)$ to the $i$th qubit.  For example:
+For an $n$-dimensional feature vector $\bm{x}=(x_1,\dots,x_n)$, apply single-qubit rotations $\mathrm{R}_X(x_i)$ or $\mathrm{R}_Y(x_i)$ to the $i$th qubit.  For example:
 !bt
 \[
 U(\bm{x})=\bigotimes{i=1}^n R_Y(x_i) = R_Y(x_1)\otimes \cdots \otimes R_Y(x_n).
@@ -1201,21 +1201,21 @@ that a classical kernel might not.
 
 
 
-Given training data $(\bm{x}i,y_i)$, we choose a quantum feature
-map $U(\bm{x})$ and define the kernel $K{ij} =
+Given training data $(\bm{x}_i,y_i)$, we choose a quantum feature
+map $U(\bm{x})$ and define the kernel $K_{ij} =
 \vert \langle\phi(\bm{x}i)\vert \phi(\bm{x}j)\rangle\vert ^2$.  Then we solve
 the binary type of  SVM problems discussed last week, with $x_i^T x_j$ replaced
-by $K{ij}$.  That is:
+by $K_{ij}$.  That is:
 !bt
 \[
-\max{\alpha} \; \sum_i \alpha_i - \frac{1}{2}\sum_{i,j} \alpha_i \alpha_j y_i y_j \,K(\bm{x}_i,\bm{x}j),
+\max{\lambda} \; \sum_i \lambda_i - \frac{1}{2}\sum_{i,j} \lambda_i \lambda_j y_i y_j \,K(\bm{x}_i,\bm{x}_j),
 \]
 !et
-subject to $\sum_i \alpha_i y_i=0$, $0\le \alpha_i\le C$.  After
-solving for $\alpha_i$, the decision function is
+subject to $\sum_i \lambda_i y_i=0$, $0\le \lambda_i\le C$.  After
+solving for $\lambda_i$, the decision function is
 !bt
 \[
-f(\bm{x})=\operatorname{sign}\Bigl(\sum{i} \alpha_i y_i \,K(\bm{x}_i,\bm{x}) + b\Bigr).
+f(\bm{x})=\operatorname{sign}\Bigl(\sum{i} \lambda_i y_i \,K(\bm{x}_i,\bm{x}) + b\Bigr).
 \]
 !et
 
@@ -1342,9 +1342,8 @@ o Quantum linear SVM: Potential $O(\log N)$ for training under ideal QRAM assump
 In practice on current hardware, QSVM speed is dominated by circuit
 execution time.  However, QSVM experiments are valuable to test
 expressivity: for some data, a simple quantum feature map yields
-perfect classification where classical kernels fail.  For example, the
-_Swiss roll_ or concentric circle datasets are often used as quantum
-kernel benchmarks.
+perfect classification where classical kernels fail.
+
 
 
 
@@ -1434,7 +1433,7 @@ two circuits, as shown below.
 ===== Computing Quantum Kernel Matrices =====
 
 To train an SVM, we need the kernel matrix
-$K_{ij}=k(\bm{x}_i,\bm{x}_j)$.  PennyLane provides
+$K_{ij}=K(\bm{x}_i,\bm{x}_j)$.  PennyLane provides
 qml.kernels.kernel$\_$matrix, which takes two datasets and a kernel
 function.  We must supply a function _kernel(x1,x2)_ that returns the
 overlap of states.
@@ -1646,27 +1645,8 @@ print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 !ec
 
-!split
-===== Classical functions =====
-
-Finally we define the classical functions $\phi_i(\vec{x}) = x_i$ and
-$\phi_{i,j}(\vec{x}) = (\pi - x_i)( \pi- x_j)$.
-
-If we write this ansatz for 2 qubits and $S \leq 2$ we see how it
-simplifies:
-!bt
-\[
-U_{\Phi(x)} = \exp \left(i \left(x_1 Z_1 + x_2 Z_2 + (\pi - x_1)( \pi- x_2) Z_1 Z_2 \right) \right).
-\]
-!et
-We won't get into details to much here, why we would take this ansatz.
-It is simply an ansatz that is simple enough an leads to good results.
-
-Finally we can define a depth of these circuits. Depth 2 means we repeat
-this ansatz two times. Which means our feature map becomes
-$U_{\Phi(x)} \otimes H^{\otimes n} \otimes U_{\Phi(x)} \otimes H^{\otimes n}$.
-
 
 !split
 ===== Plans for next week =====
+o Summary of quantum support vector machines
 o Quantum neural networks

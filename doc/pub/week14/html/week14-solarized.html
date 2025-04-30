@@ -225,7 +225,6 @@ div.toc p,a {
                None,
                'pennylane-implementations'),
               ('Iris Dataset', 2, None, 'iris-dataset'),
-              ('Classical functions', 2, None, 'classical-functions'),
               ('Plans for next week', 2, None, 'plans-for-next-week')]}
 end of tocinfo -->
 
@@ -1430,7 +1429,7 @@ evaluate such kernels systematically .
 
 <p>A quantum feature map
 \( \boldsymbol{x}\mapsto\vert \phi(\boldsymbol{x})\rangle \) combined with the kernel
-\( k(\boldsymbol{x},\boldsymbol{x}&#8217;)=\vert \langle\phi(\boldsymbol{x})\vert \phi(\boldsymbol{x}&#8217;)\rangle\vert ^2 \)
+\( K(\boldsymbol{x},\boldsymbol{x}&#8217;)=\vert \langle\phi(\boldsymbol{x})\vert \phi(\boldsymbol{x}&#8217;)\rangle\vert ^2 \)
 defines a QSVM kernel.  The intuition is that the quantum device is
 implicitly computing a rich similarity measure via its
 high-dimensional state space.
@@ -1450,7 +1449,7 @@ robustness</b>.
 <div class="alert alert-block alert-block alert-text-normal">
 <b>Angle (or rotation) embedding:</b>
 <p>
-<p>For an \( n \)-dimensional feature vector \( \boldsymbol{x}=(x_1,\dots,x_n) \), apply single-qubit rotations \( \mathrm{R}_X(x_i) \) or \( \mathrm{R}Y(x_i) \) to the $i$th qubit.  For example:</p>
+<p>For an \( n \)-dimensional feature vector \( \boldsymbol{x}=(x_1,\dots,x_n) \), apply single-qubit rotations \( \mathrm{R}_X(x_i) \) or \( \mathrm{R}_Y(x_i) \) to the $i$th qubit.  For example:</p>
 $$
 U(\boldsymbol{x})=\bigotimes{i=1}^n R_Y(x_i) = R_Y(x_1)\otimes \cdots \otimes R_Y(x_n).
 $$
@@ -1558,21 +1557,21 @@ that a classical kernel might not.
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="qsvm-formulation-via-quantum-kernels">QSVM Formulation via Quantum Kernels </h2>
 
-<p>Given training data \( (\boldsymbol{x}i,y_i) \), we choose a quantum feature
-map \( U(\boldsymbol{x}) \) and define the kernel \( K{ij} =
+<p>Given training data \( (\boldsymbol{x}_i,y_i) \), we choose a quantum feature
+map \( U(\boldsymbol{x}) \) and define the kernel \( K_{ij} =
 \vert \langle\phi(\boldsymbol{x}i)\vert \phi(\boldsymbol{x}j)\rangle\vert ^2 \).  Then we solve
 the binary type of  SVM problems discussed last week, with \( x_i^T x_j \) replaced
-by \( K{ij} \).  That is:
+by \( K_{ij} \).  That is:
 </p>
 $$
-\max{\alpha} \; \sum_i \alpha_i - \frac{1}{2}\sum_{i,j} \alpha_i \alpha_j y_i y_j \,K(\boldsymbol{x}_i,\boldsymbol{x}j),
+\max{\lambda} \; \sum_i \lambda_i - \frac{1}{2}\sum_{i,j} \lambda_i \lambda_j y_i y_j \,K(\boldsymbol{x}_i,\boldsymbol{x}_j),
 $$
 
-<p>subject to \( \sum_i \alpha_i y_i=0 \), \( 0\le \alpha_i\le C \).  After
-solving for \( \alpha_i \), the decision function is
+<p>subject to \( \sum_i \lambda_i y_i=0 \), \( 0\le \lambda_i\le C \).  After
+solving for \( \lambda_i \), the decision function is
 </p>
 $$
-f(\boldsymbol{x})=\operatorname{sign}\Bigl(\sum{i} \alpha_i y_i \,K(\boldsymbol{x}_i,\boldsymbol{x}) + b\Bigr).
+f(\boldsymbol{x})=\operatorname{sign}\Bigl(\sum{i} \lambda_i y_i \,K(\boldsymbol{x}_i,\boldsymbol{x}) + b\Bigr).
 $$
 
 <p>All kernel values \( K(\boldsymbol{x}_i,\boldsymbol{x}_j) \) are estimated by the
@@ -1699,9 +1698,7 @@ advantage is gained.
 <p>In practice on current hardware, QSVM speed is dominated by circuit
 execution time.  However, QSVM experiments are valuable to test
 expressivity: for some data, a simple quantum feature map yields
-perfect classification where classical kernels fail.  For example, the
-<b>Swiss roll</b> or concentric circle datasets are often used as quantum
-kernel benchmarks.
+perfect classification where classical kernels fail.
 </p>
 
 <p>Finally, it is worth noting that both the variational quantum
@@ -1855,7 +1852,7 @@ two circuits, as shown below.
 <h2 id="computing-quantum-kernel-matrices">Computing Quantum Kernel Matrices </h2>
 
 <p>To train an SVM, we need the kernel matrix
-\( K_{ij}=k(\boldsymbol{x}_i,\boldsymbol{x}_j) \).  PennyLane provides
+\( K_{ij}=K(\boldsymbol{x}_i,\boldsymbol{x}_j) \).  PennyLane provides
 qml.kernels.kernel$\_$matrix, which takes two datasets and a kernel
 function.  We must supply a function <b>kernel(x1,x2)</b> that returns the
 overlap of states.
@@ -2192,31 +2189,9 @@ acc = accuracy_score(y_test, y_pred)
 
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="classical-functions">Classical functions </h2>
-
-<p>Finally we define the classical functions \( \phi_i(\vec{x}) = x_i \) and
-\( \phi_{i,j}(\vec{x}) = (\pi - x_i)( \pi- x_j) \).
-</p>
-
-<p>If we write this ansatz for 2 qubits and \( S \leq 2 \) we see how it
-simplifies:
-</p>
-$$
-U_{\Phi(x)} = \exp \left(i \left(x_1 Z_1 + x_2 Z_2 + (\pi - x_1)( \pi- x_2) Z_1 Z_2 \right) \right).
-$$
-
-<p>We won't get into details to much here, why we would take this ansatz.
-It is simply an ansatz that is simple enough an leads to good results.
-</p>
-
-<p>Finally we can define a depth of these circuits. Depth 2 means we repeat
-this ansatz two times. Which means our feature map becomes
-\( U_{\Phi(x)} \otimes H^{\otimes n} \otimes U_{\Phi(x)} \otimes H^{\otimes n} \).
-</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="plans-for-next-week">Plans for next week </h2>
 <ol>
+<li> Summary of quantum support vector machines</li>
 <li> Quantum neural networks</li>
 </ol>
 <!-- ------------------- end of main content --------------- -->
