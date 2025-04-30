@@ -1,0 +1,85 @@
+import pennylane as qml
+from pennylane import numpy as np
+
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score, precision_score, recall_score
+
+from sklearn.svm import SVC
+
+num_qubits = 4
+
+def layer(x):
+
+    qml.BasisEmbedding(x, wires=range(num_qubits))
+
+    for j, wire in enumerate(wires):
+        qml.Hadamard(wires=[wire])
+        if j != num_qubits-1:
+            qml.CNOT(wires=[j, j+1])
+        else:
+            qml.CNOT(wires=[j, 0])
+
+def ansatz(x, wires):
+    layer(x)
+
+adjoint_ansatz = qml.adjoint(ansatz)
+
+dev = qml.device("default.qubit", wires=num_qubits, shots=None)
+wires = dev.wires.tolist()
+
+@qml.qnode(dev, interface="autograd")
+def kernel_circuit(x1, x2):
+    ansatz(x1, wires=wires)
+    adjoint_ansatz(x2, wires=wires)
+    return qml.probs(wires=wires)
+
+def kernel(x1, x2):
+    return kernel_circuit(x1, x2)[0]
+
+df_train = pd.read_csv('train.csv')
+
+df_train['Pclass'] = df_train['Pclass'].astype(str)
+
+df_train = pd.concat([df_train, pd.get_dummies(df_train[['Pclass', 'Sex', 'Embarked']])], axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(df_train.drop(columns=['Survived']), df_train['Survived'], test_size=0.10, random_state=42, stratify=df_train['Survived'])
+
+X_train['Age'] = X_train['Age'].fillna(X_train['Age'].median())
+X_test['Age'] = X_test['Age'].fillna(X_test['Age'].median())
+
+X_train['is_child'] = X_train['Age'].map(lambda x: 1 if x < 12 else 0)
+X_test['is_child'] = X_test['Age'].map(lambda x: 1 if x < 12 else 0)
+
+cols_model = ['is_child', 'Pclass_1', 'Pclass_2', 'Sex_female']
+
+X_train = X_train[cols_model]
+X_test = X_test[cols_model]
+
+X_train = np.array(X_train.values, requires_grad=False)
+
+init_kernel = lambda x1, x2: kernel(x1, x2)
+K = qml.kernels.square_kernel_matrix(X_train, init_kernel, assume_normalized_kernel=True)
+
+svm = SVC(kernel=lambda X1, X2: qml.kernels.kernel_matrix(X1, X2, init_kernel)).fit(X_train, y_train)
+
+X_test = np.array(X_test.values, requires_grad=False)
+
+predictions = svm.predict(X_test)
+
+accuracy_score(y_test, predictions)
+precision_score(y_test, predictions)
+recall_score(y_test, predictions)
+f1_score(y_test, predictions, average='macro')
+
+svm1 = SVC(gamma='auto', kernel='rbf')
+svm1.fit(X_train, y_train)
+
+y_pred = svm1.predict(X_test)
+
+accuracy_score(y_test, y_pred)
+precision_score(y_test, y_pred)
+recall_score(y_test, y_pred)
+f1_score(y_test, y_pred, average='macro')
