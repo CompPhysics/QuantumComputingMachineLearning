@@ -130,7 +130,13 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf  
 
 ## April 28-May 2, 2025 Quantum machine learning
-  - Quantum support vector machines
+  - Classical Support Vector Machines, reminder from last week
+  - Classical Kernels and transition to Quantum Kernels
+  - Quantum Support Vector Machines
+  - Video of lecture at URL:"https://youtu.be/L-c4EBMinwM"
+  - Whiteboard notes at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril30.pdf"
+
+
 
 ## May 5-9, 2025 Quantum Machine Learning
   - Quantum machine learning and quantum neural networks
