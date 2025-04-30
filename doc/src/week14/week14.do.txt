@@ -565,6 +565,8 @@ the trouble of performing the transformation
 $\phi(\bm{x}_i)^T\phi(\bm{x}_j)$ during the SVM calculations.
 
 
+
+
 !split
 ===== The problem to solve =====
 Using our definition of the kernel We can rewrite again the Lagrangian
@@ -611,6 +613,14 @@ o Polynomial: $K(\bm{v},\bm{w})=(\bm{v}^T\bm{w}+\gamma)^d$,
 o Gaussian Radial Basis Function: $K(\bm{v},\bm{w})=\exp{\left(-\gamma\vert\vert\bm{v}-\bm{w}\vert\vert^2\right)}$,
 o Tanh: $K(\bm{v},\bm{w})=\tanh{(\bm{v}^T\bm{w}+\gamma)}$,
 and many other ones.
+
+
+The kernel trick involves implicitly mapping the input data into a
+higher-dimensional feature space where a linear separation is
+possible. Instead of explicitly transforming each data point using a
+mapping function, the kernel function computes the inner product
+directly. This approach avoids the computational cost of handling
+high-dimensional spaces explicitly.
 
 
 !split
@@ -833,12 +843,100 @@ plt.show()
 
 
 !split
+===== The Iris data =====
+
+!bc pycod
+# import the required packages
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score,classification_report,f1_score
+iris = load_iris()
+dataset=pd.DataFrame(iris.data,columns=iris.feature_names)
+dataset["target"]=iris.target
+dataset
+features= dataset[dataset.columns[1:4]]
+target=dataset["target"]
+# split the data into training set and testing set 
+X_train,X_test,Y_train,Y_test=train_test_split(features,target,test_size=0.25,random_state=42)
+# Scale the data
+from sklearn.preprocessing import MinMaxScaler
+
+minmax=MinMaxScaler()
+X_train=minmax.fit_transform(X_train)
+X_test=minmax.transform(X_test)
+X_test=np.clip(X_test,0,1)
+import time
+start_time=time.time()
+svm_model=SVC(kernel="rbf")
+svm_model.fit(X_train, Y_train)
+end_time=time.time()
+print(end_time-start_time)
+predictions = svm_model.predict(X_test)
+
+# Calculate accuracy and other metrics
+predictions=svm_model.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+print(f"the accuracy is: {accuracy:.2f}%")
+mocrof1=f1_score(Y_test,predictions,average='macro')
+print(f"the mocro f1-score is:{mocrof1:.2f}%")
+print(classification_report(Y_test,predictions))
+!ec
+
+
+
+!split
 ===== Quantum SVMs =====
 
 The idea of a classical SVM is that we have a set of points
 that are in either one group or another and we want to find a line that
 separates these two groups. This line can be linear, but it can also be
 much more complex, which can be achieved by the use of Kernels.
+
+
+!split
+===== How QSVM works =====
+
+
+!split
+===== Basic steps: Data Encoding (Quantum Feature Mapping)  =====
+
+!bblock 
+Mapping to Quantum States: Input data is first encoded into quantum
+states. This process is akin to a quantum feature map, where classical
+information is represented in the quantum Hilbert space.
+!eblock
+
+!split
+===== Basic steps: Quantum Kernel =====
+!bblock 
+In many QSVM implementations, this mapping enables the computation of
+a kernel matrix, where the similarity (or inner product) between
+quantum states is evaluated. This quantum kernel can capture complex
+relationships in data that might be challenging for classical kernels.
+!eblock 
+
+!split
+===== Basic steps: Quantum Circuit Processing =====
+
+!bblock 
+Quantum Gates and Circuits: Once data is encoded, a series of quantum
+gates (forming a quantum circuit) is applied. These gates manipulate
+the quantum states to perform the equivalent of the SVM algorithm’s
+optimization and decision-making steps.
+!eblock
+
+!split
+===== Basic steps: Measurement =====
+
+!bblock
+Outcome: After the quantum operations, a measurement is performed on
+the output state. The result of this measurement provides the
+classification outcome, analogous to deciding on which side of the
+hyperplane a data point lies.
+!eblock
 
 
 !split
@@ -1562,13 +1660,27 @@ o define a kernel function via that QNode;
 o compute kernel matrices with qml.kernels;
 o train/predict using an SVM with the precomputed kernels.
 
+!split
+===== Steps in Quantum Kernel SVM =====
+
+o Data Encoding (Feature Map Generation)
+  * The classical data (x) is encoded into a quantum state using a quantum feature map (quantum circuit).
+
+o Quantum Kernel Computation
+  * The kernel matrix is computed using a quantum computer by measuring the inner product of quantum states.
+
+o Classical SVM Training
+  * The quantum kernel matrix is used in a classical SVM algorithm to find the optimal decision boundary.
+
+o Prediction
+  * New data is classified using the trained SVM model with the quantum kernel.
+
 
 !split
 ===== Iris Dataset =====
 
-!bc pycod
-# Quantum Kernel SVM on Iris (Setosa vs Versicolor) using PennyLane and scikit-learn
 
+!bc pycod
 import pennylane as qml
 from pennylane import numpy as np
 from sklearn import datasets
@@ -1577,73 +1689,44 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report
+num_qubits=4
+device=qml.device('default.qubit',wires=num_qubits)
 
-# Load Iris dataset and select two classes (0: setosa, 1: versicolor)
-iris = datasets.load_iris()
-X = iris.data
-y = iris.target
-mask = y != 2  # drop class '2' (virginica)
-X = X[mask]
-y = y[mask]
 
-# Standardize features and reduce to 2 dimensions via PCA
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-pca = PCA(n_components=2)
-X_reduced = pca.fit_transform(X_scaled)
+@qml.qnode(device)
+def qnode(inputs,weights):
+    qml.templates.AngleEmbedding(inputs, 
+                                 wires=range(num_qubits), 
+                                 rotation='Y') # encode the inputs into the quantum state by rotating each qubit along the Y-axis.
+    qml.adjoint(qml.AngleEmbedding(features=weights, 
+                                   wires=range(num_qubits),
+                                    rotation='Y')) # applies the inverse transformation using the weights parameter.
+    return qml.probs(wires=range(num_qubits))
 
-# Split into train and test sets
-X_train, X_test, y_train, y_test = train_test_split(
-   X_reduced, y, test_size=0.2, random_state=42
-)
-# Define quantum device and feature map (angle encoding on 2 qubits)
-n_qubits = 2
-dev = qml.device('default.qubit', wires=n_qubits)
 
-@qml.qnode(dev)
-def feature_map(x):
-   # Encode 2 features into rotation angles
-   for i in range(n_qubits):
-       qml.RY(x[i] * np.pi, wires=i)
-   # Optional: add entanglement (e.g., ZZ interaction)
-   qml.CNOT(wires=[0, 1])
-   qml.RZ((x[0] + x[1]) * np.pi, wires=1)
-   qml.CNOT(wires=[0, 1])
-   return qml.state()
+def qkernel(inputs,weights):
+    return np.array([[qnode(input,weight)[0] for weight in weights] for input in inputs ]) # compute the quantum kernel
 
-# Compute quantum kernel (fidelity) between two feature vectors
-def quantum_kernel(x1, x2):
-   # Compute state vectors for each input
-   state1 = feature_map(x1)
-   state2 = feature_map(x2)
-   # Kernel = |<phi(x1)|phi(x2)>|^2
-   overlap = np.vdot(state1, state2)
-   return np.abs(overlap) ** 2
 
-# Build kernel (Gram) matrices for training and test sets
-n_train = len(X_train)
-n_test = len(X_test)
-kernel_train = np.zeros((n_train, n_train))
-for i in range(n_train):
-   for j in range(n_train):
-       kernel_train[i, j] = quantum_kernel(X_train[i], X_train[j])
+# Fit the model
+start_time=time.time()
+qsvm=SVC(kernel=qkernel)
+qsvm.fit(X_train,Y_train)
+end_time=time.time()
+print(end_time-start_time)
 
-kernel_test = np.zeros((n_test, n_train))
-for i in range(n_test):
-   for j in range(n_train):
-       kernel_test[i, j] = quantum_kernel(X_test[i], X_train[j])
+# Make predictions and calculate the accuracy
+predictions=qsvm.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+print(f"the accuracy is: {accuracy:.2f} %")
+macrof1=f1_score(Y_test,predictions,average='macro')
+print(f"the mocro f1-score is: {mocrof1:.2f}%")
+print(classification_report(Y_test,predictions))
 
-# Train SVM with precomputed quantum kernel
-svm = SVC(kernel='precomputed')
-svm.fit(kernel_train, y_train)
-
-# Predict on test set and evaluate
-y_pred = svm.predict(kernel_test)
-acc = accuracy_score(y_test, y_pred)
-print("Test Accuracy:", acc)
-print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 !ec
+
+
 
 
 !split

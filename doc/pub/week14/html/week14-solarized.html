@@ -125,7 +125,22 @@ div.toc p,a {
               ('Different kernels', 2, None, 'different-kernels'),
               ("Mercer's theorem", 2, None, 'mercer-s-theorem'),
               ('The moons example', 2, None, 'the-moons-example'),
+              ('The Iris data', 2, None, 'the-iris-data'),
               ('Quantum SVMs', 2, None, 'quantum-svms'),
+              ('How QSVM works', 2, None, 'how-qsvm-works'),
+              ('Basic steps: Data Encoding (Quantum Feature Mapping)',
+               2,
+               None,
+               'basic-steps-data-encoding-quantum-feature-mapping'),
+              ('Basic steps: Quantum Kernel',
+               2,
+               None,
+               'basic-steps-quantum-kernel'),
+              ('Basic steps: Quantum Circuit Processing',
+               2,
+               None,
+               'basic-steps-quantum-circuit-processing'),
+              ('Basic steps: Measurement', 2, None, 'basic-steps-measurement'),
               ('Quantum Kernels and Feature Maps',
                2,
                None,
@@ -224,6 +239,10 @@ div.toc p,a {
                2,
                None,
                'pennylane-implementations'),
+              ('Steps in Quantum Kernel SVM',
+               2,
+               None,
+               'steps-in-quantum-kernel-svm'),
               ('Iris Dataset', 2, None, 'iris-dataset'),
               ('Qiskit implementation', 2, None, 'qiskit-implementation'),
               ('Plans for next week', 2, None, 'plans-for-next-week')]}
@@ -916,6 +935,14 @@ Given a kernel \( K \) and the targets \( y_i \) this matrix is easy to set up. 
 </ol>
 <p>and many other ones.</p>
 
+<p>The kernel trick involves implicitly mapping the input data into a
+higher-dimensional feature space where a linear separation is
+possible. Instead of explicitly transforming each data point using a
+mapping function, the kernel function computes the inner product
+directly. This approach avoids the computational cost of handling
+high-dimensional spaces explicitly.
+</p>
+
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="mercer-s-theorem">Mercer's theorem </h2>
 
@@ -1154,6 +1181,69 @@ plt.show()
 
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="the-iris-data">The Iris data </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #228B22"># import the required packages</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pandas</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">pd</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.model_selection</span> <span style="color: #8B008B; font-weight: bold">import</span> train_test_split
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.svm</span> <span style="color: #8B008B; font-weight: bold">import</span> SVC
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.datasets</span> <span style="color: #8B008B; font-weight: bold">import</span> load_iris
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.metrics</span> <span style="color: #8B008B; font-weight: bold">import</span> accuracy_score,classification_report,f1_score
+iris = load_iris()
+dataset=pd.DataFrame(iris.data,columns=iris.feature_names)
+dataset[<span style="color: #CD5555">&quot;target&quot;</span>]=iris.target
+dataset
+features= dataset[dataset.columns[<span style="color: #B452CD">1</span>:<span style="color: #B452CD">4</span>]]
+target=dataset[<span style="color: #CD5555">&quot;target&quot;</span>]
+<span style="color: #228B22"># split the data into training set and testing set </span>
+X_train,X_test,Y_train,Y_test=train_test_split(features,target,test_size=<span style="color: #B452CD">0.25</span>,random_state=<span style="color: #B452CD">42</span>)
+<span style="color: #228B22"># Scale the data</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.preprocessing</span> <span style="color: #8B008B; font-weight: bold">import</span> MinMaxScaler
+
+minmax=MinMaxScaler()
+X_train=minmax.fit_transform(X_train)
+X_test=minmax.transform(X_test)
+X_test=np.clip(X_test,<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>)
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">time</span>
+start_time=time.time()
+svm_model=SVC(kernel=<span style="color: #CD5555">&quot;rbf&quot;</span>)
+svm_model.fit(X_train, Y_train)
+end_time=time.time()
+<span style="color: #658b00">print</span>(end_time-start_time)
+predictions = svm_model.predict(X_test)
+
+<span style="color: #228B22"># Calculate accuracy and other metrics</span>
+predictions=svm_model.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;the accuracy is: {</span>accuracy<span style="color: #CD5555">:.2f}%&quot;</span>)
+mocrof1=f1_score(Y_test,predictions,average=<span style="color: #CD5555">&#39;macro&#39;</span>)
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;the mocro f1-score is:{</span>mocrof1<span style="color: #CD5555">:.2f}%&quot;</span>)
+<span style="color: #658b00">print</span>(classification_report(Y_test,predictions))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="quantum-svms">Quantum SVMs </h2>
 
 <p>The idea of a classical SVM is that we have a set of points
@@ -1161,6 +1251,63 @@ that are in either one group or another and we want to find a line that
 separates these two groups. This line can be linear, but it can also be
 much more complex, which can be achieved by the use of Kernels.
 </p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="how-qsvm-works">How QSVM works </h2>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="basic-steps-data-encoding-quantum-feature-mapping">Basic steps: Data Encoding (Quantum Feature Mapping)  </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<p>Mapping to Quantum States: Input data is first encoded into quantum
+states. This process is akin to a quantum feature map, where classical
+information is represented in the quantum Hilbert space.
+</p>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="basic-steps-quantum-kernel">Basic steps: Quantum Kernel </h2>
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<p>In many QSVM implementations, this mapping enables the computation of
+a kernel matrix, where the similarity (or inner product) between
+quantum states is evaluated. This quantum kernel can capture complex
+relationships in data that might be challenging for classical kernels.
+</p>
+</div>
+ 
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="basic-steps-quantum-circuit-processing">Basic steps: Quantum Circuit Processing </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<p>Quantum Gates and Circuits: Once data is encoded, a series of quantum
+gates (forming a quantum circuit) is applied. These gates manipulate
+the quantum states to perform the equivalent of the SVM algorithm&#8217;s
+optimization and decision-making steps.
+</p>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="basic-steps-measurement">Basic steps: Measurement </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<p>Outcome: After the quantum operations, a measurement is performed on
+the output state. The result of this measurement provides the
+classification outcome, analogous to deciding on which side of the
+hyperplane a data point lies.
+</p>
+</div>
+
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="quantum-kernels-and-feature-maps">Quantum Kernels and Feature Maps </h2>
@@ -2089,6 +2236,27 @@ feature maps.
 <li> train/predict using an SVM with the precomputed kernels.</li>
 </ol>
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="steps-in-quantum-kernel-svm">Steps in Quantum Kernel SVM </h2>
+
+<ol>
+<li> Data Encoding (Feature Map Generation)</li>
+<ul>
+  <li> The classical data (x) is encoded into a quantum state using a quantum feature map (quantum circuit).</li>
+</ul>
+<li> Quantum Kernel Computation</li>
+<ul>
+  <li> The kernel matrix is computed using a quantum computer by measuring the inner product of quantum states.</li>
+</ul>
+<li> Classical SVM Training</li>
+<ul>
+  <li> The quantum kernel matrix is used in a classical SVM algorithm to find the optimal decision boundary.</li>
+</ul>
+<li> Prediction</li>
+<ul>
+  <li> New data is classified using the trained SVM model with the quantum kernel.</li>
+</ul>
+</ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="iris-dataset">Iris Dataset </h2>
 
 
@@ -2098,9 +2266,7 @@ feature maps.
     <div class="inner_cell">
       <div class="input_area">
         <div class="highlight" style="background: #eeeedd">
-  <pre style="line-height: 125%;"><span style="color: #228B22"># Quantum Kernel SVM on Iris (Setosa vs Versicolor) using PennyLane and scikit-learn</span>
-
-<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn</span> <span style="color: #8B008B; font-weight: bold">import</span> datasets
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.preprocessing</span> <span style="color: #8B008B; font-weight: bold">import</span> StandardScaler
@@ -2108,71 +2274,39 @@ feature maps.
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.model_selection</span> <span style="color: #8B008B; font-weight: bold">import</span> train_test_split
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.svm</span> <span style="color: #8B008B; font-weight: bold">import</span> SVC
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.metrics</span> <span style="color: #8B008B; font-weight: bold">import</span> accuracy_score, classification_report
+num_qubits=<span style="color: #B452CD">4</span>
+device=qml.device(<span style="color: #CD5555">&#39;default.qubit&#39;</span>,wires=num_qubits)
 
-<span style="color: #228B22"># Load Iris dataset and select two classes (0: setosa, 1: versicolor)</span>
-iris = datasets.load_iris()
-X = iris.data
-y = iris.target
-mask = y != <span style="color: #B452CD">2</span>  <span style="color: #228B22"># drop class &#39;2&#39; (virginica)</span>
-X = X[mask]
-y = y[mask]
 
-<span style="color: #228B22"># Standardize features and reduce to 2 dimensions via PCA</span>
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-pca = PCA(n_components=<span style="color: #B452CD">2</span>)
-X_reduced = pca.fit_transform(X_scaled)
+<span style="color: #707a7c">@qml</span>.qnode(device)
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qnode</span>(inputs,weights):
+    qml.templates.AngleEmbedding(inputs, 
+                                 wires=<span style="color: #658b00">range</span>(num_qubits), 
+                                 rotation=<span style="color: #CD5555">&#39;Y&#39;</span>) <span style="color: #228B22"># encode the inputs into the quantum state by rotating each qubit along the Y-axis.</span>
+    qml.adjoint(qml.AngleEmbedding(features=weights, 
+                                   wires=<span style="color: #658b00">range</span>(num_qubits),
+                                    rotation=<span style="color: #CD5555">&#39;Y&#39;</span>)) <span style="color: #228B22"># applies the inverse transformation using the weights parameter.</span>
+    <span style="color: #8B008B; font-weight: bold">return</span> qml.probs(wires=<span style="color: #658b00">range</span>(num_qubits))
 
-<span style="color: #228B22"># Split into train and test sets</span>
-X_train, X_test, y_train, y_test = train_test_split(
-   X_reduced, y, test_size=<span style="color: #B452CD">0.2</span>, random_state=<span style="color: #B452CD">42</span>
-)
-<span style="color: #228B22"># Define quantum device and feature map (angle encoding on 2 qubits)</span>
-n_qubits = <span style="color: #B452CD">2</span>
-dev = qml.device(<span style="color: #CD5555">&#39;default.qubit&#39;</span>, wires=n_qubits)
 
-<span style="color: #707a7c">@qml</span>.qnode(dev)
-<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">feature_map</span>(x):
-   <span style="color: #228B22"># Encode 2 features into rotation angles</span>
-   <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
-       qml.RY(x[i] * np.pi, wires=i)
-   <span style="color: #228B22"># Optional: add entanglement (e.g., ZZ interaction)</span>
-   qml.CNOT(wires=[<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>])
-   qml.RZ((x[<span style="color: #B452CD">0</span>] + x[<span style="color: #B452CD">1</span>]) * np.pi, wires=<span style="color: #B452CD">1</span>)
-   qml.CNOT(wires=[<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>])
-   <span style="color: #8B008B; font-weight: bold">return</span> qml.state()
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qkernel</span>(inputs,weights):
+    <span style="color: #8B008B; font-weight: bold">return</span> np.array([[qnode(<span style="color: #658b00">input</span>,weight)[<span style="color: #B452CD">0</span>] <span style="color: #8B008B; font-weight: bold">for</span> weight <span style="color: #8B008B">in</span> weights] <span style="color: #8B008B; font-weight: bold">for</span> <span style="color: #658b00">input</span> <span style="color: #8B008B">in</span> inputs ]) <span style="color: #228B22"># compute the quantum kernel</span>
 
-<span style="color: #228B22"># Compute quantum kernel (fidelity) between two feature vectors</span>
-<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">quantum_kernel</span>(x1, x2):
-   <span style="color: #228B22"># Compute state vectors for each input</span>
-   state1 = feature_map(x1)
-   state2 = feature_map(x2)
-   <span style="color: #228B22"># Kernel = |&lt;phi(x1)|phi(x2)&gt;|^2</span>
-   overlap = np.vdot(state1, state2)
-   <span style="color: #8B008B; font-weight: bold">return</span> np.abs(overlap) ** <span style="color: #B452CD">2</span>
 
-<span style="color: #228B22"># Build kernel (Gram) matrices for training and test sets</span>
-n_train = <span style="color: #658b00">len</span>(X_train)
-n_test = <span style="color: #658b00">len</span>(X_test)
-kernel_train = np.zeros((n_train, n_train))
-<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_train):
-   <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_train):
-       kernel_train[i, j] = quantum_kernel(X_train[i], X_train[j])
+<span style="color: #228B22"># Fit the model</span>
+start_time=time.time()
+qsvm=SVC(kernel=qkernel)
+qsvm.fit(X_train,Y_train)
+end_time=time.time()
+<span style="color: #658b00">print</span>(end_time-start_time)
 
-kernel_test = np.zeros((n_test, n_train))
-<span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_test):
-   <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_train):
-       kernel_test[i, j] = quantum_kernel(X_test[i], X_train[j])
-
-<span style="color: #228B22"># Train SVM with precomputed quantum kernel</span>
-svm = SVC(kernel=<span style="color: #CD5555">&#39;precomputed&#39;</span>)
-svm.fit(kernel_train, y_train)
-
-<span style="color: #228B22"># Predict on test set and evaluate</span>
-y_pred = svm.predict(kernel_test)
-acc = accuracy_score(y_test, y_pred)
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;Test Accuracy:&quot;</span>, acc)
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;\nClassification Report:\n&quot;</span>, classification_report(y_test, y_pred))
+<span style="color: #228B22"># Make predictions and calculate the accuracy</span>
+predictions=qsvm.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;the accuracy is: {</span>accuracy<span style="color: #CD5555">:.2f} %&quot;</span>)
+macrof1=f1_score(Y_test,predictions,average=<span style="color: #CD5555">&#39;macro&#39;</span>)
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;the mocro f1-score is: {</span>mocrof1<span style="color: #CD5555">:.2f}%&quot;</span>)
+<span style="color: #658b00">print</span>(classification_report(Y_test,predictions))
 </pre>
 </div>
       </div>
