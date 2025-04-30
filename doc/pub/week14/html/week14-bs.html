@@ -198,6 +198,7 @@ doconce format html week14.do.txt --html_style=bootstrap --pygments_html_style=d
                None,
                'pennylane-implementations'),
               ('Iris Dataset', 2, None, 'iris-dataset'),
+              ('Qiskit implementation', 2, None, 'qiskit-implementation'),
               ('Plans for next week', 2, None, 'plans-for-next-week')]}
 end of tocinfo -->
 
@@ -308,6 +309,7 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#discussion-of-implementation" style="font-size: 80%;">Discussion of Implementation</a></li>
      <!-- navigation toc: --> <li><a href="#pennylane-implementations" style="font-size: 80%;">PennyLane implementations</a></li>
      <!-- navigation toc: --> <li><a href="#iris-dataset" style="font-size: 80%;">Iris Dataset</a></li>
+     <!-- navigation toc: --> <li><a href="#qiskit-implementation" style="font-size: 80%;">Qiskit implementation</a></li>
      <!-- navigation toc: --> <li><a href="#plans-for-next-week" style="font-size: 80%;">Plans for next week</a></li>
 
         </ul>
@@ -2268,6 +2270,72 @@ y_pred <span style="color: #666666">=</span> svm<span style="color: #666666">.</
 acc <span style="color: #666666">=</span> accuracy_score(y_test, y_pred)
 <span style="color: #008000">print</span>(<span style="color: #BA2121">&quot;Test Accuracy:&quot;</span>, acc)
 <span style="color: #008000">print</span>(<span style="color: #BA2121">&quot;</span><span style="color: #BB6622; font-weight: bold">\n</span><span style="color: #BA2121">Classification Report:</span><span style="color: #BB6622; font-weight: bold">\n</span><span style="color: #BA2121">&quot;</span>, classification_report(y_test, y_pred))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split -->
+<h2 id="qiskit-implementation" class="anchor">Qiskit implementation </h2>
+
+<p>A similar implementation on Qiskit is given here (you need to have installed Qiskit as well).</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit</span> <span style="color: #008000; font-weight: bold">import</span> BasicAer
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.utils</span> <span style="color: #008000; font-weight: bold">import</span> QuantumInstance
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit.circuit.library</span> <span style="color: #008000; font-weight: bold">import</span> ZZFeatureMap
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qiskit_machine_learning.algorithms</span> <span style="color: #008000; font-weight: bold">import</span> QSVC
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.model_selection</span> <span style="color: #008000; font-weight: bold">import</span> train_test_split
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.datasets</span> <span style="color: #008000; font-weight: bold">import</span> load_iris
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.preprocessing</span> <span style="color: #008000; font-weight: bold">import</span> StandardScaler
+
+<span style="color: #408080; font-style: italic"># Load and preprocess dataset</span>
+dataset <span style="color: #666666">=</span> load_iris()
+X <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>data
+y <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>target
+
+<span style="color: #408080; font-style: italic"># For simplicity, we&#39;ll only classify between two classes</span>
+X <span style="color: #666666">=</span> X[y <span style="color: #666666">!=</span> <span style="color: #666666">2</span>]
+y <span style="color: #666666">=</span> y[y <span style="color: #666666">!=</span> <span style="color: #666666">2</span>]
+
+<span style="color: #408080; font-style: italic"># Standardize features</span>
+scaler <span style="color: #666666">=</span> StandardScaler()
+X <span style="color: #666666">=</span> scaler<span style="color: #666666">.</span>fit_transform(X)
+
+<span style="color: #408080; font-style: italic"># Split into training and test sets</span>
+X_train, X_test, y_train, y_test <span style="color: #666666">=</span> train_test_split(X, y, test_size<span style="color: #666666">=0.2</span>, random_state<span style="color: #666666">=42</span>)
+
+<span style="color: #408080; font-style: italic"># Define quantum feature map</span>
+feature_map <span style="color: #666666">=</span> ZZFeatureMap(feature_dimension<span style="color: #666666">=4</span>, reps<span style="color: #666666">=2</span>)
+
+<span style="color: #408080; font-style: italic"># Set up quantum instance</span>
+quantum_instance <span style="color: #666666">=</span> QuantumInstance(BasicAer<span style="color: #666666">.</span>get_backend(<span style="color: #BA2121">&#39;qasm_simulator&#39;</span>), shots<span style="color: #666666">=1024</span>)
+
+<span style="color: #408080; font-style: italic"># Initialize QSVC</span>
+qsvc <span style="color: #666666">=</span> QSVC(quantum_instance<span style="color: #666666">=</span>quantum_instance, feature_map<span style="color: #666666">=</span>feature_map)
+
+<span style="color: #408080; font-style: italic"># Train QSVC</span>
+qsvc<span style="color: #666666">.</span>fit(X_train, y_train)
+
+<span style="color: #408080; font-style: italic"># Evaluate QSVC</span>
+accuracy <span style="color: #666666">=</span> qsvc<span style="color: #666666">.</span>score(X_test, y_test)
+<span style="color: #008000">print</span>(<span style="color: #BA2121">f&#39;QSVC accuracy: </span><span style="color: #BB6688; font-weight: bold">{</span>accuracy <span style="color: #666666">*</span> <span style="color: #666666">100</span><span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">%&#39;</span>)
 </pre>
 </div>
       </div>
