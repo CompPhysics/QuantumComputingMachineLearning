@@ -1637,10 +1637,15 @@ this is conveniently done by defining a QNode circuit that encodes
 <span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">import</span> numpy <span style="color: #008000; font-weight: bold">as</span> np
 dev <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>device(<span style="color: #BA2121">&#39;default.qubit&#39;</span>, wires<span style="color: #666666">=2</span>)
 <span style="color: #AA22FF">@qml</span><span style="color: #666666">.</span>qnode(dev)
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">kernel_circuit</span>(x1, x2):
-    qml<span style="color: #666666">.</span>templates<span style="color: #666666">.</span>AngleEmbedding(x1, wires<span style="color: #666666">=</span>[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>])
-    qml<span style="color: #666666">.</span>adjoint(qml<span style="color: #666666">.</span>templates<span style="color: #666666">.</span>AngleEmbedding)(x2, wires<span style="color: #666666">=</span>[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>])
-    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>probs(wires<span style="color: #666666">=</span>[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>])[<span style="color: #666666">0</span>]
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">circuit</span>(x1, x2):
+    qml<span style="color: #666666">.</span>templates<span style="color: #666666">.</span>AngleEmbedding(x1, wires<span style="color: #666666">=</span>dev<span style="color: #666666">.</span>wires)
+    qml<span style="color: #666666">.</span>adjoint(qml<span style="color: #666666">.</span>templates<span style="color: #666666">.</span>AngleEmbedding)(x2, wires<span style="color: #666666">=</span>dev<span style="color: #666666">.</span>wires)
+    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>probs(wires<span style="color: #666666">=</span>dev<span style="color: #666666">.</span>wires)
+
+kernel <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">lambda</span> x1, x2: circuit(x1, x2)[<span style="color: #666666">0</span>]
+X_train <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>random((<span style="color: #666666">4</span>,<span style="color: #666666">2</span>))
+X_test <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>random((<span style="color: #666666">3</span>,<span style="color: #666666">2</span>))
+qml<span style="color: #666666">.</span>kernels<span style="color: #666666">.</span>kernel_matrix(X_train, X_test, kernel)
 </pre>
 </div>
       </div>

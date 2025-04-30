@@ -1589,10 +1589,15 @@ this is conveniently done by defining a QNode circuit that encodes
 <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
 dev = qml.device(<span style="color: #CD5555">&#39;default.qubit&#39;</span>, wires=<span style="color: #B452CD">2</span>)
 <span style="color: #707a7c">@qml</span>.qnode(dev)
-<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">kernel_circuit</span>(x1, x2):
-    qml.templates.AngleEmbedding(x1, wires=[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
-    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
-    <span style="color: #8B008B; font-weight: bold">return</span> qml.probs(wires=[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])[<span style="color: #B452CD">0</span>]
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">circuit</span>(x1, x2):
+    qml.templates.AngleEmbedding(x1, wires=dev.wires)
+    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=dev.wires)
+    <span style="color: #8B008B; font-weight: bold">return</span> qml.probs(wires=dev.wires)
+
+kernel = <span style="color: #8B008B; font-weight: bold">lambda</span> x1, x2: circuit(x1, x2)[<span style="color: #B452CD">0</span>]
+X_train = np.random.random((<span style="color: #B452CD">4</span>,<span style="color: #B452CD">2</span>))
+X_test = np.random.random((<span style="color: #B452CD">3</span>,<span style="color: #B452CD">2</span>))
+qml.kernels.kernel_matrix(X_train, X_test, kernel)
 </pre>
 </div>
       </div>
