@@ -1,0 +1,185 @@
+\documentclass[11pt]{book}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Quantum Fourier Transform: Theory and Implementation}
+\author{}
+\date{}
+
+\lstset{
+ language=Python,
+ basicstyle=\ttfamily\small,
+ keywordstyle=\color{blue},
+ commentstyle=\color{gray},
+ stringstyle=\color{red},
+ showstringspaces=false,
+ breaklines=true,
+ frame=single,
+ captionpos=b
+}
+
+\begin{document}
+
+\maketitle
+
+\chapter{Mathematical Foundations and Motivation}
+
+\section{Introduction}
+The Quantum Fourier Transform (QFT) is a key component in many quantum algorithms, notably Shor’s factoring algorithm and quantum phase estimation. It serves as the quantum analogue of the classical Discrete Fourier Transform (DFT), but operates exponentially faster due to the principles of quantum parallelism and entanglement.
+
+\section{Classical Discrete Fourier Transform}
+Given a vector of $N$ complex numbers $\{x_0, x_1, \dots, x_{N-1}\}$, the DFT is defined as:
+\[
+X_k = \sum_{n=0}^{N-1} x_n e^{-2\pi i kn/N}, \quad k = 0, 1, \dots, N-1
+\]
+
+The inverse transform is:
+\[
+x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k e^{2\pi i kn/N}
+\]
+
+This can be expressed in matrix form:
+\[
+\vec{X} = F_N \vec{x}, \quad \text{where} \quad (F_N)_{jk} = \frac{1}{\sqrt{N}} e^{2\pi i jk/N}
+\]
+
+\section{Quantum Fourier Transform}
+Let $N = 2^n$. The QFT acts on the state:
+\[
+\ket{x} = \ket{x_1 x_2 \dots x_n}
+\]
+and transforms it into:
+\[
+\text{QFT} \ket{x} = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} e^{2\pi i xk/N} \ket{k}
+\]
+
+The QFT is unitary and can be decomposed into a series of Hadamard and controlled phase gates, allowing for an efficient $O(n^2)$ implementation.
+
+\section{Comparison with Classical DFT}
+While the classical FFT runs in $O(N \log N)$ time, the QFT runs in $O(n^2) = O(\log^2 N)$ gate operations—an exponential improvement, crucial in quantum speedups for specific problems.
+
+\section{Unitary Nature of QFT}
+The QFT matrix $F_N$ is unitary:
+\[
+F_N^\dagger F_N = I
+\]
+This guarantees that QFT is a valid quantum operation (i.e., norm-preserving and reversible).
+
+\section{PennyLane Setup and Basic Example}
+To experiment with QFT, we can use the PennyLane Python library.
+
+\subsection*{Installation}
+\begin{lstlisting}[language=bash]
+pip install pennylane
+\end{lstlisting}
+
+\subsection*{Classical DFT vs Quantum Fourier Transform}
+```python
+import pennylane as qml
+from pennylane import numpy as np
+
+n_qubits = 3
+dev = qml.device("default.qubit", wires=n_qubits)
+
+def apply_qft(wires):
+   qml.templates.QFT(wires=wires)
+
+@qml.qnode(dev)
+def qft_circuit():
+   qml.BasisState(np.array([1, 0, 1]), wires=range(n_qubits))
+   apply_qft(wires=range(n_qubits))
+   return qml.state()
+
+state = qft_circuit()
+print("QFT output state:", state)
+
+
+\chapter{Quantum Circuit Implementation}
+
+\section{High-Level Structure}
+The Quantum Fourier Transform can be efficiently implemented using a combination of Hadamard gates and controlled phase gates. Given an $n$-qubit state $\ket{x}$, the QFT circuit transforms it into the state:
+\[
+\frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} e^{2\pi i xk / 2^n} \ket{k}
+\]
+
+This is achieved through a decomposition into a quantum circuit of $O(n^2)$ gates.
+
+\section{QFT on 3 Qubits}
+We illustrate the circuit for $n = 3$. The transformation proceeds as follows:
+
+\begin{enumerate}
+   \item Apply a Hadamard gate to the first qubit.
+   \item Apply controlled-$R_k$ gates (phase gates) for $k=2, 3, \dots$ to encode phase interference.
+   \item Repeat recursively on the remaining qubits.
+   \item Apply a qubit swap at the end to reverse the order of qubits.
+\end{enumerate}
+
+\section{Controlled Phase Rotation}
+The controlled phase rotation gate $R_k$ is defined as:
+\[
+R_k = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2\pi i / 2^k}
+\end{bmatrix}
+\]
+
+This gate introduces the correct phase into the wavefunction based on the binary digits of the input number.
+
+\section{Circuit Diagram}
+The QFT circuit for 3 qubits is shown below (read top to bottom):
+
+\[
+\Qcircuit @C=1em @R=1em {
+\lstick{\ket{x_0}} & \gate{H} & \ctrl{1} & \ctrl{2} & \qw      & \qw & \swap{2} & \qw \\
+\lstick{\ket{x_1}} & \qw      & \gate{R_2} & \ctrl{1} & \gate{H} & \qw & \qw      & \qw \\
+\lstick{\ket{x_2}} & \qw      & \qw      & \gate{R_2} & \qw      & \gate{H} & \swap{-2} & \qw
+}
+\]
+
+\section{Python Code with PennyLane}
+We now implement a full QFT circuit manually for 3 qubits using PennyLane.
+
+\begin{lstlisting}[language=Python]
+import pennylane as qml
+from pennylane import numpy as np
+import math
+
+dev = qml.device("default.qubit", wires=3)
+
+def qft_rotations(wires):
+   if len(wires) == 0:
+       return
+   head, *tail = wires
+   qml.Hadamard(wires=head)
+   for i, qubit in enumerate(tail):
+       qml.ctrl(qml.PhaseShift, control=qubit)(math.pi / 2**(i+1), wires=head)
+   qft_rotations(tail)
+
+def swap_registers(wires):
+   for i in range(len(wires) // 2):
+       qml.SWAP(wires=[wires[i], wires[-i - 1]])
+
+@qml.qnode(dev)
+def qft_custom():
+   qml.BasisState(np.array([1, 0, 1]), wires=range(3))
+   qft_rotations(wires=[0, 1, 2])
+   swap_registers(wires=[0, 1, 2])
+   return qml.state()
+
+print("Custom QFT state:", qft_custom())
+\end{lstlisting}
+
+\section{Complexity}
+- The QFT requires $O(n^2)$ gates.
+- Approximate QFT implementations can reduce complexity by omitting small-angle phase gates.
+
+\section{Summary}
+The circuit implementation of QFT is surprisingly efficient, enabling its use in several key quantum algorithms. Understanding the gate-level construction deepens our understanding of quantum information flow during Fourier transformation.
