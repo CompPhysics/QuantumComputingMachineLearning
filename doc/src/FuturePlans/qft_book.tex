@@ -1,0 +1,166 @@
+
+\documentclass[12pt]{book}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{qcircuit}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{physics}
+
+\definecolor{codebg}{rgb}{0.95,0.95,0.95}
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  breaklines=true,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+  frame=single,
+  showstringspaces=false
+}
+
+\title{Quantum Fourier Transform: Theory and Implementation}
+\author{Prepared with OpenAI's ChatGPT}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\chapter{Introduction and Background}
+The Quantum Fourier Transform (QFT) is a central building block in quantum algorithms such as Shor's factoring algorithm and quantum phase estimation. It is the quantum analogue of the discrete Fourier transform (DFT) and enables efficient extraction of periodicity from quantum states.
+
+\section{Classical Fourier Transform}
+The classical Discrete Fourier Transform (DFT) on a vector $x = (x_0, ..., x_{N-1})$ is given by:
+\[
+\tilde{x}_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_j e^{2\pi i jk / N}
+\]
+It is a unitary transformation and can be implemented in $O(N \log N)$ via the Fast Fourier Transform.
+
+\section{Quantum States and Qubits}
+A quantum register of $n$ qubits encodes a vector in $2^n$-dimensional Hilbert space:
+\[
+\ket{\psi} = \sum_{j=0}^{2^n - 1} x_j \ket{j}
+\]
+where $x_j$ are complex amplitudes satisfying $\sum |x_j|^2 = 1$.
+
+\section{Quantum Fourier Transform}
+The QFT on an $n$-qubit state transforms:
+\[
+\ket{j} \rightarrow \frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} e^{2\pi i jk / 2^n} \ket{k}
+\]
+This unitary matrix has exponential size, but can be implemented in $O(n^2)$ quantum gates.
+
+\section{Matrix Form}
+For $n = 2$ qubits, the QFT matrix is:
+\[
+\frac{1}{2}
+\begin{bmatrix}
+1 & 1 & 1 & 1 \\
+1 & i & -1 & -i \\
+1 & -1 & 1 & -1 \\
+1 & -i & -1 & i
+\end{bmatrix}
+\]
+
+\chapter{Circuit Implementation of QFT}
+
+\section{QFT Circuit Structure}
+The QFT is decomposed into Hadamard and controlled phase shift gates. For $n$ qubits, the standard structure is:
+
+\begin{enumerate}
+    \item Apply Hadamard to the most significant qubit.
+    \item Apply controlled-$R_k$ gates to encode phase shifts.
+    \item Repeat for remaining qubits.
+    \item Apply SWAP gates to reverse the order.
+\end{enumerate}
+
+\section{Quantum Gates Used}
+\begin{itemize}
+    \item \textbf{Hadamard gate:} $H = \frac{1}{\sqrt{2}} \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix}$
+    \item \textbf{Phase shift gate:} $R_k = \begin{bmatrix} 1 & 0 \\ 0 & e^{2\pi i / 2^k} \end{bmatrix}$
+\end{itemize}
+
+\section{QFT on 3 Qubits}
+Example for $n = 3$ qubits:
+\begin{enumerate}
+    \item Apply $H$ to qubit 0.
+    \item Apply $R_2$ (ctrl:1, tgt:0), $R_3$ (ctrl:2, tgt:0).
+    \item Repeat with Hadamard on qubit 1, $R_2$ from qubit 2.
+    \item Hadamard on qubit 2.
+    \item Apply SWAPs: swap(0,2).
+\end{enumerate}
+
+\section{PennyLane Code Example}
+See Appendix, Code 1.
+
+\chapter{Inverse QFT and Phase Estimation}
+
+\section{The Inverse QFT}
+The inverse QFT is the adjoint of the QFT and is constructed by reversing the circuit and inverting the phases.
+
+\section{Quantum Phase Estimation (QPE)}
+QPE estimates $\phi$ in $U \ket{u} = e^{2\pi i \phi} \ket{u}$ using the QFT.
+
+\section{Circuit Diagram}
+Described with Hadamards, controlled $U^{2^k}$ gates, inverse QFT.
+
+\section{PennyLane Code Example}
+See Appendix, Code 2 and 3.
+
+\chapter{Applications in Quantum Algorithms}
+
+\section{Shor’s Algorithm}
+Uses QFT to extract period $r$ in modular exponentiation. Critical for finding nontrivial factors of integers.
+
+\section{Quantum Simulation}
+QPE is used to estimate eigenvalues of Hamiltonians in quantum chemistry.
+
+\section{Amplitude Estimation}
+Estimates amplitude $a$ in a quantum state using QFT and Grover-like operators.
+
+\section{PennyLane Example}
+Energy estimation with QPE (Appendix, Code 3).
+
+\chapter{Advanced Topics and Optimizations}
+
+\section{Approximate QFT}
+Skip $R_k$ gates with small angles to reduce depth. Reduces circuit complexity.
+
+\section{Swap-Free QFT}
+If output order is irrelevant, SWAP gates can be omitted.
+
+\section{Error Mitigation}
+Removing small-angle rotations and using noise-aware compilation improves fidelity on NISQ devices.
+
+\section{PennyLane Code Example}
+See Appendix, Code 4.
+
+\appendix
+\chapter{PennyLane Code Listings and Simulation Guide}
+
+\section{Code 1: Basic QFT Circuit}
+\lstinputlisting[language=Python]{qft_basic.py}
+
+\section{Code 2: Inverse QFT}
+\lstinputlisting[language=Python]{inverse_qft.py}
+
+\section{Code 3: Quantum Phase Estimation}
+\lstinputlisting[language=Python]{qpe.py}
+
+\section{Code 4: Approximate QFT}
+\lstinputlisting[language=Python]{approximate_qft.py}
+
+\section{Execution Tips}
+\begin{itemize}
+    \item Use \texttt{qml.draw()} to visualize circuits.
+    \item Replace \texttt{default.qubit} with hardware backend for real execution.
+    \item Use PennyLane’s \texttt{qml.probs()} or \texttt{qml.state()} for readout.
+\end{itemize}
+
+\end{document}
