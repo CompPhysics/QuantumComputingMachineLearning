@@ -130,8 +130,7 @@ class QuantumFourierTransform:
         step_label.set_text(self.animation_labels[i])
         return bar
 
-    ani = FuncAnimation(fig, update, frames=len(self.animation_frames),
-                        interval=interval, blit=False, repeat=False)
+    ani = FuncAnimation(fig, update, frames=len(self.animation_frames),interval=interval, blit=False, repeat=False)
 
     if save_path.endswith(".gif"):
         ani.save(save_path, writer='pillow')
