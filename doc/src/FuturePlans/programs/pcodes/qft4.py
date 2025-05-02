@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import os
 
 class QuantumFourierTransform:
     def __init__(self, n_qubits):
@@ -82,86 +85,74 @@ class QuantumFourierTransform:
         for i, amp in enumerate(self.state):
             print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
 
+
+# Inside the class
+    def reset_animation_log(self):
+        self.animation_frames = []
+
+    def record_probability_frame(self):
+        """Store current probabilities for animation."""
+        probs = np.abs(self.state) ** 2
+        self.animation_frames.append(probs.copy())
+
+    def apply_qft_with_recording(self, inverse=False):
+        self.reset_animation_log()
+        self.record_probability_frame()  # Record initial state
+
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+                self.record_probability_frame()
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+            self.record_probability_frame()
+
+        self.swap_registers()
+        self.record_probability_frame()
+
+    def animate_probability_evolution(self, save_path="qft_animation.gif", interval=600):
+        labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
+        fig, ax = plt.subplots()
+        bar = ax.bar(labels, [0]*self.N)
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("Probability")
+        ax.set_title("QFT Probability Evolution")
+
+        def update(frame_probs):
+            for rect, prob in zip(bar, frame_probs):
+                rect.set_height(prob)
+            return bar
+
+        ani = FuncAnimation(fig, update, frames=self.animation_frames,
+                            interval=interval, blit=False, repeat=False)
+
+        if save_path.endswith(".gif"):
+            ani.save(save_path, writer='pillow')
+        elif save_path.endswith(".mp4"):
+            ani.save(save_path, writer='ffmpeg')
+        else:
+            raise ValueError("Unsupported format. Use .gif or .mp4")
+
+        print(f"Animation saved to {save_path}")
+
 # ---------------------------
 # Example usage
 # ---------------------------
 if __name__ == "__main__":
-    qft = QuantumFourierTransform(n_qubits=3)
+   qft = QuantumFourierTransform(n_qubits=3)
+   qft.initialize_basis_state(5)
 
-    # Try different initializations
-    qft.initialize_superposition()
-    # qft.initialize_basis_state(5)
-    # qft.initialize_custom_state(np.random.randn(8) + 1j*np.random.randn(8))  # normalize first
-    # qft.initialize_ghz_state()
+# Apply QFT with intermediate state recording
+   qft.apply_qft_with_recording()
 
-    qft.print_amplitudes("Initial State")
-
-    qft.apply_qft()
-    qft.print_amplitudes("After QFT")
-
-    results = qft.measure(shots=1024)
-    print("\nMeasurement Results:")
-    for b, c in sorted(results.items()):
-        print(f"{b}: {c}")
-
-    qft.apply_qft(inverse=True)
-    qft.print_amplitudes("After Inverse QFT")
+# Animate the probability distribution over steps
+   qft.animate_probability_evolution(save_path="qft_probs.gif", interval=800)
 
 
-
-def plot_amplitudes(self, title="State Vector Amplitudes", save_path=None):
-    labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
-    reals = [self.state[i].real for i in range(self.N)]
-    imags = [self.state[i].imag for i in range(self.N)]
-
-    x = np.arange(self.N)
-    width = 0.35
-
-    fig, ax = plt.subplots()
-    ax.bar(x - width/2, reals, width, label='Real')
-    ax.bar(x + width/2, imags, width, label='Imaginary')
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=45)
-    ax.set_ylabel('Amplitude')
-    ax.set_title(title)
-    ax.legend()
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path)
-        print(f"Plot saved to: {save_path}")
-    else:
-        plt.show()
-
-def plot_probabilities(self, shots=1024, title="Measurement Probabilities", save_path=None):
-    results = self.measure(shots=shots)
-    bitstrings = sorted(results.keys())
-    counts = [results[b] for b in bitstrings]
-
-    fig, ax = plt.subplots()
-    ax.bar(bitstrings, counts)
-    ax.set_xlabel("Bitstring")
-    ax.set_ylabel("Counts")
-    ax.set_title(title)
-    ax.set_xticklabels(bitstrings, rotation=45)
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path)
-        print(f"Histogram saved to: {save_path}")
-    else:
-        plt.show()
-
-qft = QuantumFourierTransform(3)
-qft.initialize_basis_state(5)
-
-qft.apply_qft()
-
-# Save amplitude plot
-qft.plot_amplitudes("QFT Amplitudes", save_path="qft_amplitudes.png")
-
-# Save measurement histogram
-qft.plot_probabilities(shots=1024, title="QFT Output Distribution", save_path="qft_histogram.png")
 
 """
 Quick Tips on Usage
