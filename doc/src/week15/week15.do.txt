@@ -725,53 +725,6 @@ It is also possible to integrate PennyLane’s differentiable capabilities by de
 
 
 !split
-===== Example: Kernel SVM in PennyLane =====
-
-
-
-
-
-Below is a compact example that ties it together for a toy 2D dataset:
-!bc pycod
-import pennylane as qml
-from pennylane import numpy as np
-from sklearn import svm
-
-# Example dataset
-X_train = np.array([[0.1, 0.2], [1.1, -0.4], [0.0, 0.9], [1.0, 0.5]])
-Y_train = np.array([+1, +1, -1, -1])
-X_test = np.array([[0.2, 0.1], [0.9, 0.0]])
-
-# Define device and feature map
-dev = qml.device("default.qubit", wires=2)
-
-@qml.qnode(dev)
-def kernel_circuit(x1, x2):
-    qml.templates.AngleEmbedding(x1, wires=[0,1])
-    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=[0,1])
-    return qml.probs(wires=[0,1])[0]
-
-kernel = lambda a, b: kernel_circuit(a, b)
-
-# Compute kernel matrices
-K_train = qml.kernels.kernel_matrix(X_train, X_train, kernel_function=kernel)
-K_test = qml.kernels.kernel_matrix(X_test, X_train, kernel_function=kernel)
-
-# Train SVM
-clf = svm.SVC(kernel='precomputed')
-clf.fit(K_train, Y_train)
-predictions = clf.predict(K_test)
-print("Predicted labels:", predictions)
-!ec
-
-This code snippet demonstrates defining a quantum kernel via
-AngleEmbedding and using it with scikit-learn.  In a real application,
-one would use more data points and possibly include more sophisticated
-feature maps.
-
-
-
-!split
 ===== Discussion of Implementation =====
 
 In practice, one must consider:
@@ -806,6 +759,55 @@ o Classical SVM Training
 
 o Prediction
   * New data is classified using the trained SVM model with the quantum kernel.
+
+
+
+!split
+===== The Iris data and classical SVM =====
+
+!bc pycod
+# import the required packages
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score,classification_report,f1_score
+iris = load_iris()
+dataset=pd.DataFrame(iris.data,columns=iris.feature_names)
+dataset["target"]=iris.target
+dataset
+features= dataset[dataset.columns[1:4]]
+target=dataset["target"]
+# split the data into training set and testing set 
+X_train,X_test,Y_train,Y_test=train_test_split(features,target,test_size=0.25,random_state=42)
+# Scale the data
+from sklearn.preprocessing import MinMaxScaler
+
+minmax=MinMaxScaler()
+X_train=minmax.fit_transform(X_train)
+X_test=minmax.transform(X_test)
+X_test=np.clip(X_test,0,1)
+import time
+start_time=time.time()
+svm_model=SVC(kernel="rbf")
+svm_model.fit(X_train, Y_train)
+end_time=time.time()
+print(end_time-start_time)
+predictions = svm_model.predict(X_test)
+
+# Calculate accuracy and other metrics
+predictions=svm_model.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+print(f"the accuracy is: {accuracy:.2f}%")
+f1score=f1_score(Y_test,predictions,average='macro')
+print(f"the f1-score is:{f1score:.2f}%")
+print(classification_report(Y_test,predictions))
+!ec
+
+
+
+
 
 
 !split
@@ -1722,3 +1724,9 @@ finance models) may become feasible.
 #M. Zhao et al., “A tutorial on quantum machine learning and quantum neural networks,” arXiv:2504.16131 (2025) .
 #D. M. Houshmand, Quantum Machine Learning Lecture Notes, (online, 2023) . (Tutorial using PennyLane QNNs.)
 #PennyLane documentation and tutorials: 〈https://pennylane.ai〉 (for code examples and parameter-shift rules).
+
+
+
+
+
+

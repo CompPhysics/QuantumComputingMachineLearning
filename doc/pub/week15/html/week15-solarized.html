@@ -168,10 +168,6 @@ div.toc p,a {
                2,
                None,
                'training-svm-with-precomputed-quantum-kernels'),
-              ('Example: Kernel SVM in PennyLane',
-               2,
-               None,
-               'example-kernel-svm-in-pennylane'),
               ('Discussion of Implementation',
                2,
                None,
@@ -184,6 +180,10 @@ div.toc p,a {
                2,
                None,
                'steps-in-quantum-kernel-svm'),
+              ('The Iris data and classical SVM',
+               2,
+               None,
+               'the-iris-data-and-classical-svm'),
               ('Iris Dataset', 2, None, 'iris-dataset'),
               ('Qiskit implementation', 2, None, 'qiskit-implementation'),
               ('Credit data classification',
@@ -1248,67 +1248,6 @@ on the test set.
 <p>It is also possible to integrate PennyLane&#8217;s differentiable capabilities by defining a parameterized kernel and optimizing parameters via gradient descent, but here we keep a fixed feature map.</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="example-kernel-svm-in-pennylane">Example: Kernel SVM in PennyLane </h2>
-
-<p>Below is a compact example that ties it together for a toy 2D dataset:</p>
-
-<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #eeeedd">
-  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
-<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
-<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn</span> <span style="color: #8B008B; font-weight: bold">import</span> svm
-
-<span style="color: #228B22"># Example dataset</span>
-X_train = np.array([[<span style="color: #B452CD">0.1</span>, <span style="color: #B452CD">0.2</span>], [<span style="color: #B452CD">1.1</span>, -<span style="color: #B452CD">0.4</span>], [<span style="color: #B452CD">0.0</span>, <span style="color: #B452CD">0.9</span>], [<span style="color: #B452CD">1.0</span>, <span style="color: #B452CD">0.5</span>]])
-Y_train = np.array([+<span style="color: #B452CD">1</span>, +<span style="color: #B452CD">1</span>, -<span style="color: #B452CD">1</span>, -<span style="color: #B452CD">1</span>])
-X_test = np.array([[<span style="color: #B452CD">0.2</span>, <span style="color: #B452CD">0.1</span>], [<span style="color: #B452CD">0.9</span>, <span style="color: #B452CD">0.0</span>]])
-
-<span style="color: #228B22"># Define device and feature map</span>
-dev = qml.device(<span style="color: #CD5555">&quot;default.qubit&quot;</span>, wires=<span style="color: #B452CD">2</span>)
-
-<span style="color: #707a7c">@qml</span>.qnode(dev)
-<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">kernel_circuit</span>(x1, x2):
-    qml.templates.AngleEmbedding(x1, wires=[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
-    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])
-    <span style="color: #8B008B; font-weight: bold">return</span> qml.probs(wires=[<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>])[<span style="color: #B452CD">0</span>]
-
-kernel = <span style="color: #8B008B; font-weight: bold">lambda</span> a, b: kernel_circuit(a, b)
-
-<span style="color: #228B22"># Compute kernel matrices</span>
-K_train = qml.kernels.kernel_matrix(X_train, X_train, kernel_function=kernel)
-K_test = qml.kernels.kernel_matrix(X_test, X_train, kernel_function=kernel)
-
-<span style="color: #228B22"># Train SVM</span>
-clf = svm.SVC(kernel=<span style="color: #CD5555">&#39;precomputed&#39;</span>)
-clf.fit(K_train, Y_train)
-predictions = clf.predict(K_test)
-<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;Predicted labels:&quot;</span>, predictions)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p>This code snippet demonstrates defining a quantum kernel via
-AngleEmbedding and using it with scikit-learn.  In a real application,
-one would use more data points and possibly include more sophisticated
-feature maps.
-</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="discussion-of-implementation">Discussion of Implementation </h2>
 
 <p>In practice, one must consider:</p>
@@ -1350,6 +1289,69 @@ feature maps.
   <li> New data is classified using the trained SVM model with the quantum kernel.</li>
 </ul>
 </ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="the-iris-data-and-classical-svm">The Iris data and classical SVM </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #228B22"># import the required packages</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pandas</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">pd</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.model_selection</span> <span style="color: #8B008B; font-weight: bold">import</span> train_test_split
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.svm</span> <span style="color: #8B008B; font-weight: bold">import</span> SVC
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.datasets</span> <span style="color: #8B008B; font-weight: bold">import</span> load_iris
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.metrics</span> <span style="color: #8B008B; font-weight: bold">import</span> accuracy_score,classification_report,f1_score
+iris = load_iris()
+dataset=pd.DataFrame(iris.data,columns=iris.feature_names)
+dataset[<span style="color: #CD5555">&quot;target&quot;</span>]=iris.target
+dataset
+features= dataset[dataset.columns[<span style="color: #B452CD">1</span>:<span style="color: #B452CD">4</span>]]
+target=dataset[<span style="color: #CD5555">&quot;target&quot;</span>]
+<span style="color: #228B22"># split the data into training set and testing set </span>
+X_train,X_test,Y_train,Y_test=train_test_split(features,target,test_size=<span style="color: #B452CD">0.25</span>,random_state=<span style="color: #B452CD">42</span>)
+<span style="color: #228B22"># Scale the data</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">sklearn.preprocessing</span> <span style="color: #8B008B; font-weight: bold">import</span> MinMaxScaler
+
+minmax=MinMaxScaler()
+X_train=minmax.fit_transform(X_train)
+X_test=minmax.transform(X_test)
+X_test=np.clip(X_test,<span style="color: #B452CD">0</span>,<span style="color: #B452CD">1</span>)
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">time</span>
+start_time=time.time()
+svm_model=SVC(kernel=<span style="color: #CD5555">&quot;rbf&quot;</span>)
+svm_model.fit(X_train, Y_train)
+end_time=time.time()
+<span style="color: #658b00">print</span>(end_time-start_time)
+predictions = svm_model.predict(X_test)
+
+<span style="color: #228B22"># Calculate accuracy and other metrics</span>
+predictions=svm_model.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;the accuracy is: {</span>accuracy<span style="color: #CD5555">:.2f}%&quot;</span>)
+f1score=f1_score(Y_test,predictions,average=<span style="color: #CD5555">&#39;macro&#39;</span>)
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;the f1-score is:{</span>f1score<span style="color: #CD5555">:.2f}%&quot;</span>)
+<span style="color: #658b00">print</span>(classification_report(Y_test,predictions))
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="iris-dataset">Iris Dataset </h2>
 
@@ -2391,6 +2393,7 @@ finance models) may become feasible.
 <!-- M. Zhao et al., &#8220;A tutorial on quantum machine learning and quantum neural networks,&#8221; arXiv:2504.16131 (2025) . -->
 <!-- D. M. Houshmand, Quantum Machine Learning Lecture Notes, (online, 2023) . (Tutorial using PennyLane QNNs.) -->
 <!-- PennyLane documentation and tutorials: &#12296;https://pennylane.ai&#12297; (for code examples and parameter-shift rules). -->
+
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">
 <!-- copyright --> &copy; 1999-2025, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license
