@@ -687,7 +687,7 @@ This returns $\vert \langle \phi(x_1)\vert \phi(x_2)\rangle\vert ^2$ (the prob. 
 !bc pycod
 kernel = lambda a, b: kernel_circuit(a, b)
 !ec
-and compute kernel matrices.  For training:
+and compute kernel matrices.  For training (_note the codes will not run properly since the data are not defined_):
 !bc pycod
 X_train = np.array([...])  # shape (N_train, 2)
 Y_train = np.array([...])  # labels +1/-1
@@ -1581,12 +1581,10 @@ def qclassifier(params, x=None):
     variational_layer(params[4:8])
     # measure expectation of Z on qubit 0
     return qml.expval(qml.PauliZ(wires=0))
-In this code:
 !ec
 
-
-We instantiate a 2-qubit device dev.  feature$\_$map(x) encodes the
-2-dimensional input x using $R_x$ rotations .
+In this code we instantiate a two-qubit device dev.  feature$\_$map(x) encodes the
+two-dimensional input x using $R_x$ rotations .
 variational$\_$layer(params) is a block of trainable gates (here two Rot
 gates and a CNOT).  The @qml.qnode(dev) decorator turns the Python
 function qclassifier into a quantum node that returns the expectation
@@ -1662,6 +1660,182 @@ o Extend the circuit by adding a third qubit (use wires=3) and corresponding rot
 o Implement a simple dataset (e.g. points arranged in XOR pattern) and train the QNN. Evaluate its classification accuracy.
 
 
+!split
+===== Variational Quantum Neural Network for credit classification =====
+
+This self-contained PennyLane code demonstrates a simple hybrid
+quantum-classical binary classifier on synthetic financial data, like
+the one we discussed in connection with quantum support vector
+machines.
+
+
+We build a quantum neural network (QNN) – a parameterized
+(variational) quantum circuit – to classify synthetic credit data.
+Quantum neural networks are typically implemented as variational
+quantum circuits with trainable rotation angles.
+
+
+We first generate
+small synthetic data with features like income, debt ratio, and age,
+labeling each datapoint as “good” or “bad” credit. Classical features
+are encoded into qubit rotation angles using an angle embedding, and a
+layer of trainable entangling gates (PennyLane’s
+StronglyEntanglingLayers) forms the variational ansatz. During
+training, we optimize the circuit parameters via a classical optimizer
+to minimize binary cross-entropy loss . Finally, we measure one qubit
+to produce a probability for the positive class and evaluate the
+classifier with accuracy, precision, and recall . The following code
+implements all steps using PennyLane’s default.qubit simulator.
+
+!bc pycod
+import numpy as np
+import pennylane as qml
+from pennylane import numpy as pnp
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+# Step 1: Generate synthetic credit data
+np.random.seed(0)
+N = 100
+# Features: income (in thousands), debt_ratio (percent), age (years)
+income = np.random.normal(50, 15, N)         # mean 50, std 15
+debt_ratio = np.random.uniform(0, 100, N)    # between 0 and 100%
+age = np.random.randint(18, 70, N)           # ages 18 to 69
+X = np.column_stack((income, debt_ratio, age))
+
+# Label: simple linear rule with noise => 1 = good credit, 0 = bad
+score = 0.3 * income - 0.2 * debt_ratio + 0.1 * age
+y = (score > np.median(score)).astype(int)   # threshold at median
+
+# Split into train/test (80/20 split)
+X_train_np, X_test_np, y_train_np, y_test_np = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 2: Feature scaling for angle embedding
+# Scale each feature to [0, pi] so they can serve as rotation angles
+max_income = X[:, 0].max()
+max_debt = X[:, 1].max()
+min_age, max_age = X[:, 2].min(), X[:, 2].max()
+
+# Scale training data
+X_train_scaled = X_train_np.copy()
+X_train_scaled[:, 0] = X_train_scaled[:, 0] / max_income * np.pi
+X_train_scaled[:, 1] = X_train_scaled[:, 1] / max_debt * np.pi
+X_train_scaled[:, 2] = (X_train_scaled[:, 2] - min_age) / (max_age - min_age) * np.pi
+
+# Scale test data
+X_test_scaled = X_test_np.copy()
+X_test_scaled[:, 0] = X_test_scaled[:, 0] / max_income * np.pi
+X_test_scaled[:, 1] = X_test_scaled[:, 1] / max_debt * np.pi
+X_test_scaled[:, 2] = (X_test_scaled[:, 2] - min_age) / (max_age - min_age) * np.pi
+
+# Convert data to PennyLane numpy arrays for differentiation
+X_train = pnp.array(X_train_scaled)
+X_test  = pnp.array(X_test_scaled)
+y_train = pnp.array(y_train_np)
+y_test  = pnp.array(y_test_np)
+
+# Step 3: Define the variational quantum circuit
+n_qubits = 3
+dev = qml.device("default.qubit", wires=n_qubits)
+
+# Parameterized quantum neural network (variational circuit)
+@qml.qnode(dev)
+def circuit(weights, x):
+    # Feature map: encode features by rotation angles on each qubit
+    # Uses RY rotations (AngleEmbedding by default uses RX or can specify RY)
+    qml.AngleEmbedding(features=x, wires=range(n_qubits), rotation='Y')
+    # Variational (trainable) layers: strong entangling rotations
+    qml.templates.StronglyEntanglingLayers(weights, wires=range(n_qubits))
+    # Measure expectation of Pauli-Z on the first qubit
+    return qml.expval(qml.PauliZ(0))
+
+# Initialize trainable weights for the variational layers
+num_layers = 1
+# Shape for StronglyEntanglingLayers: (num_layers, n_qubits, 3)
+init_weights = 0.01 * np.random.randn(num_layers, n_qubits, 3)
+weights = pnp.array(init_weights, requires_grad=True)
+
+# Step 4: Define cost (binary cross-entropy) and train the QNN
+def cross_entropy_loss(weights, X, y):
+    # Run circuit on each sample to get expectation values
+    expvals = [circuit(weights, x=x) for x in X]
+    expvals = pnp.stack(expvals)
+    # Convert expectation ⟨Z⟩ to probability for label=1: P(1) = (1 - ⟨Z⟩)/2
+    probs = (1 - expvals) / 2
+    # Clip probabilities to avoid log(0)
+    probs = pnp.clip(probs, 1e-6, 1 - 1e-6)
+    # Binary cross-entropy loss
+    loss = -pnp.mean(y * pnp.log(probs) + (1 - y) * pnp.log(1 - probs))
+    return loss
+
+# Choose an optimizer (gradient descent)
+opt = qml.GradientDescentOptimizer(stepsize=0.5)
+
+# Training loop
+epochs = 20
+for it in range(epochs):
+    weights, cost_val = opt.step_and_cost(lambda w: cross_entropy_loss(w, X_train, y_train), weights)
+    if (it + 1) % 5 == 0:
+        print(f"Iteration {it+1:>2}: loss = {cost_val:.4f}")
+
+# Step 5: Evaluate performance on training and test sets
+# Predict by evaluating circuit and thresholding at 0.5
+def predict(weights, X):
+    preds = []
+    for x in X:
+        z = circuit(weights, x=x)
+        prob = float((1 - z) / 2)  # probability of class=1
+        preds.append(int(prob > 0.5))
+    return np.array(preds)
+
+y_train_pred = predict(weights, X_train)
+y_test_pred  = predict(weights, X_test)
+
+# Compute accuracy, precision, recall
+train_acc = accuracy_score(y_train_np, y_train_pred)
+test_acc  = accuracy_score(y_test_np, y_test_pred)
+train_prec = precision_score(y_train_np, y_train_pred)
+test_prec  = precision_score(y_test_np, y_test_pred)
+train_rec  = recall_score(y_train_np, y_train_pred)
+test_rec   = recall_score(y_test_np, y_test_pred)
+
+print(f"Train Accuracy:  {train_acc:.2f}, Precision: {train_prec:.2f}, Recall: {train_rec:.2f}")
+print(f"Test  Accuracy:  {test_acc:.2f}, Precision: {test_prec:.2f}, Recall: {test_rec:.2f}")
+!ec
+
+!split
+===== Essential steps in the code =====
+!bblock Data Encoding:
+We map each feature vector to quantum states via angle embedding: each
+feature is used as the rotation angle of an RY gate on a qubit . This
+creates a _quantum feature map_ of our classical data.
+!eblock
+!bblock Variational Ansatz:
+After embedding, we apply a layer of trainable rotations and
+entangling gates (StronglyEntanglingLayers), creating a parameterized
+circuit whose outputs depend on adjustable weights . Measuring the
+expectation ⟨Z⟩ of the first qubit yields a value in $[–1,1]$, which we
+convert to a class probability via $(1 – ⟨Z⟩)/2$.
+!eblock
+
+!bblock Training:
+We optimize the circuit parameters by minimizing the binary
+cross-entropy loss between the predicted probabilities and true
+labels. Binary cross-entropy (log-loss) is a standard choice for
+binary classification , adjusting weights to improve the match between
+predictions and targets. We use PennyLane’s GradientDescentOptimizer
+(or AdamOptimizer) to update parameters via backpropagated gradients.
+!eblock
+
+!bblock Evaluation:
+Finally, we compute accuracy, precision, and recall on the
+dataset. Accuracy is the fraction of correct predictions. Precision is
+the fraction of predicted “good” credits that are truly good, and
+recall is the fraction of actual good credits that are correctly
+identified. These metrics are standard in classification tasks .
+!eblock
+
+
 
 !split
 ===== Applications and examples =====
@@ -1709,11 +1883,9 @@ Small-scale QML experiments have been run on IBM, Google, and IonQ devices. Thes
 
 
 
-Each application comes with domain-specific twists, but all rely on
-the core ideas of Chapters 1–4: encoding data, parameterized circuits,
-measurement, and classical optimization.  As hardware improves, more
-complex QML tasks (e.g. image recognition, chemistry simulations,
-finance models) may become feasible.
+
+
+
 
 
 

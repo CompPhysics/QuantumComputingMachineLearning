@@ -337,6 +337,14 @@ div.toc p,a {
                'implementing-qnns-with-pennylane'),
               ('Using PennyLane', 2, None, 'using-pennylane'),
               ('Additional exercises', 2, None, 'additional-exercises'),
+              ('Variational Quantum Neural Network for credit classification',
+               2,
+               None,
+               'variational-quantum-neural-network-for-credit-classification'),
+              ('Essential steps in the code',
+               2,
+               None,
+               'essential-steps-in-the-code'),
               ('Applications and examples',
                2,
                None,
@@ -1233,7 +1241,7 @@ overlap of states.
   </div>
 </div>
 
-<p>and compute kernel matrices.  For training:</p>
+<p>and compute kernel matrices.  For training (<b>note the codes will not run properly since the data are not defined</b>):</p>
 
 <!-- code=python (!bc pycod) typeset with pygments style "default" -->
 <div class="cell border-box-sizing code_cell rendered">
@@ -2287,7 +2295,6 @@ dev <span style="color: #666666">=</span> qml<span style="color: #666666">.</spa
     variational_layer(params[<span style="color: #666666">4</span>:<span style="color: #666666">8</span>])
     <span style="color: #408080; font-style: italic"># measure expectation of Z on qubit 0</span>
     <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>expval(qml<span style="color: #666666">.</span>PauliZ(wires<span style="color: #666666">=0</span>))
-In this code:
 </pre>
 </div>
       </div>
@@ -2303,8 +2310,8 @@ In this code:
   </div>
 </div>
 
-<p>We instantiate a 2-qubit device dev.  feature$\_$map(x) encodes the
-2-dimensional input x using \( R_x \) rotations .
+<p>In this code we instantiate a two-qubit device dev.  feature$\_$map(x) encodes the
+two-dimensional input x using \( R_x \) rotations .
 variational$\_$layer(params) is a block of trainable gates (here two Rot
 gates and a CNOT).  The @qml.qnode(dev) decorator turns the Python
 function qclassifier into a quantum node that returns the expectation
@@ -2394,6 +2401,218 @@ quantum nodes and classical Python code, facilitating experimentation.
 <li> Implement a simple dataset (e.g. points arranged in XOR pattern) and train the QNN. Evaluate its classification accuracy.</li>
 </ol>
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="variational-quantum-neural-network-for-credit-classification">Variational Quantum Neural Network for credit classification </h2>
+
+<p>This self-contained PennyLane code demonstrates a simple hybrid
+quantum-classical binary classifier on synthetic financial data, like
+the one we discussed in connection with quantum support vector
+machines.
+</p>
+
+<p>We build a quantum neural network (QNN) &#8211; a parameterized
+(variational) quantum circuit &#8211; to classify synthetic credit data.
+Quantum neural networks are typically implemented as variational
+quantum circuits with trainable rotation angles.
+</p>
+
+<p>We first generate
+small synthetic data with features like income, debt ratio, and age,
+labeling each datapoint as &#8220;good&#8221; or &#8220;bad&#8221; credit. Classical features
+are encoded into qubit rotation angles using an angle embedding, and a
+layer of trainable entangling gates (PennyLane&#8217;s
+StronglyEntanglingLayers) forms the variational ansatz. During
+training, we optimize the circuit parameters via a classical optimizer
+to minimize binary cross-entropy loss . Finally, we measure one qubit
+to produce a probability for the positive class and evaluate the
+classifier with accuracy, precision, and recall . The following code
+implements all steps using PennyLane&#8217;s default.qubit simulator.
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qml</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">import</span> numpy <span style="color: #008000; font-weight: bold">as</span> pnp
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.model_selection</span> <span style="color: #008000; font-weight: bold">import</span> train_test_split
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.metrics</span> <span style="color: #008000; font-weight: bold">import</span> accuracy_score, precision_score, recall_score
+
+<span style="color: #408080; font-style: italic"># Step 1: Generate synthetic credit data</span>
+np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>seed(<span style="color: #666666">0</span>)
+N <span style="color: #666666">=</span> <span style="color: #666666">100</span>
+<span style="color: #408080; font-style: italic"># Features: income (in thousands), debt_ratio (percent), age (years)</span>
+income <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>normal(<span style="color: #666666">50</span>, <span style="color: #666666">15</span>, N)         <span style="color: #408080; font-style: italic"># mean 50, std 15</span>
+debt_ratio <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(<span style="color: #666666">0</span>, <span style="color: #666666">100</span>, N)    <span style="color: #408080; font-style: italic"># between 0 and 100%</span>
+age <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randint(<span style="color: #666666">18</span>, <span style="color: #666666">70</span>, N)           <span style="color: #408080; font-style: italic"># ages 18 to 69</span>
+X <span style="color: #666666">=</span> np<span style="color: #666666">.</span>column_stack((income, debt_ratio, age))
+
+<span style="color: #408080; font-style: italic"># Label: simple linear rule with noise =&gt; 1 = good credit, 0 = bad</span>
+score <span style="color: #666666">=</span> <span style="color: #666666">0.3</span> <span style="color: #666666">*</span> income <span style="color: #666666">-</span> <span style="color: #666666">0.2</span> <span style="color: #666666">*</span> debt_ratio <span style="color: #666666">+</span> <span style="color: #666666">0.1</span> <span style="color: #666666">*</span> age
+y <span style="color: #666666">=</span> (score <span style="color: #666666">&gt;</span> np<span style="color: #666666">.</span>median(score))<span style="color: #666666">.</span>astype(<span style="color: #008000">int</span>)   <span style="color: #408080; font-style: italic"># threshold at median</span>
+
+<span style="color: #408080; font-style: italic"># Split into train/test (80/20 split)</span>
+X_train_np, X_test_np, y_train_np, y_test_np <span style="color: #666666">=</span> train_test_split(X, y, test_size<span style="color: #666666">=0.2</span>, random_state<span style="color: #666666">=42</span>)
+
+<span style="color: #408080; font-style: italic"># Step 2: Feature scaling for angle embedding</span>
+<span style="color: #408080; font-style: italic"># Scale each feature to [0, pi] so they can serve as rotation angles</span>
+max_income <span style="color: #666666">=</span> X[:, <span style="color: #666666">0</span>]<span style="color: #666666">.</span>max()
+max_debt <span style="color: #666666">=</span> X[:, <span style="color: #666666">1</span>]<span style="color: #666666">.</span>max()
+min_age, max_age <span style="color: #666666">=</span> X[:, <span style="color: #666666">2</span>]<span style="color: #666666">.</span>min(), X[:, <span style="color: #666666">2</span>]<span style="color: #666666">.</span>max()
+
+<span style="color: #408080; font-style: italic"># Scale training data</span>
+X_train_scaled <span style="color: #666666">=</span> X_train_np<span style="color: #666666">.</span>copy()
+X_train_scaled[:, <span style="color: #666666">0</span>] <span style="color: #666666">=</span> X_train_scaled[:, <span style="color: #666666">0</span>] <span style="color: #666666">/</span> max_income <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi
+X_train_scaled[:, <span style="color: #666666">1</span>] <span style="color: #666666">=</span> X_train_scaled[:, <span style="color: #666666">1</span>] <span style="color: #666666">/</span> max_debt <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi
+X_train_scaled[:, <span style="color: #666666">2</span>] <span style="color: #666666">=</span> (X_train_scaled[:, <span style="color: #666666">2</span>] <span style="color: #666666">-</span> min_age) <span style="color: #666666">/</span> (max_age <span style="color: #666666">-</span> min_age) <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi
+
+<span style="color: #408080; font-style: italic"># Scale test data</span>
+X_test_scaled <span style="color: #666666">=</span> X_test_np<span style="color: #666666">.</span>copy()
+X_test_scaled[:, <span style="color: #666666">0</span>] <span style="color: #666666">=</span> X_test_scaled[:, <span style="color: #666666">0</span>] <span style="color: #666666">/</span> max_income <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi
+X_test_scaled[:, <span style="color: #666666">1</span>] <span style="color: #666666">=</span> X_test_scaled[:, <span style="color: #666666">1</span>] <span style="color: #666666">/</span> max_debt <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi
+X_test_scaled[:, <span style="color: #666666">2</span>] <span style="color: #666666">=</span> (X_test_scaled[:, <span style="color: #666666">2</span>] <span style="color: #666666">-</span> min_age) <span style="color: #666666">/</span> (max_age <span style="color: #666666">-</span> min_age) <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi
+
+<span style="color: #408080; font-style: italic"># Convert data to PennyLane numpy arrays for differentiation</span>
+X_train <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>array(X_train_scaled)
+X_test  <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>array(X_test_scaled)
+y_train <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>array(y_train_np)
+y_test  <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>array(y_test_np)
+
+<span style="color: #408080; font-style: italic"># Step 3: Define the variational quantum circuit</span>
+n_qubits <span style="color: #666666">=</span> <span style="color: #666666">3</span>
+dev <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>device(<span style="color: #BA2121">&quot;default.qubit&quot;</span>, wires<span style="color: #666666">=</span>n_qubits)
+
+<span style="color: #408080; font-style: italic"># Parameterized quantum neural network (variational circuit)</span>
+<span style="color: #AA22FF">@qml</span><span style="color: #666666">.</span>qnode(dev)
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">circuit</span>(weights, x):
+    <span style="color: #408080; font-style: italic"># Feature map: encode features by rotation angles on each qubit</span>
+    <span style="color: #408080; font-style: italic"># Uses RY rotations (AngleEmbedding by default uses RX or can specify RY)</span>
+    qml<span style="color: #666666">.</span>AngleEmbedding(features<span style="color: #666666">=</span>x, wires<span style="color: #666666">=</span><span style="color: #008000">range</span>(n_qubits), rotation<span style="color: #666666">=</span><span style="color: #BA2121">&#39;Y&#39;</span>)
+    <span style="color: #408080; font-style: italic"># Variational (trainable) layers: strong entangling rotations</span>
+    qml<span style="color: #666666">.</span>templates<span style="color: #666666">.</span>StronglyEntanglingLayers(weights, wires<span style="color: #666666">=</span><span style="color: #008000">range</span>(n_qubits))
+    <span style="color: #408080; font-style: italic"># Measure expectation of Pauli-Z on the first qubit</span>
+    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>expval(qml<span style="color: #666666">.</span>PauliZ(<span style="color: #666666">0</span>))
+
+<span style="color: #408080; font-style: italic"># Initialize trainable weights for the variational layers</span>
+num_layers <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+<span style="color: #408080; font-style: italic"># Shape for StronglyEntanglingLayers: (num_layers, n_qubits, 3)</span>
+init_weights <span style="color: #666666">=</span> <span style="color: #666666">0.01</span> <span style="color: #666666">*</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(num_layers, n_qubits, <span style="color: #666666">3</span>)
+weights <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>array(init_weights, requires_grad<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
+
+<span style="color: #408080; font-style: italic"># Step 4: Define cost (binary cross-entropy) and train the QNN</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">cross_entropy_loss</span>(weights, X, y):
+    <span style="color: #408080; font-style: italic"># Run circuit on each sample to get expectation values</span>
+    expvals <span style="color: #666666">=</span> [circuit(weights, x<span style="color: #666666">=</span>x) <span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> X]
+    expvals <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>stack(expvals)
+    <span style="color: #408080; font-style: italic"># Convert expectation ⟨Z⟩ to probability for label=1: P(1) = (1 - ⟨Z⟩)/2</span>
+    probs <span style="color: #666666">=</span> (<span style="color: #666666">1</span> <span style="color: #666666">-</span> expvals) <span style="color: #666666">/</span> <span style="color: #666666">2</span>
+    <span style="color: #408080; font-style: italic"># Clip probabilities to avoid log(0)</span>
+    probs <span style="color: #666666">=</span> pnp<span style="color: #666666">.</span>clip(probs, <span style="color: #666666">1e-6</span>, <span style="color: #666666">1</span> <span style="color: #666666">-</span> <span style="color: #666666">1e-6</span>)
+    <span style="color: #408080; font-style: italic"># Binary cross-entropy loss</span>
+    loss <span style="color: #666666">=</span> <span style="color: #666666">-</span>pnp<span style="color: #666666">.</span>mean(y <span style="color: #666666">*</span> pnp<span style="color: #666666">.</span>log(probs) <span style="color: #666666">+</span> (<span style="color: #666666">1</span> <span style="color: #666666">-</span> y) <span style="color: #666666">*</span> pnp<span style="color: #666666">.</span>log(<span style="color: #666666">1</span> <span style="color: #666666">-</span> probs))
+    <span style="color: #008000; font-weight: bold">return</span> loss
+
+<span style="color: #408080; font-style: italic"># Choose an optimizer (gradient descent)</span>
+opt <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>GradientDescentOptimizer(stepsize<span style="color: #666666">=0.5</span>)
+
+<span style="color: #408080; font-style: italic"># Training loop</span>
+epochs <span style="color: #666666">=</span> <span style="color: #666666">20</span>
+<span style="color: #008000; font-weight: bold">for</span> it <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(epochs):
+    weights, cost_val <span style="color: #666666">=</span> opt<span style="color: #666666">.</span>step_and_cost(<span style="color: #008000; font-weight: bold">lambda</span> w: cross_entropy_loss(w, X_train, y_train), weights)
+    <span style="color: #008000; font-weight: bold">if</span> (it <span style="color: #666666">+</span> <span style="color: #666666">1</span>) <span style="color: #666666">%</span> <span style="color: #666666">5</span> <span style="color: #666666">==</span> <span style="color: #666666">0</span>:
+        <span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Iteration </span><span style="color: #BB6688; font-weight: bold">{</span>it<span style="color: #666666">+1</span><span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">&gt;2</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">: loss = </span><span style="color: #BB6688; font-weight: bold">{</span>cost_val<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.4f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+
+<span style="color: #408080; font-style: italic"># Step 5: Evaluate performance on training and test sets</span>
+<span style="color: #408080; font-style: italic"># Predict by evaluating circuit and thresholding at 0.5</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">predict</span>(weights, X):
+    preds <span style="color: #666666">=</span> []
+    <span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> X:
+        z <span style="color: #666666">=</span> circuit(weights, x<span style="color: #666666">=</span>x)
+        prob <span style="color: #666666">=</span> <span style="color: #008000">float</span>((<span style="color: #666666">1</span> <span style="color: #666666">-</span> z) <span style="color: #666666">/</span> <span style="color: #666666">2</span>)  <span style="color: #408080; font-style: italic"># probability of class=1</span>
+        preds<span style="color: #666666">.</span>append(<span style="color: #008000">int</span>(prob <span style="color: #666666">&gt;</span> <span style="color: #666666">0.5</span>))
+    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array(preds)
+
+y_train_pred <span style="color: #666666">=</span> predict(weights, X_train)
+y_test_pred  <span style="color: #666666">=</span> predict(weights, X_test)
+
+<span style="color: #408080; font-style: italic"># Compute accuracy, precision, recall</span>
+train_acc <span style="color: #666666">=</span> accuracy_score(y_train_np, y_train_pred)
+test_acc  <span style="color: #666666">=</span> accuracy_score(y_test_np, y_test_pred)
+train_prec <span style="color: #666666">=</span> precision_score(y_train_np, y_train_pred)
+test_prec  <span style="color: #666666">=</span> precision_score(y_test_np, y_test_pred)
+train_rec  <span style="color: #666666">=</span> recall_score(y_train_np, y_train_pred)
+test_rec   <span style="color: #666666">=</span> recall_score(y_test_np, y_test_pred)
+
+<span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Train Accuracy:  </span><span style="color: #BB6688; font-weight: bold">{</span>train_acc<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">, Precision: </span><span style="color: #BB6688; font-weight: bold">{</span>train_prec<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">, Recall: </span><span style="color: #BB6688; font-weight: bold">{</span>train_rec<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+<span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Test  Accuracy:  </span><span style="color: #BB6688; font-weight: bold">{</span>test_acc<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">, Precision: </span><span style="color: #BB6688; font-weight: bold">{</span>test_prec<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">, Recall: </span><span style="color: #BB6688; font-weight: bold">{</span>test_rec<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="essential-steps-in-the-code">Essential steps in the code </h2>
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Data Encoding:</b>
+<p>
+<p>We map each feature vector to quantum states via angle embedding: each
+feature is used as the rotation angle of an RY gate on a qubit . This
+creates a <b>quantum feature map</b> of our classical data.
+</p>
+</div>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Variational Ansatz:</b>
+<p>
+<p>After embedding, we apply a layer of trainable rotations and
+entangling gates (StronglyEntanglingLayers), creating a parameterized
+circuit whose outputs depend on adjustable weights . Measuring the
+expectation &#10216;Z&#10217; of the first qubit yields a value in \( [&#8211;1,1] \), which we
+convert to a class probability via \( (1 &#8211; &#10216;Z&#10217;)/2 \).
+</p>
+</div>
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Training:</b>
+<p>
+<p>We optimize the circuit parameters by minimizing the binary
+cross-entropy loss between the predicted probabilities and true
+labels. Binary cross-entropy (log-loss) is a standard choice for
+binary classification , adjusting weights to improve the match between
+predictions and targets. We use PennyLane&#8217;s GradientDescentOptimizer
+(or AdamOptimizer) to update parameters via backpropagated gradients.
+</p>
+</div>
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Evaluation:</b>
+<p>
+<p>Finally, we compute accuracy, precision, and recall on the
+dataset. Accuracy is the fraction of correct predictions. Precision is
+the fraction of predicted &#8220;good&#8221; credits that are truly good, and
+recall is the fraction of actual good credits that are correctly
+identified. These metrics are standard in classification tasks .
+</p>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="applications-and-examples">Applications and examples </h2>
 
 <p>Quantum neural networks and VQCs have been explored in various
@@ -2455,13 +2674,6 @@ rapidly growing):
 <p>Small-scale QML experiments have been run on IBM, Google, and IonQ devices. These serve as proof-of-concept for the hybrid model.</p>
 </div>
 
-
-<p>Each application comes with domain-specific twists, but all rely on
-the core ideas of Chapters 1&#8211;4: encoding data, parameterized circuits,
-measurement, and classical optimization.  As hardware improves, more
-complex QML tasks (e.g. image recognition, chemistry simulations,
-finance models) may become feasible.
-</p>
 
 <!-- A. Abbas et al., &#8220;The power of quantum neural networks,&#8221; Nature Comput. Sci. 1, 403&#8211;409 (2021) . -->
 <!-- E. Anschuetz and B. Kiani, &#8220;Quantum variational algorithms are swamped with traps,&#8221; Nat. Commun. 13, 7760 (2022) . -->
