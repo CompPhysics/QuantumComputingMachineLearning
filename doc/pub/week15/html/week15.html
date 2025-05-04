@@ -143,10 +143,92 @@ div.toc p,a {
  'sections': [('Plan for the week of May 5-9',
                2,
                None,
-               'plan-for-the-week-of-may-5-9')]}
+               'plan-for-the-week-of-may-5-9'),
+              ('Quantum Machine Learning: Quantum Neural Networks and '
+               'Variational Circuits',
+               2,
+               None,
+               'quantum-machine-learning-quantum-neural-networks-and-variational-circuits'),
+              ('Structure of lecture', 2, None, 'structure-of-lecture'),
+              ('Variational Quantum Circuits',
+               2,
+               None,
+               'variational-quantum-circuits'),
+              ('Setting up a VQC', 2, None, 'setting-up-a-vqc'),
+              ('Outputs', 2, None, 'outputs'),
+              ('Short summary', 2, None, 'short-summary'),
+              ('Mathematical example', 2, None, 'mathematical-example'),
+              ('Key elements', 2, None, 'key-elements'),
+              ('Test yourself exercises', 2, None, 'test-yourself-exercises'),
+              ('Quantum Neural Networks (QNNs)',
+               2,
+               None,
+               'quantum-neural-networks-qnns'),
+              ('Input Encoding', 2, None, 'input-encoding'),
+              ('QNN Architecture and Models',
+               2,
+               None,
+               'qnn-architecture-and-models'),
+              ('A simple feedforward QNN structure',
+               2,
+               None,
+               'a-simple-feedforward-qnn-structure'),
+              ('Example', 2, None, 'example'),
+              ('Training Output and Loss', 2, None, 'training-output-and-loss'),
+              ('Exampe: Variational Classifier',
+               2,
+               None,
+               'exampe-variational-classifier'),
+              ('Variational Layer Algebra',
+               2,
+               None,
+               'variational-layer-algebra'),
+              ('Short summary', 2, None, 'short-summary'),
+              ('Training QNNs and Loss Landscapes',
+               2,
+               None,
+               'training-qnns-and-loss-landscapes'),
+              ('Gradient Computation', 2, None, 'gradient-computation'),
+              ('Barren Plateaus', 2, None, 'barren-plateaus'),
+              ('Loss Landscape Visualization',
+               2,
+               None,
+               'loss-landscape-visualization'),
+              ('Exercises', 2, None, 'exercises'),
+              ('Implementing QNNs with PennyLane',
+               2,
+               None,
+               'implementing-qnns-with-pennylane'),
+              ('Using PennyLane', 2, None, 'using-pennylane'),
+              ('Additional exercises', 2, None, 'additional-exercises'),
+              ('Applications and examples',
+               2,
+               None,
+               'applications-and-examples'),
+              ('Additional applications and examples',
+               2,
+               None,
+               'additional-applications-and-examples'),
+              ('More on applications', 2, None, 'more-on-applications')]}
 end of tocinfo -->
 
 <body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "AMS"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
 <!-- ------------------- main content ---------------------- -->
 <center>
 <h1>Quantum Computing, Quantum Machine Learning and Quantum Information Theories</h1>
@@ -172,15 +254,598 @@ end of tocinfo -->
 <b></b>
 <p>
 <ol>
-<li> TBA
+<li> Discussion of Quantum Support Vector Machines and their implementations</li>
+<li> Variational Quantum Circuits (VQCs)</li> 
+<li> Quantum neural networks (QNNs)</li>
+<ul>
+ <li> Training QNNs and Loss Landscapes</li>
+ <li> Implementing QNNs with PennyLane
 <!-- o <a href="https://youtu.be/OZdyky8UYdk" target="_blank">Video of lecture at</a> -->
 <!-- o <a href="https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesMay8.pdf" target="_blank">Whiteboard notes</a> --></li>
+</ul>
 </ol>
 </div>
 
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="quantum-machine-learning-quantum-neural-networks-and-variational-circuits">Quantum Machine Learning: Quantum Neural Networks and Variational Circuits </h2>
+
+<p>The Variational Quantum Algorithm (VQA) is a 
+Variational Quantum Circuit (VQC), that is  a quantum circuit with tunable
+parameters and which is trained using a classical optimizer.  In practice, a
+VQC (also called a Parameterized Quantum Circuit (PQC)) is used as a
+Quantum Neural Network (QNN): data are encoded into quantum states, a
+parameterized circuit is applied, and measurements yield outputs.
+For example, Abbas et al. showed that certain QNNs can exhibit higher
+effective dimension (and thus capacity to generalize) than comparable
+classical networks , suggesting a potential quantum advantage.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="structure-of-lecture">Structure of lecture </h2>
+
+<p>This lecture introduces the theory and practice of QNNs and VQCs at an
+intermediate level.  We will develop the mathematical foundations
+(state preparation, parameterized unitaries, measurement), discuss
+optimization and training challenges, and work through practical code
+examples using PennyLane.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="variational-quantum-circuits">Variational Quantum Circuits </h2>
+
+<p>Variational Quantum Algorithms (VQAs) are hybrid schemes where a
+quantum circuit with adjustable parameters is trained by a classical
+optimizer .  In this framework, a Variational Quantum Circuit (VQC)
+typically has three parts : (i) a state preparation or feature map
+that encodes classical input \( \mathbf{x} \) into a quantum state; (ii) a
+parameterized circuit \( W(\boldsymbol\theta) \) (often called the ansatz)
+that depends on trainable parameters \( \boldsymbol\theta \); and (iii) a
+measurement that extracts a classical output from the final quantum
+state.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="setting-up-a-vqc">Setting up a VQC </h2>
+
+<p>Given an input vector \( \mathbf{x}=(x_1,\dots,x_n) \), we prepare the initial state</p>
+
+$$
+\vert \psi_{\rm in}\rangle = U(\mathbf{x})|0\rangle^{\otimes n},
+$$
+
+<p>where \( U(\mathbf{x}) \) is a unitary (possibly composed of rotations)
+that depends on the data.  We then apply the variational circuit
+\( W(\boldsymbol\theta) \), often built as a product of layers
+\( V_j(\theta_j) \), so that the final state is
+</p>
+
+$$
+\vert \Psi(\mathbf{x};\boldsymbol\theta)\rangle = W(\boldsymbol\theta),U(\mathbf{x}),|0\rangle^{\otimes n}.
+$$
+
+<p>For instance, one common ansatz is the hardware-efficient circuit:
+layers of parameterized single-qubit rotations and entangling gates
+(like CNOTs) repeated several times.  The structure of
+\( W(\boldsymbol\theta) \) can dramatically affect the circuit&#8217;s
+expressivity and trainability.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="outputs">Outputs </h2>
+
+<p>To produce a scalar or vector output, we measure one or more
+observables \( \hat B_k \) on the final state.  The network&#8217;s output is
+given by the expectation values:
+</p>
+$$
+f_k(\mathbf{x};\boldsymbol\theta) ;=; \langle \Psi(\mathbf{x};\boldsymbol\theta) | \hat B_k | \Psi(\mathbf{x};\boldsymbol\theta)\rangle.
+$$
+
+<p>Equivalently, with</p>
+$$
+\vert \Psi(\mathbf{x};\boldsymbol\theta)\rangle = W(\boldsymbol\theta)U(\mathbf{x})|0\rangle,
+$$
+
+<p>one has</p>
+$$
+f_k(\mathbf{x};\boldsymbol\theta) = \langle 0|U(\mathbf{x})^\dagger W(\boldsymbol\theta)^\dagger ,\hat B_k, W(\boldsymbol\theta) U(\mathbf{x}),|0\rangle.
+$$
+
+<p>Commonly \( \hat B \) is a Pauli operator (e.g. \( Z \) on one qubit).  In practice one runs many shots on quantum hardware or simulates this circuit classically to estimate \( \langle \hat B_k\rangle \) .</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="short-summary">Short summary </h2>
+
+<p>In summary, a variational quantum model
+\( f(\mathbf{x};\boldsymbol\theta) \) maps inputs to outputs via the
+hybrid quantum-classical procedure.  During training, the classical
+optimizer adjusts \( \boldsymbol\theta \) (e.g. by gradient descent) to
+minimize a cost function (like mean-squared error) defined on a
+dataset.  Because the mapping is inherently quantum, these models can,
+in principle, harness the high-dimensional Hilbert space for richer
+representations.  (However, unlike classical deep nets, VQCs may face
+unique challenges such as gradient vanishing, which we discuss later.)
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="mathematical-example">Mathematical example </h2>
+
+<p>For concreteness, consider a 2-qubit circuit.  A simple encoding is</p>
+$$
+U(\mathbf{x})=R_x(x_1)\otimes R_x(x_2),
+$$
+
+<p>and a variational layer is</p>
+$$
+V(\boldsymbol\theta)=R_y(\theta_1)\otimes R_y(\theta_2),\text{CNOT}(0,1),
+$$
+
+<p>(apply \( R_y \) on each qubit then entangle).  After
+applying \( W(\boldsymbol\theta)=V(\boldsymbol\theta) \) to \( |0,0\rangle \),
+we measure \( \hat B=Z\otimes I \) on qubit 0.  The output is
+</p>
+$$
+f(\mathbf{x};\boldsymbol\theta) = \langle 0,0|,U(\mathbf{x})^\dagger,V(\boldsymbol\theta)^\dagger, (Z\otimes I), V(\boldsymbol\theta),U(\mathbf{x}),|0,0\rangle.
+$$
+
+<p>This \( f(x;\theta) \) is then compared to the target in a cost function for optimization.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="key-elements">Key elements </h2>
+
+<p>A VQC is a quantum circuit with trainable parameters acting on a
+quantum state; it is central to near-term QML (hybrid
+quantum-classical).  Data encoding and ansatz design determine a
+VQC&#8217;s expressivity.  Simple encodings use rotations (e.g. \( R_x(x_i) \))
+on each qubit , while more complex feature maps may exploit
+entanglement.  The circuit output is obtained via expectation values
+of observables (e.g. Pauli-Z), yielding a differentiable function
+\( f(\mathbf{x};\boldsymbol\theta) \) .
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="test-yourself-exercises">Test yourself exercises </h2>
+
+<ol>
+<li> Compute the state \( |\Psi(\mathbf{x};\boldsymbol\theta)\rangle \) explicitly for a 1-qubit VQC with \( U(x)=R_x(x) \) and \( W(\theta)=R_y(\theta) \). What is \( \langle Z\rangle \) as a function of \( x,\theta \)?</li>
+<li> Draw (or describe) a hardware-efficient ansatz for 3 qubits with 2 layers of rotations and CNOTs. How many parameters does it have?</li>
+</ol>
+<p>For the above ansatz, derive the effect of each layer on the state&#8217;s parameters.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="quantum-neural-networks-qnns">Quantum Neural Networks (QNNs) </h2>
+
+<p>Quantum Neural Networks (QNNs) are essentially multi-layer VQCs that
+mimic classical neural network architectures .  One can think of each
+layer as adding a nonlinear quantum neuron to the network.  A simple
+QNN is a sequence of encoding and variational layers.  More structured
+architectures also exist, such as Quantum Convolutional Neural
+Networks (QCNNs) and Quantum Long-Short Term Memory networks.  In a
+QCNN, for example, qubits are entangled in a localized pattern to
+mimic convolution and pooling .
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="input-encoding">Input Encoding </h2>
+
+<p>A crucial aspect of any QNN (as we also saw for QSVMs) is how
+classical data \( \mathbf{x}\in\mathbb{R}^d \) are embedded into a quantum
+state.  Common strategies include:
+</p>
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<ol>
+<li> Basis Encoding: Map each bit of \( \mathbf{x} \) (or feature) to a qubit state \( |0\rangle \) or \( |1\rangle \). Simple but limited to binary data.</li>
+<li> Angle (Amplitude) Encoding: Use rotation gates to encode real values, e.g. \( R_x(x_i) \) or \( R_y(x_i) \) on qubit \( i \).</li>  
+<li> Amplitude Encoding: Embed \( \mathbf{x} \) into the amplitudes of a multi-qubit state (exponentially compact, but requires complex circuits to prepare).</li>
+<li> Data Re-uploading: Re-encode input at multiple layers interspersed with trainable gates, effectively increasing expressivity.</li>
+</ol>
+</div>
+
+
+<p>The choice of feature map affects performance: no single encoding is
+best for all tasks.  Often one uses a problem-inspired map or random
+feature circuits, then lets the optimizer adjust the ansatz.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="qnn-architecture-and-models">QNN Architecture and Models </h2>
+
+<p>A general QNN can be viewed as a parameterized unitary
+\( U(\mathbf{x},\boldsymbol\theta) \) acting on \( n \) qubits, followed by
+measurements.  Fig. 2 (placeholder) might depict a generic QNN with
+several layers of trainable gates. Each layer can entangle qubits,
+building up complexity. The output is then a (classical) vector of
+measured values, analogous to the output layer in a classical network.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="a-simple-feedforward-qnn-structure">A simple feedforward QNN structure </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<ol>
+<li> Embedding Layer: Convert \( \mathbf{x} \) to \( |0\rangle^{\otimes n} \) via \( U(\mathbf{x}) \).</li>
+<li> Variational Layers: Repeat \( L \) blocks of parameterized gates \( W(\boldsymbol\theta^{(l)}) \) (each block may act on all or subsets of qubits).</li>
+<li> Measurement: Measure selected qubits or observables to obtain the output predictions \( f(\mathbf{x};\boldsymbol\theta) \).</li>
+</ol>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="example">Example </h2>
+
+<p>For example, a 2-layer QNN on 2 qubits might apply encoding
+\( R_x(x_1)\otimes R_x(x_2) \), then apply \( W(\theta^{(1)}) \), then again
+encoding (or not), then \( W(\theta^{(2)}) \), and finally measure. In
+classification tasks, one typically assigns a label based on the sign
+of \( \langle Z\rangle \) or uses multiple measurements for multi-class
+outputs.
+</p>
+
+<p>Notably, even though QNNs operate on exponentially large Hilbert
+spaces, their actual power is subject of research. Abbas et
+al. introduce the notion of effective dimension and argue that some
+QNNs can outperform classical networks in terms of trainability and
+generalization .  However, other studies point out that QNNs may
+suffer from trainability issues.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="training-output-and-loss">Training Output and Loss </h2>
+
+<p>Given a QNN with output \( f(\mathbf{x};\boldsymbol\theta) \) (a real
+number or vector of real values), one must define a loss function to
+train on data. Common choices are the mean squared error (MSE) for
+regression or cross-entropy for classification.  For a training set
+\( {\mathbf{x}i,y_i} \), the MSE loss is
+</p>
+$$
+L(\boldsymbol\theta) = \frac{1}{N} \sum{i=1}^N \bigl(f(\mathbf{x}i;\boldsymbol\theta) - y_i\bigr)^2.
+$$
+
+<p>One then computes gradients \( \nabla{\boldsymbol\theta}L \) and updates
+parameters via gradient descent or other optimizers.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="exampe-variational-classifier">Exampe: Variational Classifier </h2>
+
+<p>A binary classifier can output
+\( f(\mathbf{x};\boldsymbol\theta)=\langle Z_0\rangle \) on qubit 0, and
+predict label \( +1 \) if \( f\ge0 \), else \( -1 \).  In [50], a code snippet
+defines such a classifier and uses a square loss .  We will build
+similar models in Chapter 4.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="variational-layer-algebra">Variational Layer Algebra </h2>
+
+<p>As a warm-up problem, consider two qubits with single-qubit rotations
+\( R_y(\alpha) \) on each qubit followed by a CNOT. Show that this
+two-qubit gate can create entanglement if \( \alpha \) is not a multiple
+of \( \pi \).  (Hint: apply it to \( |00\rangle \) and compute the resulting
+state.)  This demonstrates how trainable gates can correlate qubits,
+enriching the model.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="short-summary">Short summary </h2>
+
+<p>A QNN is implemented by layering VQCs; it generalizes neural networks
+to quantum circuits .  Encoding maps classical features to quantum
+states (e.g. via rotation gates ).  The ansatz (variational layers)
+defines the network&#8217;s expressive power; depth and entanglement matter.
+Output is given by expectation(s) of measured observables, which are
+compared against targets via a classical loss function.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="training-qnns-and-loss-landscapes">Training QNNs and Loss Landscapes </h2>
+
+<p>Training a QNN involves optimizing a nonconvex quantum circuit cost
+function.  Like classical neural networks, one typically uses
+gradient-based methods.  However, VQCs have unique features, as listed here.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="gradient-computation">Gradient Computation </h2>
+
+<p>Gradients \( \partial f/\partial\theta_j \) are obtained using the parameter-shift rule.  For many gates \( e^{-i\theta P/2} \) (with \( P \) a Pauli), one can compute</p>
+$$
+\frac{\partial}{\partial\theta}\langle B\rangle
+= \frac{1}{2}\Bigl[\langle B\rangle_{\theta+\pi/2} - \langle B\rangle_{\theta-\pi/2}\Bigr],
+$$
+
+<p>where \( \langle B\rangle_{\theta\pm\pi/2} \) are expectation values
+evaluated at shifted parameter values.  This formula allows exact
+gradients by two circuit evaluations per parameter (independent of
+circuit size).  PennyLane automatically applies parameter-shift rule
+when you call backward on a QNode .  Optimizers: One can use gradient
+descent or more advanced optimizers (Adam, SPSA, etc.). PennyLane
+provides a qml.GradientDescentOptimizer and others.  Gradients flow
+through the classical loss into the quantum circuit via the
+parameter-shift trick. In our code examples below we will see
+this in action.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="barren-plateaus">Barren Plateaus </h2>
+
+<p>A major challenge is the barren plateau phenomenon .  In deep or
+highly entangled circuits, the loss landscape can become extremely
+flat: gradients vanish exponentially with system size.  As Anschuetz
+and Kiani note, variational models often become untrainable due to
+vanishing gradients in deep layers .  Even surprisingly, their work
+shows that shallow circuits may still have very few &#8220;good&#8221; local
+minima near the global optimum .  In practice, this means random
+initialization of a deep QNN often leads to tiny gradients, stalling
+training.  Mitigation Strategies: Researchers propose various remedies
+to avoid or alleviate barren plateaus.  Examples include layerwise
+training (training a few layers at a time), smart initialization
+(e.g. initializing most gates to identity), and ansatz
+design (using problem-inspired or shallow circuits to avoid global
+entanglement).  Another approach uses local cost functions: measuring
+local observables rather than global ones can reduce gradient
+concentration.  These strategies are active research areas, but remain
+crucial for making QNN training feasible on near-term devices.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="loss-landscape-visualization">Loss Landscape Visualization </h2>
+
+<p>One can imagine the loss function \( L(\boldsymbol\theta) \) over the
+parameter space.  Unlike convex classical problems, this landscape may
+have many local minima and saddle points.  Barren plateaus correspond
+to regions where \( \nabla L\approx 0 \) almost everywhere.  Even if
+plateaus are avoided, poor minima can still trap the optimizer .  In
+practice, careful tuning of learning rates and adding small random
+noise can help escape shallow minima.
+</p>
+
+<p>QNN training uses classical optimizers on circuit outputs, with
+gradients given by the parameter-shift rule .  Barren plateaus
+(vanishing gradients) are a central obstacle in deep circuits .
+Mitigation includes shallow ansatz, structured circuits, and smart
+initialization.  Always monitor training and consider multiple random
+restarts to find good minima.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="exercises">Exercises </h2>
+
+<ol>
+<li> Compute a gradient by hand: For a circuit with one qubit and \( f(\theta)=\langle0|R_y(\theta)^\dagger Z R_y(\theta)|0\rangle \), use the parameter-shift rule to compute \( df/d\theta \).</li>
+<li> Explore barren plateaus: Numerically evaluate \( \partial f/\partial\theta \) for a simple 5-qubit random circuit as depth increases. Observe the trend of gradient norms. What does this suggest?</li>
+<li> Optimizer effects: Implement a small QNN (2 qubits) and train with both SGD and Adam optimizers. Compare convergence speed.</li>
+</ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="implementing-qnns-with-pennylane">Implementing QNNs with PennyLane </h2>
+
+<p>PennyLane is a software library for hybrid quantum-classical
+computation. It provides QNodes, differentiable quantum functions that
+can be integrated with Python ML frameworks.  Here we illustrate
+building and training a simple variational quantum classifier using
+PennyLane.
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qml</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">import</span> numpy <span style="color: #008000; font-weight: bold">as</span> np
+
+<span style="color: #408080; font-style: italic"># Create a 2-qubit simulator device</span>
+dev <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>device(<span style="color: #BA2121">&#39;default.qubit&#39;</span>, wires<span style="color: #666666">=2</span>)
+
+<span style="color: #408080; font-style: italic"># Define a feature map (state preparation) circuit</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">feature_map</span>(x):
+    qml<span style="color: #666666">.</span>RX(x[<span style="color: #666666">0</span>], wires<span style="color: #666666">=0</span>)
+    qml<span style="color: #666666">.</span>RX(x[<span style="color: #666666">1</span>], wires<span style="color: #666666">=1</span>)
+
+<span style="color: #408080; font-style: italic"># Define a variational (trainable) layer</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">variational_layer</span>(params):
+    <span style="color: #408080; font-style: italic"># params is a list of 4 angles for 2 qubits</span>
+    qml<span style="color: #666666">.</span>Rot(params[<span style="color: #666666">0</span>], params[<span style="color: #666666">1</span>], params[<span style="color: #666666">2</span>], wires<span style="color: #666666">=0</span>)
+    qml<span style="color: #666666">.</span>Rot(params[<span style="color: #666666">3</span>], params[<span style="color: #666666">0</span>], params[<span style="color: #666666">1</span>], wires<span style="color: #666666">=1</span>)
+    qml<span style="color: #666666">.</span>CNOT(wires<span style="color: #666666">=</span>[<span style="color: #666666">0</span>,<span style="color: #666666">1</span>])
+
+<span style="color: #408080; font-style: italic"># Define the QNode: quantum classifier circuit</span>
+<span style="color: #AA22FF">@qml</span><span style="color: #666666">.</span>qnode(dev)
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">qclassifier</span>(params, x<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">None</span>):
+    <span style="color: #408080; font-style: italic"># encode data into quantum state</span>
+    feature_map(x)
+    <span style="color: #408080; font-style: italic"># apply two variational layers</span>
+    variational_layer(params[<span style="color: #666666">0</span>:<span style="color: #666666">4</span>])
+    variational_layer(params[<span style="color: #666666">4</span>:<span style="color: #666666">8</span>])
+    <span style="color: #408080; font-style: italic"># measure expectation of Z on qubit 0</span>
+    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>expval(qml<span style="color: #666666">.</span>PauliZ(wires<span style="color: #666666">=0</span>))
+In this code:
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>We instantiate a 2-qubit device dev.  feature$\_$map(x) encodes the
+2-dimensional input x using \( R_x \) rotations .
+variational$\_$layer(params) is a block of trainable gates (here two Rot
+gates and a CNOT).  The @qml.qnode(dev) decorator turns the Python
+function qclassifier into a quantum node that returns the expectation
+value of \( Z \) .  We apply two such layers (with 8 parameters total) to
+increase expressivity.
+</p>
+
+<p>Next, we define a cost function and train:</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #408080; font-style: italic"># Example training data (X: inputs, Y: binary labels {+1,-1})</span>
+X <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">0.1</span>, <span style="color: #666666">0.2</span>], [<span style="color: #666666">1.5</span>, <span style="color: #666666">-0.7</span>], [<span style="color: #666666">0.3</span>, <span style="color: #666666">0.8</span>], [<span style="color: #666666">0.9</span>, <span style="color: #666666">0.4</span>]])
+Y <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>, <span style="color: #666666">1</span>, <span style="color: #666666">-1</span>])
+
+<span style="color: #408080; font-style: italic"># Mean squared error cost</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">cost_fn</span>(params):
+    preds <span style="color: #666666">=</span> [qclassifier(params, x<span style="color: #666666">=</span>x) <span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> X]
+    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>mean((preds <span style="color: #666666">-</span> Y)<span style="color: #666666">**2</span>)
+
+<span style="color: #408080; font-style: italic"># Initialize parameters (8 angles) randomly</span>
+init_params <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">8</span>, requires_grad<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
+
+<span style="color: #408080; font-style: italic"># Choose an optimizer</span>
+opt <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>GradientDescentOptimizer(stepsize<span style="color: #666666">=0.1</span>)
+
+<span style="color: #408080; font-style: italic"># Training loop</span>
+params <span style="color: #666666">=</span> init_params
+<span style="color: #008000; font-weight: bold">for</span> epoch <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">30</span>):
+    params <span style="color: #666666">=</span> opt<span style="color: #666666">.</span>step(cost_fn, params)
+    <span style="color: #008000; font-weight: bold">if</span> epoch <span style="color: #666666">%</span> <span style="color: #666666">5</span> <span style="color: #666666">==</span> <span style="color: #666666">0</span>:
+        loss <span style="color: #666666">=</span> cost_fn(params)
+        <span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Epoch </span><span style="color: #BB6688; font-weight: bold">{</span>epoch<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">, loss = </span><span style="color: #BB6688; font-weight: bold">{</span>loss<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.4f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>This training loop uses PennyLane&#8217;s GradientDescentOptimizer which
+automatically computes gradients of cost$\_$fn w.r.t. params using the
+parameter-shift rule.  One monitors the loss to verify improvement.
+In practice, more advanced optimizers (Adam, QNG, etc.) or batch
+training may be used.  The printed output shows the loss decreasing
+over epochs (assuming a learnable model).
+</p>
+
+<p>Note: All operations are differentiable because we imported
+pennylane.numpy as np.  This ensures that backpropagation through the
+QNode and classical operations works seamlessly .
+</p>
+
+<p>One could also plot the training loss
+vs. epochs or the decision boundary learned by the QNN.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="using-pennylane">Using PennyLane </h2>
+
+<p>PennyLane&#8217;s qml.qnode decorator converts a quantum circuit into a
+function whose gradients can be computed automatically .  We combine
+the feature map and variational layers inside a single QNode to form a
+model.  The cost function compares the QNN&#8217;s output to labels;
+optimization is done classically.  PennyLane allows seamless mixing of
+quantum nodes and classical Python code, facilitating experimentation.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="additional-exercises">Additional exercises </h2>
+
+<ol>
+<li> Modify the above code to use qml.AdamOptimizer and compare training convergence.</li>
+<li> Extend the circuit by adding a third qubit (use wires=3) and corresponding rotations. How does this affect the model&#8217;s capacity?</li>
+<li> Implement a simple dataset (e.g. points arranged in XOR pattern) and train the QNN. Evaluate its classification accuracy.</li>
+</ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="applications-and-examples">Applications and examples </h2>
+
+<p>Quantum neural networks and VQCs have been explored in various
+contexts.  Here we briefly mention some notable examples (the field is
+rapidly growing):
+</p>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Quantum Classification and Regression:</b>
+<p>
+<p>As demonstrated above, QNNs can classify classical data points by learning decision boundaries in Hilbert space .  Extensions include multiclass classification, embedding kernels, and combining classical-quantum pipelines.</p>
+</div>
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Quantum Approximate Optimization Algorithm (QAOA):</b>
+<p>
+<p>Though not a neural network per se, QAOA is a VQA for combinatorial optimization. It can be seen as a special case where the Hamiltonian objective is minimized by a parameterized circuit. PennyLane supports QAOA out of the box.</p>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="additional-applications-and-examples">Additional applications and examples </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Variational Quantum Eigensolver (VQE):</b>
+<p>
+<p>Another hybrid algorithm for finding ground-state energies; useful in quantum chemistry. While not ML, it uses similar VQC training techniques.</p>
+</div>
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Quantum Generative Models:</b>
+<p>
+<p>Variational circuits can be trained to produce quantum states resembling a target distribution (Quantum GANs, Quantum Boltzmann Machines). This is an active research area.</p>
+</div>
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Quantum Reinforcement Learning:</b>
+<p>
+<p>Researchers have proposed using QNNs as function approximators (policy or value functions) in RL. Some works embed classical observations into quantum states and train QNNs by classical RL algorithms.</p>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-on-applications">More on applications </h2>
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Quantum Kernel Methods:</b>
+<p>
+<p>Instead of a neural net, one can use VQCs to define kernels for classical kernel machines. PennyLane provides modules for quantum kernel evaluation.</p>
+</div>
+
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b>Hardware Demonstrations:</b>
+<p>
+<p>Small-scale QML experiments have been run on IBM, Google, and IonQ devices. These serve as proof-of-concept for the hybrid model.</p>
+</div>
+
+
+<p>Each application comes with domain-specific twists, but all rely on
+the core ideas of Chapters 1&#8211;4: encoding data, parameterized circuits,
+measurement, and classical optimization.  As hardware improves, more
+complex QML tasks (e.g. image recognition, chemistry simulations,
+finance models) may become feasible.
+</p>
+
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">
-<!-- copyright --> &copy; 1999-2024, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license
+<!-- copyright --> &copy; 1999-2025, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license
 </center>
 </body>
 </html>
