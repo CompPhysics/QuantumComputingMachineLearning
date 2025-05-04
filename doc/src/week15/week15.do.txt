@@ -911,6 +911,255 @@ print(f'QSVC accuracy: {accuracy * 100:.2f}%')
 
 
 !split
+===== Credit data classification =====
+
+We demonstrate a Quantum Support Vector Machine (QSVM) using PennyLane
+to classify synthetic credit data (good vs. bad credit). We generate a
+small dataset of financial features (e.g. income, debt ratio, age),
+encode them into quantum states via angle embedding, compute a quantum
+kernel (state overlap) matrix, and train a classical SVM using
+scikit-learn. Finally, we evaluate accuracy, precision, and
+recall. PennyLane’s default.qubit simulator is used throughout, and
+the code is heavily commented for clarity.
+
+
+!split
+===== Synthetic Credit Data =====
+
+
+We create a toy dataset with three features per sample: income (in
+thousands), debt ratio (fraction of income), and age. Good-credit and
+bad-credit samples are drawn from different Gaussian clusters for
+illustration. After generation we scale features into suitable ranges
+(for example $[0,1]$ or $[0,\pi]$) before encoding into qubits.
+
+!bc pycod
+import numpy as np
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Number of samples per class
+N_per = 50
+
+# Define Gaussian cluster means and covariances for two classes
+mean_good = np.array([80, 0.3, 45])   # High income, low debt ratio, middle age
+cov_good  = np.diag([50, 0.01, 20])   # Some variation
+
+mean_bad  = np.array([40, 0.7, 30])   # Low income, high debt ratio, younger
+cov_bad   = np.diag([30, 0.02, 20])
+
+# Sample synthetic data from multivariate Gaussians
+good_data = np.random.multivariate_normal(mean_good, cov_good, size=N_per)
+bad_data  = np.random.multivariate_normal(mean_bad,  cov_bad,  size=N_per)
+
+# Combine data and create labels (1 = good credit, 0 = bad credit)
+data = np.vstack([good_data, bad_data])
+labels = np.array([1]*N_per + [0]*N_per)
+
+# Clip unrealistic values (e.g. negative values or ratios >1)
+data[:,0] = np.clip(data[:,0], 20, 120)  # Income [20k, 120k]
+data[:,1] = np.clip(data[:,1], 0, 1)     # Debt ratio [0, 1]
+data[:,2] = np.clip(data[:,2], 18, 70)   # Age [18, 70]
+
+# Normalize and scale features for quantum encoding
+# We scale to [0, pi] range to use as rotation angles
+income_scaled = (data[:,0] - 20) / 100      # ~[0,1]
+debt_scaled   = data[:,1]                  # already [0,1]
+age_scaled    = (data[:,2] - 18) / 52       # ~[0,1]
+
+# Stack and multiply by pi for AngleEmbedding
+X = np.vstack([income_scaled, debt_scaled, age_scaled]).T * np.pi
+
+# Split into train/test sets
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, labels, test_size=0.2, stratify=labels, random_state=42
+)
+
+print("Training samples:", X_train.shape, "Test samples:", X_test.shape)
+!ec
+
+Explanation: We drew two clusters (good vs. bad credit) with distinct
+means, then clipped and scaled features into the $[0,\pi]$ range. This makes
+them suitable as rotation angles in an angle-embedding circuit. We
+split the data into training and test sets (80/20 split).
+
+!split
+===== Quantum Feature Encoding and Kernel Circuit =====
+
+
+
+
+
+Each feature vector is encoded into a quantum state. We use
+PennyLane’s AngleEmbedding: each feature is used as an angle for a
+single-qubit rotation. For simplicity we use three qubits (one per
+feature) and rotation on the $y$-axis. Our quantum kernel is then
+defined by the state fidelity (overlap) between two encoded feature
+vectors. Concretely, we build a QNode that encodes one data point,
+then applies the inverse encoding of another, and measures the
+probability of the all-zero state. This probability equals the squared
+overlap between the two encoded states .
+
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as pnp
+
+# Number of qubits = number of features
+num_qubits = 3
+dev = qml.device('default.qubit', wires=num_qubits)
+
+@qml.qnode(dev)
+def kernel_circuit(x1, x2):
+    """Quantum kernel circuit: encodes x1, then uncomputes x2."""
+    # Encode first sample
+    qml.templates.AngleEmbedding(features=x1, wires=range(num_qubits), rotation='Y')
+    # Apply the inverse (adjoint) embedding of second sample
+    qml.adjoint(qml.templates.AngleEmbedding)(features=x2, wires=range(num_qubits), rotation='Y')
+    # Measure probability of |0...0> state
+    return qml.probs(wires=range(num_qubits))
+
+# Define kernel function: probability of all-zero outcome = state overlap fidelity
+def quantum_kernel(x1, x2):
+    """Compute the quantum kernel (fidelity) between two vectors x1, x2."""
+    # circuit returns probability array; index 0 corresponds to state |000>
+    return kernel_circuit(x1, x2)[0]
+
+# Test the kernel on two training samples
+k_val = quantum_kernel(X_train[0], X_train[1])
+print("Kernel between first two training points:", k_val)
+# Should be 1.0 when comparing a vector with itself
+print("Kernel of a point with itself:", quantum_kernel(X_train[0], X_train[0]))
+!ec
+
+Explanation: We use a three-qubit device and PennyLane’s AngleEmbedding
+(rotation=‘Y’) to encode each three-element vector. The circuit first
+embeds $x_1$, then applies the adjoint (inverse) of the same embedding
+for $x_2$. Measuring the probability of the state $\vert 000\rangle $ yields the
+fidelity (overlap) between the two quantum states . We wrap this in a
+Python function quantum$\_$kernel$(x_1, x_2)$ for convenience.
+
+
+
+!split
+===== Kernel matrix computation =====
+
+
+
+
+
+We build the Gram (kernel) matrix for the training data (size
+N$\_$train x N$\_$train) and between test/train (N$\_$test x N$\_$train). PennyLane
+provides qml.kernels.kernel$\_$matrix, but here we compute it directly
+for clarity. Each matrix entry $K_{ij} = K(x_i, x_j)$ is the fidelity
+between training points $x_i$ and $x_j$.
+
+!bc pycod
+# Compute kernel matrices using our quantum_kernel function
+K_train = np.array([[quantum_kernel(x_i, x_j) for x_j in X_train] for x_i in X_train])
+K_test  = np.array([[quantum_kernel(x_i, x_j) for x_j in X_train] for x_i in X_test])
+
+print("Shape of training Gram matrix:", K_train.shape)
+!ec
+
+For a set of input vectors, we compute the pairwise
+kernel values. This produces a symmetric kernel matrix for training
+data, and a (test x train) kernel matrix for prediction. In practice,
+one could use qml.kernels.kernel$\_$matrix(X$\_$train, X$\_$train,
+quantum$\_$kernel) as in the PennyLane docs , but the manual loop
+illustrates the concept. Each entry is a number in $[0,1]$, with $1.0$ on
+the diagonal (fidelity of a state with itself).
+
+
+
+
+
+!split
+===== Training the classical SVM =====
+
+
+
+
+
+With the quantum kernel computed, we train a classical SVM using
+scikit-learn, specifying kernel='precomputed'. This tells the SVM to
+use our Gram matrix directly. We fit on the training kernel matrix
+K$\_$train and labels, then predict on the test kernel matrix
+K$\_$test.
+
+!bc pycod
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+# Train SVM with precomputed kernel
+svm = SVC(kernel='precomputed')
+svm.fit(K_train, y_train)
+
+# Predict on test set using the test-train kernel matrix
+y_pred = svm.predict(K_test)
+
+# Evaluate performance
+acc = accuracy_score(y_test, y_pred)
+prec = precision_score(y_test, y_pred)
+rec = recall_score(y_test, y_pred)
+
+print(f"Accuracy: {acc:.2f}, Precision: {prec:.2f}, Recall: {rec:.2f}")
+!ec
+
+Explanation: We instantiate an SVM with a precomputed kernel (since
+K$\_$train is the Gram matrix). After fitting on the
+quantum-kernel-trained data, we predict on the test set by passing the
+test/train kernel matrix K$\_$test. We then compute accuracy, precision,
+and recall using standard sklearn metrics. In our synthetic example
+this yields very high performance (often perfect) because the data
+clusters were well-separated.
+
+
+
+
+
+!split
+===== Results and Evaluation =====
+
+
+Finally, we report the evaluation metrics and visualize the kernel
+matrix and classification. For brevity, only key metrics are printed
+here. In a complete analysis, one could plot the kernel matrix as a
+heatmap and a confusion matrix for the classifier. Our code achieved
+perfect separation (accuracy, precision, recall all approximately equal to 1.00) on this
+synthetic dataset. Real-world data would typically show lower
+scores. We highlight that quantum kernels have been proposed to
+capture complex feature relationships that help SVMs separate
+nonlinearly separable data .
+
+!bc pycod
+# Example output (metrics)
+print("Model performance on test set:")
+print(f"  Accuracy:  {acc:.3f}")
+print(f"  Precision: {prec:.3f}")
+print(f"  Recall:    {rec:.3f}")
+!ec
+
+The printed metrics confirm the model’s performance. In
+our toy example, the quantum kernel produced an easily separable data
+representation, leading to perfect classification. In practice, one
+would inspect the kernel matrix (e.g. with a heatmap) and perhaps
+compare against classical kernels. Recent studies have indeed found
+quantum-enhanced models promising for financial tasks like credit
+scoring.
+
+
+!split
+===== QSVM summary =====
+
+This QSVM implementation shows how classical data can be mapped to
+quantum states via angle encoding, how to compute the quantum kernel
+via state overlap (fidelity), and how to plug that kernel into a
+classical SVM.
+
+
+!split
 ===== Quantum Neural Networks and Variational Circuits =====
 
 
@@ -924,12 +1173,7 @@ For example, Abbas et al. showed that certain QNNs can exhibit higher
 effective dimension (and thus capacity to generalize) than comparable
 classical networks , suggesting a potential quantum advantage.
 
-
-!split
-===== Structure of lecture =====
-
-This lecture introduces the theory and practice of QNNs and VQCs at an
-intermediate level.  We will develop the mathematical foundations
+Below we develop the mathematical foundations
 (state preparation, parameterized unitaries, measurement), discuss
 optimization and training challenges, and work through practical code
 examples using PennyLane.
