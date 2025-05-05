@@ -1,0 +1,348 @@
+quantum Gibbs state.  Instead of a classical energy, one defines a Hamiltonian H(\boldsymbol{\theta}) whose parameters \boldsymbol{\theta} (biases and couplings) play the role of the RBM weights.  The model’s density operator is the thermal (Gibbs) state
+
+\rho(\boldsymbol{\theta}) = \frac{e^{-\beta H(\boldsymbol{\theta})}}{Z(\boldsymbol{\theta})},
+
+with inverse temperature \beta (often set to 1) and partition function \(Z = \Tr(e^{-\beta H})\).  The probability of observing a visible configuration v is obtained by measuring \rho in the computational basis (and tracing out hidden qubits if any).  In effect, the quantum model can capture richer correlations via superposition and entanglement .
+
+
+
+Figure: A schematic of quantum generative modeling using a parameterized quantum circuit (Quantum Circuit Born Machine, or QCBM).  A training dataset with empirical distribution \tilde{p}(x) is used to optimize quantum circuit parameters \theta so that the circuit-induced distribution q_\theta(x) = |\langle x|U(\theta)|0\rangle|^2 approximates the target distribution . This figure illustrates the data pipeline and loss evaluation for generative modeling. The Quantum Boltzmann machine can be viewed as another quantum generative model, where the circuit prepares a thermal state rather than a pure state.
+
+
+
+Figure: Framework for quantum generative modeling.  A parameterized quantum circuit $U(\theta)$ is trained so that its output distribution $q_\theta(x)=|\langle x|U(\theta)|0\rangle|^2$ matches the data distribution $p(x)$ . The lower part of the figure shows the “Born machine” approach; in a Quantum Boltzmann Machine, one would instead prepare and measure a thermal (Gibbs) state of a Hamiltonian.
+
+
+
+
+
+Classical Boltzmann Machines
+
+
+
+
+
+A classical Boltzmann machine (BM) is an Ising model with binary units v_i,h_j.  Its energy can be written E(v,h) = - \sum_i a_i v_i - \sum_j b_j h_j - \sum_{i<j} W_{ij} x_i x_j (where x runs over all units) . The restricted variant (RBM) enforces no visible-visible or hidden-hidden couplings, so only v\!-\!h interactions remain.  Training maximizes the likelihood of training data by adjusting \{a,b,W\}. In practice this involves computing the “positive phase” (expectation under the data) and “negative phase” (expectation under the model), typically by Gibbs sampling or contrastive divergence .  Despite the simplification of the restricted architecture, exact training of RBMs remains computationally demanding due to the cost of sampling the model distribution, motivating the exploration of quantum accelerations.
+
+
+
+
+
+Quantum Boltzmann Machines
+
+
+
+
+
+In a Quantum Boltzmann Machine (QBM), the classical energy is replaced by a Hamiltonian H acting on qubits.  The model distribution over classical bitstrings v is given by the diagonal of the quantum Gibbs state \rho = e^{-H}/Z.  A straightforward choice is a stoquastic Hamiltonian that is diagonal in the computational basis (e.g. involving only Pauli-$Z$ operators), which yields a probability distribution very similar to a classical BM.  More generally one can allow non-commuting terms (e.g. Pauli-$X$ fields) to introduce quantum correlations .  In fact, Amin et al. (2018) introduced a QBM where the training is done by bounding the quantum probabilities and sampling from the transverse-field Ising Hamiltonian .  However, non-commutativity makes exact training harder, so many proposals use either special Hamiltonians or variational approximations.
+
+
+
+A Restricted Quantum Boltzmann Machine (RQBM) (also called Quantum RBM or QRBM) enforces a bipartite structure analogous to the classical RBM: no hidden-hidden interactions, and possibly limited hidden-visible connectivity.  The simplest RQBM Hamiltonian can be written (up to local Pauli bases) as
+
+\[
+
+\label{eq:rqbm_hamiltonian}
+
+H(\mathbf{a},\mathbf{b},W,V) \;=\; \sum_{i=1}^{n_v} a_i Z_i \;+\; \sum_{j=1}^{n_h} b_j Z_j \;+\; \sum_{i,j} W_{ij}\, Z_i Z_j \;+\; \sum_{i<i{\prime}} V_{ii{\prime}}\, Z_i Z_{i{\prime}} \,.
+
+\]
+
+Here Z_i and Z_j are Pauli-$Z$ operators on the visible and hidden qubits respectively, a_i,b_j are biases, W_{ij} are visible-hidden couplings, and V_{ii{\prime}} are possible visible-visible couplings.  (Classically, V=0 in an RBM; allowing V\neq0 gives a “2-local QRBM” as in Wu et al. .)  Importantly, there are no hidden-hidden $ZZ$ terms in this restricted model.  Equation (\ref{eq:rqbm_hamiltonian}) is a direct quantum analogue of the RBM energy function, promoting it to an operator acting on qubits.  Wu et al. (2020) used such a Hamiltonian and proved that this 2-local QRBM is universal for quantum computation .
+
+
+
+
+
+Quantum Statistical Mechanics Background
+
+
+
+
+
+In quantum statistical mechanics, a system at inverse temperature \beta is described by the density operator \rho = e^{-\beta H}/Z, where the partition function \(Z = \Tr(e^{-\beta H})\) normalizes the state.  For a qubit model we typically take \beta=1.  Observables are expectation values \(\langle O\rangle = \Tr(\rho O)\). In the QBM context, one is interested in the probability p(v) of measuring the visible qubits in computational basis state v.  If the full thermal state lives on both visible and hidden qubits, this probability is
+
+\[
+
+p_\theta(v) \;=\; \Tr\bigl[\Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
+
+\]
+
+where \(\Pi_v^{(\text{vis})}=|v\>\<v|\) acts on the visible subspace.  Equivalently, one may “trace out” the hidden qubits and work with the reduced density matrix on the visible subsystem.  Computing these probabilities requires preparing or approximating the Gibbs state of H.  In practice this is done either by quantum simulators, quantum annealers, or variational algorithms.
+
+
+
+
+
+Energy-Based Training Objective and Gradients
+
+
+
+
+
+RQBM training is analogous to the classical case: we have a dataset of bitstrings \{v^{(k)}\} from an unknown distribution p_{\rm data}(v).  The goal is to adjust the Hamiltonian parameters \theta so that the model distribution \(p_\theta(v)=\<v|\rho(\theta)|v\>\) approximates p_{\rm data}(v).  Equivalently, one can view the data distribution as a target density matrix \eta (diagonal in the computational basis) and minimize the quantum relative entropy (quantum KL divergence)
+
+\[
+
+S(\eta\Vert \rho(\theta)) = \Tr\!\bigl[\eta\ln\eta\bigr] - \Tr\!\bigl[\eta\ln\rho(\theta)\bigr] \;.
+
+\]
+
+This loss is non-negative and equals zero only when \eta=\rho(\theta).  Writing \rho=e^{-H}/Z, one finds the gradient of the relative entropy (for parameter \theta in H) as
+
+\[
+
+\frac{\partial}{\partial\theta} S(\eta\Vert\rho)
+
+= \Tr\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
+
+= \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \Tr[\rho\,\partial_\theta H]\Bigr).
+
+\]
+
+In other words,
+
+\nabla_\theta S \;=\; \beta\Bigl(\langle \partial_\theta H\rangle_{\rm data} \;-\; \langle \partial_\theta H\rangle_{\rm model}\Bigr).
+
+This is directly analogous to the classical RBM gradient: the update for each parameter is proportional to the difference between its expectation under the data distribution and under the model’s Gibbs distribution.  (Equation: $S(\eta\Vert\rho)={\rm Tr}[\eta\ln\eta]-{\rm Tr}[\eta\ln\rho]$ .)  In practice, one computes $\langle \partial_\theta H\rangle_{\rm data}$ by averaging over the training set, and estimates $\langle \partial_\theta H\rangle_{\rm model}$ by sampling from the quantum model.
+
+
+
+Note that preparing exact Gibbs samples of a non-commuting Hamiltonian is hard.  Many methods have been proposed to approximate the model expectation.  For example, one may use a bound on the quantum free energy (as in Amin et al. ), or perform contrastive divergence with a quantum device.  Recent theoretical work shows that minimizing the relative entropy in QBM training can be done with stochastic gradient descent in polynomial sample complexity under reasonable assumptions .
+
+
+
+Figure: Quantum vs. classical training loop for RBMs.  In the classical loop (red arrows), the RBM weights \Theta=(W,a,b) are updated via Gibbs sampling: visible data is clamped and Gibbs steps estimate the “positive phase,” while separate Gibbs chains estimate the “negative phase.”  In the quantum loop (blue arrows, e.g. using a D-Wave annealer), the model samples for the negative phase are drawn by encoding \Theta in the quantum device and measuring its thermal state .  The positive phase is computed classically from the data.  This figure (from Moro et al., 2023) highlights that the only difference is how the negative-phase samples are obtained .
+
+
+
+
+
+Parameter Optimization and Variational Techniques
+
+
+
+
+
+Given the gradient above, one can optimize \theta by standard gradient-based methods (SGD, Adam, etc.).  In a gate-based setting, we implement the RQBM Hamiltonian via a parameterized quantum circuit (ansatz) and use variational quantum algorithms (VQAs).  Each parameter in H is encoded as a gate angle or circuit parameter.  The gradient of a circuit expectation can be obtained by the parameter-shift rule or automatic differentiation.
+
+
+
+One approach is the $\beta$-Variational Quantum Eigensolver (β-VQE) technique.  Liu et al. (2021) proposed a variational ansatz to represent a thermal (mixed) state using a combination of a classical neural network and a quantum circuit.  Huijgen et al. (2024) applied this to QBM training: an inner loop runs β-VQE to approximate the Gibbs state of H(\theta), while an outer loop updates \theta to minimize the relative entropy to the data .  This “nested loop” algorithm effectively sidesteps direct sampling of the true quantum Boltzmann state by variational approximation.  It has been shown to work on both classical and quantum target data, achieving high-fidelity learning for up to 10 qubits .
+
+
+
+Other sophisticated ansätze exist.  For example, Evolved Quantum Boltzmann Machines (Minervini et al., 2025) prepare a thermal state under one Hamiltonian and then evolve it under another, combining imaginary- and real-time evolution.  They derive analytical gradient formulas and propose natural-gradient variants .  There are also “semi-quantum” RBMs (sqRBMs) which commute in the visible subspace and treat the hidden units quantum-mechanically.  Intriguingly, sqRBMs were found to be expressively equivalent to classical RBMs, requiring fewer hidden units for the same number of parameters . In practice, however, variational optimization in high dimensions can suffer from barren plateaus. Recent analysis shows that training QBMs using the relative entropy objective avoids many of these concentration issues, with provably polynomial complexity under realistic conditions .
+
+
+
+
+
+Implementation with PennyLane
+
+
+
+
+
+As a concrete example, we outline how to implement an RQBM in PennyLane. We consider n_v visible and n_h hidden qubits. The ansatz can be, for instance, layers of parameterized single-qubit rotations and entangling gates that respect the bipartite structure.  Below is illustrative code (in Python) using PennyLane’s default.qubit simulator.
+
+
+
+\begin{lstlisting}[language=Python]
+
+  import pennylane as qml
+
+  import numpy as np
+
+
+
+
+
+  Number of visible and hidden qubits
+
+
+
+
+
+  n_v, n_h = 2, 1
+
+  dev = qml.device(“default.qubit”, wires=n_v+n_h)
+
+
+
+
+
+  Define a variational circuit (QNode)
+
+
+
+
+
+  @qml.qnode(dev, interface=‘autograd’)
+
+  def circuit(params):
+
+  # params is a vector of rotation angles
+
+  # Prepare all qubits in |0>
+
+  # Example ansatz: one layer of rotations + entangling gates
+
+  for i in range(n_v + n_h):
+
+  qml.RY(params[i], wires=i)
+
+  # entangle visible to hidden
+
+  for i in range(n_v):
+
+  qml.CNOT(wires=[i, n_v])  # connect each visible i to hidden n_v
+
+  # Optionally more layers…
+
+  # Return probability distribution on visible wires
+
+  return qml.probs(wires=list(range(n_v)))
+
+\end{lstlisting}
+
+
+
+This circuit takes a parameter vector params of length n_v+n_h and returns the probabilities q_\theta(v) of measuring each visible bitstring v.  Notice we measure only the visible wires (the wires=list(range(n_v)) in qml.probs marginalizes out the hidden qubit).
+
+
+
+Next, we train this model to match a target dataset distribution.  Suppose our data has distribution target = [p(00), p(01), p(10), p(11)].  We can define the (classical) loss as the Kullback-Leibler divergence D_{\rm KL}(p_{\rm data}\Vert q_\theta) or simply the negative log-likelihood.  Then we update params by gradient descent.  PennyLane’s automatic differentiation can compute gradients via the parameter-shift rule, but we show an explicit parameter-shift computation for demonstration:
+
+
+
+\begin{lstlisting}[language=Python]
+
+
+
+
+
+  Example target distribution over 2 visible bits
+
+
+
+
+
+  target = np.array([0.3, 0.2, 0.1, 0.4])  # must sum to 1
+
+
+
+  def loss(params):
+
+  probs = circuit(params)  # model probabilities for visible states
+
+  # Add small epsilon to avoid log(0)
+
+  return np.sum(target * np.log((target + 1e-9) / probs))
+
+
+
+
+
+  Compute gradient via parameter-shift rule
+
+
+
+
+
+  def parameter_shift_grad(params):
+
+  grads = np.zeros_like(params)
+
+  shift = np.pi/2
+
+  for idx in range(len(params)):
+
+  shift_vector = np.zeros_like(params)
+
+  shift_vector[idx] = shift
+
+  probs_plus = circuit(params + shift_vector)
+
+  probs_minus = circuit(params - shift_vector)
+
+  loss_plus  = np.sum(target * np.log((target + 1e-9) / probs_plus))
+
+  loss_minus = np.sum(target * np.log((target + 1e-9) / probs_minus))
+
+  grads[idx] = 0.5 * (loss_plus - loss_minus)
+
+  return grads
+
+
+
+
+
+  Initialize parameters and perform a simple gradient descent
+
+
+
+
+
+  params = np.random.normal(0, 0.1, size=(n_v+n_h,))
+
+  learning_rate = 0.1
+
+  for epoch in range(100):
+
+  grads = parameter_shift_grad(params)
+
+  params -= learning_rate * grads
+
+\end{lstlisting}
+
+
+
+This code illustrates the training loop.  At each epoch we evaluate the loss, compute gradients (via two forward passes per parameter), and update the parameters.  In practice one can use qml.grad for automatic gradients, and more sophisticated optimizers (Adam, natural gradient, etc.). The above shows that PennyLane can seamlessly integrate quantum circuit definitions with classical training logic.
+
+
+
+
+
+Applications and Examples
+
+
+
+
+
+RQBMs and related quantum generative models have begun to find applications in unsupervised learning and physics.  For example, anomaly detection in cybersecurity can be cast as a generative modeling task: anomalies are rare samples of a complex distribution.  Stein et al. (2023) built fully unsupervised anomaly detectors using QBMs trained on synthetic intrusion data.  Their results indicate that, for certain tasks, the quantum model can achieve better anomaly-detection performance than the classical RBM, often requiring fewer training steps .  Likewise, Moro & Prati (2023) demonstrated a quantum speed-up in training RBMs on a D-Wave annealer: the negative-phase sampling was up to 64× faster in hardware than in a CPU implementation for real-world datasets, although overheads remain .
+
+
+
+In another large-scale example, Sinno et al. (2025) implemented a QRBM with 120 visible and 120 hidden units on D-Wave’s Pegasus chip to generate synthetic network traffic for intrusion detection.  They successfully generated over 1.6 million attack samples, achieving a balanced dataset of more than 4.2 million records.  Compared to classical oversampling methods (SMOTE, etc.), the QRBM-generated data led to higher detection rates and F1 scores across multiple classifiers . These results highlight the potential of RQBMs as quantum generative models in practical machine-learning workflows.
+
+
+
+RQBMs are also studied in physics.  For instance, Wu et al. (2020) used a QRBM ansatz on a superconducting quantum chip to approximate quantum wavefunctions. They trained the QRBM so that its output state approximated the ground state and Gibbs (thermal) state of small molecules, achieving reasonable accuracy .  This connects to the broader idea of using neural-network quantum states (like RBMs) to represent many-body wavefunctions. Indeed, Carleo & Troyer (2017) introduced classical RBMs as variational ansätze for quantum ground states, and unitary/complex extensions have been explored in many works . A Restricted Quantum Boltzmann Machine provides an alternative ansatz where part of the network is truly quantum; recent theory shows that allowing non-commuting terms (e.g. in the hidden layer) does not expand representational power beyond classical RBMs, though it does change resource requirements .
+
+
+
+Overall, RQBMs sit at the intersection of quantum statistical physics and machine learning. They generalize RBMs to the quantum domain, require understanding of density matrices and partition functions, and employ energy-based learning objectives analogous to classical models. Variational training techniques and software frameworks like PennyLane make it possible to experiment with RQBMs on near-term devices. As research progresses, we expect RQBMs and related models to be applied to more sophisticated generative tasks and potentially offer advantages in sampling, expressivity, or training speed .
+
+
+
+
+
+References
+
+
+
+
+
+Amin et al., 2018. Quantum Boltzmann Machine, Phys. Rev. X 8, 021050. (Introduced the QBM and training bounds .)
+Wu et al., 2020. Quantum restricted Boltzmann machine is universal for quantum computation, arXiv:2005.11970. (Defined the 2-local QRBM Hamiltonian and demonstrated its universality .)
+Huijgen et al., 2024. Training Quantum Boltzmann Machines with the β-VQE, arXiv:2304.08631. (Presented the nested variational training algorithm .)
+Coopmans & Benedetti, 2024. On the sample complexity of quantum Boltzmann machine learning, Commun. Phys. 7, 274. (Theoretical analysis of relative-entropy training and sample complexity .)
+Minervini et al., 2025. Evolved Quantum Boltzmann Machines, arXiv:2501.03367. (Proposed the eQBM ansatz mixing imaginary and real time evolution .)
+Nicosia et al., 2025. Expressive equivalence of classical and quantum RBMs, arXiv:2502.17562. (Introduced semi-quantum RBMs (sqRBMs) with commuting visible terms and non-commuting hidden terms; showed structural relationships with classical RBMs .)
+Stein et al., 2023. Unsupervised anomaly detection with Quantum Boltzmann Machines, IEEE QWeek (preprint arXiv:2306.04998). (Applied QBMs to fraud/anomaly detection; found QBMs could outperform classical RBMs on synthetic cybersecurity data .)
+Moro & Prati, 2023. Anomaly detection speed-up by quantum restricted Boltzmann machines, Commun. Phys. 6, 269. (Demonstrated classical vs. quantum training loops on real datasets and observed large sampling speed-ups on a quantum annealer .)
+Sinno et al., 2025. Implementing Large Quantum Boltzmann Machines for Dataset Balancing, arXiv:2502.03086. (Embedded a 120×120 QRBM on D-Wave Pegasus to generate millions of intrusion-detection samples, improving downstream classifier performance .)
+
+
+~
