@@ -137,10 +137,23 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril30.pdf
 
 
-
 ## May 5-9, 2025 Quantum Machine Learning
-  - Quantum machine learning and quantum neural networks
+  - Quantum support vector machines, theory and code examples
+  - Quantum neural networks, theory and code examples
+  - Video of lecture at https://youtu.be/
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMay7.pdf
+
 
 ## May 12-16, 2025
-  - Quantum machine learning and quantum Boltzmann machines
+  - Quantum neural networks, theory and code examples, contn from last week
+  - Quantum and classical Boltzmann machines
+  - Video of lecture at https://youtu.be
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMay14.pdf
+
+
+## May 19-23, 2025
+  - Quantum Boltzmann machines
   - Summary of course
+  - Discussion of project 2
+  - Video of lecture at https://youtu.be/
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMay21.pdf
