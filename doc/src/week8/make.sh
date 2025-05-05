@@ -54,9 +54,11 @@ system doconce format ipynb $name $opt
 dest=../../pub
 if [ ! -d $dest/$name ]; then
 mkdir $dest/$name
+mkdir $dest/$name/pdf
 mkdir $dest/$name/html
 mkdir $dest/$name/ipynb
 fi
+cp ${name}*.pdf $dest/$name/pdf
 cp -r ${name}*.html ._${name}*.html reveal.js $dest/$name/html
 
 # Figures: cannot just copy link, need to physically copy the files
@@ -77,3 +79,11 @@ EOF
 tar czf ${ipynb_tarfile} README.txt
 fi
 cp ${ipynb_tarfile} $dest/$name/ipynb
+
+
+
+
+
+
+
+
