@@ -109,6 +109,10 @@ div.toc p,a {
                None,
                'inverse-qft-and-the-phase-estimation-algorithm'),
               ('Circuit Construction', 2, None, 'circuit-construction'),
+              ('Codes for the QFT', 2, None, 'codes-for-the-qft'),
+              ('Adding classes', 2, None, 'adding-classes'),
+              ('Plotting the amplitudes', 2, None, 'plotting-the-amplitudes'),
+              ('Adding animations', 2, None, 'adding-animations'),
               ('Introduction to Quantum Phase Estimation (QPE)',
                2,
                None,
@@ -498,6 +502,630 @@ $$
    0 & e^{-2\pi i / 2^k}
    \end{bmatrix}
 $$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="codes-for-the-qft">Codes for the QFT </h2>
+
+<p>Here we present examples on how we can build our own QFT codes, without using software like PennyLane or QisKit.
+The first code is a simple code without the introduction of a class structure.
+Its key features are
+</p>
+<ol>
+<li> Inverse QFT (via negative controlled-phase angles and reversed order),</li>
+<li> Measurement sampling (random draws from the final state&#8217;s probability distribution).</li>
+<li> Forward and inverse QFT logic built in.</li>
+<li> Uses exact Hadamard and controlled phase gates.</li>
+<li> Simulates quantum measurement from the QFT result.</li>
+<li> Bit-reversal swaps ensure correct output basis alignment.</li>
+</ol>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">hadamard</span>():
+    <span style="color: #8B008B; font-weight: bold">return</span> np.array([[<span style="color: #B452CD">1</span>, <span style="color: #B452CD">1</span>], [<span style="color: #B452CD">1</span>, -<span style="color: #B452CD">1</span>]]) / np.sqrt(<span style="color: #B452CD">2</span>)
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_single_qubit_gate</span>(state, gate, target, n_qubits):
+    <span style="color: #CD5555">&quot;&quot;&quot;Applies a single-qubit gate to the target qubit.&quot;&quot;&quot;</span>
+    I = np.eye(<span style="color: #B452CD">2</span>)
+    ops = [I] * n_qubits
+    ops[target] = gate
+    U = ops[<span style="color: #B452CD">0</span>]
+    <span style="color: #8B008B; font-weight: bold">for</span> op <span style="color: #8B008B">in</span> ops[<span style="color: #B452CD">1</span>:]:
+        U = np.kron(U, op)
+    <span style="color: #8B008B; font-weight: bold">return</span> U @ state
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_controlled_phase</span>(state, control, target, theta, n_qubits):
+    <span style="color: #CD5555">&quot;&quot;&quot;Applies a controlled phase rotation gate.&quot;&quot;&quot;</span>
+    size = <span style="color: #B452CD">2</span> ** n_qubits
+    U = np.eye(size, dtype=<span style="color: #658b00">complex</span>)
+    <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(size):
+        bin_str = <span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span>n_qubits<span style="color: #CD5555">}b&#39;</span>)
+        <span style="color: #8B008B; font-weight: bold">if</span> bin_str[n_qubits - <span style="color: #B452CD">1</span> - control] == <span style="color: #CD5555">&#39;1&#39;</span> <span style="color: #8B008B">and</span> bin_str[n_qubits - <span style="color: #B452CD">1</span> - target] == <span style="color: #CD5555">&#39;1&#39;</span>:
+            U[i, i] *= np.exp(<span style="color: #B452CD">1</span>j * theta)
+    <span style="color: #8B008B; font-weight: bold">return</span> U @ state
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">swap_registers</span>(state, n_qubits):
+    <span style="color: #CD5555">&quot;&quot;&quot;Swap qubit order (bit-reversal permutation).&quot;&quot;&quot;</span>
+    perm = [<span style="color: #658b00">int</span>(<span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span>n_qubits<span style="color: #CD5555">}b&#39;</span>)[::-<span style="color: #B452CD">1</span>], <span style="color: #B452CD">2</span>) <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">2</span> ** n_qubits)]
+    <span style="color: #8B008B; font-weight: bold">return</span> state[perm]
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qft_step_by_step</span>(state, n_qubits, inverse=<span style="color: #8B008B; font-weight: bold">False</span>):
+    <span style="color: #CD5555">&quot;&quot;&quot;Performs (inverse) QFT using gate decomposition.&quot;&quot;&quot;</span>
+    <span style="color: #8B008B; font-weight: bold">for</span> target <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
+        idx = n_qubits - <span style="color: #B452CD">1</span> - target  <span style="color: #228B22"># Apply to qubits in reversed order</span>
+        <span style="color: #228B22"># Controlled phase rotations</span>
+        <span style="color: #8B008B; font-weight: bold">for</span> control_offset <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">1</span>, n_qubits - target):
+            control = n_qubits - <span style="color: #B452CD">1</span> - (target + control_offset)
+            angle = np.pi / (<span style="color: #B452CD">2</span> ** control_offset)
+            <span style="color: #8B008B; font-weight: bold">if</span> inverse:
+                angle *= -<span style="color: #B452CD">1</span>
+            state = apply_controlled_phase(state, control, idx, angle, n_qubits)
+        <span style="color: #228B22"># Hadamard</span>
+        state = apply_single_qubit_gate(state, hadamard(), idx, n_qubits)
+    <span style="color: #228B22"># Swap qubits unless inverse and user wants to avoid it</span>
+    <span style="color: #8B008B; font-weight: bold">return</span> swap_registers(state, n_qubits)
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">measure_state</span>(state, shots=<span style="color: #B452CD">1024</span>):
+    <span style="color: #CD5555">&quot;&quot;&quot;Measure the quantum state multiple times to simulate outcomes.&quot;&quot;&quot;</span>
+    probs = np.abs(state) ** <span style="color: #B452CD">2</span>
+    outcomes = np.random.choice(<span style="color: #658b00">len</span>(probs), size=shots, p=probs)
+    counts = {}
+    <span style="color: #8B008B; font-weight: bold">for</span> o <span style="color: #8B008B">in</span> outcomes:
+        b = <span style="color: #658b00">format</span>(o, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">int</span>(np.log2(<span style="color: #658b00">len</span>(state)))<span style="color: #CD5555">}b&#39;</span>)
+        counts[b] = counts.get(b, <span style="color: #B452CD">0</span>) + <span style="color: #B452CD">1</span>
+    <span style="color: #8B008B; font-weight: bold">return</span> counts
+
+<span style="color: #228B22"># -------------------------</span>
+<span style="color: #228B22"># Example: 3 qubits in |5⟩</span>
+<span style="color: #228B22"># -------------------------</span>
+n_qubits = <span style="color: #B452CD">3</span>
+N = <span style="color: #B452CD">2</span> ** n_qubits
+state = np.zeros(N, dtype=<span style="color: #658b00">complex</span>)
+state[<span style="color: #B452CD">5</span>] = <span style="color: #B452CD">1.0</span>  <span style="color: #228B22"># Start in |5⟩ = |101⟩</span>
+
+<span style="color: #228B22"># Apply QFT</span>
+qft_state = qft_step_by_step(state.copy(), n_qubits)
+
+<span style="color: #228B22"># Apply inverse QFT to check if we recover original</span>
+inv_qft_state = qft_step_by_step(qft_state.copy(), n_qubits, inverse=<span style="color: #8B008B; font-weight: bold">True</span>)
+
+<span style="color: #228B22"># Measurement sampling from QFT output</span>
+measurement_results = measure_state(qft_state, shots=<span style="color: #B452CD">1024</span>)
+
+<span style="color: #228B22"># -------------------------</span>
+<span style="color: #228B22"># Output</span>
+<span style="color: #228B22"># -------------------------</span>
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;QFT amplitudes:&quot;</span>)
+<span style="color: #8B008B; font-weight: bold">for</span> i, amp <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(qft_state):
+    <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;|{</span>i<span style="color: #CD5555">:03b}&gt;: {</span>amp<span style="color: #CD5555">:.4f}&quot;</span>)
+
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;\nInverse QFT applied back (should recover |5⟩):&quot;</span>)
+<span style="color: #8B008B; font-weight: bold">for</span> i, amp <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(inv_qft_state):
+    <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;|{</span>i<span style="color: #CD5555">:03b}&gt;: {</span>amp<span style="color: #CD5555">:.4f}&quot;</span>)
+
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;\nMeasurement results from QFT output:&quot;</span>)
+<span style="color: #8B008B; font-weight: bold">for</span> bitstring, count <span style="color: #8B008B">in</span> <span style="color: #658b00">sorted</span>(measurement_results.items()):
+    <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;{</span>bitstring<span style="color: #CD5555">}: {</span>count<span style="color: #CD5555">}&quot;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="adding-classes">Adding classes </h2>
+
+<p>This variant of the same code attempts at making a more structured introduction to classes.
+It introduces  a reusable Python class called QuantumFourierTransform that encapsulates everything:
+It includes the same elements as before but adds also a visualization of the measurements. Here we have
+</p>
+<ol>
+<li> Initialization of state</li>
+<li> QFT and inverse QFT</li>
+<li> Measurement sampling</li>
+<li> Easy customization of qubit number and input state</li>
+<li> Includes state visualization and measurement simulation.</li>
+</ol>
+<p>The benefits of the class design is that the code is reusable and
+hopefully clean and makes it easy to switch between QFT and inverse
+QFT.
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">class</span> <span style="color: #008b45; font-weight: bold">QuantumFourierTransform</span>:
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">__init__</span>(<span style="color: #658b00">self</span>, n_qubits):
+        <span style="color: #658b00">self</span>.n_qubits = n_qubits
+        <span style="color: #658b00">self</span>.N = <span style="color: #B452CD">2</span> ** n_qubits
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_basis_state</span>(<span style="color: #658b00">self</span>, index):
+        <span style="color: #CD5555">&quot;&quot;&quot;Initialize the quantum state to |index⟩&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[index] = <span style="color: #B452CD">1.0</span>
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">hadamard</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #8B008B; font-weight: bold">return</span> np.array([[<span style="color: #B452CD">1</span>, <span style="color: #B452CD">1</span>], [<span style="color: #B452CD">1</span>, -<span style="color: #B452CD">1</span>]]) / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_single_qubit_gate</span>(<span style="color: #658b00">self</span>, gate, target):
+        <span style="color: #CD5555">&quot;&quot;&quot;Apply a single-qubit gate to the target qubit.&quot;&quot;&quot;</span>
+        I = np.eye(<span style="color: #B452CD">2</span>)
+        ops = [I] * <span style="color: #658b00">self</span>.n_qubits
+        ops[target] = gate
+        U = ops[<span style="color: #B452CD">0</span>]
+        <span style="color: #8B008B; font-weight: bold">for</span> op <span style="color: #8B008B">in</span> ops[<span style="color: #B452CD">1</span>:]:
+            U = np.kron(U, op)
+        <span style="color: #658b00">self</span>.state = U @ <span style="color: #658b00">self</span>.state
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_controlled_phase</span>(<span style="color: #658b00">self</span>, control, target, theta):
+        <span style="color: #CD5555">&quot;&quot;&quot;Apply a controlled phase rotation gate.&quot;&quot;&quot;</span>
+        size = <span style="color: #658b00">self</span>.N
+        U = np.eye(size, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(size):
+            b = <span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)
+            <span style="color: #8B008B; font-weight: bold">if</span> b[<span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - control] == <span style="color: #CD5555">&#39;1&#39;</span> <span style="color: #8B008B">and</span> b[<span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target] == <span style="color: #CD5555">&#39;1&#39;</span>:
+                U[i, i] *= np.exp(<span style="color: #B452CD">1</span>j * theta)
+        <span style="color: #658b00">self</span>.state = U @ <span style="color: #658b00">self</span>.state
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">swap_registers</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;Swap qubit order (bit-reversal permutation).&quot;&quot;&quot;</span>
+        perm = [<span style="color: #658b00">int</span>(<span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)[::-<span style="color: #B452CD">1</span>], <span style="color: #B452CD">2</span>) <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        <span style="color: #658b00">self</span>.state = <span style="color: #658b00">self</span>.state[perm]
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_qft</span>(<span style="color: #658b00">self</span>, inverse=<span style="color: #8B008B; font-weight: bold">False</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;Apply (inverse) QFT to the current state.&quot;&quot;&quot;</span>
+        <span style="color: #8B008B; font-weight: bold">for</span> target <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.n_qubits):
+            idx = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target
+            <span style="color: #8B008B; font-weight: bold">for</span> ctrl_offset <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">1</span>, <span style="color: #658b00">self</span>.n_qubits - target):
+                control = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - (target + ctrl_offset)
+                angle = np.pi / (<span style="color: #B452CD">2</span> ** ctrl_offset)
+                <span style="color: #8B008B; font-weight: bold">if</span> inverse:
+                    angle *= -<span style="color: #B452CD">1</span>
+                <span style="color: #658b00">self</span>.apply_controlled_phase(control, idx, angle)
+            <span style="color: #658b00">self</span>.apply_single_qubit_gate(<span style="color: #658b00">self</span>.hadamard(), idx)
+        <span style="color: #658b00">self</span>.swap_registers()
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">measure</span>(<span style="color: #658b00">self</span>, shots=<span style="color: #B452CD">1024</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;Simulate measurement outcomes.&quot;&quot;&quot;</span>
+        probs = np.abs(<span style="color: #658b00">self</span>.state) ** <span style="color: #B452CD">2</span>
+        outcomes = np.random.choice(<span style="color: #658b00">self</span>.N, size=shots, p=probs)
+        counts = {}
+        <span style="color: #8B008B; font-weight: bold">for</span> o <span style="color: #8B008B">in</span> outcomes:
+            bitstring = <span style="color: #658b00">format</span>(o, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)
+            counts[bitstring] = counts.get(bitstring, <span style="color: #B452CD">0</span>) + <span style="color: #B452CD">1</span>
+        <span style="color: #8B008B; font-weight: bold">return</span> counts
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">print_amplitudes</span>(<span style="color: #658b00">self</span>, title=<span style="color: #CD5555">&quot;Quantum State&quot;</span>):
+        <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;\n{</span>title<span style="color: #CD5555">}:&quot;</span>)
+        <span style="color: #8B008B; font-weight: bold">for</span> i, amp <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(<span style="color: #658b00">self</span>.state):
+            <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;|{</span>i<span style="color: #CD5555">:0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b}&gt;: {</span>amp<span style="color: #CD5555">:.4f}&quot;</span>)
+
+<span style="color: #228B22"># ---------------------------</span>
+<span style="color: #228B22"># Example usage</span>
+<span style="color: #228B22"># ---------------------------</span>
+<span style="color: #8B008B; font-weight: bold">if</span> <span style="color: #00688B">__name__</span> == <span style="color: #CD5555">&quot;__main__&quot;</span>:
+    qft = QuantumFourierTransform(n_qubits=<span style="color: #B452CD">3</span>)
+    qft.initialize_basis_state(<span style="color: #B452CD">5</span>)  <span style="color: #228B22"># Set initial state to |5⟩</span>
+
+    qft.print_amplitudes(<span style="color: #CD5555">&quot;Initial State&quot;</span>)
+
+    qft.apply_qft()  <span style="color: #228B22"># Apply QFT</span>
+    qft.print_amplitudes(<span style="color: #CD5555">&quot;After QFT&quot;</span>)
+
+    samples = qft.measure(shots=<span style="color: #B452CD">1024</span>)
+    <span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;\nMeasurement results:&quot;</span>)
+    <span style="color: #8B008B; font-weight: bold">for</span> k, v <span style="color: #8B008B">in</span> <span style="color: #658b00">sorted</span>(samples.items()):
+        <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;{</span>k<span style="color: #CD5555">}: {</span>v<span style="color: #CD5555">}&quot;</span>)
+
+    qft.apply_qft(inverse=<span style="color: #8B008B; font-weight: bold">True</span>)  <span style="color: #228B22"># Apply inverse QFT to recover original</span>
+    qft.print_amplitudes(<span style="color: #CD5555">&quot;After Inverse QFT (should be |5⟩)&quot;</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="plotting-the-amplitudes">Plotting the amplitudes </h2>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">matplotlib.pyplot</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">plt</span>
+<span style="color: #8B008B; font-weight: bold">class</span> <span style="color: #008b45; font-weight: bold">QuantumFourierTransform</span>:
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">__init__</span>(<span style="color: #658b00">self</span>, n_qubits):
+        <span style="color: #658b00">self</span>.n_qubits = n_qubits
+        <span style="color: #658b00">self</span>.N = <span style="color: #B452CD">2</span> ** n_qubits
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_basis_state</span>(<span style="color: #658b00">self</span>, index):
+        <span style="color: #CD5555">&quot;&quot;&quot;Set state to basis state |index⟩&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[index] = <span style="color: #B452CD">1.0</span>
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_custom_state</span>(<span style="color: #658b00">self</span>, state_vector):
+        <span style="color: #CD5555">&quot;&quot;&quot;Set state to custom normalized state vector&quot;&quot;&quot;</span>
+        <span style="color: #8B008B; font-weight: bold">assert</span> <span style="color: #658b00">len</span>(state_vector) == <span style="color: #658b00">self</span>.N, <span style="color: #CD5555">&quot;State vector length mismatch.&quot;</span>
+        norm = np.linalg.norm(state_vector)
+        <span style="color: #8B008B; font-weight: bold">assert</span> np.isclose(norm, <span style="color: #B452CD">1.0</span>), <span style="color: #CD5555">&quot;State vector must be normalized.&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.array(state_vector, dtype=<span style="color: #658b00">complex</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_superposition</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;Create |+⟩^n superposition state&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.ones(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>) / np.sqrt(<span style="color: #658b00">self</span>.N)
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_bell_pair</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;2-qubit Bell state: (|00⟩ + |11⟩)/√2&quot;&quot;&quot;</span>
+        <span style="color: #8B008B; font-weight: bold">if</span> <span style="color: #658b00">self</span>.n_qubits != <span style="color: #B452CD">2</span>:
+            <span style="color: #8B008B; font-weight: bold">raise</span> <span style="color: #008b45; font-weight: bold">ValueError</span>(<span style="color: #CD5555">&quot;Bell pair requires exactly 2 qubits.&quot;</span>)
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[<span style="color: #B452CD">0</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+        <span style="color: #658b00">self</span>.state[<span style="color: #B452CD">3</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_ghz_state</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;n-qubit GHZ state: (|00...0⟩ + |11...1⟩)/√2&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[<span style="color: #B452CD">0</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+        <span style="color: #658b00">self</span>.state[-<span style="color: #B452CD">1</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">hadamard</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #8B008B; font-weight: bold">return</span> np.array([[<span style="color: #B452CD">1</span>, <span style="color: #B452CD">1</span>], [<span style="color: #B452CD">1</span>, -<span style="color: #B452CD">1</span>]]) / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_single_qubit_gate</span>(<span style="color: #658b00">self</span>, gate, target):
+        I = np.eye(<span style="color: #B452CD">2</span>)
+        ops = [I] * <span style="color: #658b00">self</span>.n_qubits
+        ops[target] = gate
+        U = ops[<span style="color: #B452CD">0</span>]
+        <span style="color: #8B008B; font-weight: bold">for</span> op <span style="color: #8B008B">in</span> ops[<span style="color: #B452CD">1</span>:]:
+            U = np.kron(U, op)
+        <span style="color: #658b00">self</span>.state = U @ <span style="color: #658b00">self</span>.state
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_controlled_phase</span>(<span style="color: #658b00">self</span>, control, target, theta):
+        U = np.eye(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N):
+            b = <span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)
+            <span style="color: #8B008B; font-weight: bold">if</span> b[<span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - control] == <span style="color: #CD5555">&#39;1&#39;</span> <span style="color: #8B008B">and</span> b[<span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target] == <span style="color: #CD5555">&#39;1&#39;</span>:
+                U[i, i] *= np.exp(<span style="color: #B452CD">1</span>j * theta)
+        <span style="color: #658b00">self</span>.state = U @ <span style="color: #658b00">self</span>.state
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">swap_registers</span>(<span style="color: #658b00">self</span>):
+        perm = [<span style="color: #658b00">int</span>(<span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)[::-<span style="color: #B452CD">1</span>], <span style="color: #B452CD">2</span>) <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        <span style="color: #658b00">self</span>.state = <span style="color: #658b00">self</span>.state[perm]
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_qft</span>(<span style="color: #658b00">self</span>, inverse=<span style="color: #8B008B; font-weight: bold">False</span>):
+        <span style="color: #8B008B; font-weight: bold">for</span> target <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.n_qubits):
+            idx = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target
+            <span style="color: #8B008B; font-weight: bold">for</span> offset <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">1</span>, <span style="color: #658b00">self</span>.n_qubits - target):
+                control = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - (target + offset)
+                angle = np.pi / (<span style="color: #B452CD">2</span> ** offset)
+                <span style="color: #8B008B; font-weight: bold">if</span> inverse:
+                    angle *= -<span style="color: #B452CD">1</span>
+                <span style="color: #658b00">self</span>.apply_controlled_phase(control, idx, angle)
+            <span style="color: #658b00">self</span>.apply_single_qubit_gate(<span style="color: #658b00">self</span>.hadamard(), idx)
+        <span style="color: #658b00">self</span>.swap_registers()
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">measure</span>(<span style="color: #658b00">self</span>, shots=<span style="color: #B452CD">1024</span>):
+        probs = np.abs(<span style="color: #658b00">self</span>.state) ** <span style="color: #B452CD">2</span>
+        outcomes = np.random.choice(<span style="color: #658b00">self</span>.N, size=shots, p=probs)
+        counts = {}
+        <span style="color: #8B008B; font-weight: bold">for</span> o <span style="color: #8B008B">in</span> outcomes:
+            bitstring = <span style="color: #658b00">format</span>(o, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)
+            counts[bitstring] = counts.get(bitstring, <span style="color: #B452CD">0</span>) + <span style="color: #B452CD">1</span>
+        <span style="color: #8B008B; font-weight: bold">return</span> counts
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">print_amplitudes</span>(<span style="color: #658b00">self</span>, title=<span style="color: #CD5555">&quot;Quantum State&quot;</span>):
+        <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;\n{</span>title<span style="color: #CD5555">}:&quot;</span>)
+        <span style="color: #8B008B; font-weight: bold">for</span> i, amp <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(<span style="color: #658b00">self</span>.state):
+            <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;|{</span>i<span style="color: #CD5555">:0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b}&gt;: {</span>amp<span style="color: #CD5555">:.4f}&quot;</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">plot_amplitudes</span>(<span style="color: #658b00">self</span>, title=<span style="color: #CD5555">&quot;State Vector Amplitudes&quot;</span>, save_path=<span style="color: #8B008B; font-weight: bold">None</span>):
+        labels = [<span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>) <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        reals = [<span style="color: #658b00">self</span>.state[i].real <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        imags = [<span style="color: #658b00">self</span>.state[i].imag <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        x = np.arange(<span style="color: #658b00">self</span>.N)
+        width = <span style="color: #B452CD">0.35</span>
+        fig, ax = plt.subplots()
+        ax.bar(x - width/<span style="color: #B452CD">2</span>, reals, width, label=<span style="color: #CD5555">&#39;Real&#39;</span>)
+        ax.bar(x + width/<span style="color: #B452CD">2</span>, imags, width, label=<span style="color: #CD5555">&#39;Imaginary&#39;</span>)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=<span style="color: #B452CD">45</span>)
+        ax.set_ylabel(<span style="color: #CD5555">&#39;Amplitude&#39;</span>)
+        ax.set_title(title)
+        ax.legend()
+        plt.tight_layout()
+
+        <span style="color: #8B008B; font-weight: bold">if</span> save_path:
+           plt.savefig(save_path)
+           <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;Plot saved to: {</span>save_path<span style="color: #CD5555">}&quot;</span>)
+        <span style="color: #8B008B; font-weight: bold">else</span>:
+           plt.show()
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">plot_probabilities</span>(<span style="color: #658b00">self</span>, shots=<span style="color: #B452CD">1024</span>, title=<span style="color: #CD5555">&quot;Measurement Probabilities&quot;</span>, save_path=<span style="color: #8B008B; font-weight: bold">None</span>):
+        results = <span style="color: #658b00">self</span>.measure(shots=shots)
+        bitstrings = <span style="color: #658b00">sorted</span>(results.keys())
+        counts = [results[b] <span style="color: #8B008B; font-weight: bold">for</span> b <span style="color: #8B008B">in</span> bitstrings]
+        fig, ax = plt.subplots()
+        ax.bar(bitstrings, counts)
+        ax.set_xlabel(<span style="color: #CD5555">&quot;Bitstring&quot;</span>)
+        ax.set_ylabel(<span style="color: #CD5555">&quot;Counts&quot;</span>)
+        ax.set_title(title)
+        ax.set_xticklabels(bitstrings, rotation=<span style="color: #B452CD">45</span>)
+        plt.tight_layout()
+
+        <span style="color: #8B008B; font-weight: bold">if</span> save_path:
+           plt.savefig(save_path)
+           <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;Histogram saved to: {</span>save_path<span style="color: #CD5555">}&quot;</span>)
+        <span style="color: #8B008B; font-weight: bold">else</span>:
+           plt.show()
+
+            
+<span style="color: #228B22"># ---------------------------</span>
+<span style="color: #228B22"># Example usage</span>
+<span style="color: #228B22"># ---------------------------</span>
+<span style="color: #8B008B; font-weight: bold">if</span> <span style="color: #00688B">__name__</span> == <span style="color: #CD5555">&quot;__main__&quot;</span>:
+   qft = QuantumFourierTransform(<span style="color: #B452CD">3</span>)
+   qft.initialize_basis_state(<span style="color: #B452CD">5</span>)
+
+   qft.apply_qft()
+
+<span style="color: #228B22"># Save amplitude plot</span>
+   qft.plot_amplitudes(<span style="color: #CD5555">&quot;QFT Amplitudes&quot;</span>, save_path=<span style="color: #CD5555">&quot;qft_amplitudes.png&quot;</span>)
+
+<span style="color: #228B22"># Save measurement histogram</span>
+   qft.plot_probabilities(shots=<span style="color: #B452CD">1024</span>, title=<span style="color: #CD5555">&quot;QFT Output Distribution&quot;</span>, save_path=<span style="color: #CD5555">&quot;qft_histogram.png&quot;</span>)
+
+<span style="color: #CD5555">&quot;&quot;&quot;</span>
+<span style="color: #CD5555">Quick Tips on Usage</span>
+
+
+<span style="color: #CD5555">Superposition inputs (e.g. Hadamards to create |+\rangle^{\otimes n})</span>
+<span style="color: #CD5555">Custom state initialization (e.g. any normalized complex vector)</span>
+<span style="color: #CD5555">Entangled state preparation (e.g. Bell states, GHZ states, etc.)</span>
+
+
+
+<span style="color: #CD5555">initialize_superposition() gives |+\rangle^{\otimes n}</span>
+<span style="color: #CD5555">initialize_bell_pair() is for 2-qubit entangled states</span>
+<span style="color: #CD5555">initialize_ghz_state() creates a GHZ state</span>
+<span style="color: #CD5555">initialize_custom_state(vec) lets you pass any normalized state</span>
+<span style="color: #CD5555">&quot;&quot;&quot;</span>
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>See next code as well.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="adding-animations">Adding animations </h2>
+
+<p>This code example adds superposition inputs to the previous code (e.g. Hadamards to create \( |+\rangle^{\otimes n} \)) and
+customs a state initialization (e.g. any normalized complex vector). It includes also the possibility of having
+entangled state preparation (e.g. Bell states, GHZ states, etc.)
+It has the following added feature
+</p>
+<ol>
+<li> initialize$\_$superposition() gives \( |+\rangle^{\otimes n} \)</li>
+<li> initialize$\_$bell$\_$pair() for two-qubit entangled states</li>
+<li> initialize$\_$ghz$\_$state() creates a GHZ state</li>
+<li> initialize$\_$custom$\_$state(vec) allows to pass any normalized state</li>
+</ol>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">numpy</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">np</span>
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">matplotlib.pyplot</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">plt</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">matplotlib.animation</span> <span style="color: #8B008B; font-weight: bold">import</span> FuncAnimation
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">os</span>
+
+<span style="color: #8B008B; font-weight: bold">class</span> <span style="color: #008b45; font-weight: bold">QuantumFourierTransform</span>:
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">__init__</span>(<span style="color: #658b00">self</span>, n_qubits):
+        <span style="color: #658b00">self</span>.n_qubits = n_qubits
+        <span style="color: #658b00">self</span>.N = <span style="color: #B452CD">2</span> ** n_qubits
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_basis_state</span>(<span style="color: #658b00">self</span>, index):
+        <span style="color: #CD5555">&quot;&quot;&quot;Set state to basis state |index⟩&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[index] = <span style="color: #B452CD">1.0</span>
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_custom_state</span>(<span style="color: #658b00">self</span>, state_vector):
+        <span style="color: #CD5555">&quot;&quot;&quot;Set state to custom normalized state vector&quot;&quot;&quot;</span>
+        <span style="color: #8B008B; font-weight: bold">assert</span> <span style="color: #658b00">len</span>(state_vector) == <span style="color: #658b00">self</span>.N, <span style="color: #CD5555">&quot;State vector length mismatch.&quot;</span>
+        norm = np.linalg.norm(state_vector)
+        <span style="color: #8B008B; font-weight: bold">assert</span> np.isclose(norm, <span style="color: #B452CD">1.0</span>), <span style="color: #CD5555">&quot;State vector must be normalized.&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.array(state_vector, dtype=<span style="color: #658b00">complex</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_superposition</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;Create |+⟩^n superposition state&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.ones(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>) / np.sqrt(<span style="color: #658b00">self</span>.N)
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_bell_pair</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;2-qubit Bell state: (|00⟩ + |11⟩)/√2&quot;&quot;&quot;</span>
+        <span style="color: #8B008B; font-weight: bold">if</span> <span style="color: #658b00">self</span>.n_qubits != <span style="color: #B452CD">2</span>:
+            <span style="color: #8B008B; font-weight: bold">raise</span> <span style="color: #008b45; font-weight: bold">ValueError</span>(<span style="color: #CD5555">&quot;Bell pair requires exactly 2 qubits.&quot;</span>)
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[<span style="color: #B452CD">0</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+        <span style="color: #658b00">self</span>.state[<span style="color: #B452CD">3</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">initialize_ghz_state</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;n-qubit GHZ state: (|00...0⟩ + |11...1⟩)/√2&quot;&quot;&quot;</span>
+        <span style="color: #658b00">self</span>.state = np.zeros(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #658b00">self</span>.state[<span style="color: #B452CD">0</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+        <span style="color: #658b00">self</span>.state[-<span style="color: #B452CD">1</span>] = <span style="color: #B452CD">1</span> / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">hadamard</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #8B008B; font-weight: bold">return</span> np.array([[<span style="color: #B452CD">1</span>, <span style="color: #B452CD">1</span>], [<span style="color: #B452CD">1</span>, -<span style="color: #B452CD">1</span>]]) / np.sqrt(<span style="color: #B452CD">2</span>)
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_single_qubit_gate</span>(<span style="color: #658b00">self</span>, gate, target):
+        I = np.eye(<span style="color: #B452CD">2</span>)
+        ops = [I] * <span style="color: #658b00">self</span>.n_qubits
+        ops[target] = gate
+        U = ops[<span style="color: #B452CD">0</span>]
+        <span style="color: #8B008B; font-weight: bold">for</span> op <span style="color: #8B008B">in</span> ops[<span style="color: #B452CD">1</span>:]:
+            U = np.kron(U, op)
+        <span style="color: #658b00">self</span>.state = U @ <span style="color: #658b00">self</span>.state
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_controlled_phase</span>(<span style="color: #658b00">self</span>, control, target, theta):
+        U = np.eye(<span style="color: #658b00">self</span>.N, dtype=<span style="color: #658b00">complex</span>)
+        <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N):
+            b = <span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)
+            <span style="color: #8B008B; font-weight: bold">if</span> b[<span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - control] == <span style="color: #CD5555">&#39;1&#39;</span> <span style="color: #8B008B">and</span> b[<span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target] == <span style="color: #CD5555">&#39;1&#39;</span>:
+                U[i, i] *= np.exp(<span style="color: #B452CD">1</span>j * theta)
+        <span style="color: #658b00">self</span>.state = U @ <span style="color: #658b00">self</span>.state
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">swap_registers</span>(<span style="color: #658b00">self</span>):
+        perm = [<span style="color: #658b00">int</span>(<span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)[::-<span style="color: #B452CD">1</span>], <span style="color: #B452CD">2</span>) <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        <span style="color: #658b00">self</span>.state = <span style="color: #658b00">self</span>.state[perm]
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_qft</span>(<span style="color: #658b00">self</span>, inverse=<span style="color: #8B008B; font-weight: bold">False</span>):
+        <span style="color: #8B008B; font-weight: bold">for</span> target <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.n_qubits):
+            idx = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target
+            <span style="color: #8B008B; font-weight: bold">for</span> offset <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">1</span>, <span style="color: #658b00">self</span>.n_qubits - target):
+                control = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - (target + offset)
+                angle = np.pi / (<span style="color: #B452CD">2</span> ** offset)
+                <span style="color: #8B008B; font-weight: bold">if</span> inverse:
+                    angle *= -<span style="color: #B452CD">1</span>
+                <span style="color: #658b00">self</span>.apply_controlled_phase(control, idx, angle)
+            <span style="color: #658b00">self</span>.apply_single_qubit_gate(<span style="color: #658b00">self</span>.hadamard(), idx)
+        <span style="color: #658b00">self</span>.swap_registers()
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">measure</span>(<span style="color: #658b00">self</span>, shots=<span style="color: #B452CD">1024</span>):
+        probs = np.abs(<span style="color: #658b00">self</span>.state) ** <span style="color: #B452CD">2</span>
+        outcomes = np.random.choice(<span style="color: #658b00">self</span>.N, size=shots, p=probs)
+        counts = {}
+        <span style="color: #8B008B; font-weight: bold">for</span> o <span style="color: #8B008B">in</span> outcomes:
+            bitstring = <span style="color: #658b00">format</span>(o, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>)
+            counts[bitstring] = counts.get(bitstring, <span style="color: #B452CD">0</span>) + <span style="color: #B452CD">1</span>
+        <span style="color: #8B008B; font-weight: bold">return</span> counts
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">print_amplitudes</span>(<span style="color: #658b00">self</span>, title=<span style="color: #CD5555">&quot;Quantum State&quot;</span>):
+        <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;\n{</span>title<span style="color: #CD5555">}:&quot;</span>)
+        <span style="color: #8B008B; font-weight: bold">for</span> i, amp <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(<span style="color: #658b00">self</span>.state):
+            <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;|{</span>i<span style="color: #CD5555">:0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b}&gt;: {</span>amp<span style="color: #CD5555">:.4f}&quot;</span>)
+
+
+<span style="color: #228B22"># Inside the class</span>
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">reset_animation_log</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #658b00">self</span>.animation_frames = []
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">record_probability_frame</span>(<span style="color: #658b00">self</span>):
+        <span style="color: #CD5555">&quot;&quot;&quot;Store current probabilities for animation.&quot;&quot;&quot;</span>
+        probs = np.abs(<span style="color: #658b00">self</span>.state) ** <span style="color: #B452CD">2</span>
+        <span style="color: #658b00">self</span>.animation_frames.append(probs.copy())
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_qft_with_recording</span>(<span style="color: #658b00">self</span>, inverse=<span style="color: #8B008B; font-weight: bold">False</span>):
+        <span style="color: #658b00">self</span>.reset_animation_log()
+        <span style="color: #658b00">self</span>.record_probability_frame()  <span style="color: #228B22"># Record initial state</span>
+
+        <span style="color: #8B008B; font-weight: bold">for</span> target <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.n_qubits):
+            idx = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - target
+            <span style="color: #8B008B; font-weight: bold">for</span> offset <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #B452CD">1</span>, <span style="color: #658b00">self</span>.n_qubits - target):
+                control = <span style="color: #658b00">self</span>.n_qubits - <span style="color: #B452CD">1</span> - (target + offset)
+                angle = np.pi / (<span style="color: #B452CD">2</span> ** offset)
+                <span style="color: #8B008B; font-weight: bold">if</span> inverse:
+                    angle *= -<span style="color: #B452CD">1</span>
+                <span style="color: #658b00">self</span>.apply_controlled_phase(control, idx, angle)
+                <span style="color: #658b00">self</span>.record_probability_frame()
+            <span style="color: #658b00">self</span>.apply_single_qubit_gate(<span style="color: #658b00">self</span>.hadamard(), idx)
+            <span style="color: #658b00">self</span>.record_probability_frame()
+
+        <span style="color: #658b00">self</span>.swap_registers()
+        <span style="color: #658b00">self</span>.record_probability_frame()
+
+    <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">animate_probability_evolution</span>(<span style="color: #658b00">self</span>, save_path=<span style="color: #CD5555">&quot;qft_animation.gif&quot;</span>, interval=<span style="color: #B452CD">600</span>):
+        labels = [<span style="color: #658b00">format</span>(i, <span style="color: #CD5555">f&#39;0{</span><span style="color: #658b00">self</span>.n_qubits<span style="color: #CD5555">}b&#39;</span>) <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">self</span>.N)]
+        fig, ax = plt.subplots()
+        bar = ax.bar(labels, [<span style="color: #B452CD">0</span>]*<span style="color: #658b00">self</span>.N)
+        ax.set_ylim(<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>)
+        ax.set_ylabel(<span style="color: #CD5555">&quot;Probability&quot;</span>)
+        ax.set_title(<span style="color: #CD5555">&quot;QFT Probability Evolution&quot;</span>)
+
+        <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">update</span>(frame_probs):
+            <span style="color: #8B008B; font-weight: bold">for</span> rect, prob <span style="color: #8B008B">in</span> <span style="color: #658b00">zip</span>(bar, frame_probs):
+                rect.set_height(prob)
+            <span style="color: #8B008B; font-weight: bold">return</span> bar
+
+        ani = FuncAnimation(fig, update, frames=<span style="color: #658b00">self</span>.animation_frames,
+                            interval=interval, blit=<span style="color: #8B008B; font-weight: bold">False</span>, repeat=<span style="color: #8B008B; font-weight: bold">False</span>)
+
+        <span style="color: #8B008B; font-weight: bold">if</span> save_path.endswith(<span style="color: #CD5555">&quot;.gif&quot;</span>):
+            ani.save(save_path, writer=<span style="color: #CD5555">&#39;pillow&#39;</span>)
+        <span style="color: #8B008B; font-weight: bold">elif</span> save_path.endswith(<span style="color: #CD5555">&quot;.mp4&quot;</span>):
+            ani.save(save_path, writer=<span style="color: #CD5555">&#39;ffmpeg&#39;</span>)
+        <span style="color: #8B008B; font-weight: bold">else</span>:
+            <span style="color: #8B008B; font-weight: bold">raise</span> <span style="color: #008b45; font-weight: bold">ValueError</span>(<span style="color: #CD5555">&quot;Unsupported format. Use .gif or .mp4&quot;</span>)
+
+        <span style="color: #658b00">print</span>(<span style="color: #CD5555">f&quot;Animation saved to {</span>save_path<span style="color: #CD5555">}&quot;</span>)
+
+<span style="color: #228B22"># ---------------------------</span>
+<span style="color: #228B22"># Example usage</span>
+<span style="color: #228B22"># ---------------------------</span>
+<span style="color: #8B008B; font-weight: bold">if</span> <span style="color: #00688B">__name__</span> == <span style="color: #CD5555">&quot;__main__&quot;</span>:
+   qft = QuantumFourierTransform(n_qubits=<span style="color: #B452CD">3</span>)
+   qft.initialize_basis_state(<span style="color: #B452CD">5</span>)
+
+<span style="color: #228B22"># Apply QFT with intermediate state recording</span>
+   qft.apply_qft_with_recording()
+
+<span style="color: #228B22"># Animate the probability distribution over steps</span>
+   qft.animate_probability_evolution(save_path=<span style="color: #CD5555">&quot;qft_probs.gif&quot;</span>, interval=<span style="color: #B452CD">800</span>)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>

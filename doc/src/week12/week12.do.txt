@@ -233,6 +233,545 @@ o Replace each $R_k$ gate with its conjugate transpose $R_k^\dagger$:
 !et
 
 
+!split
+===== Codes for the QFT =====
+
+Here we present examples on how we can build our own QFT codes, without using software like PennyLane or QisKit.
+The first code is a simple code without the introduction of a class structure.
+Its key features are
+o Inverse QFT (via negative controlled-phase angles and reversed order),
+o Measurement sampling (random draws from the final state’s probability distribution).
+o Forward and inverse QFT logic built in.
+o Uses exact Hadamard and controlled phase gates.
+o Simulates quantum measurement from the QFT result.
+o Bit-reversal swaps ensure correct output basis alignment.
+
+!bc pycod
+import numpy as np
+
+def hadamard():
+    return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+def apply_single_qubit_gate(state, gate, target, n_qubits):
+    """Applies a single-qubit gate to the target qubit."""
+    I = np.eye(2)
+    ops = [I] * n_qubits
+    ops[target] = gate
+    U = ops[0]
+    for op in ops[1:]:
+        U = np.kron(U, op)
+    return U @ state
+
+def apply_controlled_phase(state, control, target, theta, n_qubits):
+    """Applies a controlled phase rotation gate."""
+    size = 2 ** n_qubits
+    U = np.eye(size, dtype=complex)
+    for i in range(size):
+        bin_str = format(i, f'0{n_qubits}b')
+        if bin_str[n_qubits - 1 - control] == '1' and bin_str[n_qubits - 1 - target] == '1':
+            U[i, i] *= np.exp(1j * theta)
+    return U @ state
+
+def swap_registers(state, n_qubits):
+    """Swap qubit order (bit-reversal permutation)."""
+    perm = [int(format(i, f'0{n_qubits}b')[::-1], 2) for i in range(2 ** n_qubits)]
+    return state[perm]
+
+def qft_step_by_step(state, n_qubits, inverse=False):
+    """Performs (inverse) QFT using gate decomposition."""
+    for target in range(n_qubits):
+        idx = n_qubits - 1 - target  # Apply to qubits in reversed order
+        # Controlled phase rotations
+        for control_offset in range(1, n_qubits - target):
+            control = n_qubits - 1 - (target + control_offset)
+            angle = np.pi / (2 ** control_offset)
+            if inverse:
+                angle *= -1
+            state = apply_controlled_phase(state, control, idx, angle, n_qubits)
+        # Hadamard
+        state = apply_single_qubit_gate(state, hadamard(), idx, n_qubits)
+    # Swap qubits unless inverse and user wants to avoid it
+    return swap_registers(state, n_qubits)
+
+def measure_state(state, shots=1024):
+    """Measure the quantum state multiple times to simulate outcomes."""
+    probs = np.abs(state) ** 2
+    outcomes = np.random.choice(len(probs), size=shots, p=probs)
+    counts = {}
+    for o in outcomes:
+        b = format(o, f'0{int(np.log2(len(state)))}b')
+        counts[b] = counts.get(b, 0) + 1
+    return counts
+
+# -------------------------
+# Example: 3 qubits in |5⟩
+# -------------------------
+n_qubits = 3
+N = 2 ** n_qubits
+state = np.zeros(N, dtype=complex)
+state[5] = 1.0  # Start in |5⟩ = |101⟩
+
+# Apply QFT
+qft_state = qft_step_by_step(state.copy(), n_qubits)
+
+# Apply inverse QFT to check if we recover original
+inv_qft_state = qft_step_by_step(qft_state.copy(), n_qubits, inverse=True)
+
+# Measurement sampling from QFT output
+measurement_results = measure_state(qft_state, shots=1024)
+
+# -------------------------
+# Output
+# -------------------------
+print("QFT amplitudes:")
+for i, amp in enumerate(qft_state):
+    print(f"|{i:03b}>: {amp:.4f}")
+
+print("\nInverse QFT applied back (should recover |5⟩):")
+for i, amp in enumerate(inv_qft_state):
+    print(f"|{i:03b}>: {amp:.4f}")
+
+print("\nMeasurement results from QFT output:")
+for bitstring, count in sorted(measurement_results.items()):
+    print(f"{bitstring}: {count}")
+!ec
+
+!split
+===== Adding classes =====
+
+This variant of the same code attempts at making a more structured introduction to classes.
+It introduces  a reusable Python class called QuantumFourierTransform that encapsulates everything:
+It includes the same elements as before but adds also a visualization of the measurements. Here we have
+o Initialization of state
+o QFT and inverse QFT
+o Measurement sampling
+o Easy customization of qubit number and input state
+o Includes state visualization and measurement simulation.
+
+The benefits of the class design is that the code is reusable and
+hopefully clean and makes it easy to switch between QFT and inverse
+QFT.
+
+!bc pycod
+import numpy as np
+class QuantumFourierTransform:
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.state = np.zeros(self.N, dtype=complex)
+
+    def initialize_basis_state(self, index):
+        """Initialize the quantum state to |index⟩"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[index] = 1.0
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_single_qubit_gate(self, gate, target):
+        """Apply a single-qubit gate to the target qubit."""
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+
+    def apply_controlled_phase(self, control, target, theta):
+        """Apply a controlled phase rotation gate."""
+        size = self.N
+        U = np.eye(size, dtype=complex)
+        for i in range(size):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1' and b[self.n_qubits - 1 - target] == '1':
+                U[i, i] *= np.exp(1j * theta)
+        self.state = U @ self.state
+
+    def swap_registers(self):
+        """Swap qubit order (bit-reversal permutation)."""
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+
+    def apply_qft(self, inverse=False):
+        """Apply (inverse) QFT to the current state."""
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for ctrl_offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + ctrl_offset)
+                angle = np.pi / (2 ** ctrl_offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+        self.swap_registers()
+    def measure(self, shots=1024):
+        """Simulate measurement outcomes."""
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=shots, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def print_amplitudes(self, title="Quantum State"):
+        print(f"\n{title}:")
+        for i, amp in enumerate(self.state):
+            print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
+
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+    qft = QuantumFourierTransform(n_qubits=3)
+    qft.initialize_basis_state(5)  # Set initial state to |5⟩
+
+    qft.print_amplitudes("Initial State")
+
+    qft.apply_qft()  # Apply QFT
+    qft.print_amplitudes("After QFT")
+
+    samples = qft.measure(shots=1024)
+    print("\nMeasurement results:")
+    for k, v in sorted(samples.items()):
+        print(f"{k}: {v}")
+
+    qft.apply_qft(inverse=True)  # Apply inverse QFT to recover original
+    qft.print_amplitudes("After Inverse QFT (should be |5⟩)")
+!ec
+
+!split
+===== Plotting the amplitudes =====
+!bc pycod
+import numpy as np
+import matplotlib.pyplot as plt
+class QuantumFourierTransform:
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.state = np.zeros(self.N, dtype=complex)
+
+    def initialize_basis_state(self, index):
+        """Set state to basis state |index⟩"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[index] = 1.0
+
+    def initialize_custom_state(self, state_vector):
+        """Set state to custom normalized state vector"""
+        assert len(state_vector) == self.N, "State vector length mismatch."
+        norm = np.linalg.norm(state_vector)
+        assert np.isclose(norm, 1.0), "State vector must be normalized."
+        self.state = np.array(state_vector, dtype=complex)
+
+    def initialize_superposition(self):
+        """Create |+⟩^n superposition state"""
+        self.state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+    def initialize_bell_pair(self):
+        """2-qubit Bell state: (|00⟩ + |11⟩)/√2"""
+        if self.n_qubits != 2:
+            raise ValueError("Bell pair requires exactly 2 qubits.")
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[3] = 1 / np.sqrt(2)
+
+    def initialize_ghz_state(self):
+        """n-qubit GHZ state: (|00...0⟩ + |11...1⟩)/√2"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[-1] = 1 / np.sqrt(2)
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_single_qubit_gate(self, gate, target):
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+    def apply_controlled_phase(self, control, target, theta):
+        U = np.eye(self.N, dtype=complex)
+        for i in range(self.N):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1' and b[self.n_qubits - 1 - target] == '1':
+                U[i, i] *= np.exp(1j * theta)
+        self.state = U @ self.state
+
+    def swap_registers(self):
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+    def apply_qft(self, inverse=False):
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+        self.swap_registers()
+    def measure(self, shots=1024):
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=shots, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def print_amplitudes(self, title="Quantum State"):
+        print(f"\n{title}:")
+        for i, amp in enumerate(self.state):
+            print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
+
+    def plot_amplitudes(self, title="State Vector Amplitudes", save_path=None):
+        labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
+        reals = [self.state[i].real for i in range(self.N)]
+        imags = [self.state[i].imag for i in range(self.N)]
+        x = np.arange(self.N)
+        width = 0.35
+        fig, ax = plt.subplots()
+        ax.bar(x - width/2, reals, width, label='Real')
+        ax.bar(x + width/2, imags, width, label='Imaginary')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=45)
+        ax.set_ylabel('Amplitude')
+        ax.set_title(title)
+        ax.legend()
+        plt.tight_layout()
+
+        if save_path:
+           plt.savefig(save_path)
+           print(f"Plot saved to: {save_path}")
+        else:
+           plt.show()
+
+    def plot_probabilities(self, shots=1024, title="Measurement Probabilities", save_path=None):
+        results = self.measure(shots=shots)
+        bitstrings = sorted(results.keys())
+        counts = [results[b] for b in bitstrings]
+        fig, ax = plt.subplots()
+        ax.bar(bitstrings, counts)
+        ax.set_xlabel("Bitstring")
+        ax.set_ylabel("Counts")
+        ax.set_title(title)
+        ax.set_xticklabels(bitstrings, rotation=45)
+        plt.tight_layout()
+
+        if save_path:
+           plt.savefig(save_path)
+           print(f"Histogram saved to: {save_path}")
+        else:
+           plt.show()
+
+            
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+   qft = QuantumFourierTransform(3)
+   qft.initialize_basis_state(5)
+
+   qft.apply_qft()
+
+# Save amplitude plot
+   qft.plot_amplitudes("QFT Amplitudes", save_path="qft_amplitudes.png")
+
+# Save measurement histogram
+   qft.plot_probabilities(shots=1024, title="QFT Output Distribution", save_path="qft_histogram.png")
+
+"""
+Quick Tips on Usage
+
+
+Superposition inputs (e.g. Hadamards to create |+\rangle^{\otimes n})
+Custom state initialization (e.g. any normalized complex vector)
+Entangled state preparation (e.g. Bell states, GHZ states, etc.)
+
+
+
+initialize_superposition() gives |+\rangle^{\otimes n}
+initialize_bell_pair() is for 2-qubit entangled states
+initialize_ghz_state() creates a GHZ state
+initialize_custom_state(vec) lets you pass any normalized state
+"""
+
+!ec
+See next code as well.
+
+!split
+===== Adding animations =====
+
+This code example adds superposition inputs to the previous code (e.g. Hadamards to create $|+\rangle^{\otimes n}$) and
+customs a state initialization (e.g. any normalized complex vector). It includes also the possibility of having
+entangled state preparation (e.g. Bell states, GHZ states, etc.)
+It has the following added feature
+o initialize$\_$superposition() gives $|+\rangle^{\otimes n}$
+o initialize$\_$bell$\_$pair() for two-qubit entangled states
+o initialize$\_$ghz$\_$state() creates a GHZ state
+o initialize$\_$custom$\_$state(vec) allows to pass any normalized state
+
+
+!bc pycod
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import os
+
+class QuantumFourierTransform:
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.state = np.zeros(self.N, dtype=complex)
+
+    def initialize_basis_state(self, index):
+        """Set state to basis state |index⟩"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[index] = 1.0
+
+    def initialize_custom_state(self, state_vector):
+        """Set state to custom normalized state vector"""
+        assert len(state_vector) == self.N, "State vector length mismatch."
+        norm = np.linalg.norm(state_vector)
+        assert np.isclose(norm, 1.0), "State vector must be normalized."
+        self.state = np.array(state_vector, dtype=complex)
+
+    def initialize_superposition(self):
+        """Create |+⟩^n superposition state"""
+        self.state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+    def initialize_bell_pair(self):
+        """2-qubit Bell state: (|00⟩ + |11⟩)/√2"""
+        if self.n_qubits != 2:
+            raise ValueError("Bell pair requires exactly 2 qubits.")
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[3] = 1 / np.sqrt(2)
+
+    def initialize_ghz_state(self):
+        """n-qubit GHZ state: (|00...0⟩ + |11...1⟩)/√2"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[-1] = 1 / np.sqrt(2)
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_single_qubit_gate(self, gate, target):
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+    def apply_controlled_phase(self, control, target, theta):
+        U = np.eye(self.N, dtype=complex)
+        for i in range(self.N):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1' and b[self.n_qubits - 1 - target] == '1':
+                U[i, i] *= np.exp(1j * theta)
+        self.state = U @ self.state
+
+    def swap_registers(self):
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+    def apply_qft(self, inverse=False):
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+        self.swap_registers()
+    def measure(self, shots=1024):
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=shots, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def print_amplitudes(self, title="Quantum State"):
+        print(f"\n{title}:")
+        for i, amp in enumerate(self.state):
+            print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
+
+
+# Inside the class
+    def reset_animation_log(self):
+        self.animation_frames = []
+
+    def record_probability_frame(self):
+        """Store current probabilities for animation."""
+        probs = np.abs(self.state) ** 2
+        self.animation_frames.append(probs.copy())
+
+    def apply_qft_with_recording(self, inverse=False):
+        self.reset_animation_log()
+        self.record_probability_frame()  # Record initial state
+
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+                self.record_probability_frame()
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+            self.record_probability_frame()
+
+        self.swap_registers()
+        self.record_probability_frame()
+
+    def animate_probability_evolution(self, save_path="qft_animation.gif", interval=600):
+        labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
+        fig, ax = plt.subplots()
+        bar = ax.bar(labels, [0]*self.N)
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("Probability")
+        ax.set_title("QFT Probability Evolution")
+
+        def update(frame_probs):
+            for rect, prob in zip(bar, frame_probs):
+                rect.set_height(prob)
+            return bar
+
+        ani = FuncAnimation(fig, update, frames=self.animation_frames,
+                            interval=interval, blit=False, repeat=False)
+
+        if save_path.endswith(".gif"):
+            ani.save(save_path, writer='pillow')
+        elif save_path.endswith(".mp4"):
+            ani.save(save_path, writer='ffmpeg')
+        else:
+            raise ValueError("Unsupported format. Use .gif or .mp4")
+
+        print(f"Animation saved to {save_path}")
+
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+   qft = QuantumFourierTransform(n_qubits=3)
+   qft.initialize_basis_state(5)
+
+# Apply QFT with intermediate state recording
+   qft.apply_qft_with_recording()
+
+# Animate the probability distribution over steps
+   qft.animate_probability_evolution(save_path="qft_probs.gif", interval=800)
+
+!ec
 
 !split
 ===== Introduction to Quantum Phase Estimation (QPE) =====

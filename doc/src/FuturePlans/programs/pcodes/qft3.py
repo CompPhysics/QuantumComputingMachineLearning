@@ -1,5 +1,6 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
+#import matplotlib as plt
 class QuantumFourierTransform:
     def __init__(self, n_qubits):
         self.n_qubits = n_qubits
@@ -82,86 +83,61 @@ class QuantumFourierTransform:
         for i, amp in enumerate(self.state):
             print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
 
+    def plot_amplitudes(self, title="State Vector Amplitudes", save_path=None):
+        labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
+        reals = [self.state[i].real for i in range(self.N)]
+        imags = [self.state[i].imag for i in range(self.N)]
+        x = np.arange(self.N)
+        width = 0.35
+        fig, ax = plt.subplots()
+        ax.bar(x - width/2, reals, width, label='Real')
+        ax.bar(x + width/2, imags, width, label='Imaginary')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=45)
+        ax.set_ylabel('Amplitude')
+        ax.set_title(title)
+        ax.legend()
+        plt.tight_layout()
+
+        if save_path:
+           plt.savefig(save_path)
+           print(f"Plot saved to: {save_path}")
+        else:
+           plt.show()
+
+    def plot_probabilities(self, shots=1024, title="Measurement Probabilities", save_path=None):
+        results = self.measure(shots=shots)
+        bitstrings = sorted(results.keys())
+        counts = [results[b] for b in bitstrings]
+        fig, ax = plt.subplots()
+        ax.bar(bitstrings, counts)
+        ax.set_xlabel("Bitstring")
+        ax.set_ylabel("Counts")
+        ax.set_title(title)
+        ax.set_xticklabels(bitstrings, rotation=45)
+        plt.tight_layout()
+
+        if save_path:
+           plt.savefig(save_path)
+           print(f"Histogram saved to: {save_path}")
+        else:
+           plt.show()
+
+            
 # ---------------------------
 # Example usage
 # ---------------------------
 if __name__ == "__main__":
-    qft = QuantumFourierTransform(n_qubits=3)
+   qft = QuantumFourierTransform(3)
+   qft.initialize_basis_state(5)
 
-    # Try different initializations
-    qft.initialize_superposition()
-    # qft.initialize_basis_state(5)
-    # qft.initialize_custom_state(np.random.randn(8) + 1j*np.random.randn(8))  # normalize first
-    # qft.initialize_ghz_state()
-
-    qft.print_amplitudes("Initial State")
-
-    qft.apply_qft()
-    qft.print_amplitudes("After QFT")
-
-    results = qft.measure(shots=1024)
-    print("\nMeasurement Results:")
-    for b, c in sorted(results.items()):
-        print(f"{b}: {c}")
-
-    qft.apply_qft(inverse=True)
-    qft.print_amplitudes("After Inverse QFT")
-
-
-
-def plot_amplitudes(self, title="State Vector Amplitudes", save_path=None):
-    labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
-    reals = [self.state[i].real for i in range(self.N)]
-    imags = [self.state[i].imag for i in range(self.N)]
-
-    x = np.arange(self.N)
-    width = 0.35
-
-    fig, ax = plt.subplots()
-    ax.bar(x - width/2, reals, width, label='Real')
-    ax.bar(x + width/2, imags, width, label='Imaginary')
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=45)
-    ax.set_ylabel('Amplitude')
-    ax.set_title(title)
-    ax.legend()
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path)
-        print(f"Plot saved to: {save_path}")
-    else:
-        plt.show()
-
-def plot_probabilities(self, shots=1024, title="Measurement Probabilities", save_path=None):
-    results = self.measure(shots=shots)
-    bitstrings = sorted(results.keys())
-    counts = [results[b] for b in bitstrings]
-
-    fig, ax = plt.subplots()
-    ax.bar(bitstrings, counts)
-    ax.set_xlabel("Bitstring")
-    ax.set_ylabel("Counts")
-    ax.set_title(title)
-    ax.set_xticklabels(bitstrings, rotation=45)
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path)
-        print(f"Histogram saved to: {save_path}")
-    else:
-        plt.show()
-
-qft = QuantumFourierTransform(3)
-qft.initialize_basis_state(5)
-
-qft.apply_qft()
+   qft.apply_qft()
 
 # Save amplitude plot
-qft.plot_amplitudes("QFT Amplitudes", save_path="qft_amplitudes.png")
+   qft.plot_amplitudes("QFT Amplitudes", save_path="qft_amplitudes.png")
 
 # Save measurement histogram
-qft.plot_probabilities(shots=1024, title="QFT Output Distribution", save_path="qft_histogram.png")
+   qft.plot_probabilities(shots=1024, title="QFT Output Distribution", save_path="qft_histogram.png")
 
 """
 Quick Tips on Usage
