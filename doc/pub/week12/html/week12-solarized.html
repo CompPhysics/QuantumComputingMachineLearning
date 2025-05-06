@@ -71,19 +71,54 @@ div.toc p,a {
                2,
                None,
                'reminder-on-the-quantum-fourier-transform'),
-              ('Quantum phase estimation algorithm',
+              ('Classical Discrete Fourier Transform',
                2,
                None,
-               'quantum-phase-estimation-algorithm'),
+               'classical-discrete-fourier-transform'),
+              ('In matrix form', 2, None, 'in-matrix-form'),
+              ('Quantum Fourier Transform',
+               2,
+               None,
+               'quantum-fourier-transform'),
+              ('Comparison with Classical DFT',
+               2,
+               None,
+               'comparison-with-classical-dft'),
+              ('Unitary Nature of QFT', 2, None, 'unitary-nature-of-qft'),
+              ('PennyLane Setup and Basic Example',
+               2,
+               None,
+               'pennylane-setup-and-basic-example'),
+              ('Quantum Circuit Implementation',
+               2,
+               None,
+               'quantum-circuit-implementation'),
+              ('QFT on three  qubits', 2, None, 'qft-on-three-qubits'),
+              ('Controlled Phase Rotation',
+               2,
+               None,
+               'controlled-phase-rotation'),
+              ('Circuit Diagram', 2, None, 'circuit-diagram'),
+              ('Python code with PennyLane',
+               2,
+               None,
+               'python-code-with-pennylane'),
+              ('Complexity', 2, None, 'complexity'),
+              ('Inverse QFT and the phase estimation algorithm',
+               2,
+               None,
+               'inverse-qft-and-the-phase-estimation-algorithm'),
+              ('Circuit Construction', 2, None, 'circuit-construction'),
               ('Introduction to Quantum Phase Estimation (QPE)',
                2,
                None,
                'introduction-to-quantum-phase-estimation-qpe'),
-              ('Mathematical Background', 2, None, 'mathematical-background'),
-              ('Quantum Circuit and Working',
+              ('Algorithm overview', 2, None, 'algorithm-overview'),
+              ('Circuit diagram (three-qubit QPE)',
                2,
                None,
-               'quantum-circuit-and-working'),
+               'circuit-diagram-three-qubit-qpe'),
+              ('Mathematical Background', 2, None, 'mathematical-background'),
               ('Derivation of the Algorithm, Step 1: Initialization',
                2,
                None,
@@ -109,6 +144,17 @@ div.toc p,a {
                2,
                None,
                'code-which-implements-the-qpe-using-pennylane'),
+              ('PennyLane Implementation of QPE',
+               2,
+               None,
+               'pennylane-implementation-of-qpe'),
+              ('Accuracy and Readout', 2, None, 'accuracy-and-readout'),
+              ('Hamiltonian simulation', 2, None, 'hamiltonian-simulation'),
+              ('Amplitude estimation', 2, None, 'amplitude-estimation'),
+              ('PennyLane Example: Energy Estimation',
+               2,
+               None,
+               'pennylane-example-energy-estimation'),
               ('Applications of QPE', 2, None, 'applications-of-qpe'),
               ('Challenges and Practical Considerations',
                2,
@@ -208,16 +254,271 @@ MathJax.Hub.Config({
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="reminder-on-the-quantum-fourier-transform">Reminder on the Quantum Fourier transform </h2>
-<p>Reminder on material from last week</p>
+
+<p>The Quantum Fourier Transform (QFT) is a key component in many quantum
+algorithms, notably Shor&#8217;s factoring algorithm and quantum phase
+estimation. It serves as the quantum analogue of the classical
+Discrete Fourier Transform (DFT), but operates exponentially faster
+due to the principles of quantum parallelism and entanglement.
+</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="quantum-phase-estimation-algorithm">Quantum phase estimation algorithm </h2>
+<h2 id="classical-discrete-fourier-transform">Classical Discrete Fourier Transform </h2>
+
+<p>Given a vector of \( N \) complex numbers \( \{x_0, x_1, \dots, x_{N-1}\} \), the DFT is defined as:</p>
+$$
+X_k = \sum_{n=0}^{N-1} x_n \exp{-2\pi i kn/N}, \quad k = 0, 1, \dots, N-1
+$$
+
+<p>The inverse transform is:</p>
+$$
+x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k \exp{2\pi i kn/N}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="in-matrix-form">In matrix form </h2>
+
+<p>This can be expressed in matrix form:</p>
+$$
+\vec{X} = F_N \vec{x}, \quad \text{where} \quad (F_N)_{jk} = \frac{1}{\sqrt{N}} \exp{2\pi i jk/N}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="quantum-fourier-transform">Quantum Fourier Transform </h2>
+
+<p>Let \( N = 2^n \). The QFT acts on the state:</p>
+$$
+\vert x\rangle = \vert x_1 x_2 \dots x_n\rangle
+$$
+
+<p>and transforms it into:</p>
+$$
+\mathrm{QFT} \vert x\rangle  = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \exp{2\pi i xk/N} \vert k\rangle
+$$
+
+<p>The QFT is unitary and can be decomposed into a series of Hadamard and
+controlled phase gates, allowing for an efficient \( O(n^2) \)
+implementation.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="comparison-with-classical-dft">Comparison with Classical DFT </h2>
+
+<p>While the classical FFT runs in \( O(N \log N) \) time, the QFT runs in
+\( O(n^2) = O(\log^2 N) \) gate operations&#8212;an exponential improvement,
+crucial in quantum speedups for specific problems.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="unitary-nature-of-qft">Unitary Nature of QFT </h2>
+
+<p>Last week we showed that the QFT matrix \( F_N \) is unitary:</p>
+$$
+F_N^\dagger F_N = I
+$$
+
+<p>This guarantees that QFT is a valid quantum operation (i.e., norm-preserving and reversible).</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="pennylane-setup-and-basic-example">PennyLane Setup and Basic Example </h2>
+
+<p>To experiment with QFT, we can use the PennyLane Python library.</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
+
+n_qubits = <span style="color: #B452CD">3</span>
+dev = qml.device(<span style="color: #CD5555">&quot;default.qubit&quot;</span>, wires=n_qubits)
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_qft</span>(wires):
+   qml.templates.QFT(wires=wires)
+
+<span style="color: #707a7c">@qml</span>.qnode(dev)
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qft_circuit</span>():
+   qml.BasisState(np.array([<span style="color: #B452CD">1</span>, <span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>]), wires=<span style="color: #658b00">range</span>(n_qubits))
+   apply_qft(wires=<span style="color: #658b00">range</span>(n_qubits))
+   <span style="color: #8B008B; font-weight: bold">return</span> qml.state()
+
+state = qft_circuit()
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;QFT output state:&quot;</span>, state)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="quantum-circuit-implementation">Quantum Circuit Implementation </h2>
+
+<p>The Quantum Fourier Transform can be efficiently implemented using a
+combination of Hadamard gates and controlled phase gates. Given an
+\( n \)-qubit state \( \vert x\rangle \), the QFT circuit transforms it into the
+state:
+</p>
+
+$$
+\frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} \exp{2\pi i xk / 2^n} \vert k\rangle
+$$
+
+<p>This is achieved through a decomposition into a quantum circuit of \( O(n^2) \) gates.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="qft-on-three-qubits">QFT on three  qubits </h2>
+
+<p>We illustrate the circuit for \( n = 3 \). The transformation proceeds as follows:</p>
+
+<ol>
+<li> Apply a Hadamard gate to the first qubit.</li>
+<li> Apply controlled-\( R_k \) gates (phase gates) for \( k=2, 3, \dots \) to encode phase interference.</li>
+<li> Repeat recursively on the remaining qubits.</li>
+<li> Apply a qubit swap at the end to reverse the order of qubits.</li>
+</ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="controlled-phase-rotation">Controlled Phase Rotation </h2>
+
+<p>The controlled phase rotation gate \( R_k \) is defined as:</p>
+$$
+R_k = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2\pi i / 2^k}
+\end{bmatrix}
+$$
+
+<p>This gate introduces the correct phase into the wavefunction based on
+the binary digits of the input number.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="circuit-diagram">Circuit Diagram </h2>
+
+<p>The QFT circuit for three qubits is shown below (read top to bottom):</p>
+
+<br/><br/>
+<center>
+<p><img src="figures/threequbits.png" width="800" align="bottom"></p>
+</center>
+<br/><br/>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="python-code-with-pennylane">Python code with PennyLane </h2>
+<p>We now implement a full QFT circuit manually for three qubits using PennyLane.</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
+<span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">math</span>
+
+dev = qml.device(<span style="color: #CD5555">&quot;default.qubit&quot;</span>, wires=<span style="color: #B452CD">3</span>)
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qft_rotations</span>(wires):
+   <span style="color: #8B008B; font-weight: bold">if</span> <span style="color: #658b00">len</span>(wires) == <span style="color: #B452CD">0</span>:
+       <span style="color: #8B008B; font-weight: bold">return</span>
+   head, *tail = wires
+   qml.Hadamard(wires=head)
+   <span style="color: #8B008B; font-weight: bold">for</span> i, qubit <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(tail):
+       qml.ctrl(qml.PhaseShift, control=qubit)(math.pi / <span style="color: #B452CD">2</span>**(i+<span style="color: #B452CD">1</span>), wires=head)
+   qft_rotations(tail)
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">swap_registers</span>(wires):
+   <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(wires) // <span style="color: #B452CD">2</span>):
+       qml.SWAP(wires=[wires[i], wires[-i - <span style="color: #B452CD">1</span>]])
+
+<span style="color: #707a7c">@qml</span>.qnode(dev)
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qft_custom</span>():
+   qml.BasisState(np.array([<span style="color: #B452CD">1</span>, <span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>]), wires=<span style="color: #658b00">range</span>(<span style="color: #B452CD">3</span>))
+   qft_rotations(wires=[<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>, <span style="color: #B452CD">2</span>])
+   swap_registers(wires=[<span style="color: #B452CD">0</span>, <span style="color: #B452CD">1</span>, <span style="color: #B452CD">2</span>])
+   <span style="color: #8B008B; font-weight: bold">return</span> qml.state()
+
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;Custom QFT state:&quot;</span>, qft_custom())
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="complexity">Complexity </h2>
+<ol>
+<li> The QFT requires \( O(n^2) \) gates.</li>
+<li> Approximate QFT implementations can reduce complexity by omitting small-angle phase gates.</li>
+</ol>
+<p>The circuit implementation of QFT is surprisingly efficient, enabling
+its use in several key quantum algorithms. Understanding the
+gate-level construction deepens our understanding of quantum
+information flow during Fourier transformation.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="inverse-qft-and-the-phase-estimation-algorithm">Inverse QFT and the phase estimation algorithm </h2>
+
+<p>In our discussion of the phase estimation algorithm, we will need the inverse QFT.
+The inverse Quantum Fourier Transform (IQFT) is simply the Hermitian adjoint of the QFT. Since the QFT is unitary, its inverse is:
+</p>
+$$
+\mathrm{QFT}^\dagger = \mathrm{QFT}^{-1}
+$$
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="circuit-construction">Circuit Construction </h2>
+
+<p>To reverse the QFT circuit:</p>
+<ol>
+<li> Swap the order of gates.</li>
+<li> Replace Hadamard gates with Hadamard gates (self-inverse).</li>
+<li> Replace each \( R_k \) gate with its conjugate transpose \( R_k^\dagger \):</li>
+</ol>
+$$
+   R_k^\dagger = \begin{bmatrix}
+   1 & 0 \\
+   0 & e^{-2\pi i / 2^k}
+   \end{bmatrix}
+$$
+
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="introduction-to-quantum-phase-estimation-qpe">Introduction to Quantum Phase Estimation (QPE) </h2>
-<p>The QPE is a fundamental quantum algorithm used to estimate the phase \( \phi \) in eigenvalue equations of unitary operators.
-Given a unitary operator \( U \) and an eigenvector \( | \psi \rangle \) such that:
+
+<p>The QPE is a fundamental quantum algorithm used to estimate the phase
+\( \phi \) in eigenvalue equations of unitary operators.  Given a unitary
+operator \( U \) and an eigenvector \( | \psi \rangle \) such that:
 </p>
+
 $$
 U | \psi \rangle = \exp{2\pi i \phi} | \psi \rangle
 $$
@@ -232,6 +533,32 @@ crucial subroutine for algorithms like
 <li> quantum many-body simulations.</li>
 </ol>
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="algorithm-overview">Algorithm overview </h2>
+
+<p>Given an eigenvector \( \vert u\rangle \) of a unitary \( U \), the QPE
+algorithm estimates the phase \( \phi \) using:
+</p>
+
+<ol>
+<li> Apply Hadamards to an \( n \)-qubit register.</li>
+<li> Use controlled-\( U^{2^k} \) gates to encode phase.</li>
+<li> Apply inverse QFT to extract the binary digits of \( \phi \).</li>
+</ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="circuit-diagram-three-qubit-qpe">Circuit diagram (three-qubit QPE) </h2>
+
+<p>The quantum circuit for QPE consists of two quantum registers:</p>
+<ol>
+<li> The first register with \( n \) qubits is initialized to \( \vert 0\rangle^{\otimes n} \).</li>
+<li> second register is initialized to the eigenstate \( \vert\psi\rangle \) of \( U \).</li>
+</ol>
+<br/><br/>
+<center>
+<p><img src="figures/threequbitsqpe.png" width="800" align="bottom"></p>
+</center>
+<br/><br/>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="mathematical-background">Mathematical Background </h2>
 
 <p>The goal of QPE is to estimate the phase \( \phi \in [0,1) \) where:</p>
@@ -245,16 +572,6 @@ $$
 $$
 
 <p>The QFT is essential for extracting phase information in QPE.</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="quantum-circuit-and-working">Quantum Circuit and Working </h2>
-
-<p>The quantum circuit for QPE consists of two quantum registers:</p>
-<ol>
-<li> The first register with \( n \) qubits is initialized to \( \vert 0\rangle^{\otimes n} \).</li>
-<li> second register is initialized to the eigenstate \( \vert\psi\rangle \) of \( U \).</li>
-</ol>
-<p>Figure to be added</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="derivation-of-the-algorithm-step-1-initialization">Derivation of the Algorithm, Step 1: Initialization </h2>
@@ -572,21 +889,170 @@ estimated_phi = qpe(phi, num_counting_qubits)
 
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="pennylane-implementation-of-qpe">PennyLane Implementation of QPE </h2>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;"><span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
+<span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
+
+n_estimation = <span style="color: #B452CD">3</span>
+dev = qml.device(<span style="color: #CD5555">&quot;default.qubit&quot;</span>, wires=n_estimation + <span style="color: #B452CD">1</span>)
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">apply_controlled_unitaries</span>(U, wires):
+   <span style="color: #8B008B; font-weight: bold">for</span> i, ctrl <span style="color: #8B008B">in</span> <span style="color: #658b00">enumerate</span>(wires[:-<span style="color: #B452CD">1</span>]):
+       power = <span style="color: #B452CD">2</span>**i
+       <span style="color: #8B008B; font-weight: bold">for</span> _ <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(power):
+           qml.ctrl(U, control=ctrl)(wires[-<span style="color: #B452CD">1</span>])
+
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">inverse_qft</span>(wires):
+   swap_registers(wires)
+   <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">reversed</span>(<span style="color: #658b00">range</span>(<span style="color: #658b00">len</span>(wires))):
+       <span style="color: #8B008B; font-weight: bold">for</span> j <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(i):
+           qml.ctrl(qml.PhaseShift, control=wires[j])(-np.pi / <span style="color: #B452CD">2</span>**(i - j), wires=wires[i])
+       qml.Hadamard(wires=wires[i])
+
+<span style="color: #707a7c">@qml</span>.qnode(dev)
+<span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">qpe</span>():
+   target_wire = n_estimation
+   <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_estimation):
+       qml.Hadamard(wires=i)
+
+   qml.RZ(<span style="color: #B452CD">2</span> * np.pi * <span style="color: #B452CD">0.375</span>, wires=target_wire)  <span style="color: #228B22"># Assume phase = 0.375</span>
+
+   apply_controlled_unitaries(qml.RZ, <span style="color: #658b00">list</span>(<span style="color: #658b00">range</span>(n_estimation)) + [target_wire])
+   inverse_qft(<span style="color: #658b00">list</span>(<span style="color: #658b00">range</span>(n_estimation)))
+   <span style="color: #8B008B; font-weight: bold">return</span> qml.probs(wires=<span style="color: #658b00">range</span>(n_estimation))
+
+probs = qpe()
+<span style="color: #658b00">print</span>(<span style="color: #CD5555">&quot;Measured phase state:&quot;</span>, probs)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="accuracy-and-readout">Accuracy and Readout </h2>
+
+<p>The accuracy of phase estimation improves with the number of qubits in
+the control register. For \( n \) qubits, we obtain the \( n \) most
+significant bits of \( \phi \).
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="hamiltonian-simulation">Hamiltonian simulation </h2>
+
+<p>Let \( H \) be a Hamiltonian. The evolution \( U = \exp{-iHt} \) has
+eigenvectors \( \vert u\rangle \) and eigenvalues \( \exp{-iEt} \). QPE yields
+estimates of \( E \).
+</p>
+
+<p>Typical applications are</p>
+<ol>
+<li> Electronic structure problems</li>
+<li> Dynamics of molecules</li>
+<li> Energy spectrum estimation</li>
+</ol>
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="amplitude-estimation">Amplitude estimation </h2>
+
+<p>Quantum Amplitude Estimation (QAE) uses QFT for estimating
+probabilities (amplitudes) more efficiently than classical sampling.
+</p>
+
+<p>Prepare a state:</p>
+$$
+\vert \psi\rangle = \sqrt{a}\vert1\rangle + \sqrt{1 - a}\vert 0\rangle.
+$$
+
+<p>The QAE estimates \( a \) using Grover-like iterations and QFT.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="pennylane-example-energy-estimation">PennyLane Example: Energy Estimation </h2>
+
+<p>We simulate a simple diagonal Hamiltonian using QPE.</p>
+
+<!-- code=python (!bc pycod) typeset with pygments style "perldoc" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #eeeedd">
+  <pre style="line-height: 125%;">  <span style="color: #8B008B; font-weight: bold">import</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">as</span> <span style="color: #008b45; text-decoration: underline">qml</span>
+  <span style="color: #8B008B; font-weight: bold">from</span> <span style="color: #008b45; text-decoration: underline">pennylane</span> <span style="color: #8B008B; font-weight: bold">import</span> numpy <span style="color: #8B008B; font-weight: bold">as</span> np
+
+  n_qubits = <span style="color: #B452CD">2</span>
+  dev = qml.device(<span style="color: #a61717; background-color: #e3d2d2">``</span>default.qubit<span style="color: #CD5555">&#39;&#39;</span>, wires=n_qubits + <span style="color: #B452CD">1</span>)
+
+  <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">controlled_unitary</span>(t):
+  <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">unitary</span>():
+  qml.PhaseShift(<span style="color: #B452CD">2</span> * np.pi * <span style="color: #B452CD">0.3</span> * t, wires=n_qubits)
+  <span style="color: #8B008B; font-weight: bold">return</span> unitary
+
+  <span style="color: #707a7c">@qml</span>.qnode(dev)
+  <span style="color: #8B008B; font-weight: bold">def</span> <span style="color: #008b45">energy_estimation</span>():
+  <span style="color: #228B22"># Apply Hadamards to estimation qubits</span>
+  <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
+  qml.Hadamard(wires=i)
+  <span style="color: #228B22"># Prepare eigenstate for target qubit</span>
+  qml.PauliX(wires=n_qubits)
+  <span style="color: #228B22"># Apply controlled-U^{2^j}</span>
+  <span style="color: #8B008B; font-weight: bold">for</span> i <span style="color: #8B008B">in</span> <span style="color: #658b00">range</span>(n_qubits):
+  unitary = controlled_unitary(<span style="color: #B452CD">2</span>**i)
+  qml.ctrl(unitary, control=i)()
+  <span style="color: #228B22"># Inverse QFT</span>
+  inverse_qft(<span style="color: #658b00">range</span>(n_qubits))
+  <span style="color: #8B008B; font-weight: bold">return</span> qml.probs(wires=<span style="color: #658b00">range</span>(n_qubits))
+
+  probs = energy_estimation()
+  <span style="color: #658b00">print</span>(<span style="color: #a61717; background-color: #e3d2d2">``</span>Measured energy phase:<span style="color: #CD5555">&#39;&#39;</span>, probs)
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="applications-of-qpe">Applications of QPE </h2>
 
 <p>The QPE is a foundational algorithm with several key applications:</p>
 <ol>
-<li> \textbf{Factoring and Cryptography:} Integral to Shor's algorithm for integer factoring.</li>
-<li> \textbf{Quantum Simulations:} Estimating eigenvalues of Hamiltonians in many-body physics.</li>
-<li> \textbf{Amplitude Estimation:} Enhances algorithms like Grover's search.</li>
+<li> <b>Factoring and Cryptography:</b> Integral to Shor's algorithm for integer factoring.</li>
+<li> <b>Quantum Simulations:</b> Estimating eigenvalues of Hamiltonians in many-body physics.</li>
+<li> <b>Amplitude Estimation:</b> Enhances algorithms like Grover's search.</li>
 </ol>
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="challenges-and-practical-considerations">Challenges and Practical Considerations </h2>
 
 <ol>
-<li> \textbf{Qubit Requirements:} Requires a large number of qubits for high precision.</li>
-<li> \textbf{Gate Depth:} Controlled-\( U^{2^j} \) operations increase gate complexity.</li>
-<li> \textbf{Noise Sensitivity:} Errors in QFT or controlled gates impact accuracy.</li>
+<li> <b>Qubit Requirements:</b> Requires a large number of qubits for high precision.</li>
+<li> <b>Gate Depth:</b> Controlled-\( U^{2^j} \) operations increase gate complexity.</li>
+<li> <b>Noise Sensitivity:</b> Errors in QFT or controlled gates impact accuracy.</li>
 </ol>
 <p>It is a powerful quantum algorithm for extracting phase information of
 unitary operators. It forms the foundation for many advanced quantum
@@ -634,7 +1100,7 @@ factorization into an order-finding problem:
 <li> Choose a random integer \( a \) such that \( 1 < a < N \) and \( \gcd(a, N) = 1 \).</li>
 <li> Determine the smallest positive integer \( r \) such that \( a^r \equiv 1 \pmod{N} \).</li>
 </ol>
-<p>The integer \( r \) is known as the \textit{order} of \( a \) modulo
+<p>The integer \( r \) is known as the <em>order</em> of \( a \) modulo
 \( N \), and it helps in discovering the factors of \( N \).
 </p>
 
@@ -666,8 +1132,8 @@ $$
 \text{QFT}: \vert x\rangle \mapsto \frac{1}{\sqrt{2^n}} \sum_{y=0}^{2^n-1} e^{2\pi ixy/2^n} \vert y\rangle
 $$
 
-<p>The quantum part of Shor's algorithm is designed to find the period \(
-r \) of the modular exponentiation function \( f(x) = a^x \bmod N \):
+<p>The quantum part of Shor's algorithm is designed to find the period
+\( r \) of the modular exponentiation function \( f(x) = a^x \bmod N \):
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
