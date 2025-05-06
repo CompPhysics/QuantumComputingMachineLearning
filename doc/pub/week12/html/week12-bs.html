@@ -126,6 +126,10 @@ doconce format html week12.do.txt --html_style=bootstrap --pygments_html_style=d
                2,
                None,
                'challenges-and-practical-considerations'),
+              ('QPE code without the usage of explicit quantum libraries',
+               2,
+               None,
+               'qpe-code-without-the-usage-of-explicit-quantum-libraries'),
               ("Brief overview of Shor's algorithm",
                2,
                None,
@@ -162,15 +166,7 @@ doconce format html week12.do.txt --html_style=bootstrap --pygments_html_style=d
               ("Summarizing Shor's algorithm",
                2,
                None,
-               'summarizing-shor-s-algorithm'),
-              ('QPE code without the usage of explicit quantum libraries',
-               2,
-               None,
-               'qpe-code-without-the-usage-of-explicit-quantum-libraries'),
-              ('QPE code without the usage of explicit quantum libraries',
-               2,
-               None,
-               'qpe-code-without-the-usage-of-explicit-quantum-libraries')]}
+               'summarizing-shor-s-algorithm')]}
 end of tocinfo -->
 
 <body>
@@ -238,6 +234,7 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#code-which-implements-the-qpe-using-pennylane" style="font-size: 80%;">Code which implements the QPE using PennyLane</a></li>
      <!-- navigation toc: --> <li><a href="#applications-of-qpe" style="font-size: 80%;">Applications of QPE</a></li>
      <!-- navigation toc: --> <li><a href="#challenges-and-practical-considerations" style="font-size: 80%;">Challenges and Practical Considerations</a></li>
+     <!-- navigation toc: --> <li><a href="#qpe-code-without-the-usage-of-explicit-quantum-libraries" style="font-size: 80%;">QPE code without the usage of explicit quantum libraries</a></li>
      <!-- navigation toc: --> <li><a href="#brief-overview-of-shor-s-algorithm" style="font-size: 80%;">Brief overview of Shor's algorithm</a></li>
      <!-- navigation toc: --> <li><a href="#some-history" style="font-size: 80%;">Some history</a></li>
      <!-- navigation toc: --> <li><a href="#problem-statement" style="font-size: 80%;">Problem Statement</a></li>
@@ -251,8 +248,6 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#complexity-and-practical-considerations" style="font-size: 80%;">Complexity and Practical Considerations</a></li>
      <!-- navigation toc: --> <li><a href="#error-analysis-and-success-probability" style="font-size: 80%;">Error Analysis and Success Probability</a></li>
      <!-- navigation toc: --> <li><a href="#summarizing-shor-s-algorithm" style="font-size: 80%;">Summarizing Shor's algorithm</a></li>
-     <!-- navigation toc: --> <li><a href="#qpe-code-without-the-usage-of-explicit-quantum-libraries" style="font-size: 80%;">QPE code without the usage of explicit quantum libraries</a></li>
-     <!-- navigation toc: --> <li><a href="#qpe-code-without-the-usage-of-explicit-quantum-libraries" style="font-size: 80%;">QPE code without the usage of explicit quantum libraries</a></li>
 
         </ul>
       </li>
@@ -1588,6 +1583,142 @@ computational tasks. For many-body simulations it is however not as efficient as
 </p>
 
 <!-- !split -->
+<h2 id="qpe-code-without-the-usage-of-explicit-quantum-libraries" class="anchor">QPE code without the usage of explicit quantum libraries </h2>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib.animation</span> <span style="color: #008000; font-weight: bold">import</span> FuncAnimation
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib</span> <span style="color: #008000; font-weight: bold">import</span> cm
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">unitary_operator</span>():
+    <span style="color: #408080; font-style: italic"># Controlled Phase Gate (CP) with a phase of pi/4</span>
+    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>],
+                     [<span style="color: #666666">0</span>, <span style="color: #666666">1</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>],
+                     [<span style="color: #666666">0</span>, <span style="color: #666666">0</span>, np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> <span style="color: #666666">4</span>), <span style="color: #666666">0</span>],
+                     [<span style="color: #666666">0</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> <span style="color: #666666">4</span>)]], dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">eigenstate</span>():
+    <span style="color: #408080; font-style: italic"># Superposition state |ψ⟩ = (|0⟩ + |1⟩)/√2</span>
+    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1/</span>np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>), <span style="color: #666666">1/</span>np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>)], dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+
+<span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">QuantumPhaseEstimation</span>:
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">__init__</span>(<span style="color: #008000">self</span>, n_qubits, unitary, eigenstate, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">=</span> n_qubits
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>N <span style="color: #666666">=</span> <span style="color: #666666">2</span> <span style="color: #666666">**</span> n_qubits
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>unitary <span style="color: #666666">=</span> unitary  <span style="color: #408080; font-style: italic"># Unitary operator U</span>
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>eigenstate <span style="color: #666666">=</span> eigenstate  <span style="color: #408080; font-style: italic"># Eigenstate |ψ⟩</span>
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>inverse <span style="color: #666666">=</span> inverse  <span style="color: #408080; font-style: italic"># Whether to reverse the QFT</span>
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>state[<span style="color: #666666">0</span>] <span style="color: #666666">=</span> <span style="color: #666666">1.0</span>  <span style="color: #408080; font-style: italic"># Initialize ancillary qubits to |0...0⟩</span>
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_single_qubit_gate</span>(<span style="color: #008000">self</span>, gate, target):
+        I <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #666666">2</span>)
+        ops <span style="color: #666666">=</span> [I] <span style="color: #666666">*</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits
+        ops[target] <span style="color: #666666">=</span> gate
+        U <span style="color: #666666">=</span> ops[<span style="color: #666666">0</span>]
+        <span style="color: #008000; font-weight: bold">for</span> op <span style="color: #AA22FF; font-weight: bold">in</span> ops[<span style="color: #666666">1</span>:]:
+            U <span style="color: #666666">=</span> np<span style="color: #666666">.</span>kron(U, op)
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> U <span style="color: #666666">@</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">hadamard</span>(<span style="color: #008000">self</span>):
+        <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>, <span style="color: #666666">1</span>], [<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>]]) <span style="color: #666666">/</span> np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>)
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_controlled_unitary</span>(<span style="color: #008000">self</span>, control, target, exp_power):
+        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Apply controlled unitary operation U^(2^j).&quot;&quot;&quot;</span>
+        U <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
+        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>N):
+            b <span style="color: #666666">=</span> <span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)
+            <span style="color: #008000; font-weight: bold">if</span> b[<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> control] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;1&#39;</span>:
+                U[i, i] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> (np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> (<span style="color: #666666">2</span> <span style="color: #666666">**</span> exp_power)))
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> U <span style="color: #666666">@</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_qft</span>(<span style="color: #008000">self</span>, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
+        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Apply Quantum Fourier Transform on ancillary qubits.&quot;&quot;&quot;</span>
+        <span style="color: #008000; font-weight: bold">for</span> target <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
+            idx <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> target
+            <span style="color: #008000; font-weight: bold">for</span> offset <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">1</span>, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> target):
+                control <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> (target <span style="color: #666666">+</span> offset)
+                angle <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> (<span style="color: #666666">2</span> <span style="color: #666666">**</span> offset)
+                <span style="color: #008000; font-weight: bold">if</span> inverse:
+                    angle <span style="color: #666666">*=</span> <span style="color: #666666">-1</span>
+                <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_controlled_unitary(control, idx, angle)
+            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_single_qubit_gate(<span style="color: #008000">self</span><span style="color: #666666">.</span>hadamard(), idx)
+
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>swap_registers()
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">swap_registers</span>(<span style="color: #008000">self</span>):
+        perm <span style="color: #666666">=</span> [<span style="color: #008000">int</span>(<span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)[::<span style="color: #666666">-1</span>], <span style="color: #666666">2</span>) <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>N)]
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state[perm]
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">measure</span>(<span style="color: #008000">self</span>):
+        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Measure the ancillary qubits.&quot;&quot;&quot;</span>
+        probs <span style="color: #666666">=</span> np<span style="color: #666666">.</span>abs(<span style="color: #008000">self</span><span style="color: #666666">.</span>state) <span style="color: #666666">**</span> <span style="color: #666666">2</span>
+        outcomes <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>choice(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, size<span style="color: #666666">=1024</span>, p<span style="color: #666666">=</span>probs)
+        counts <span style="color: #666666">=</span> {}
+        <span style="color: #008000; font-weight: bold">for</span> o <span style="color: #AA22FF; font-weight: bold">in</span> outcomes:
+            bitstring <span style="color: #666666">=</span> <span style="color: #008000">format</span>(o, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)
+            counts[bitstring] <span style="color: #666666">=</span> counts<span style="color: #666666">.</span>get(bitstring, <span style="color: #666666">0</span>) <span style="color: #666666">+</span> <span style="color: #666666">1</span>
+        <span style="color: #008000; font-weight: bold">return</span> counts
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">plot_probability_distribution</span>(<span style="color: #008000">self</span>, results):
+        bitstrings <span style="color: #666666">=</span> <span style="color: #008000">sorted</span>(results<span style="color: #666666">.</span>keys())
+        counts <span style="color: #666666">=</span> [results[b] <span style="color: #008000; font-weight: bold">for</span> b <span style="color: #AA22FF; font-weight: bold">in</span> bitstrings]
+        plt<span style="color: #666666">.</span>bar(bitstrings, counts)
+        plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&quot;Bitstring&quot;</span>)
+        plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&quot;Counts&quot;</span>)
+        plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&quot;QPE Measurement Results&quot;</span>)
+        plt<span style="color: #666666">.</span>xticks(rotation<span style="color: #666666">=45</span>)
+        plt<span style="color: #666666">.</span>tight_layout()
+        plt<span style="color: #666666">.</span>show()
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_phase_estimation</span>(<span style="color: #008000">self</span>):
+        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Perform Quantum Phase Estimation (QPE).&quot;&quot;&quot;</span>
+        <span style="color: #408080; font-style: italic"># Apply Hadamard to all ancillary qubits</span>
+        <span style="color: #008000; font-weight: bold">for</span> target <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
+            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_single_qubit_gate(<span style="color: #008000">self</span><span style="color: #666666">.</span>hadamard(), target)
+
+        <span style="color: #408080; font-style: italic"># Apply controlled unitaries (U^(2^j))</span>
+        <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
+            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_controlled_unitary(j, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits, j)
+
+        <span style="color: #408080; font-style: italic"># Apply QFT</span>
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_qft(inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
+
+        <span style="color: #408080; font-style: italic"># Measure the ancillary qubits</span>
+        results <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>measure()
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>plot_probability_distribution(results)
+
+<span style="color: #408080; font-style: italic"># ---------------------------</span>
+<span style="color: #408080; font-style: italic"># Example usage</span>
+<span style="color: #408080; font-style: italic"># ---------------------------</span>
+<span style="color: #008000; font-weight: bold">if</span> <span style="color: #19177C">__name__</span> <span style="color: #666666">==</span> <span style="color: #BA2121">&quot;__main__&quot;</span>:
+    n_qubits <span style="color: #666666">=</span> <span style="color: #666666">3</span>  <span style="color: #408080; font-style: italic"># Number of ancillary qubits</span>
+    qpe <span style="color: #666666">=</span> QuantumPhaseEstimation(n_qubits, unitary_operator(), eigenstate())
+    qpe<span style="color: #666666">.</span>apply_phase_estimation()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- !split -->
 <h2 id="brief-overview-of-shor-s-algorithm" class="anchor">Brief overview of Shor's algorithm </h2>
 
 <ol>
@@ -1728,275 +1859,6 @@ current cryptographic standards.
 <li> Combines quantum period finding with classical number theory.</li>
 <li> Highlights the potential of quantum computing to break RSA.</li>
 </ol>
-<!-- !split -->
-<h2 id="qpe-code-without-the-usage-of-explicit-quantum-libraries" class="anchor">QPE code without the usage of explicit quantum libraries </h2>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib.animation</span> <span style="color: #008000; font-weight: bold">import</span> FuncAnimation
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib</span> <span style="color: #008000; font-weight: bold">import</span> cm
-
-<span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">QuantumPhaseEstimation</span>:
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">__init__</span>(<span style="color: #008000">self</span>, n_qubits, unitary, eigenstate, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">=</span> n_qubits
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>N <span style="color: #666666">=</span> <span style="color: #666666">2</span> <span style="color: #666666">**</span> n_qubits
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>unitary <span style="color: #666666">=</span> unitary  <span style="color: #408080; font-style: italic"># Unitary operator U</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>eigenstate <span style="color: #666666">=</span> eigenstate  <span style="color: #408080; font-style: italic"># Eigenstate |ψ⟩</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>inverse <span style="color: #666666">=</span> inverse  <span style="color: #408080; font-style: italic"># Whether to reverse the QFT</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state[<span style="color: #666666">0</span>] <span style="color: #666666">=</span> <span style="color: #666666">1.0</span>  <span style="color: #408080; font-style: italic"># Initialize ancillary qubits to |0...0⟩</span>
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_single_qubit_gate</span>(<span style="color: #008000">self</span>, gate, target):
-        I <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #666666">2</span>)
-        ops <span style="color: #666666">=</span> [I] <span style="color: #666666">*</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits
-        ops[target] <span style="color: #666666">=</span> gate
-        U <span style="color: #666666">=</span> ops[<span style="color: #666666">0</span>]
-        <span style="color: #008000; font-weight: bold">for</span> op <span style="color: #AA22FF; font-weight: bold">in</span> ops[<span style="color: #666666">1</span>:]:
-            U <span style="color: #666666">=</span> np<span style="color: #666666">.</span>kron(U, op)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> U <span style="color: #666666">@</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">hadamard</span>(<span style="color: #008000">self</span>):
-        <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>, <span style="color: #666666">1</span>], [<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>]]) <span style="color: #666666">/</span> np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_controlled_unitary</span>(<span style="color: #008000">self</span>, control, target, exp_power):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Apply controlled unitary operation U^(2^j).&quot;&quot;&quot;</span>
-        U <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>N):
-            b <span style="color: #666666">=</span> <span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)
-            <span style="color: #008000; font-weight: bold">if</span> b[<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> control] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;1&#39;</span>:
-                U[i, i] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> (np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> (<span style="color: #666666">2</span> <span style="color: #666666">**</span> exp_power)))
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> U <span style="color: #666666">@</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_qft</span>(<span style="color: #008000">self</span>, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Apply Quantum Fourier Transform on ancillary qubits.&quot;&quot;&quot;</span>
-        <span style="color: #008000; font-weight: bold">for</span> target <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
-            idx <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> target
-            <span style="color: #008000; font-weight: bold">for</span> offset <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">1</span>, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> target):
-                control <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> (target <span style="color: #666666">+</span> offset)
-                angle <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> (<span style="color: #666666">2</span> <span style="color: #666666">**</span> offset)
-                <span style="color: #008000; font-weight: bold">if</span> inverse:
-                    angle <span style="color: #666666">*=</span> <span style="color: #666666">-1</span>
-                <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_controlled_unitary(control, idx, angle)
-            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_single_qubit_gate(<span style="color: #008000">self</span><span style="color: #666666">.</span>hadamard(), idx)
-
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>swap_registers()
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">swap_registers</span>(<span style="color: #008000">self</span>):
-        perm <span style="color: #666666">=</span> [<span style="color: #008000">int</span>(<span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)[::<span style="color: #666666">-1</span>], <span style="color: #666666">2</span>) <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>N)]
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state[perm]
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">measure</span>(<span style="color: #008000">self</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Measure the ancillary qubits.&quot;&quot;&quot;</span>
-        probs <span style="color: #666666">=</span> np<span style="color: #666666">.</span>abs(<span style="color: #008000">self</span><span style="color: #666666">.</span>state) <span style="color: #666666">**</span> <span style="color: #666666">2</span>
-        outcomes <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>choice(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, size<span style="color: #666666">=1024</span>, p<span style="color: #666666">=</span>probs)
-        counts <span style="color: #666666">=</span> {}
-        <span style="color: #008000; font-weight: bold">for</span> o <span style="color: #AA22FF; font-weight: bold">in</span> outcomes:
-            bitstring <span style="color: #666666">=</span> <span style="color: #008000">format</span>(o, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)
-            counts[bitstring] <span style="color: #666666">=</span> counts<span style="color: #666666">.</span>get(bitstring, <span style="color: #666666">0</span>) <span style="color: #666666">+</span> <span style="color: #666666">1</span>
-        <span style="color: #008000; font-weight: bold">return</span> counts
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">plot_probability_distribution</span>(<span style="color: #008000">self</span>, results):
-        bitstrings <span style="color: #666666">=</span> <span style="color: #008000">sorted</span>(results<span style="color: #666666">.</span>keys())
-        counts <span style="color: #666666">=</span> [results[b] <span style="color: #008000; font-weight: bold">for</span> b <span style="color: #AA22FF; font-weight: bold">in</span> bitstrings]
-        plt<span style="color: #666666">.</span>bar(bitstrings, counts)
-        plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&quot;Bitstring&quot;</span>)
-        plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&quot;Counts&quot;</span>)
-        plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&quot;QPE Measurement Results&quot;</span>)
-        plt<span style="color: #666666">.</span>xticks(rotation<span style="color: #666666">=45</span>)
-        plt<span style="color: #666666">.</span>tight_layout()
-        plt<span style="color: #666666">.</span>show()
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_phase_estimation</span>(<span style="color: #008000">self</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Perform Quantum Phase Estimation (QPE).&quot;&quot;&quot;</span>
-        <span style="color: #408080; font-style: italic"># Apply Hadamard to all ancillary qubits</span>
-        <span style="color: #008000; font-weight: bold">for</span> target <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
-            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_single_qubit_gate(<span style="color: #008000">self</span><span style="color: #666666">.</span>hadamard(), target)
-
-        <span style="color: #408080; font-style: italic"># Apply controlled unitaries (U^(2^j))</span>
-        <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
-            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_controlled_unitary(j, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits, j)
-
-        <span style="color: #408080; font-style: italic"># Apply QFT</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_qft(inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
-
-        <span style="color: #408080; font-style: italic"># Measure the ancillary qubits</span>
-        results <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>measure()
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>plot_probability_distribution(results)
-
-<span style="color: #408080; font-style: italic"># Example Unit and Eigenstate</span>
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">unitary_operator</span>():
-    <span style="color: #408080; font-style: italic"># Simple controlled-phase gate (for example)</span>
-    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>, <span style="color: #666666">0</span>], [<span style="color: #666666">0</span>, np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> <span style="color: #666666">4</span>)]], dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">eigenstate</span>():
-    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1</span>, <span style="color: #666666">0</span>], dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)  <span style="color: #408080; font-style: italic"># eigenstate |1⟩</span>
-
-<span style="color: #408080; font-style: italic"># ---------------------------</span>
-<span style="color: #408080; font-style: italic"># Example usage</span>
-<span style="color: #408080; font-style: italic"># ---------------------------</span>
-<span style="color: #008000; font-weight: bold">if</span> <span style="color: #19177C">__name__</span> <span style="color: #666666">==</span> <span style="color: #BA2121">&quot;__main__&quot;</span>:
-    n_qubits <span style="color: #666666">=</span> <span style="color: #666666">3</span>
-    qpe <span style="color: #666666">=</span> QuantumPhaseEstimation(n_qubits, unitary_operator(), eigenstate())
-    qpe<span style="color: #666666">.</span>apply_phase_estimation()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- !split -->
-<h2 id="qpe-code-without-the-usage-of-explicit-quantum-libraries" class="anchor">QPE code without the usage of explicit quantum libraries </h2>
-
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib.animation</span> <span style="color: #008000; font-weight: bold">import</span> FuncAnimation
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib</span> <span style="color: #008000; font-weight: bold">import</span> cm
-
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">unitary_operator</span>():
-    <span style="color: #408080; font-style: italic"># Controlled Phase Gate (CP) with a phase of pi/4</span>
-    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>],
-                     [<span style="color: #666666">0</span>, <span style="color: #666666">1</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>],
-                     [<span style="color: #666666">0</span>, <span style="color: #666666">0</span>, np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> <span style="color: #666666">4</span>), <span style="color: #666666">0</span>],
-                     [<span style="color: #666666">0</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> <span style="color: #666666">4</span>)]], dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">eigenstate</span>():
-    <span style="color: #408080; font-style: italic"># Superposition state |ψ⟩ = (|0⟩ + |1⟩)/√2</span>
-    <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([<span style="color: #666666">1/</span>np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>), <span style="color: #666666">1/</span>np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>)], dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-
-<span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">QuantumPhaseEstimation</span>:
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">__init__</span>(<span style="color: #008000">self</span>, n_qubits, unitary, eigenstate, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">=</span> n_qubits
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>N <span style="color: #666666">=</span> <span style="color: #666666">2</span> <span style="color: #666666">**</span> n_qubits
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>unitary <span style="color: #666666">=</span> unitary  <span style="color: #408080; font-style: italic"># Unitary operator U</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>eigenstate <span style="color: #666666">=</span> eigenstate  <span style="color: #408080; font-style: italic"># Eigenstate |ψ⟩</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>inverse <span style="color: #666666">=</span> inverse  <span style="color: #408080; font-style: italic"># Whether to reverse the QFT</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state[<span style="color: #666666">0</span>] <span style="color: #666666">=</span> <span style="color: #666666">1.0</span>  <span style="color: #408080; font-style: italic"># Initialize ancillary qubits to |0...0⟩</span>
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_single_qubit_gate</span>(<span style="color: #008000">self</span>, gate, target):
-        I <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #666666">2</span>)
-        ops <span style="color: #666666">=</span> [I] <span style="color: #666666">*</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits
-        ops[target] <span style="color: #666666">=</span> gate
-        U <span style="color: #666666">=</span> ops[<span style="color: #666666">0</span>]
-        <span style="color: #008000; font-weight: bold">for</span> op <span style="color: #AA22FF; font-weight: bold">in</span> ops[<span style="color: #666666">1</span>:]:
-            U <span style="color: #666666">=</span> np<span style="color: #666666">.</span>kron(U, op)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> U <span style="color: #666666">@</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">hadamard</span>(<span style="color: #008000">self</span>):
-        <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array([[<span style="color: #666666">1</span>, <span style="color: #666666">1</span>], [<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>]]) <span style="color: #666666">/</span> np<span style="color: #666666">.</span>sqrt(<span style="color: #666666">2</span>)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_controlled_unitary</span>(<span style="color: #008000">self</span>, control, target, exp_power):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Apply controlled unitary operation U^(2^j).&quot;&quot;&quot;</span>
-        U <span style="color: #666666">=</span> np<span style="color: #666666">.</span>eye(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, dtype<span style="color: #666666">=</span><span style="color: #008000">complex</span>)
-        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>N):
-            b <span style="color: #666666">=</span> <span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)
-            <span style="color: #008000; font-weight: bold">if</span> b[<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> control] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;1&#39;</span>:
-                U[i, i] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>exp(<span style="color: #666666">1</span>j <span style="color: #666666">*</span> (np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> (<span style="color: #666666">2</span> <span style="color: #666666">**</span> exp_power)))
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> U <span style="color: #666666">@</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_qft</span>(<span style="color: #008000">self</span>, inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Apply Quantum Fourier Transform on ancillary qubits.&quot;&quot;&quot;</span>
-        <span style="color: #008000; font-weight: bold">for</span> target <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
-            idx <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> target
-            <span style="color: #008000; font-weight: bold">for</span> offset <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">1</span>, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> target):
-                control <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span> <span style="color: #666666">-</span> (target <span style="color: #666666">+</span> offset)
-                angle <span style="color: #666666">=</span> np<span style="color: #666666">.</span>pi <span style="color: #666666">/</span> (<span style="color: #666666">2</span> <span style="color: #666666">**</span> offset)
-                <span style="color: #008000; font-weight: bold">if</span> inverse:
-                    angle <span style="color: #666666">*=</span> <span style="color: #666666">-1</span>
-                <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_controlled_unitary(control, idx, angle)
-            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_single_qubit_gate(<span style="color: #008000">self</span><span style="color: #666666">.</span>hadamard(), idx)
-
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>swap_registers()
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">swap_registers</span>(<span style="color: #008000">self</span>):
-        perm <span style="color: #666666">=</span> [<span style="color: #008000">int</span>(<span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)[::<span style="color: #666666">-1</span>], <span style="color: #666666">2</span>) <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>N)]
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>state <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>state[perm]
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">measure</span>(<span style="color: #008000">self</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Measure the ancillary qubits.&quot;&quot;&quot;</span>
-        probs <span style="color: #666666">=</span> np<span style="color: #666666">.</span>abs(<span style="color: #008000">self</span><span style="color: #666666">.</span>state) <span style="color: #666666">**</span> <span style="color: #666666">2</span>
-        outcomes <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>choice(<span style="color: #008000">self</span><span style="color: #666666">.</span>N, size<span style="color: #666666">=1024</span>, p<span style="color: #666666">=</span>probs)
-        counts <span style="color: #666666">=</span> {}
-        <span style="color: #008000; font-weight: bold">for</span> o <span style="color: #AA22FF; font-weight: bold">in</span> outcomes:
-            bitstring <span style="color: #666666">=</span> <span style="color: #008000">format</span>(o, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>)
-            counts[bitstring] <span style="color: #666666">=</span> counts<span style="color: #666666">.</span>get(bitstring, <span style="color: #666666">0</span>) <span style="color: #666666">+</span> <span style="color: #666666">1</span>
-        <span style="color: #008000; font-weight: bold">return</span> counts
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">plot_probability_distribution</span>(<span style="color: #008000">self</span>, results):
-        bitstrings <span style="color: #666666">=</span> <span style="color: #008000">sorted</span>(results<span style="color: #666666">.</span>keys())
-        counts <span style="color: #666666">=</span> [results[b] <span style="color: #008000; font-weight: bold">for</span> b <span style="color: #AA22FF; font-weight: bold">in</span> bitstrings]
-        plt<span style="color: #666666">.</span>bar(bitstrings, counts)
-        plt<span style="color: #666666">.</span>xlabel(<span style="color: #BA2121">&quot;Bitstring&quot;</span>)
-        plt<span style="color: #666666">.</span>ylabel(<span style="color: #BA2121">&quot;Counts&quot;</span>)
-        plt<span style="color: #666666">.</span>title(<span style="color: #BA2121">&quot;QPE Measurement Results&quot;</span>)
-        plt<span style="color: #666666">.</span>xticks(rotation<span style="color: #666666">=45</span>)
-        plt<span style="color: #666666">.</span>tight_layout()
-        plt<span style="color: #666666">.</span>show()
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">apply_phase_estimation</span>(<span style="color: #008000">self</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Perform Quantum Phase Estimation (QPE).&quot;&quot;&quot;</span>
-        <span style="color: #408080; font-style: italic"># Apply Hadamard to all ancillary qubits</span>
-        <span style="color: #008000; font-weight: bold">for</span> target <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
-            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_single_qubit_gate(<span style="color: #008000">self</span><span style="color: #666666">.</span>hadamard(), target)
-
-        <span style="color: #408080; font-style: italic"># Apply controlled unitaries (U^(2^j))</span>
-        <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits):
-            <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_controlled_unitary(j, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_qubits, j)
-
-        <span style="color: #408080; font-style: italic"># Apply QFT</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>apply_qft(inverse<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
-
-        <span style="color: #408080; font-style: italic"># Measure the ancillary qubits</span>
-        results <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>measure()
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>plot_probability_distribution(results)
-
-<span style="color: #408080; font-style: italic"># ---------------------------</span>
-<span style="color: #408080; font-style: italic"># Example usage</span>
-<span style="color: #408080; font-style: italic"># ---------------------------</span>
-<span style="color: #008000; font-weight: bold">if</span> <span style="color: #19177C">__name__</span> <span style="color: #666666">==</span> <span style="color: #BA2121">&quot;__main__&quot;</span>:
-    n_qubits <span style="color: #666666">=</span> <span style="color: #666666">3</span>  <span style="color: #408080; font-style: italic"># Number of ancillary qubits</span>
-    qpe <span style="color: #666666">=</span> QuantumPhaseEstimation(n_qubits, unitary_operator(), eigenstate())
-    qpe<span style="color: #666666">.</span>apply_phase_estimation()
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->
 <!-- include javascript, jQuery *first* -->
