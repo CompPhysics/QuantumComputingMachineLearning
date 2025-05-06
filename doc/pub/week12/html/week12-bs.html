@@ -72,6 +72,22 @@ doconce format html week12.do.txt --html_style=bootstrap --pygments_html_style=d
                None,
                'controlled-phase-rotation'),
               ('Circuit Diagram', 2, None, 'circuit-diagram'),
+              ('Swap gates', 2, None, 'swap-gates'),
+              ('Swap gates and step-by-step mathematical derivation',
+               2,
+               None,
+               'swap-gates-and-step-by-step-mathematical-derivation'),
+              ('Circuit‐level decomposition and implicit bit reversal',
+               2,
+               None,
+               'circuit-level-decomposition-and-implicit-bit-reversal'),
+              ('Qubit ordering', 2, None, 'qubit-ordering'),
+              ('Change of basis order', 2, None, 'change-of-basis-order'),
+              ('The bit-reversal permutation and Swap gates',
+               2,
+               None,
+               'the-bit-reversal-permutation-and-swap-gates'),
+              ('Can we avoid them?', 2, None, 'can-we-avoid-them'),
               ('Python code with PennyLane',
                2,
                None,
@@ -213,6 +229,13 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#qft-on-three-qubits" style="font-size: 80%;">QFT on three  qubits</a></li>
      <!-- navigation toc: --> <li><a href="#controlled-phase-rotation" style="font-size: 80%;">Controlled Phase Rotation</a></li>
      <!-- navigation toc: --> <li><a href="#circuit-diagram" style="font-size: 80%;">Circuit Diagram</a></li>
+     <!-- navigation toc: --> <li><a href="#swap-gates" style="font-size: 80%;">Swap gates</a></li>
+     <!-- navigation toc: --> <li><a href="#swap-gates-and-step-by-step-mathematical-derivation" style="font-size: 80%;">Swap gates and step-by-step mathematical derivation</a></li>
+     <!-- navigation toc: --> <li><a href="#circuit-level-decomposition-and-implicit-bit-reversal" style="font-size: 80%;">Circuit‐level decomposition and implicit bit reversal</a></li>
+     <!-- navigation toc: --> <li><a href="#qubit-ordering" style="font-size: 80%;">Qubit ordering</a></li>
+     <!-- navigation toc: --> <li><a href="#change-of-basis-order" style="font-size: 80%;">Change of basis order</a></li>
+     <!-- navigation toc: --> <li><a href="#the-bit-reversal-permutation-and-swap-gates" style="font-size: 80%;">The bit-reversal permutation and Swap gates</a></li>
+     <!-- navigation toc: --> <li><a href="#can-we-avoid-them" style="font-size: 80%;">Can we avoid them?</a></li>
      <!-- navigation toc: --> <li><a href="#python-code-with-pennylane" style="font-size: 80%;">Python code with PennyLane</a></li>
      <!-- navigation toc: --> <li><a href="#complexity" style="font-size: 80%;">Complexity</a></li>
      <!-- navigation toc: --> <li><a href="#inverse-qft-and-the-phase-estimation-algorithm" style="font-size: 80%;">Inverse QFT and the phase estimation algorithm</a></li>
@@ -463,6 +486,126 @@ the binary digits of the input number.
 <p><img src="figures/threequbits.png" width="800" align="bottom"></p>
 </center>
 <br/><br/>
+
+<!-- !split -->
+<h2 id="swap-gates" class="anchor">Swap gates </h2>
+
+<p>In the circuit implementation of the \( n \)-qubit Quantum Fourier
+Transform (QFT), one finds at the end a cascade of Swap gates
+<em>crossing</em> qubit \( 1 \) with qubit \( n \), qubit \( 2 \) with qubit \( n-1 \), and
+so on.  These are not arbitrary extra operations, but arise inevitably
+from the fact that the standard QFT&#8212;when written as a matrix&#8212;maps
+computational&#8208;basis states into <em>bit&#8208;reversed</em> amplitudes.  The Swap
+gates simply undo that bit-reversal so that the output register has
+its qubits in the natural (most&#8208;significant&#8211;to&#8211;least&#8208;significant)
+order.
+</p>
+
+<!-- !split -->
+<h2 id="swap-gates-and-step-by-step-mathematical-derivation" class="anchor">Swap gates and step-by-step mathematical derivation </h2>
+
+<p>On an \( n \)-qubit register, label the computational basis states by integers</p>
+
+$$
+\vert x\rangle \quad,\quad x\in\{0,1,\dots,2^n-1\}\,.
+$$
+
+<p>The QFT is the linear map</p>
+$$
+\mathrm{QFT}n:\;\vert x \rangle \;\mapsto\;\frac{1}{\sqrt{2^n}}\sum{y=0}^{2^n-1}
+\exp{(2\pi i\,xy / 2^n)}\,\vert y\rangle.
+$$
+
+<p>Viewed as a \( 2^n\times2^n \) unitary matrix \( F_{2^n} \), its \( (y,x) \)&#8211;entry is</p>
+$$
+[F_{2^n}]_{y,x} \;=\;\frac{1}{\sqrt{2^n}}\,e^{2\pi i\,x y / 2^n}\,.
+$$
+
+<!-- !split -->
+<h2 id="circuit-level-decomposition-and-implicit-bit-reversal" class="anchor">Circuit&#8208;level decomposition and implicit bit reversal </h2>
+
+<p>A standard circuit for \( \mathrm{QFT}_n \) proceeds qubit by qubit (from
+most significant qubit down to least significant), applying:
+</p>
+<ol>
+<li> A Hadamard on qubit \( j \);</li>
+<li> Controlled-\( R_2,R_3,\dots,R_{n-j+1} \) phase gates from qubit \( k>j \) to qubit \( j \), where</li>
+</ol>
+$$
+R_m \;=\;\begin{pmatrix}1&0\\0&e^{2\pi i/2^m}\end{pmatrix}.
+$$
+
+<ol>
+<li> Move on to the next qubit \( j+1 \).</li>
+</ol>
+<!-- !split -->
+<h2 id="qubit-ordering" class="anchor">Qubit ordering </h2>
+
+<p>If you label the input qubits as
+\( \vert x_{n-1}\rangle\otimes\vert x_{n-2}\rangle\otimes\cdots\otimes\vert x_0\rangle \) (with
+\( x_{n-1} \) the most&#8208;significant bit), then the order in which
+phase&#8208;gates tie those bits ends up producing output amplitudes in the
+reverse bit&#8208;order, that is
+</p>
+$$
+\mathrm{QFT}n \;=\; (\text{controlled‐phase and Hadamard layers})\;\times\; \underbrace{\bigl(\mathrm{bit\!-\!reversal}\bigr)}{P},
+$$
+
+<p>where \( P \) is the permutation matrix that sends</p>
+$$
+\vert y_{n-1}y_{n-2}\dots y_0\rangle \longmapsto \vert y_{0}y_{1}\dots y_{n-1}\rangle.
+$$
+
+
+<!-- !split -->
+<h2 id="change-of-basis-order" class="anchor">Change of basis order </h2>
+
+<p>Concretely, one finds for each basis vector</p>
+$$
+(\text{circuit without swaps})\;\vert x_{n-1}\dots x_0\rangle\;=\;\frac{1}{\sqrt{2^n}}
+\sum_{y} \exp{(2\pi i\,x\,y/2^n)}\;\vert y_{\text{reversed}}\rangle,
+$$
+
+<p>where \( y_{\text{reversed}} = \sum_j y_j,2^{n-1-j} \) instead of the natural \( \sum_j y_j,2^j \).</p>
+
+<!-- !split -->
+<h2 id="the-bit-reversal-permutation-and-swap-gates" class="anchor">The bit-reversal permutation and Swap gates </h2>
+
+<p>The bit-reversal permutation \( P \) is exactly the unitary that swaps
+qubit \( j \) with qubit \( (n-1-j) \) for all
+\( j=0,\dots,\lfloor(n-1)/2\rfloor \).  In matrix form,
+</p>
+$$
+\Pi \;=\;\prod_{j=0}^{\lfloor(n-1)/2\rfloor}\;\mathrm{SWAP}{j,\;n-1-j},
+$$
+
+<p>where each \( \mathrm{SWAP}{a,b} \) acts as</p>
+$$
+\mathrm{SWAP}:\;\vert  u\rangle_a\!\otimes\!\vert v\rangle_b \;\longmapsto\;\vert v\rangle_a\!\otimes\!\vert u\rangle_b.
+$$
+
+<p>Since the circuit we built implements \( F{2^n},\Pi \) rather than
+\( F{2^n} \), appending those swaps at the end yields exactly the matrix
+\( F{2^n} \) in the natural qubit ordering.
+</p>
+
+<!-- !split -->
+<h2 id="can-we-avoid-them" class="anchor">Can we avoid them? </h2>
+
+<p>One might ask: <em>Couldn&#8217;t we just re&#8208;label wires?</em> In principle yes,
+but in a physical device the wiring corresponds to real qubit lines.
+If you want the logical output bit \( y_{n-1} \) on the same physical wire
+as the input \( x_{n-1} \), you must physically swap the states.  Hence
+the Swap gates are unavoidable whenever you demand that qubit indices
+retain their original semantic meaning.
+</p>
+
+<p>In summary, the Swap gates at the end of the QFT circuit correct the
+inherent bit-reversal that arises from the order in which Hadamard and
+controlled-phase gates entangle the qubits.  Without them, the output
+register would hold the Fourier&#8208;transformed amplitudes in
+reverse&#8208;index order.
+</p>
 
 <!-- !split -->
 <h2 id="python-code-with-pennylane" class="anchor">Python code with PennyLane </h2>
