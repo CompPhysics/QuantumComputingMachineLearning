@@ -16,16 +16,231 @@ o Reading recommendation: Hundt section 6.4 for the QPE and section 6.5 for Shor
 
 !split
 ===== Reminder on the Quantum Fourier transform =====
-Reminder on material from last week
+
+The Quantum Fourier Transform (QFT) is a key component in many quantum
+algorithms, notably Shor’s factoring algorithm and quantum phase
+estimation. It serves as the quantum analogue of the classical
+Discrete Fourier Transform (DFT), but operates exponentially faster
+due to the principles of quantum parallelism and entanglement.
+
+!split
+===== Classical Discrete Fourier Transform =====
+
+Given a vector of $N$ complex numbers $\{x_0, x_1, \dots, x_{N-1}\}$, the DFT is defined as:
+!bt
+\[
+X_k = \sum_{n=0}^{N-1} x_n \exp{-2\pi i kn/N}, \quad k = 0, 1, \dots, N-1
+\]
+!et
+The inverse transform is:
+!bt
+\[
+x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k \exp{2\pi i kn/N}
+\]
+!et
+
+!split
+===== In matrix form =====
+
+This can be expressed in matrix form:
+!bt
+\[
+\vec{X} = F_N \vec{x}, \quad \text{where} \quad (F_N)_{jk} = \frac{1}{\sqrt{N}} \exp{2\pi i jk/N}
+\]
+!et
+
+!split
+===== Quantum Fourier Transform =====
+
+Let $N = 2^n$. The QFT acts on the state:
+!bt
+\[
+\vert x\rangle = \vert x_1 x_2 \dots x_n\rangle
+\]
+!et
+and transforms it into:
+!bt
+\[
+\mathrm{QFT} \vert x\rangle  = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \exp{2\pi i xk/N} \vert k\rangle
+\]
+!et
+
+The QFT is unitary and can be decomposed into a series of Hadamard and
+controlled phase gates, allowing for an efficient $O(n^2)$
+implementation.
+
+!split
+===== Comparison with Classical DFT =====
+
+While the classical FFT runs in $O(N \log N)$ time, the QFT runs in
+$O(n^2) = O(\log^2 N)$ gate operations—an exponential improvement,
+crucial in quantum speedups for specific problems.
+
+!split
+===== Unitary Nature of QFT =====
+
+Last week we showed that the QFT matrix $F_N$ is unitary:
+!bt
+\[
+F_N^\dagger F_N = I
+\]
+!et
+This guarantees that QFT is a valid quantum operation (i.e., norm-preserving and reversible).
+
+!split
+===== PennyLane Setup and Basic Example =====
+
+To experiment with QFT, we can use the PennyLane Python library.
+
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+
+n_qubits = 3
+dev = qml.device("default.qubit", wires=n_qubits)
+
+def apply_qft(wires):
+   qml.templates.QFT(wires=wires)
+
+@qml.qnode(dev)
+def qft_circuit():
+   qml.BasisState(np.array([1, 0, 1]), wires=range(n_qubits))
+   apply_qft(wires=range(n_qubits))
+   return qml.state()
+
+state = qft_circuit()
+print("QFT output state:", state)
+!ec
+
+!split
+===== Quantum Circuit Implementation =====
+
+The Quantum Fourier Transform can be efficiently implemented using a
+combination of Hadamard gates and controlled phase gates. Given an
+$n$-qubit state $\vert x\rangle$, the QFT circuit transforms it into the
+state:
+
+!bt
+\[
+\frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} \exp{2\pi i xk / 2^n} \vert k\rangle
+\]
+!et
+
+This is achieved through a decomposition into a quantum circuit of $O(n^2)$ gates.
+
+!split
+===== QFT on three  qubits =====
+
+We illustrate the circuit for $n = 3$. The transformation proceeds as follows:
+
+o Apply a Hadamard gate to the first qubit.
+o Apply controlled-$R_k$ gates (phase gates) for $k=2, 3, \dots$ to encode phase interference.
+o Repeat recursively on the remaining qubits.
+o Apply a qubit swap at the end to reverse the order of qubits.
+
+!split
+===== Controlled Phase Rotation =====
+
+The controlled phase rotation gate $R_k$ is defined as:
+!bt
+\[
+R_k = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2\pi i / 2^k}
+\end{bmatrix}
+\]
+!et
+
+This gate introduces the correct phase into the wavefunction based on
+the binary digits of the input number.
+
+!split
+===== Circuit Diagram =====
+
+The QFT circuit for three qubits is shown below (read top to bottom):
+
+FIGURE: [figures/threequbits.png, width=800 frac=1.0]
 
 
 !split
-===== Quantum phase estimation algorithm =====
+===== Python code with PennyLane =====
+We now implement a full QFT circuit manually for three qubits using PennyLane.
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+import math
+
+dev = qml.device("default.qubit", wires=3)
+
+def qft_rotations(wires):
+   if len(wires) == 0:
+       return
+   head, *tail = wires
+   qml.Hadamard(wires=head)
+   for i, qubit in enumerate(tail):
+       qml.ctrl(qml.PhaseShift, control=qubit)(math.pi / 2**(i+1), wires=head)
+   qft_rotations(tail)
+
+def swap_registers(wires):
+   for i in range(len(wires) // 2):
+       qml.SWAP(wires=[wires[i], wires[-i - 1]])
+
+@qml.qnode(dev)
+def qft_custom():
+   qml.BasisState(np.array([1, 0, 1]), wires=range(3))
+   qft_rotations(wires=[0, 1, 2])
+   swap_registers(wires=[0, 1, 2])
+   return qml.state()
+
+print("Custom QFT state:", qft_custom())
+!ec
+
+!split
+===== Complexity =====
+o The QFT requires $O(n^2)$ gates.
+o Approximate QFT implementations can reduce complexity by omitting small-angle phase gates.
+
+The circuit implementation of QFT is surprisingly efficient, enabling
+its use in several key quantum algorithms. Understanding the
+gate-level construction deepens our understanding of quantum
+information flow during Fourier transformation.
+
+!split
+===== Inverse QFT and the phase estimation algorithm =====
+
+In our discussion of the phase estimation algorithm, we will need the inverse QFT.
+The inverse Quantum Fourier Transform (IQFT) is simply the Hermitian adjoint of the QFT. Since the QFT is unitary, its inverse is:
+!bt
+\[
+\mathrm{QFT}^\dagger = \mathrm{QFT}^{-1}
+\]
+!et
+
+!split
+===== Circuit Construction =====
+
+To reverse the QFT circuit:
+o Swap the order of gates.
+o Replace Hadamard gates with Hadamard gates (self-inverse).
+o Replace each $R_k$ gate with its conjugate transpose $R_k^\dagger$:
+!bt
+\[
+   R_k^\dagger = \begin{bmatrix}
+   1 & 0 \\
+   0 & e^{-2\pi i / 2^k}
+   \end{bmatrix}
+\]
+!et
+
+
 
 !split
 ===== Introduction to Quantum Phase Estimation (QPE) =====
-The QPE is a fundamental quantum algorithm used to estimate the phase $\phi$ in eigenvalue equations of unitary operators.
-Given a unitary operator $U$ and an eigenvector $| \psi \rangle$ such that:
+
+The QPE is a fundamental quantum algorithm used to estimate the phase
+$\phi$ in eigenvalue equations of unitary operators.  Given a unitary
+operator $U$ and an eigenvector $| \psi \rangle$ such that:
+
 !bt
 \[
 U | \psi \rangle = \exp{2\pi i \phi} | \psi \rangle
@@ -37,6 +252,26 @@ The QPE provides an estimate of $\phi$ with high probability. It is a
 crucial subroutine for algorithms like
 o Shor's factoring algorithm and
 o quantum many-body simulations.
+
+
+!split
+===== Algorithm overview ====
+
+Given an eigenvector $\vert u\rangle$ of a unitary $U$, the QPE
+algorithm estimates the phase $\phi$ using:
+
+o Apply Hadamards to an $n$-qubit register.
+o Use controlled-$U^{2^k}$ gates to encode phase.
+o Apply inverse QFT to extract the binary digits of $\phi$.
+
+!split
+===== Circuit diagram (three-qubit QPE) =====
+
+The quantum circuit for QPE consists of two quantum registers:
+o The first register with $n$ qubits is initialized to $\vert 0\rangle^{\otimes n}$.
+o second register is initialized to the eigenstate $\vert\psi\rangle$ of $U$.
+
+FIGURE: [figures/threequbitsqpe.png, width=800 frac=1.0]
 
 !split
 ===== Mathematical Background =====
@@ -56,14 +291,7 @@ The Quantum Fourier Transform on $n$ qubits is defined as (see above):
 !et
 The QFT is essential for extracting phase information in QPE.
 
-!split
-===== Quantum Circuit and Working =====
 
-The quantum circuit for QPE consists of two quantum registers:
-o The first register with $n$ qubits is initialized to $\vert 0\rangle^{\otimes n}$.
-o second register is initialized to the eigenstate $\vert\psi\rangle$ of $U$.
-
-Figure to be added
 
 !split
 ===== Derivation of the Algorithm, Step 1: Initialization =====
@@ -317,20 +545,129 @@ print(f"Estimated phase: {estimated_phi}")
 print(f"Actual phase: {phi}")
 !ec
 
+
+!split
+===== PennyLane Implementation of QPE =====
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+
+n_estimation = 3
+dev = qml.device("default.qubit", wires=n_estimation + 1)
+
+def apply_controlled_unitaries(U, wires):
+   for i, ctrl in enumerate(wires[:-1]):
+       power = 2**i
+       for _ in range(power):
+           qml.ctrl(U, control=ctrl)(wires[-1])
+
+def inverse_qft(wires):
+   swap_registers(wires)
+   for i in reversed(range(len(wires))):
+       for j in range(i):
+           qml.ctrl(qml.PhaseShift, control=wires[j])(-np.pi / 2**(i - j), wires=wires[i])
+       qml.Hadamard(wires=wires[i])
+
+@qml.qnode(dev)
+def qpe():
+   target_wire = n_estimation
+   for i in range(n_estimation):
+       qml.Hadamard(wires=i)
+
+   qml.RZ(2 * np.pi * 0.375, wires=target_wire)  # Assume phase = 0.375
+
+   apply_controlled_unitaries(qml.RZ, list(range(n_estimation)) + [target_wire])
+   inverse_qft(list(range(n_estimation)))
+   return qml.probs(wires=range(n_estimation))
+
+probs = qpe()
+print("Measured phase state:", probs)
+!ec
+
+!split
+===== Accuracy and Readout =====
+
+The accuracy of phase estimation improves with the number of qubits in
+the control register. For $n$ qubits, we obtain the $n$ most
+significant bits of $\phi$.
+
+!split
+===== Hamiltonian simulation =====
+
+Let $H$ be a Hamiltonian. The evolution $U = \exp{-iHt}$ has
+eigenvectors $\ket{u}$ and eigenvalues $\exp{-iEt}$. QPE yields
+estimates of $E$.
+
+Typical applications are
+o Electronic structure problems
+o Dynamics of molecules
+o Energy spectrum estimation
+
+!split
+===== Amplitude estimation =====
+
+Quantum Amplitude Estimation (QAE) uses QFT for estimating
+probabilities (amplitudes) more efficiently than classical sampling.
+
+Prepare a state:
+!bt
+\[
+\vert \psi\rangle = \sqrt{a}\vert1\rangle + \sqrt{1 - a}\vert 0\rangle.
+\]
+!et
+The QAE estimates $a$ using Grover-like iterations and QFT.
+
+!split
+===== PennyLane Example: Energy Estimation ====
+
+We simulate a simple diagonal Hamiltonian using QPE.
+!bc pycod
+  import pennylane as qml
+  from pennylane import numpy as np
+
+  n_qubits = 2
+  dev = qml.device(``default.qubit'', wires=n_qubits + 1)
+
+  def controlled_unitary(t):
+  def unitary():
+  qml.PhaseShift(2 * np.pi * 0.3 * t, wires=n_qubits)
+  return unitary
+
+  @qml.qnode(dev)
+  def energy_estimation():
+  # Apply Hadamards to estimation qubits
+  for i in range(n_qubits):
+  qml.Hadamard(wires=i)
+  # Prepare eigenstate for target qubit
+  qml.PauliX(wires=n_qubits)
+  # Apply controlled-U^{2^j}
+  for i in range(n_qubits):
+  unitary = controlled_unitary(2**i)
+  qml.ctrl(unitary, control=i)()
+  # Inverse QFT
+  inverse_qft(range(n_qubits))
+  return qml.probs(wires=range(n_qubits))
+
+  probs = energy_estimation()
+  print(``Measured energy phase:'', probs)
+!ec
+
+
+
 !split
 ===== Applications of QPE =====
 
 The QPE is a foundational algorithm with several key applications:
-o \textbf{Factoring and Cryptography:} Integral to Shor's algorithm for integer factoring.
-o \textbf{Quantum Simulations:} Estimating eigenvalues of Hamiltonians in many-body physics.
-o \textbf{Amplitude Estimation:} Enhances algorithms like Grover's search.
+o _Factoring and Cryptography:_ Integral to Shor's algorithm for integer factoring.
+o _Quantum Simulations:_ Estimating eigenvalues of Hamiltonians in many-body physics.
+o _Amplitude Estimation:_ Enhances algorithms like Grover's search.
 
 !split
 ===== Challenges and Practical Considerations =====
 
-o \textbf{Qubit Requirements:} Requires a large number of qubits for high precision.
-o \textbf{Gate Depth:} Controlled-$U^{2^j}$ operations increase gate complexity.
-o \textbf{Noise Sensitivity:} Errors in QFT or controlled gates impact accuracy.
+o _Qubit Requirements:_ Requires a large number of qubits for high precision.
+o _Gate Depth:_ Controlled-$U^{2^j}$ operations increase gate complexity.
+o _Noise Sensitivity:_ Errors in QFT or controlled gates impact accuracy.
 
 It is a powerful quantum algorithm for extracting phase information of
 unitary operators. It forms the foundation for many advanced quantum
@@ -360,10 +697,10 @@ such as RSA.
 ===== Problem Statement =====
 
 The objective of Shor's algorithm is to factorize a large composite
-integer \( N \) into its prime factors. Given \( N = p \times q \),
-where \( p \) and \( q \) are unknown distinct primes, the problem of
-factorization can be reduced to finding an integer \( a \) such that
-\( 1 < a < N \) and \( \gcd(a, N) = 1 \).
+integer $N$ into its prime factors. Given $N = p \times q$,
+where $p$ and $q$ are unknown distinct primes, the problem of
+factorization can be reduced to finding an integer $a$ such that
+$1 < a < N$ and $\gcd(a, N) = 1$.
 
 !split
 ===== Reduction to Order-Finding =====
@@ -371,18 +708,18 @@ factorization can be reduced to finding an integer \( a \) such that
 The key reduction in Shor's algorithm lies in transforming
 factorization into an order-finding problem:
 
-o Choose a random integer \( a \) such that \( 1 < a < N \) and \( \gcd(a, N) = 1 \).
-o Determine the smallest positive integer \( r \) such that \( a^r \equiv 1 \pmod{N} \).
+o Choose a random integer $a$ such that $1 < a < N$ and $\gcd(a, N) = 1$.
+o Determine the smallest positive integer $r$ such that $a^r \equiv 1 \pmod{N}$.
 
-The integer \( r \) is known as the \textit{order} of \( a \) modulo
-\( N \), and it helps in discovering the factors of \( N \).
+The integer $r$ is known as the *order* of $a$ modulo
+$N$, and it helps in discovering the factors of $N$.
 
 !split
 ===== Continued Fraction Expansion =====
 
 After obtaining the rational approximation from the quantum algorithm,
 classical computation using continued fraction expansion aids in
-deducing the correct order \( r \).
+deducing the correct order $r$.
 
 
 
@@ -406,8 +743,8 @@ the periodicity of a function.
 \]
 !et
 
-The quantum part of Shor's algorithm is designed to find the period \(
-r \) of the modular exponentiation function \( f(x) = a^x \bmod N \):
+The quantum part of Shor's algorithm is designed to find the period
+$r$ of the modular exponentiation function $f(x) = a^x \bmod N$:
 
 
 !split
@@ -448,7 +785,7 @@ o Practical Challenges: Quantum error correction, large qubit counts.
 !split
 ===== Error Analysis and Success Probability =====
 
-The probability that a randomly chosen \( a \) leads to successful
+The probability that a randomly chosen $a$ leads to successful
 factoring is generally greater than 50\%. The quantum component
 requires carefully managed resources for high precision.
 
@@ -469,10 +806,6 @@ current cryptographic standards.
 o Shor's algorithm is a groundbreaking quantum algorithm for factoring.
 o Combines quantum period finding with classical number theory.
 o Highlights the potential of quantum computing to break RSA.
-
-
-
-
 
 
 
