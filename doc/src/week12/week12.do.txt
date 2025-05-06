@@ -1,4 +1,4 @@
-TITLE: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+TITLE: Quantum Computing and Quantum Machine Learning
 AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo
 DATE: April 9
 
@@ -29,13 +29,13 @@ due to the principles of quantum parallelism and entanglement.
 Given a vector of $N$ complex numbers $\{x_0, x_1, \dots, x_{N-1}\}$, the DFT is defined as:
 !bt
 \[
-X_k = \sum_{n=0}^{N-1} x_n \exp{-2\pi i kn/N}, \quad k = 0, 1, \dots, N-1
+X_k = \sum_{n=0}^{N-1} x_n \exp{-(2\pi i kn/N)}, \quad k = 0, 1, \dots, N-1
 \]
 !et
 The inverse transform is:
 !bt
 \[
-x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k \exp{2\pi i kn/N}
+x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k \exp{(2\pi i kn/N)}
 \]
 !et
 
@@ -45,7 +45,7 @@ x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k \exp{2\pi i kn/N}
 This can be expressed in matrix form:
 !bt
 \[
-\vec{X} = F_N \vec{x}, \quad \text{where} \quad (F_N)_{jk} = \frac{1}{\sqrt{N}} \exp{2\pi i jk/N}
+\bm{X} = F_N \bm{x}, \quad \text{where} \quad (F_N)_{jk} = \frac{1}{\sqrt{N}} \exp{(2\pi i jk/N)}
 \]
 !et
 
@@ -55,13 +55,13 @@ This can be expressed in matrix form:
 Let $N = 2^n$. The QFT acts on the state:
 !bt
 \[
-\vert x\rangle = \vert x_1 x_2 \dots x_n\rangle
+\vert x\rangle = \vert x_0 x_1 \dots x_{n-1}\rangle
 \]
 !et
 and transforms it into:
 !bt
 \[
-\mathrm{QFT} \vert x\rangle  = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \exp{2\pi i xk/N} \vert k\rangle
+\mathrm{QFT} \vert x\rangle  = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \exp{(2\pi i xk/N)} \vert k\rangle
 \]
 !et
 
@@ -122,7 +122,7 @@ state:
 
 !bt
 \[
-\frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} \exp{2\pi i xk / 2^n} \vert k\rangle
+\frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} \exp{(2\pi i xk / 2^n)} \vert k\rangle
 \]
 !et
 
@@ -243,7 +243,7 @@ operator $U$ and an eigenvector $| \psi \rangle$ such that:
 
 !bt
 \[
-U | \psi \rangle = \exp{2\pi i \phi} | \psi \rangle
+U | \psi \rangle = \exp{(2\pi i \phi)} | \psi \rangle
 \]
 !et
 the goal of QPE is to estimate $\phi$.
@@ -279,7 +279,7 @@ FIGURE: [figures/threequbitsqpe.png, width=800 frac=1.0]
 The goal of QPE is to estimate the phase $\phi \in [0,1)$ where:
 !bt
 \[
-    U\vert \psi\rangle = \exp{2\pi i \phi} \vert\psi\rangle.
+    U\vert \psi\rangle = \exp{(2\pi i \phi)} \vert\psi\rangle.
 \]
 !et
 
@@ -544,114 +544,6 @@ estimated_phi = qpe(phi, num_counting_qubits)
 print(f"Estimated phase: {estimated_phi}")
 print(f"Actual phase: {phi}")
 !ec
-
-
-!split
-===== PennyLane Implementation of QPE =====
-!bc pycod
-import pennylane as qml
-from pennylane import numpy as np
-
-n_estimation = 3
-dev = qml.device("default.qubit", wires=n_estimation + 1)
-
-def apply_controlled_unitaries(U, wires):
-   for i, ctrl in enumerate(wires[:-1]):
-       power = 2**i
-       for _ in range(power):
-           qml.ctrl(U, control=ctrl)(wires[-1])
-
-def inverse_qft(wires):
-   swap_registers(wires)
-   for i in reversed(range(len(wires))):
-       for j in range(i):
-           qml.ctrl(qml.PhaseShift, control=wires[j])(-np.pi / 2**(i - j), wires=wires[i])
-       qml.Hadamard(wires=wires[i])
-
-@qml.qnode(dev)
-def qpe():
-   target_wire = n_estimation
-   for i in range(n_estimation):
-       qml.Hadamard(wires=i)
-
-   qml.RZ(2 * np.pi * 0.375, wires=target_wire)  # Assume phase = 0.375
-
-   apply_controlled_unitaries(qml.RZ, list(range(n_estimation)) + [target_wire])
-   inverse_qft(list(range(n_estimation)))
-   return qml.probs(wires=range(n_estimation))
-
-probs = qpe()
-print("Measured phase state:", probs)
-!ec
-
-!split
-===== Accuracy and Readout =====
-
-The accuracy of phase estimation improves with the number of qubits in
-the control register. For $n$ qubits, we obtain the $n$ most
-significant bits of $\phi$.
-
-!split
-===== Hamiltonian simulation =====
-
-Let $H$ be a Hamiltonian. The evolution $U = \exp{-iHt}$ has
-eigenvectors $\vert u\rangle$ and eigenvalues $\exp{-iEt}$. QPE yields
-estimates of $E$.
-
-Typical applications are
-o Electronic structure problems
-o Dynamics of molecules
-o Energy spectrum estimation
-
-!split
-===== Amplitude estimation =====
-
-Quantum Amplitude Estimation (QAE) uses QFT for estimating
-probabilities (amplitudes) more efficiently than classical sampling.
-
-Prepare a state:
-!bt
-\[
-\vert \psi\rangle = \sqrt{a}\vert1\rangle + \sqrt{1 - a}\vert 0\rangle.
-\]
-!et
-The QAE estimates $a$ using Grover-like iterations and QFT.
-
-!split
-===== PennyLane Example: Energy Estimation =====
-
-We simulate a simple diagonal Hamiltonian using QPE.
-!bc pycod
-  import pennylane as qml
-  from pennylane import numpy as np
-
-  n_qubits = 2
-  dev = qml.device(``default.qubit'', wires=n_qubits + 1)
-
-  def controlled_unitary(t):
-  def unitary():
-  qml.PhaseShift(2 * np.pi * 0.3 * t, wires=n_qubits)
-  return unitary
-
-  @qml.qnode(dev)
-  def energy_estimation():
-  # Apply Hadamards to estimation qubits
-  for i in range(n_qubits):
-  qml.Hadamard(wires=i)
-  # Prepare eigenstate for target qubit
-  qml.PauliX(wires=n_qubits)
-  # Apply controlled-U^{2^j}
-  for i in range(n_qubits):
-  unitary = controlled_unitary(2**i)
-  qml.ctrl(unitary, control=i)()
-  # Inverse QFT
-  inverse_qft(range(n_qubits))
-  return qml.probs(wires=range(n_qubits))
-
-  probs = energy_estimation()
-  print(``Measured energy phase:'', probs)
-!ec
-
 
 
 !split
