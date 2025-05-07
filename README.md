@@ -105,7 +105,7 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Quantum phase estimation algorithm
   - Video of lecture at https://youtu.be/UHqBk1eQT6E
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch26.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
 
@@ -114,13 +114,14 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Quantum Fourier transforms (QFTs), reminder from last week
   - Setting up circuits for QFTs
   - Quantum phase estimation algorithm (QPE)
-- Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
+  - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
 
 ## April 7-11, 2025
   - Setting up circuits for QFTs
   - Quantum phase estimation algorithm (QPE)
-- Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
-
+  - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
+  - Video of lecture at https://youtu.be/3myI1qFLVN8
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril7.pdf
 
 ## April 14-18, 2025, Public holidays in Norway no classes
 
