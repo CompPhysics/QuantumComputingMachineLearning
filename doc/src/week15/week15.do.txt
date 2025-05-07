@@ -492,7 +492,7 @@ There are two broad approaches in the literature for QSVMs:
 Early work by Rebentrost, Mohseni, and Lloyd (2014) formulated an SVM
 in terms of quantum linear algebra.  They showed that one can invert
 the kernel matrix (a positive semidefinite matrix) using quantum
-algorithms (HHL algorithm) in time polylogarithmic in $N$ and $d$ .
+algorithms in time polylogarithmic in $N$ and $d$ .
 Concretely, they assumed quantum RAM (QRAM) access to data and used a
 quantum subroutine to solve the dual SVM as a linear system, yielding
 the vector of $\alpha_i$ in superposition.  Under ideal conditions
@@ -526,7 +526,7 @@ truly benefit from quantum kernels.
 ===== Quantum neural network =====
 
 Another variation is the quantum variational classifier, sometimes
-called a quantum neural network.  Instead of precomputing a fixed
+called a quantum neural network (to be discussed below).  Instead of precomputing a fixed
 kernel, one trains a parameterized quantum circuit to output labels.
 Interestingly, Schuld (2021) shows that variational quantum models,
 when trained by minimizing a loss, are mathematically equivalent to
@@ -607,9 +607,6 @@ matrix, and train a classical SVM using scikit-learn.
 
 !split
 ===== Setting up PennyLane =====
-
-
-
 
 
 First, install PennyLane (pip install pennylane) and import necessary modules:
@@ -721,7 +718,9 @@ on the test set.
 
 
 
-It is also possible to integrate PennyLane’s differentiable capabilities by defining a parameterized kernel and optimizing parameters via gradient descent, but here we keep a fixed feature map.
+It is also possible to integrate PennyLane’s differentiable
+capabilities by defining a parameterized kernel and optimizing
+parameters via gradient descent, but here we keep a fixed feature map.
 
 
 !split
@@ -807,6 +806,32 @@ print(classification_report(Y_test,predictions))
 
 
 
+!split
+===== Small addendum, $F1$-score =====
+
+The $F1$ measure (or $F1$-score) in machine learning is a metric used to
+evaluate the accuracy of a classification model, particularly in
+situations where class distribution is imbalanced.
+It is the harmonic mean of precision and recall and is defined as 
+!bt
+\[
+\mathrm{F1 score} = 2 \times \frac{\mathrm{precision} \times \mathrm{recall}}{\mathrm{precision} + \mathrm{recall}},
+\]
+!et
+where we have defined
+!bt
+\[
+\mathrm{precision} = \frac{\mathrm{True-Positives}}{\mathrm{True-Positives} + \mathrm{False-Positives}},
+\]
+!et
+and
+!bt
+\[
+\mathrm{recall} = \frac{\mathrm{True-Positives}}{\mathrm{True-Positives} + \mathrm{False-Negatives}}.
+\]
+!et
+The $F1$-score ranges from $0$ to $1$ where $1$ means perfect precision and recall, while
+$0$ means either precision or recall is zero.
 
 
 
@@ -1278,7 +1303,7 @@ U(\mathbf{x})=R_x(x_1)\otimes R_x(x_2),
 and a variational layer is
 !bt
 \[
-V(\boldsymbol\theta)=R_y(\theta_1)\otimes R_y(\theta_2),\text{CNOT}(0,1),
+V(\boldsymbol\theta)=R_y(\theta_1)\otimes R_y(\theta_2),\mathrm{CNOT}(0,1),
 \]
 !et
 (apply $R_y$ on each qubit then entangle).  After
