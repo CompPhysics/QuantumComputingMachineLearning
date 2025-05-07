@@ -317,7 +317,10 @@ div.toc p,a {
                None,
                'a-simple-feedforward-qnn-structure'),
               ('Example', 2, None, 'example'),
-              ('Training Output and Loss', 2, None, 'training-output-and-loss'),
+              ('Training output and Cost/Loss-function',
+               2,
+               None,
+               'training-output-and-cost-loss-function'),
               ('Exampe: Variational Classifier',
                2,
                None,
@@ -333,10 +336,10 @@ div.toc p,a {
                'training-qnns-and-loss-landscapes'),
               ('Gradient Computation', 2, None, 'gradient-computation'),
               ('Barren Plateaus', 2, None, 'barren-plateaus'),
-              ('Loss Landscape Visualization',
+              ('Cost/Loss-landscape visualization',
                2,
                None,
-               'loss-landscape-visualization'),
+               'cost-loss-landscape-visualization'),
               ('Exercises', 2, None, 'exercises'),
               ('Implementing QNNs with PennyLane',
                2,
@@ -2164,19 +2167,19 @@ suffer from trainability issues.
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="training-output-and-loss">Training Output and Loss </h2>
+<h2 id="training-output-and-cost-loss-function">Training output and Cost/Loss-function </h2>
 
 <p>Given a QNN with output \( f(\mathbf{x};\boldsymbol\theta) \) (a real
 number or vector of real values), one must define a loss function to
 train on data. Common choices are the mean squared error (MSE) for
 regression or cross-entropy for classification.  For a training set
-\( {\mathbf{x}i,y_i} \), the MSE loss is
+\( {\mathbf{x}i,y_i} \), the MSE cost/loss-function is
 </p>
 $$
-L(\boldsymbol\theta) = \frac{1}{N} \sum{i=1}^N \bigl(f(\mathbf{x}i;\boldsymbol\theta) - y_i\bigr)^2.
+C(\boldsymbol\theta) = \frac{1}{N} \sum_{i=1}^N \bigl(f(\mathbf{x}i;\boldsymbol\theta) - y_i\bigr)^2.
 $$
 
-<p>One then computes gradients \( \nabla{\boldsymbol\theta}L \) and updates
+<p>One then computes gradients \( \nabla{\boldsymbol\theta}C \) and updates
 parameters via gradient descent or other optimizers.
 </p>
 
@@ -2185,9 +2188,7 @@ parameters via gradient descent or other optimizers.
 
 <p>A binary classifier can output
 \( f(\mathbf{x};\boldsymbol\theta)=\langle Z_0\rangle \) on qubit 0, and
-predict label \( +1 \) if \( f\ge0 \), else \( -1 \).  In [50], a code snippet
-defines such a classifier and uses a square loss .  We will build
-similar models in Chapter 4.
+predict label \( +1 \) if \( f\ge0 \), else \( -1 \).
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
@@ -2215,7 +2216,7 @@ compared against targets via a classical loss function.
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="training-qnns-and-loss-landscapes">Training QNNs and Loss Landscapes </h2>
 
-<p>Training a QNN involves optimizing a nonconvex quantum circuit cost
+<p>Training a QNN involves optimizing a non-convex quantum circuit cost
 function.  Like classical neural networks, one typically uses
 gradient-based methods.  However, VQCs have unique features, as listed here.
 </p>
@@ -2234,7 +2235,7 @@ evaluated at shifted parameter values.  This formula allows exact
 gradients by two circuit evaluations per parameter (independent of
 circuit size).  PennyLane automatically applies parameter-shift rule
 when you call backward on a QNode .  Optimizers: One can use gradient
-descent or more advanced optimizers (Adam, SPSA, etc.). PennyLane
+descent or more advanced optimizers (Adam, ADAgrad, RMSprop, etc.). PennyLane
 provides a qml.GradientDescentOptimizer and others.  Gradients flow
 through the classical loss into the quantum circuit via the
 parameter-shift trick. In our code examples below we will see
@@ -2264,12 +2265,12 @@ crucial for making QNN training feasible on near-term devices.
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="loss-landscape-visualization">Loss Landscape Visualization </h2>
+<h2 id="cost-loss-landscape-visualization">Cost/Loss-landscape visualization </h2>
 
-<p>One can imagine the loss function \( L(\boldsymbol\theta) \) over the
+<p>One can imagine the cost/loss function \( C(\boldsymbol\theta) \) over the
 parameter space.  Unlike convex classical problems, this landscape may
 have many local minima and saddle points.  Barren plateaus correspond
-to regions where \( \nabla L\approx 0 \) almost everywhere.  Even if
+to regions where \( \nabla C\approx 0 \) almost everywhere.  Even if
 plateaus are avoided, poor minima can still trap the optimizer .  In
 practice, careful tuning of learning rates and adding small random
 noise can help escape shallow minima.
@@ -2294,8 +2295,7 @@ restarts to find good minima.
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="implementing-qnns-with-pennylane">Implementing QNNs with PennyLane </h2>
 
-<p>PennyLane is a software library for hybrid quantum-classical
-computation. It provides QNodes, differentiable quantum functions that
+<p>PennyLane provides QNodes, differentiable quantum functions that
 can be integrated with Python ML frameworks.  Here we illustrate
 building and training a simple variational quantum classifier using
 PennyLane.
@@ -2622,8 +2622,8 @@ creates a <b>quantum feature map</b> of our classical data.
 <p>After embedding, we apply a layer of trainable rotations and
 entangling gates (StronglyEntanglingLayers), creating a parameterized
 circuit whose outputs depend on adjustable weights . Measuring the
-expectation &#10216;Z&#10217; of the first qubit yields a value in \( [&#8211;1,1] \), which we
-convert to a class probability via \( (1 &#8211; &#10216;Z&#10217;)/2 \).
+expectation \( \langle Z\rangle \) of the first qubit yields a value in \( [-1,1] \), which we
+convert to a class probability via \( (1&#8211;\langle Z\rangle)/2 \).
 </p>
 </div>
 
