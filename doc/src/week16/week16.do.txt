@@ -6,116 +6,68 @@ DATE: May 14, 2025
 ===== Plan for the week of May 12-16 =====
 !bblock 
 o Quantum Boltzmann Machines: Theory and Implementation
-  * Classical Boltzmann  Machines (QBMs)
+  * Quantum neural networks, wrapping up discussions from last week (see notes from last week at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week15/ipynb/week15.ipynb")
+  * Classical Boltzmann  Machines (BMs)
   * Restricted Quantum Boltzmann Machines (RQBM)
   * Training Quantum Boltzmann Machines
   * Practical Implementation with PennyLane
+o Summary of course and work on  project 2
 !eblock
 
 !split
 ===== Introduction =====
 
+!bblock
 Quantum Boltzmann Machines (QBM extend the
 classical Boltzmann machine (a probabilistic neural network) into the
 quantum domain. QBMs promise richer representations by leveraging
 quantum superposition and entanglement, potentially capturing
-correlations that classical models cannot . In these notes, we review
-classical Boltzmann machines and restricted Boltzmann machines (RBMs),
+correlations that classical models cannot .
+!eblock
+
+!bblock
+In these notes, we review
+first classical Boltzmann machines and restricted Boltzmann machines (RBMs).
+Thereafter we
 introduce QBMs and their restricted variant (RQBM), discuss training
 methods, and illustrate practical implementation using
 PennyLane. 
+!eblock
+
+!split
+===== Classical Boltzmann machines =====
 
 
 !split
-===== Introduction to Quantum Boltzmann Machines (QBMs) =====
+===== Quantum Boltzmann Machines (QBMs) =====
 
 
 A Quantum Boltzmann Machine (QBM) extends a classical BM by replacing
 each binary unit with a qubit and generalizing the energy to a quantum
-Hamiltonian.  Concretely, consider a system of $N$ qubits. A
-convenient choice is the transverse-field Ising model (TFIM)
-Hamiltonian:
-
-
-
-
-
-Boltzmann machines are energy-based generative models that learn a
-probability distribution by associating an energy to each
-configuration of visible and hidden binary units.  In a Restricted
-Boltzmann Machine (RBM), the units form a bipartite graph with visible
-and hidden layers and no intra-layer connections.  The joint
-distribution is
-
-$$
-
-p(\mathbf{v},\mathbf{h}) \propto \exp\bigl[-E(\mathbf{v},\mathbf{h})\bigr],
-
-$$
-
-where a common choice for the energy is E(\mathbf{v},\mathbf{h}) =
--\sum_i a_i v_i - \sum_j b_j h_j - \sum_{i,j} v_i\,W_{ij}\,h_j.  RBMs
-have been widely used for unsupervised learning, dimensionality
-reduction, and generating samples .  However, training classical BMs
-and RBMs is computationally expensive because computing the partition
-function or sampling from the model (“negative phase”) often requires
-many Gibbs steps .
-
+Hamiltonian.
 
 
 Quantum Boltzmann machines (QBMs) generalize this framework by
 encoding the model distribution in a quantum Gibbs state.  Instead of
-a classical energy, one defines a Hamiltonian H(\boldsymbol{\theta})
-whose parameters \boldsymbol{\theta} (biases and couplings) play the
-role of the RBM weights.  The model’s density operator is the thermal
-(Gibbs) state
-
-\rho(\boldsymbol{\theta}) = \frac{e^{-\beta H(\boldsymbol{\theta})}}{Z(\boldsymbol{\theta})},
-
-with inverse temperature \beta (often set to 1) and partition function
-\(Z = \Tr(e^{-\beta H})\).  The probability of observing a visible
-configuration v is obtained by measuring \rho in the computational
+a classical energy, one defines a Hamiltonian $H(\boldsymbol{\Theta})$
+whose parameters $\boldsymbol{\Theta}$ (biases and couplings) play the
+role of the RBM weights.  The model’s density operator is the state
+!bt
+\[
+\rho(\boldsymbol{\theta}) = \frac{\exp{-(\beta H(\boldsymbol{\Theta}))}}{Z(\boldsymbol{\Theta})},
+\]
+!et
+with inverse temperature $\beta$ (set to 1 as we did for standard Boltzmann machines ) and partition function
+$Z = \Tr(\exp{-\beta H})$.  The probability of observing a visible
+configuration v is obtained by measuring $\rho$ in the computational
 basis (and tracing out hidden qubits if any).  In effect, the quantum
 model can capture richer correlations via superposition and
-entanglement .
+entanglement.
 
 
 
-Figure: A schematic of quantum generative modeling using a parameterized quantum circuit (Quantum Circuit Born Machine, or QCBM).  A training dataset with empirical distribution \tilde{p}(x) is used to optimize quantum circuit parameters \theta so that the circuit-induced distribution q_\theta(x) = |\langle x|U(\theta)|0\rangle|^2 approximates the target distribution . This figure illustrates the data pipeline and loss evaluation for generative modeling. The Quantum Boltzmann machine can be viewed as another quantum generative model, where the circuit prepares a thermal state rather than a pure state.
-
-
-
-Figure: Framework for quantum generative modeling.  A parameterized quantum circuit $U(\theta)$ is trained so that its output distribution $q_\theta(x)=|\langle x|U(\theta)|0\rangle|^2$ matches the data distribution $p(x)$ . The lower part of the figure shows the “Born machine” approach; in a Quantum Boltzmann Machine, one would instead prepare and measure a thermal (Gibbs) state of a Hamiltonian.
-
-
-
-
-
-Classical Boltzmann Machines
-
-
-
-
-
-A classical Boltzmann machine (BM) is an Ising model with binary units
-v_i,h_j.  Its energy can be written E(v,h) = - \sum_i a_i v_i - \sum_j
-b_j h_j - \sum_{i<j} W_{ij} x_i x_j (where x runs over all units)
-. The restricted variant (RBM) enforces no visible-visible or
-hidden-hidden couplings, so only v\!-\!h interactions remain.
-Training maximizes the likelihood of training data by adjusting
-\{a,b,W\}. In practice this involves computing the “positive phase”
-(expectation under the data) and “negative phase” (expectation under
-the model), typically by Gibbs sampling or contrastive divergence .
-Despite the simplification of the restricted architecture, exact
-training of RBMs remains computationally demanding due to the cost of
-sampling the model distribution, motivating the exploration of quantum
-accelerations.
-
-
-
-
-
-Quantum Boltzmann Machines
+!split
+===== Quantum Boltzmann Machines =====
 
 
 
@@ -124,7 +76,7 @@ Quantum Boltzmann Machines
 In a Quantum Boltzmann Machine (QBM), the classical energy is replaced
 by a Hamiltonian H acting on qubits.  The model distribution over
 classical bitstrings v is given by the diagonal of the quantum Gibbs
-state \rho = e^{-H}/Z.  A straightforward choice is a stoquastic
+state $\rho = e^{-H}/Z$.  A straightforward choice is a stoquastic
 Hamiltonian that is diagonal in the computational basis
 (e.g. involving only Pauli-$Z$ operators), which yields a probability
 distribution very similar to a classical BM.  More generally one can
@@ -135,24 +87,23 @@ from the transverse-field Ising Hamiltonian .  However,
 non-commutativity makes exact training harder, so many proposals use
 either special Hamiltonians or variational approximations.
 
+!split
 
+!split
+===== Restricted QBM (RQBM) =====
 
 A Restricted Quantum Boltzmann Machine (RQBM) (also called Quantum RBM
 or QRBM) enforces a bipartite structure analogous to the classical
 RBM: no hidden-hidden interactions, and possibly limited
 hidden-visible connectivity.  The simplest RQBM Hamiltonian can be
 written (up to local Pauli bases) as
-
+!bt
 \[
-
-\label{eq:rqbm_hamiltonian}
-
 H(\mathbf{a},\mathbf{b},W,V) \;=\; \sum_{i=1}^{n_v} a_i Z_i \;+\; \sum_{j=1}^{n_h} b_j Z_j \;+\; \sum_{i,j} W_{ij}\, Z_i Z_j \;+\; \sum_{i<i{\prime}} V_{ii{\prime}}\, Z_i Z_{i{\prime}} \,.
-
 \]
-
-Here Z_i and Z_j are Pauli-$Z$ operators on the visible and hidden
-qubits respectively, a_i,b_j are biases, W_{ij} are visible-hidden
+!et
+Here $Z_i$ and $Z_j$ are Pauli-$Z$ operators on the visible and hidden
+qubits respectively, $a_i,b_j$ are biases, $W_{ij}$ are visible-hidden
 couplings, and V_{ii{\prime}} are possible visible-visible couplings.
 (Classically, V=0 in an RBM; allowing V\neq0 gives a “2-local QRBM” as
 in Wu et al. .)  Importantly, there are no hidden-hidden $ZZ$ terms in
@@ -165,8 +116,8 @@ and proved that this 2-local QRBM is universal for quantum computation
 
 
 
-
-Quantum Statistical Mechanics Background
+!split
+===== Quantum Statistical Mechanics Background =====
 
 
 
@@ -181,12 +132,11 @@ context, one is interested in the probability p(v) of measuring the
 visible qubits in computational basis state v.  If the full thermal
 state lives on both visible and hidden qubits, this probability is
 
+!bt
 \[
-
 p_\theta(v) \;=\; \Tr\bigl[\Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
-
 \]
-
+!et
 where \(\Pi_v^{(\text{vis})}=|v\>\<v|\) acts on the visible subspace.
 Equivalently, one may “trace out” the hidden qubits and work with the
 reduced density matrix on the visible subsystem.  Computing these
@@ -197,11 +147,8 @@ annealers, or variational algorithms.
 
 
 
-
-Energy-Based Training Objective and Gradients
-
-
-
+!split
+===== Energy-Based Training Objective and Gradients =====
 
 
 RQBM training is analogous to the classical case: we have a dataset of
@@ -212,29 +159,28 @@ p_{\rm data}(v).  Equivalently, one can view the data distribution as
 a target density matrix \eta (diagonal in the computational basis) and
 minimize the quantum relative entropy (quantum KL divergence)
 
+!bt
 \[
-
 S(\eta\Vert \rho(\theta)) = \Tr\!\bigl[\eta\ln\eta\bigr] - \Tr\!\bigl[\eta\ln\rho(\theta)\bigr] \;.
-
 \]
+!et
 
 This loss is non-negative and equals zero only when \eta=\rho(\theta).
 Writing \rho=e^{-H}/Z, one finds the gradient of the relative entropy
 (for parameter \theta in H) as
-
+!bt
 \[
-
 \frac{\partial}{\partial\theta} S(\eta\Vert\rho)
-
 = \Tr\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
-
 = \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \Tr[\rho\,\partial_\theta H]\Bigr).
-
 \]
-
+!et
 In other words,
-
+!bt
+\[
 \nabla_\theta S \;=\; \beta\Bigl(\langle \partial_\theta H\rangle_{\rm data} \;-\; \langle \partial_\theta H\rangle_{\rm model}\Bigr).
+\]
+!et
 
 This is directly analogous to the classical RBM gradient: the update
 for each parameter is proportional to the difference between its
@@ -262,12 +208,8 @@ Figure: Quantum vs. classical training loop for RBMs.  In the classical loop (re
 
 
 
-
-Parameter Optimization and Variational Techniques
-
-
-
-
+!split
+===== Parameter Optimization and Variational Techniques =====
 
 Given the gradient above, one can optimize \theta by standard
 gradient-based methods (SGD, Adam, etc.).  In a gate-based setting, we
@@ -310,10 +252,8 @@ with provably polynomial complexity under realistic conditions .
 
 
 
-
-Implementation with PennyLane
-
-
+!split
+===== Implementation with PennyLane =====
 
 
 
@@ -324,7 +264,7 @@ and entangling gates that respect the bipartite structure.  Below is
 illustrative code (in Python) using PennyLane’s default.qubit
 simulator.
 
-
+!bc pycod
 import pennylane as qml
 import numpy as np
 # Number of visible and hidden qubits
@@ -352,8 +292,7 @@ dev = qml.device(“default.qubit”, wires=n_v+n_h)
 # Return probability distribution on visible wires
 
 return qml.probs(wires=list(range(n_v)))
-
-\end{lstlisting}
+!ec
 
 
 
@@ -361,33 +300,22 @@ This circuit takes a parameter vector params of length n_v+n_h and returns the p
 
 
 
-Next, we train this model to match a target dataset distribution.  Suppose our data has distribution target = [p(00), p(01), p(10), p(11)].  We can define the (classical) loss as the Kullback-Leibler divergence D_{\rm KL}(p_{\rm data}\Vert q_\theta) or simply the negative log-likelihood.  Then we update params by gradient descent.  PennyLane’s automatic differentiation can compute gradients via the parameter-shift rule, but we show an explicit parameter-shift computation for demonstration:
+Next, we train this model to match a target dataset distribution.
+Suppose our data has distribution target = [p(00), p(01), p(10),
+p(11)].  We can define the (classical) loss as the Kullback-Leibler
+divergence D_{\rm KL}(p_{\rm data}\Vert q_\theta) or simply the
+negative log-likelihood.  Then we update params by gradient descent.
+PennyLane’s automatic differentiation can compute gradients via the
+parameter-shift rule, but we show an explicit parameter-shift
+computation for demonstration:
 
-
-
-\begin{lstlisting}[language=Python]
-
-
-
-
-
-Example target distribution over 2 visible bits
-
-
-
-
-
+!bc pycod
+# Example target distribution over 2 visible bits
 target = np.array([0.3, 0.2, 0.1, 0.4])  # must sum to 1
-
-
-
 def loss(params):
-
-probs = circuit(params)  # model probabilities for visible states
-
+    probs = circuit(params)  # model probabilities for visible states
 # Add small epsilon to avoid log(0)
-
-return np.sum(target * np.log((target + 1e-9) / probs))
+    return np.sum(target * np.log((target + 1e-9) / probs))
 
 
 
