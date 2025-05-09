@@ -265,38 +265,16 @@ illustrative code (in Python) using PennyLane’s default.qubit
 simulator.
 
 !bc pycod
-import pennylane as qml
-import numpy as np
-# Number of visible and hidden qubits
-n_v, n_h = 2, 1
-dev = qml.device(“default.qubit”, wires=n_v+n_h)
 
-# Define a variational circuit (QNode)
-
-@qml.qnode(dev, interface=‘autograd’)
-    def circuit(params):
-
-# params is a vector of rotation angles
-
-# Prepare all qubits in |0>
-
-# Example ansatz: one layer of rotations + entangling gates
-    for i in range(n_v + n_h):
-        qml.RY(params[i], wires=i)
-# entangle visible to hidden
-        for i in range(n_v):
-            qml.CNOT(wires=[i, n_v])  # connect each visible i to hidden n_v
-
-# Optionally more layers…
-
-# Return probability distribution on visible wires
-
-return qml.probs(wires=list(range(n_v)))
 !ec
 
 
 
-This circuit takes a parameter vector params of length n_v+n_h and returns the probabilities q_\theta(v) of measuring each visible bitstring v.  Notice we measure only the visible wires (the wires=list(range(n_v)) in qml.probs marginalizes out the hidden qubit).
+This circuit takes a parameter vector params of length n_v+n_h and
+returns the probabilities q_\theta(v) of measuring each visible
+bitstring v.  Notice we measure only the visible wires (the
+wires=list(range(n_v)) in qml.probs marginalizes out the hidden
+qubit).
 
 
 
@@ -324,54 +302,10 @@ def loss(params):
 Compute gradient via parameter-shift rule
 
 
-
-
-
-def parameter_shift_grad(params):
-
-grads = np.zeros_like(params)
-
-shift = np.pi/2
-
-for idx in range(len(params)):
-
-shift_vector = np.zeros_like(params)
-
-shift_vector[idx] = shift
-
-probs_plus = circuit(params + shift_vector)
-
-probs_minus = circuit(params - shift_vector)
-
-loss_plus  = np.sum(target * np.log((target + 1e-9) / probs_plus))
-
-loss_minus = np.sum(target * np.log((target + 1e-9) / probs_minus))
-
-grads[idx] = 0.5 * (loss_plus - loss_minus)
-
-return grads
-
-
-
-
-
 Initialize parameters and perform a simple gradient descent
 
 
 
-
-
-params = np.random.normal(0, 0.1, size=(n_v+n_h,))
-
-learning_rate = 0.1
-
-for epoch in range(100):
-
-grads = parameter_shift_grad(params)
-
-params -= learning_rate * grads
-
-\end{lstlisting}
 
 
 
@@ -380,46 +314,6 @@ This code illustrates the training loop.  At each epoch we evaluate the loss, co
 
 
 
-
-Applications and Examples
-
-
-
-
-
-RQBMs and related quantum generative models have begun to find applications in unsupervised learning and physics.  For example, anomaly detection in cybersecurity can be cast as a generative modeling task: anomalies are rare samples of a complex distribution.  Stein et al. (2023) built fully unsupervised anomaly detectors using QBMs trained on synthetic intrusion data.  Their results indicate that, for certain tasks, the quantum model can achieve better anomaly-detection performance than the classical RBM, often requiring fewer training steps .  Likewise, Moro & Prati (2023) demonstrated a quantum speed-up in training RBMs on a D-Wave annealer: the negative-phase sampling was up to 64× faster in hardware than in a CPU implementation for real-world datasets, although overheads remain .
-
-
-
-In another large-scale example, Sinno et al. (2025) implemented a QRBM with 120 visible and 120 hidden units on D-Wave’s Pegasus chip to generate synthetic network traffic for intrusion detection.  They successfully generated over 1.6 million attack samples, achieving a balanced dataset of more than 4.2 million records.  Compared to classical oversampling methods (SMOTE, etc.), the QRBM-generated data led to higher detection rates and F1 scores across multiple classifiers . These results highlight the potential of RQBMs as quantum generative models in practical machine-learning workflows.
-
-
-
-RQBMs are also studied in physics.  For instance, Wu et al. (2020) used a QRBM ansatz on a superconducting quantum chip to approximate quantum wavefunctions. They trained the QRBM so that its output state approximated the ground state and Gibbs (thermal) state of small molecules, achieving reasonable accuracy .  This connects to the broader idea of using neural-network quantum states (like RBMs) to represent many-body wavefunctions. Indeed, Carleo & Troyer (2017) introduced classical RBMs as variational ansätze for quantum ground states, and unitary/complex extensions have been explored in many works . A Restricted Quantum Boltzmann Machine provides an alternative ansatz where part of the network is truly quantum; recent theory shows that allowing non-commuting terms (e.g. in the hidden layer) does not expand representational power beyond classical RBMs, though it does change resource requirements .
-
-
-
-Overall, RQBMs sit at the intersection of quantum statistical physics and machine learning. They generalize RBMs to the quantum domain, require understanding of density matrices and partition functions, and employ energy-based learning objectives analogous to classical models. Variational training techniques and software frameworks like PennyLane make it possible to experiment with RQBMs on near-term devices. As research progresses, we expect RQBMs and related models to be applied to more sophisticated generative tasks and potentially offer advantages in sampling, expressivity, or training speed .
-
-
-
-
-
-References
-
-
-
-
-
-Amin et al., 2018. Quantum Boltzmann Machine, Phys. Rev. X 8, 021050. (Introduced the QBM and training bounds .)
-Wu et al., 2020. Quantum restricted Boltzmann machine is universal for quantum computation, arXiv:2005.11970. (Defined the 2-local QRBM Hamiltonian and demonstrated its universality .)
-Huijgen et al., 2024. Training Quantum Boltzmann Machines with the β-VQE, arXiv:2304.08631. (Presented the nested variational training algorithm .)
-Coopmans & Benedetti, 2024. On the sample complexity of quantum Boltzmann machine learning, Commun. Phys. 7, 274. (Theoretical analysis of relative-entropy training and sample complexity .)
-Minervini et al., 2025. Evolved Quantum Boltzmann Machines, arXiv:2501.03367. (Proposed the eQBM ansatz mixing imaginary and real time evolution .)
-Nicosia et al., 2025. Expressive equivalence of classical and quantum RBMs, arXiv:2502.17562. (Introduced semi-quantum RBMs (sqRBMs) with commuting visible terms and non-commuting hidden terms; showed structural relationships with classical RBMs .)
-Stein et al., 2023. Unsupervised anomaly detection with Quantum Boltzmann Machines, IEEE QWeek (preprint arXiv:2306.04998). (Applied QBMs to fraud/anomaly detection; found QBMs could outperform classical RBMs on synthetic cybersecurity data .)
-Moro & Prati, 2023. Anomaly detection speed-up by quantum restricted Boltzmann machines, Commun. Phys. 6, 269. (Demonstrated classical vs. quantum training loops on real datasets and observed large sampling speed-ups on a quantum annealer .)
-Sinno et al., 2025. Implementing Large Quantum Boltzmann Machines for Dataset Balancing, arXiv:2502.03086. (Embedded a 120×120 QRBM on D-Wave Pegasus to generate millions of intrusion-detection samples, improving downstream classifier performance .)
 
 
 
@@ -1198,13 +1092,6 @@ References
 
 
 
-Montúfar, G. (2018). Restricted Boltzmann Machines: Introduction and Review. Journal of Machine Learning Research 23(36), 1-108 .
-Amin, M. H., Andriyash, E., Rolfe, J., Kulchytskyy, B., & Melko, R. (2018). Quantum Boltzmann Machine. Physical Review X, 8(2), 021050 .
-Askarzadeh, A., Cong, I., & Sarma, S. (2024). On the sample complexity of quantum Boltzmann machine learning. Communications Physics 7, 24 .
-Wiebe, N., & Wossnig, L. (2019). Generative training of quantum Boltzmann machines with hidden units. arXiv:1905.09902 .
-Tan, A.T.V., Bahr, K., Plewnia, R., Grimsley, H.R., & Cerezo, M. (2023). Training quantum Boltzmann machines with coresets. arXiv:2307.14459 .
-Hinton, G. E. (2002). Training products of experts by minimizing contrastive divergence. Neural Computation 14, 1771–1800.
-Hinton, G. E., Osindero, S., & Teh, Y.-W. (2006). A Fast Learning Algorithm for Deep Belief Nets. Neural Computation 18(7), 1527–1554.
 
 
 
@@ -1228,3 +1115,548 @@ Contrastive Divergence (CD): Approximate BM training algorithm (Ch. 2, 6).
 PennyLane: Quantum software library for circuit simulations (Ch. 5).
 Hamiltonian: Quantum operator representing energy (Ch. 3, 5).
 Visibility (clamping): Fixing visible qubits to data values during training (Ch. 3–5).
+
+
+
+Applications and Examples
+
+
+
+
+
+RQBMs and related quantum generative models have begun to find applications in unsupervised learning and physics.  For example, anomaly detection in cybersecurity can be cast as a generative modeling task: anomalies are rare samples of a complex distribution.  Stein et al. (2023) built fully unsupervised anomaly detectors using QBMs trained on synthetic intrusion data.  Their results indicate that, for certain tasks, the quantum model can achieve better anomaly-detection performance than the classical RBM, often requiring fewer training steps .  Likewise, Moro & Prati (2023) demonstrated a quantum speed-up in training RBMs on a D-Wave annealer: the negative-phase sampling was up to 64× faster in hardware than in a CPU implementation for real-world datasets, although overheads remain .
+
+
+
+In another large-scale example, Sinno et al. (2025) implemented a QRBM with 120 visible and 120 hidden units on D-Wave’s Pegasus chip to generate synthetic network traffic for intrusion detection.  They successfully generated over 1.6 million attack samples, achieving a balanced dataset of more than 4.2 million records.  Compared to classical oversampling methods (SMOTE, etc.), the QRBM-generated data led to higher detection rates and F1 scores across multiple classifiers . These results highlight the potential of RQBMs as quantum generative models in practical machine-learning workflows.
+
+
+
+RQBMs are also studied in physics.  For instance, Wu et al. (2020) used a QRBM ansatz on a superconducting quantum chip to approximate quantum wavefunctions. They trained the QRBM so that its output state approximated the ground state and Gibbs (thermal) state of small molecules, achieving reasonable accuracy .  This connects to the broader idea of using neural-network quantum states (like RBMs) to represent many-body wavefunctions. Indeed, Carleo & Troyer (2017) introduced classical RBMs as variational ansätze for quantum ground states, and unitary/complex extensions have been explored in many works . A Restricted Quantum Boltzmann Machine provides an alternative ansatz where part of the network is truly quantum; recent theory shows that allowing non-commuting terms (e.g. in the hidden layer) does not expand representational power beyond classical RBMs, though it does change resource requirements .
+
+
+
+Overall, RQBMs sit at the intersection of quantum statistical physics and machine learning. They generalize RBMs to the quantum domain, require understanding of density matrices and partition functions, and employ energy-based learning objectives analogous to classical models. Variational training techniques and software frameworks like PennyLane make it possible to experiment with RQBMs on near-term devices. As research progresses, we expect RQBMs and related models to be applied to more sophisticated generative tasks and potentially offer advantages in sampling, expressivity, or training speed .
+
+
+
+
+
+References
+
+
+
+
+
+Amin et al., 2018. Quantum Boltzmann Machine, Phys. Rev. X 8, 021050. (Introduced the QBM and training bounds .)
+Wu et al., 2020. Quantum restricted Boltzmann machine is universal for quantum computation, arXiv:2005.11970. (Defined the 2-local QRBM Hamiltonian and demonstrated its universality .)
+Huijgen et al., 2024. Training Quantum Boltzmann Machines with the β-VQE, arXiv:2304.08631. (Presented the nested variational training algorithm .)
+Coopmans & Benedetti, 2024. On the sample complexity of quantum Boltzmann machine learning, Commun. Phys. 7, 274. (Theoretical analysis of relative-entropy training and sample complexity .)
+Minervini et al., 2025. Evolved Quantum Boltzmann Machines, arXiv:2501.03367. (Proposed the eQBM ansatz mixing imaginary and real time evolution .)
+Nicosia et al., 2025. Expressive equivalence of classical and quantum RBMs, arXiv:2502.17562. (Introduced semi-quantum RBMs (sqRBMs) with commuting visible terms and non-commuting hidden terms; showed structural relationships with classical RBMs .)
+Stein et al., 2023. Unsupervised anomaly detection with Quantum Boltzmann Machines, IEEE QWeek (preprint arXiv:2306.04998). (Applied QBMs to fraud/anomaly detection; found QBMs could outperform classical RBMs on synthetic cybersecurity data .)
+Moro & Prati, 2023. Anomaly detection speed-up by quantum restricted Boltzmann machines, Commun. Phys. 6, 269. (Demonstrated classical vs. quantum training loops on real datasets and observed large sampling speed-ups on a quantum annealer .)
+Sinno et al., 2025. Implementing Large Quantum Boltzmann Machines for Dataset Balancing, arXiv:2502.03086. (Embedded a 120×120 QRBM on D-Wave Pegasus to generate millions of intrusion-detection samples, improving downstream classifier performance .)
+
+Montúfar, G. (2018). Restricted Boltzmann Machines: Introduction and Review. Journal of Machine Learning Research 23(36), 1-108 .
+Amin, M. H., Andriyash, E., Rolfe, J., Kulchytskyy, B., & Melko, R. (2018). Quantum Boltzmann Machine. Physical Review X, 8(2), 021050 .
+Askarzadeh, A., Cong, I., & Sarma, S. (2024). On the sample complexity of quantum Boltzmann machine learning. Communications Physics 7, 24 .
+Wiebe, N., & Wossnig, L. (2019). Generative training of quantum Boltzmann machines with hidden units. arXiv:1905.09902 .
+Tan, A.T.V., Bahr, K., Plewnia, R., Grimsley, H.R., & Cerezo, M. (2023). Training quantum Boltzmann machines with coresets. arXiv:2307.14459 .
+Hinton, G. E. (2002). Training products of experts by minimizing contrastive divergence. Neural Computation 14, 1771–1800.
+Hinton, G. E., Osindero, S., & Teh, Y.-W. (2006). A Fast Learning Algorithm for Deep Belief Nets. Neural Computation 18(7), 1527–1554.
+
+
+
+
+
+!split
+===== Energy models =====
+
+We define a domain $\bm{X}$ of stochastic variables $\bm{X}= \{x_0,x_1, \dots , x_{n-1}\}$ with a pertinent probability distribution
+!bt
+\[
+p(\bm{X})=\prod_{x_i\in \bm{X}}p(x_i),
+\]
+!et
+where we have assumed that the random varaibles $x_i$ are all independent and identically distributed (iid).
+
+We will now assume that we can defined this function in terms of optimization parameters $\bm{\Theta}$, which could be the biases and weights of deep network, and a set of hidden variables we also assume to be random variables which also are iid. The domain of these variables is
+$\bm{H}= \{h_0,h_1, \dots , h_{m-1}\}$.
+
+!split
+===== Probability model =====
+
+We define a probability
+!bt
+\[
+p(x_i,h_j;\bm{\Theta}) = \frac{f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+where $f(x_i,h_j;\bm{\Theta})$ is a function which we assume is larger or
+equal than zero and obeys all properties required for a probability
+distribution and $Z(\bm{\Theta})$ is a normalization constant. Inspired by
+statistical mechanics, we call it often for the partition function.
+It is defined as (assuming that we have discrete probability distributions)
+!bt
+\[
+Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}).
+\]
+!et
+
+!split
+===== Marginal and conditional probabilities =====
+
+We can in turn define the marginal probabilities
+!bt
+\[
+p(x_i;\bm{\Theta}) = \frac{\sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+and 
+!bt
+\[
+p(h_i;\bm{\Theta}) = \frac{\sum_{x_i\in \bm{X}}f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})}.
+\]
+!et
+
+
+!split
+===== Change of notation =====
+
+_Note the change to a vector notation_. A variable like $\bm{x}$
+represents now a specific _configuration_. We can generate an infinity
+of such configurations. The final partition function is then the sum
+over all such possible configurations, that is
+
+!bt
+\[
+Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}),
+\]
+!et
+changes to
+!bt
+\[
+Z(\bm{\Theta})=\sum_{\bm{x}}\sum_{\bm{h}} f(\bm{x},\bm{h};\bm{\Theta}).
+\]
+!et
+If we have a binary set of variable $x_i$ and $h_j$ and $M$ values of $x_i$ and $N$ values of $h_j$ we have in total $2^M$ and $2^N$ possible $\bm{x}$ and $\bm{h}$ configurations, respectively.
+
+We see that even for the modest binary case, we can easily approach a
+number of configuration which is not possible to deal with.
+
+!split
+===== Optimization problem =====
+
+At the end, we are not interested in the probabilities of the hidden variables. The probability we thus want to optimize is 
+!bt
+\[
+p(\bm{X};\bm{\Theta})=\prod_{x_i\in \bm{X}}p(x_i;\bm{\Theta})=\prod_{x_i\in \bm{X}}\left(\frac{\sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})}\right),
+\]
+!et
+which we rewrite as
+!bt
+\[
+p(\bm{X};\bm{\Theta})=\frac{1}{Z(\bm{\Theta})}\prod_{x_i\in \bm{X}}\left(\sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})\right).
+\]
+!et
+
+!split
+===== Further simplifications =====
+
+We simplify further by rewriting it as
+!bt
+\[
+p(\bm{X};\bm{\Theta})=\frac{1}{Z(\bm{\Theta})}\prod_{x_i\in \bm{X}}f(x_i;\bm{\Theta}),
+\]
+!et
+where we used $p(x_i;\bm{\Theta}) = \sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})$.
+The optimization problem is then
+!bt
+\[
+{\displaystyle \mathrm{arg} \hspace{0.1cm}\max_{\bm{\bm{\Theta}}\in {\mathbb{R}}^{p}}} \hspace{0.1cm}p(\bm{X};\bm{\Theta}).
+\]
+!et
+
+!split
+===== Optimizing the logarithm instead =====
+
+Computing the derivatives with respect to the parameters $\bm{\Theta}$ is
+easier (and equivalent) with taking the logarithm of the
+probability. We will thus optimize
+!bt
+\[
+{\displaystyle \mathrm{arg} \hspace{0.1cm}\max_{\bm{\bm{\Theta}}\in {\mathbb{R}}^{p}}} \hspace{0.1cm}\log{p(\bm{X};\bm{\Theta})},
+\]
+!et
+which leads to
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{p(\bm{X};\bm{\Theta})}=0.
+\]
+!et
+
+!split
+===== Expression for the gradients =====
+This leads to the following equation
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{p(\bm{X};\bm{\Theta})}=\nabla_{\bm{\Theta}}\left(\sum_{x_i\in \bm{X}}\log{f(x_i;\bm{\Theta})}\right)-\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=0.
+\]
+!et
+
+The first term is called the positive phase and we assume that we have a model for the function $f$ from which we can sample values. Below we will develop an explicit model for this.
+The second term is called the negative phase and is the one which leads to more difficulties.
+
+!split
+===== The derivative of the partition function =====
+
+The partition function, defined above as
+!bt
+\[
+Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}),
+\]
+!et
+is in general the most problematic term. In principle both $x$ and $h$ can span large degrees of freedom, if not even infinitely many ones, and computing the partition function itself is often not desirable or even feasible. The above derivative of the partition function can however be written in terms of an expectation value which is in turn evaluated  using Monte Carlo sampling and the theory of Markov chains, popularly shortened to MCMC (or just MC$^2$).
+
+!split
+===== Explicit expression for the derivative =====
+We can rewrite
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{\nabla_{\bm{\Theta}}Z(\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+which reads in more detail
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{\nabla_{\bm{\Theta}} \sum_{x_i\in \bm{X}}f(x_i;\bm{\Theta})   }{Z(\bm{\Theta})}.
+\]
+!et
+
+We can rewrite the function $f$ (we have assumed that is larger or
+equal than zero) as $f=\exp{\log{f}}$. We can then reqrite the last
+equation as
+
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{ \sum_{x_i\in \bm{X}} \nabla_{\bm{\Theta}}\exp{\log{f(x_i;\bm{\Theta})}}   }{Z(\bm{\Theta})}.
+\]
+!et
+
+!split
+===== Final expression =====
+
+Taking the derivative gives us
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{ \sum_{x_i\in \bm{X}}f(x_i;\bm{\Theta}) \nabla_{\bm{\Theta}}\log{f(x_i;\bm{\Theta})}   }{Z(\bm{\Theta})}, 
+\]
+!et
+which is the expectation value of $\log{f}$
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\sum_{x_i\in \bm{X}}p(x_i;\bm{\Theta}) \nabla_{\bm{\Theta}}\log{f(x_i;\bm{\Theta})},
+\]
+!et
+that is
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\mathbb{E}(\log{f(x_i;\bm{\Theta})}).
+\]
+!et
+
+This quantity is evaluated using Monte Carlo sampling, with Gibbs
+sampling as the standard sampling rule.  Before we discuss the
+explicit algorithms, we need to remind ourselves about Markov chains
+and sampling rules like the Metropolis-Hastings algorithm and Gibbs
+sampling.
+
+!split
+===== Introducing the energy model =====
+
+As we will see below, a typical Boltzmann machines employs a probability distribution
+!bt
+\[
+p(\bm{x},\bm{h};\bm{\Theta}) = \frac{f(\bm{x},\bm{h};\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+where $f(\bm{x},\bm{h};\bm{\Theta})$ is given by a so-called energy model. If we assume that the random variables $x_i$ and $h_j$ take binary values only, for example $x_i,h_j=\{0,1\}$, we have a so-called binary-binary model where
+!bt
+\[
+f(\bm{x},\bm{h};\bm{\Theta})=-E(\bm{x}, \bm{h};\bm{\Theta}) = \sum_{x_i\in \bm{X}} x_i a_i+\sum_{h_j\in \bm{H}} b_j h_j + \sum_{x_i\in \bm{X},h_j\in\bm{H}} x_i w_{ij} h_j,
+\]
+!et
+where the set of parameters are given by the biases and weights $\bm{\Theta}=\{\bm{a},\bm{b},\bm{W}\}$.
+_Note the vector notation_ instead of $x_i$ and $h_j$ for $f$. The vectors $\bm{x}$ and $\bm{h}$ represent a specific instance of stochastic variables $x_i$ and $h_j$. These arrangements of $\bm{x}$ and $\bm{h}$ lead to a specific energy configuration.
+
+!split
+===== More compact notation =====
+
+With the above definition we can write the probability as
+!bt
+\[
+p(\bm{x},\bm{h};\bm{\Theta}) = \frac{\exp{(\bm{a}^T\bm{x}+\bm{b}^T\bm{h}+\bm{x}^T\bm{W}\bm{h})}}{Z(\bm{\Theta})},
+\]
+!et
+where the biases $\bm{a}$ and $\bm{h}$ and the weights defined by the matrix $\bm{W}$ are the parameters we need to optimize.
+
+
+
+!split
+===== Energy models =====
+
+Last week we defined a domain $\bm{X}$ of stochastic variables $\bm{X}= \{x_0,x_1, \dots , x_{n-1}\}$ with a pertinent probability distribution
+!bt
+\[
+p(\bm{X})=\prod_{x_i\in \bm{X}}p(x_i),
+\]
+!et
+where we have assumed that the random varaibles $x_i$ are all independent and identically distributed (iid).
+
+We will now assume that we can defined this function in terms of optimization parameters $\bm{\Theta}$, which could be the biases and weights of deep network, and a set of hidden variables we also assume to be random variables which also are iid. The domain of these variables is
+$\bm{H}= \{h_0,h_1, \dots , h_{m-1}\}$.
+
+!split
+===== Probability model =====
+
+We define a probability
+!bt
+\[
+p(x_i,h_j;\bm{\Theta}) = \frac{f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+where $f(x_i,h_j;\bm{\Theta})$ is a function which we assume is larger or
+equal than zero and obeys all properties required for a probability
+distribution and $Z(\bm{\Theta})$ is a normalization constant. Inspired by
+statistical mechanics, we call it often for the partition function.
+It is defined as (assuming that we have discrete probability distributions)
+!bt
+\[
+Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}).
+\]
+!et
+
+!split
+===== Marginal and conditional probabilities =====
+
+We can in turn define the marginal probabilities
+!bt
+\[
+p(x_i;\bm{\Theta}) = \frac{\sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+and 
+!bt
+\[
+p(h_i;\bm{\Theta}) = \frac{\sum_{x_i\in \bm{X}}f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})}.
+\]
+!et
+
+
+!split
+===== Change of notation =====
+
+_Note the change to a vector notation_. A variable like $\bm{x}$
+represents now a specific _configuration_. We can generate an infinity
+of such configurations. The final partition function is then the sum
+over all such possible configurations, that is
+
+!bt
+\[
+Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}),
+\]
+!et
+changes to
+!bt
+\[
+Z(\bm{\Theta})=\sum_{\bm{x}}\sum_{\bm{h}} f(\bm{x},\bm{h};\bm{\Theta}).
+\]
+!et
+If we have a binary set of variable $x_i$ and $h_j$ and $M$ values of $x_i$ and $N$ values of $h_j$ we have in total $2^M$ and $2^N$ possible $\bm{x}$ and $\bm{h}$ configurations, respectively.
+
+We see that even for the modest binary case, we can easily approach a
+number of configuration which is not possible to deal with.
+
+!split
+===== Optimization problem =====
+
+At the end, we are not interested in the probabilities of the hidden variables. The probability we thus want to optimize is 
+!bt
+\[
+p(\bm{X};\bm{\Theta})=\prod_{x_i\in \bm{X}}p(x_i;\bm{\Theta})=\prod_{x_i\in \bm{X}}\left(\frac{\sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})}{Z(\bm{\Theta})}\right),
+\]
+!et
+which we rewrite as
+!bt
+\[
+p(\bm{X};\bm{\Theta})=\frac{1}{Z(\bm{\Theta})}\prod_{x_i\in \bm{X}}\left(\sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})\right).
+\]
+!et
+
+!split
+===== Further simplifications =====
+
+We simplify further by rewriting it as
+!bt
+\[
+p(\bm{X};\bm{\Theta})=\frac{1}{Z(\bm{\Theta})}\prod_{x_i\in \bm{X}}f(x_i;\bm{\Theta}),
+\]
+!et
+where we used $p(x_i;\bm{\Theta}) = \sum_{h_j\in \bm{H}}f(x_i,h_j;\bm{\Theta})$.
+The optimization problem is then
+!bt
+\[
+{\displaystyle \mathrm{arg} \hspace{0.1cm}\max_{\bm{\bm{\Theta}}\in {\mathbb{R}}^{p}}} \hspace{0.1cm}p(\bm{X};\bm{\Theta}).
+\]
+!et
+
+!split
+===== Optimizing the logarithm instead =====
+
+Computing the derivatives with respect to the parameters $\bm{\Theta}$ is
+easier (and equivalent) with taking the logarithm of the
+probability. We will thus optimize
+!bt
+\[
+{\displaystyle \mathrm{arg} \hspace{0.1cm}\max_{\bm{\bm{\Theta}}\in {\mathbb{R}}^{p}}} \hspace{0.1cm}\log{p(\bm{X};\bm{\Theta})},
+\]
+!et
+which leads to
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{p(\bm{X};\bm{\Theta})}=0.
+\]
+!et
+
+!split
+===== Expression for the gradients =====
+This leads to the following equation
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{p(\bm{X};\bm{\Theta})}=\nabla_{\bm{\Theta}}\left(\sum_{x_i\in \bm{X}}\log{f(x_i;\bm{\Theta})}\right)-\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=0.
+\]
+!et
+
+The first term is called the positive phase and we assume that we have a model for the function $f$ from which we can sample values. Below we will develop an explicit model for this.
+The second term is called the negative phase and is the one which leads to more difficulties.
+
+!split
+===== The derivative of the partition function =====
+
+The partition function, defined above as
+!bt
+\[
+Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}),
+\]
+!et
+is in general the most problematic term. In principle both $x$ and $h$ can span large degrees of freedom, if not even infinitely many ones, and computing the partition function itself is often not desirable or even feasible. The above derivative of the partition function can however be written in terms of an expectation value which is in turn evaluated  using Monte Carlo sampling and the theory of Markov chains, popularly shortened to MCMC (or just MC$^2$).
+
+!split
+===== Explicit expression for the derivative =====
+We can rewrite
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{\nabla_{\bm{\Theta}}Z(\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+which reads in more detail
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{\nabla_{\bm{\Theta}} \sum_{x_i\in \bm{X}}f(x_i;\bm{\Theta})   }{Z(\bm{\Theta})}.
+\]
+!et
+
+We can rewrite the function $f$ (we have assumed that is larger or
+equal than zero) as $f=\exp{\log{f}}$. We can then reqrite the last
+equation as
+
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{ \sum_{x_i\in \bm{X}} \nabla_{\bm{\Theta}}\exp{\log{f(x_i;\bm{\Theta})}}   }{Z(\bm{\Theta})}.
+\]
+!et
+
+!split
+===== Final expression =====
+
+Taking the derivative gives us
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{ \sum_{x_i\in \bm{X}}f(x_i;\bm{\Theta}) \nabla_{\bm{\Theta}}\log{f(x_i;\bm{\Theta})}   }{Z(\bm{\Theta})}, 
+\]
+!et
+which is the expectation value of $\log{f}$
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\sum_{x_i\in \bm{X}}p(x_i;\bm{\Theta}) \nabla_{\bm{\Theta}}\log{f(x_i;\bm{\Theta})},
+\]
+!et
+that is
+!bt
+\[
+\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\mathbb{E}(\log{f(x_i;\bm{\Theta})}).
+\]
+!et
+
+This quantity is evaluated using Monte Carlo sampling, with Gibbs
+sampling as the standard sampling rule.  Before we discuss the
+explicit algorithms, we need to remind ourselves about Markov chains
+and sampling rules like the Metropolis-Hastings algorithm and Gibbs
+sampling.
+
+!split
+===== Introducing the energy model =====
+
+As we will see below, a typical Boltzmann machines employs a probability distribution
+!bt
+\[
+p(\bm{x},\bm{h};\bm{\Theta}) = \frac{f(\bm{x},\bm{h};\bm{\Theta})}{Z(\bm{\Theta})},
+\]
+!et
+where $f(\bm{x},\bm{h};\bm{\Theta})$ is given by a so-called energy model. If we assume that the random variables $x_i$ and $h_j$ take binary values only, for example $x_i,h_j=\{0,1\}$, we have a so-called binary-binary model where
+!bt
+\[
+f(\bm{x},\bm{h};\bm{\Theta})=-E(\bm{x}, \bm{h};\bm{\Theta}) = \sum_{x_i\in \bm{X}} x_i a_i+\sum_{h_j\in \bm{H}} b_j h_j + \sum_{x_i\in \bm{X},h_j\in\bm{H}} x_i w_{ij} h_j,
+\]
+!et
+where the set of parameters are given by the biases and weights $\bm{\Theta}=\{\bm{a},\bm{b},\bm{W}\}$.
+_Note the vector notation_ instead of $x_i$ and $h_j$ for $f$. The vectors $\bm{x}$ and $\bm{h}$ represent a specific instance of stochastic variables $x_i$ and $h_j$. These arrangements of $\bm{x}$ and $\bm{h}$ lead to a specific energy configuration.
+
+!split
+===== More compact notation =====
+
+With the above definition we can write the probability as
+!bt
+\[
+p(\bm{x},\bm{h};\bm{\Theta}) = \frac{\exp{(\bm{a}^T\bm{x}+\bm{b}^T\bm{h}+\bm{x}^T\bm{W}\bm{h})}}{Z(\bm{\Theta})},
+\]
+!et
+where the biases $\bm{a}$ and $\bm{h}$ and the weights defined by the matrix $\bm{W}$ are the parameters we need to optimize.
+
+!split
+===== Anticipating results to be derived =====
+
+Since the binary-binary energy model is linear in the parameters $a_i$, $b_j$ and
+$w_{ij}$, it is easy to see that the derivatives with respect to the
+various optimization parameters yield expressions used in the
+evaluation of gradients like
+!bt
+\[
+\frac{\partial E(\bm{x}, \bm{h};\bm{\Theta})}{\partial w_{ij}}=-x_ih_j,
+\]
+!et
+and
+!bt
+\[
+\frac{\partial E(\bm{x}, \bm{h};\bm{\Theta})}{\partial a_i}=-x_i,
+\]
+!et
+and
+!bt
+\[
+\frac{\partial E(\bm{x}, \bm{h};\bm{\Theta})}{\partial b_j}=-h_j.
+\]
+!et
+
+
