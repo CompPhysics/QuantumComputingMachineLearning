@@ -386,24 +386,50 @@ A Quantum Boltzmann Machine (QBM) extends a classical BM by replacing
 each binary unit with a qubit and generalizing the energy to a quantum
 Hamiltonian.
 
-
-Quantum Boltzmann machines (QBMs) generalize this framework by
-encoding the model distribution in a quantum Gibbs state.  Instead of
-a classical energy, one defines a Hamiltonian $H(\boldsymbol{\Theta})$
-whose parameters $\boldsymbol{\Theta}$ (biases and couplings) play the
-role of the RBM weights.  The model’s density operator is the state
+Instead of a classical energy, one defines a Hamiltonian
+$H(\bm{\Theta})$ whose parameters $\bm{\Theta}$ (biases and couplings)
+play the role of the RBM weights.  The model’s density operator is the
+state (these are elements from quantum statistical mechanics)
 !bt
 \[
-\rho(\boldsymbol{\theta}) = \frac{\exp{-(\beta H(\boldsymbol{\Theta}))}}{Z(\boldsymbol{\Theta})},
+\rho(\bm{\theta}) = \frac{\exp{-(\beta H(\bm{\Theta}))}}{Z(\bm{\Theta})},
 \]
 !et
-with inverse temperature $\beta$ (set to 1 as we did for standard Boltzmann machines ) and partition function
-$Z = Trace(\exp{-\beta H})$.  The probability of observing a visible
-configuration v is obtained by measuring $\rho$ in the computational
-basis (and tracing out hidden qubits if any).  In effect, the quantum
-model can capture richer correlations via superposition and
-entanglement.
 
+with inverse temperature $\beta$ (set to 1 as we did for the classical
+Boltzmann machine) and partition function $Z = \mathrm{Tr}(\exp{-\beta
+H})$.  The probability of observing a visible configuration $v$ is
+obtained by measuring $\rho$ in the computational basis (and tracing
+out hidden qubits if any).  In principle, the quantum model should be able to
+include more correlations via superposition and entanglement.
+
+
+!split
+===== Observables =====
+
+Observables are expectation values
+!bt
+\[
+\langle \hat{O}\rangle = \mathrm{Tr} (\rho \hat{O}).
+\]
+!et
+
+In the QBM
+context, one is interested in the probability $p(v)$ of measuring the
+visible qubits in computational basis state $v$.  If the full thermal
+state lives on both visible and hidden qubits, this probability is
+!bt
+\[
+p_\Theta(v)=\mathrm{Tr}\bigl[Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
+\]
+!et
+where $Pi_v^{(\text{vis})}=|v\>\<v|$ acts on the visible subspace.
+
+Equivalently, one may *trace out* the hidden qubits and work with the
+reduced density matrix on the visible subsystem.  Computing these
+probabilities requires preparing or approximating the Gibbs state of
+$H$.  In practice this is done either by quantum simulators, quantum
+annealers, or variational algorithms (add refs here).
 
 
 !split
@@ -411,9 +437,11 @@ entanglement.
 
 The model distribution over
 classical bitstrings $v$ is given by the diagonal of the quantum Gibbs
-state $\rho = e^{-H}/Z$.  A straightforward choice is a stoquastic
+state $\rho = e^{-H}/Z$.
+
+A straightforward choice is a stochastic
 Hamiltonian that is diagonal in the computational basis
-(e.g. involving only Pauli-$Z$ operators), which yields a probability
+(in our case given in terms of  only the Pauli-$Z$ operator), which yields a probability
 distribution very similar to a classical BM.  More generally one can
 allow non-commuting terms (e.g. Pauli-$X$ fields) to introduce quantum
 correlations .  In fact, Amin et al. (2018) introduced a QBM where the
@@ -433,78 +461,57 @@ hidden-visible connectivity.  The simplest RQBM Hamiltonian can be
 written (up to local Pauli bases) as
 !bt
 \[
-H(\mathbf{a},\mathbf{b},W,V) \;=\; \sum_{i=1}^{n_v} a_i Z_i \;+\; \sum_{j=1}^{n_h} b_j Z_j \;+\; \sum_{i,j} W_{ij}\, Z_i Z_j \;+\; \sum_{i<i{\prime}} V_{ii{\prime}}\, Z_i Z_{i{\prime}} \,.
+H(\mathbf{a},\mathbf{b},W,V) =\sum_{i=1}^{n_v} a_i Z_i+\sum_{j=1}^{n_h} b_j Z_j+\sum_{i,j} w_{ij}\, Z_i Z_j \;+\; \sum_{i<i{\prime}} V_{ii{\prime}}\, Z_i Z_{i{\prime}} \,.
 \]
 !et
 Here $Z_i$ and $Z_j$ are Pauli-$Z$ operators on the visible and hidden
-qubits respectively, $a_i,b_j$ are biases, $W_{ij}$ are visible-hidden
-couplings, and V_{ii{\prime}} are possible visible-visible couplings.
-(Classically, V=0 in an RBM; allowing V\neq0 gives a “2-local QRBM” as
-in Wu et al. .)  Importantly, there are no hidden-hidden $ZZ$ terms in
+qubits respectively, $a_i,b_j$ are biases, $w_{ij}$ are visible-hidden
+couplings, and $V_{ii{\prime}}$ are possible visible-visible couplings.
+(Classically, $V=0$ in an RBM).
+Importantly, there are no hidden-hidden $ZZ$ terms in
 this restricted model.  Equation xxxx  is a
 direct quantum analogue of the RBM energy function, promoting it to an
-operator acting on qubits.  Wu et al. (2020) used such a Hamiltonian
-and proved that this 2-local QRBM is universal for quantum computation
+operator acting on qubits.  
 .
-
-
-
-
-!split
-===== Quantum Statistical Mechanics Background =====
-
-In quantum statistical mechanics, a system at inverse temperature
-\beta is described by the density operator \rho = e^{-\beta H}/Z,
-where the partition function \(Z = \Tr(e^{-\beta H})\) normalizes the
-state.  For a qubit model we typically take \beta=1.  Observables are
-expectation values \(\langle O\rangle = \Tr(\rho O)\). In the QBM
-context, one is interested in the probability p(v) of measuring the
-visible qubits in computational basis state v.  If the full thermal
-state lives on both visible and hidden qubits, this probability is
-
-!bt
-\[
-p_\theta(v) \;=\; \Tr\bigl[\Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
-\]
-!et
-where \(\Pi_v^{(\text{vis})}=|v\>\<v|\) acts on the visible subspace.
-Equivalently, one may “trace out” the hidden qubits and work with the
-reduced density matrix on the visible subsystem.  Computing these
-probabilities requires preparing or approximating the Gibbs state of
-H.  In practice this is done either by quantum simulators, quantum
-annealers, or variational algorithms.
-
 
 
 
 !split
 ===== Energy-Based Training Objective and Gradients =====
 
-
+!bblock
 RQBM training is analogous to the classical case: we have a dataset of
-bitstrings \{v^{(k)}\} from an unknown distribution p_{\rm data}(v).
-The goal is to adjust the Hamiltonian parameters \theta so that the
-model distribution \(p_\theta(v)=\<v|\rho(\theta)|v\>\) approximates
-p_{\rm data}(v).  Equivalently, one can view the data distribution as
-a target density matrix \eta (diagonal in the computational basis) and
-minimize the quantum relative entropy (quantum KL divergence)
+bitstrings $\{v^{(k)}\}$ from an unknown distribution $p_{\rm data}(v)$.
+!eblock 
 
+!bblock
+The goal is to adjust the Hamiltonian parameters \theta so that the
+model distribution
 !bt
-\[
-S(\eta\Vert \rho(\theta)) = \Tr\!\bigl[\eta\ln\eta\bigr] - \Tr\!\bigl[\eta\ln\rho(\theta)\bigr] \;.
+\(p_\theta(v)=\<v|\rho(\theta)|v\>\),
 \]
 !et
-
+approximates
+$p_{\rm data}(v)$.  Equivalently, one can view the data distribution as
+a target density matrix $\eta$ (diagonal in the computational basis) and
+minimize the quantum relative entropy (quantum KL divergence)
+!bt
+\[
+S(\eta\Vert \rho(\theta)) = \mathrm{Tr}\!\bigl[\eta\ln\eta\bigr] - \mathrm{Tr}\!\bigl[\eta\ln\rho(\theta)\bigr].
+\]
+!et
+!eblock
 !split
 ===== Non-negative loss =====
-This loss is non-negative and equals zero only when \eta=\rho(\theta).
-Writing \rho=e^{-H}/Z, one finds the gradient of the relative entropy
-(for parameter \theta in H) as
+
+This loss is non-negative and equals zero only when $\eta=\rho(\theta)$.
+Writing $\rho=e^{-H}/Z$, one finds the gradient of the relative entropy
+(for parameter \theta in $H$) as
 !bt
 \[
 \frac{\partial}{\partial\theta} S(\eta\Vert\rho)
-= \Tr\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
-= \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \Tr[\rho\,\partial_\theta H]\Bigr).
+= \mathrm{Tr}\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
+= \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \mathrm{Tr}[\rho\,\partial_\theta H]\Bigr).
 \]
 !et
 In other words,
@@ -516,12 +523,18 @@ In other words,
 
 !split
 ===== Analogy with classical RBM =====
+
 This is directly analogous to the classical RBM gradient: the update
 for each parameter is proportional to the difference between its
 expectation under the data distribution and under the model’s Gibbs
-distribution.  (Equation: $S(\eta\Vert\rho)={\rm Tr}[\eta\ln\eta]-{\rm
-Tr}[\eta\ln\rho]$ .)  In practice, one computes $\langle
-\partial_\theta H\rangle_{\rm data}$ by averaging over the training
+distribution
+!bt
+\[
+\eta\Vert\rho)=\mathrm{Tr}[\eta\ln\eta]-\mathrm{Tr}[\eta\ln\rho].
+\]
+!et
+
+In practice, one computes $\langle $\partial_\theta H\rangle_{\rm data}$ by averaging over the training
 set, and estimates $\langle \partial_\theta H\rangle_{\rm model}$ by
 sampling from the quantum model.
 
@@ -655,191 +668,3 @@ more complex terms, but we focus on this common ansatz.
 
 
 
-!split
-===== Code 1 =====
-!bc pycod
-import numpy as np
-from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-
-# Load and binarize MNIST
-def load_binarized_mnist():
-    print("Downloading MNIST...")
-    mnist = fetch_openml('mnist_784', version=1)
-    X = mnist.data.astype(np.float32) / 255.0
-    X = (X > 0.5).astype(np.float32)  # Binarize
-    return X
-
-class RBM:
-    def __init__(self, n_visible, n_hidden, learning_rate=0.1):
-        self.n_visible = n_visible
-        self.n_hidden = n_hidden
-        self.learning_rate = learning_rate
-
-        # Parameters
-        self.W = np.random.normal(0, 0.01, size=(n_visible, n_hidden))
-        self.v_bias = np.zeros(n_visible)
-        self.h_bias = np.zeros(n_hidden)
-
-    def sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
-
-    def sample(self, probs):
-        return (np.random.rand(*probs.shape) < probs).astype(np.float32)
-
-    def train(self, data, epochs=10, batch_size=64):
-        # Convert the DataFrame to a NumPy array with reset indices to avoid the KeyError.
-        data = data.reset_index(drop=True).to_numpy() 
-        
-        n_samples = data.shape[0]
-
-        for epoch in range(epochs):
-            np.random.shuffle(data) # Now shuffles the NumPy array with default integer indices
-            epoch_error = 0
-    
-
-            for i in range(0, n_samples, batch_size):
-                v0 = data[i:i + batch_size]
-                h0_prob = self.sigmoid(np.dot(v0, self.W) + self.h_bias)
-                h0_sample = self.sample(h0_prob)
-
-                # Gibbs step
-                v1_prob = self.sigmoid(np.dot(h0_sample, self.W.T) + self.v_bias)
-                v1_sample = self.sample(v1_prob)
-                h1_prob = self.sigmoid(np.dot(v1_sample, self.W) + self.h_bias)
-
-                # Update
-                self.W += self.learning_rate * (np.dot(v0.T, h0_prob) - np.dot(v1_sample.T, h1_prob)) / batch_size
-                self.v_bias += self.learning_rate * np.mean(v0 - v1_sample, axis=0)
-                self.h_bias += self.learning_rate * np.mean(h0_prob - h1_prob, axis=0)
-
-                epoch_error += np.mean((v0 - v1_sample) ** 2)
-
-            print(f"Epoch {epoch + 1}: Reconstruction error = {epoch_error:.4f}")
-
-    def gibbs_sample(self, v_start, k=1):
-        """Perform k steps of Gibbs sampling starting from visible vector v_start"""
-        v = v_start.copy()
-        for _ in range(k):
-            h_prob = self.sigmoid(np.dot(v, self.W) + self.h_bias)
-            h = self.sample(h_prob)
-            v_prob = self.sigmoid(np.dot(h, self.W.T) + self.v_bias)
-            v = self.sample(v_prob)
-        return v
-
-    def generate(self, n_samples=10, k=100):
-        """Generate new samples via Gibbs sampling from random initial states"""
-        samples = []
-        for _ in range(n_samples):
-            v_start = np.random.randint(0, 2, size=(1, self.n_visible)).astype(np.float32)
-            v_sample = self.gibbs_sample(v_start, k=k)
-            samples.append(v_sample[0])
-        return np.array(samples)
-
-# Load and split MNIST
-X = load_binarized_mnist()
-X_train, X_test = train_test_split(X, test_size=0.1, random_state=42)
-
-# Train RBM
-rbm = RBM(n_visible=784, n_hidden=128, learning_rate=0.1)
-rbm.train(X_train, epochs=10, batch_size=64)
-
-# Generate digits
-generated_digits = rbm.generate(n_samples=10, k=200)
-
-# Display generated digits
-def show_generated(images):
-    fig, axes = plt.subplots(1, len(images), figsize=(15, 2))
-    for ax, img in zip(axes, images):
-        ax.imshow(img.reshape(28, 28), cmap="gray")
-        ax.axis("off")
-    plt.suptitle("Generated Digits from RBM via Gibbs Sampling")
-    plt.show()
-
-show_generated(generated_digits)
-!ec
-
-
-!split
-===== Code 2 =====
-!bc pycod
-import pennylane as qml
-from pennylane import numpy as np
-from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-
-# Load and binarize MNIST
-def load_binarized_mnist(n_samples=1000):
-    print("Downloading MNIST...")
-    mnist = fetch_openml('mnist_784', version=1)
-    X = mnist.data[:n_samples].astype(np.float32) / 255.0
-    X = (X > 0.5).astype(np.float32)
-    return X
-
-# Quantum device and number of hidden qubits
-n_visible = 8  # We will use only 8 pixels for this toy example
-n_hidden = 4
-dev = qml.device("default.qubit", wires=n_hidden)
-
-# Define quantum circuit as hidden layer
-def qrbm_circuit(v, weights):
-    for i in range(n_hidden):
-        qml.Hadamard(wires=i)
-        qml.RZ(weights[i], wires=i)
-    for i in range(n_hidden - 1):
-        qml.CNOT(wires=[i, i + 1])
-    return [qml.expval(qml.PauliZ(i)) for i in range(n_hidden)]
-
-# QRBM class
-class QRBM:
-    def __init__(self, n_visible, n_hidden, lr=0.1):
-        self.n_visible = n_visible
-        self.n_hidden = n_hidden
-        self.weights = np.random.uniform(0, 2 * np.pi, n_hidden, requires_grad=True)
-        self.visible_bias = np.zeros(n_visible, requires_grad=False)
-        self.optimizer = qml.GradientDescentOptimizer(stepsize=lr)
-
-    def reconstruct(self, v):
-        # Use quantum circuit to sample hidden state
-        h_exp = hidden_layer(v, self.weights)
-        v_recon = np.tanh(np.dot(h_exp, np.random.randn(self.n_hidden, self.n_visible)) + self.visible_bias)
-        return (v_recon > 0.5).astype(np.float32)
-
-    def cost(self, v):
-        recon = self.reconstruct(v)
-        return np.mean((v - recon) ** 2)
-
-    def train(self, data, epochs=10):
-        for epoch in range(epochs):
-            total_cost = 0
-            for v in data:
-                v = v[:self.n_visible]
-                self.weights, cost_val = self.optimizer.step_and_cost(lambda w: self.cost(v), self.weights)
-                total_cost += cost_val
-            print(f"Epoch {epoch+1}: Cost = {total_cost / len(data):.4f}")
-# Load and reduce MNIST
-X = load_binarized_mnist(n_samples=500)
-X_train, X_test = train_test_split(X, test_size=0.1, random_state=42)
-
-# Train QRBM
-qrbm = QRBM(n_visible=n_visible, n_hidden=n_hidden, lr=0.3)
-# Convert X_train to a NumPy array before training
-qrbm.train(X_train.to_numpy(), epochs=10) # Converting X_train to numpy array
-
-# Visualize a reconstruction
-def show_reconstruction(original, reconstructed):
-    fig, axes = plt.subplots(1, 2)
-    axes[0].imshow(original[:n_visible].reshape(1, -1), cmap="gray", aspect='auto')
-    axes[0].set_title("Original")
-    axes[1].imshow(reconstructed.reshape(1, -1), cmap="gray", aspect='auto')
-    axes[1].set_title("Reconstruction")
-    plt.show()
-
-# Access the first row using .iloc to avoid the KeyError
-sample = X_test.iloc[0].values # Access the first row and convert to NumPy array
-reconstruction = qrbm.reconstruct(sample[:n_visible])
-show_reconstruction(sample, reconstruction)
-
-!ec

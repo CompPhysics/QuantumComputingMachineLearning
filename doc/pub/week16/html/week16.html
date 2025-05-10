@@ -185,15 +185,12 @@ div.toc p,a {
                2,
                None,
                'quantum-boltzmann-machines-qbms'),
+              ('Observables', 2, None, 'observables'),
               ('Quantum Boltzmann Machines',
                2,
                None,
                'quantum-boltzmann-machines'),
               ('Restricted QBM (RQBM)', 2, None, 'restricted-qbm-rqbm'),
-              ('Quantum Statistical Mechanics Background',
-               2,
-               None,
-               'quantum-statistical-mechanics-background'),
               ('Energy-Based Training Objective and Gradients',
                2,
                None,
@@ -211,9 +208,7 @@ div.toc p,a {
               ('Implementation with PennyLane',
                2,
                None,
-               'implementation-with-pennylane'),
-              ('Code 1', 2, None, 'code-1'),
-              ('Code 2', 2, None, 'code-2')]}
+               'implementation-with-pennylane')]}
 end of tocinfo -->
 
 <body>
@@ -649,22 +644,47 @@ each binary unit with a qubit and generalizing the energy to a quantum
 Hamiltonian.
 </p>
 
-<p>Quantum Boltzmann machines (QBMs) generalize this framework by
-encoding the model distribution in a quantum Gibbs state.  Instead of
-a classical energy, one defines a Hamiltonian \( H(\boldsymbol{\Theta}) \)
-whose parameters \( \boldsymbol{\Theta} \) (biases and couplings) play the
-role of the RBM weights.  The model&#8217;s density operator is the state
+<p>Instead of a classical energy, one defines a Hamiltonian
+\( H(\boldsymbol{\Theta}) \) whose parameters \( \boldsymbol{\Theta} \) (biases and couplings)
+play the role of the RBM weights.  The model&#8217;s density operator is the
+state (these are elements from quantum statistical mechanics)
 </p>
 $$
 \rho(\boldsymbol{\theta}) = \frac{\exp{-(\beta H(\boldsymbol{\Theta}))}}{Z(\boldsymbol{\Theta})},
 $$
 
-<p>with inverse temperature \( \beta \) (set to 1 as we did for standard Boltzmann machines ) and partition function
-\( Z = Trace(\exp{-\beta H}) \).  The probability of observing a visible
-configuration v is obtained by measuring \( \rho \) in the computational
-basis (and tracing out hidden qubits if any).  In effect, the quantum
-model can capture richer correlations via superposition and
-entanglement.
+<p>with inverse temperature \( \beta \) (set to 1 as we did for the classical
+Boltzmann machine) and partition function \( Z = \mathrm{Tr}(\exp{-\beta
+H}) \).  The probability of observing a visible configuration \( v \) is
+obtained by measuring \( \rho \) in the computational basis (and tracing
+out hidden qubits if any).  In principle, the quantum model should be able to
+include more correlations via superposition and entanglement.
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="observables">Observables </h2>
+
+<p>Observables are expectation values</p>
+$$
+\langle \hat{O}\rangle = \mathrm{Tr} (\rho \hat{O}).
+$$
+
+<p>In the QBM
+context, one is interested in the probability \( p(v) \) of measuring the
+visible qubits in computational basis state \( v \).  If the full thermal
+state lives on both visible and hidden qubits, this probability is
+</p>
+$$
+p_\Theta(v)=\mathrm{Tr}\bigl[Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
+$$
+
+<p>where \( Pi_v^{(\text{vis})}=|v\>\ < v| \) acts on the visible subspace.</p>
+
+<p>Equivalently, one may <em>trace out</em> the hidden qubits and work with the
+reduced density matrix on the visible subsystem.  Computing these
+probabilities requires preparing or approximating the Gibbs state of
+\( H \).  In practice this is done either by quantum simulators, quantum
+annealers, or variational algorithms (add refs here).
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
@@ -672,9 +692,12 @@ entanglement.
 
 <p>The model distribution over
 classical bitstrings \( v \) is given by the diagonal of the quantum Gibbs
-state \( \rho = e^{-H}/Z \).  A straightforward choice is a stoquastic
+state \( \rho = e^{-H}/Z \).
+</p>
+
+<p>A straightforward choice is a stochastic
 Hamiltonian that is diagonal in the computational basis
-(e.g. involving only Pauli-\( Z \) operators), which yields a probability
+(in our case given in terms of  only the Pauli-\( Z \) operator), which yields a probability
 distribution very similar to a classical BM.  More generally one can
 allow non-commuting terms (e.g. Pauli-\( X \) fields) to introduce quantum
 correlations .  In fact, Amin et al. (2018) introduced a QBM where the
@@ -694,73 +717,63 @@ hidden-visible connectivity.  The simplest RQBM Hamiltonian can be
 written (up to local Pauli bases) as
 </p>
 $$
-H(\mathbf{a},\mathbf{b},W,V) \;=\; \sum_{i=1}^{n_v} a_i Z_i \;+\; \sum_{j=1}^{n_h} b_j Z_j \;+\; \sum_{i,j} W_{ij}\, Z_i Z_j \;+\; \sum_{i < i{\prime}} V_{ii{\prime}}\, Z_i Z_{i{\prime}} \,.
+H(\mathbf{a},\mathbf{b},W,V) =\sum_{i=1}^{n_v} a_i Z_i+\sum_{j=1}^{n_h} b_j Z_j+\sum_{i,j} w_{ij}\, Z_i Z_j \;+\; \sum_{i < i{\prime}} V_{ii{\prime}}\, Z_i Z_{i{\prime}} \,.
 $$
 
 <p>Here \( Z_i \) and \( Z_j \) are Pauli-\( Z \) operators on the visible and hidden
-qubits respectively, \( a_i,b_j \) are biases, \( W_{ij} \) are visible-hidden
-couplings, and V_{ii{\prime}} are possible visible-visible couplings.
-(Classically, V=0 in an RBM; allowing V\neq0 gives a &#8220;2-local QRBM&#8221; as
-in Wu et al. .)  Importantly, there are no hidden-hidden \( ZZ \) terms in
+qubits respectively, \( a_i,b_j \) are biases, \( w_{ij} \) are visible-hidden
+couplings, and \( V_{ii{\prime}} \) are possible visible-visible couplings.
+(Classically, \( V=0 \) in an RBM).
+Importantly, there are no hidden-hidden \( ZZ \) terms in
 this restricted model.  Equation&#8239;xxxx  is a
 direct quantum analogue of the RBM energy function, promoting it to an
-operator acting on qubits.  Wu et al. (2020) used such a Hamiltonian
-and proved that this 2-local QRBM is universal for quantum computation
+operator acting on qubits.  
 .
-</p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="quantum-statistical-mechanics-background">Quantum Statistical Mechanics Background </h2>
-
-<p>In quantum statistical mechanics, a system at inverse temperature
-\beta is described by the density operator \rho = e^{-\beta H}/Z,
-where the partition function \(Z = \Tr(e^{-\beta H})\) normalizes the
-state.  For a qubit model we typically take \beta=1.  Observables are
-expectation values \(\langle O\rangle = \Tr(\rho O)\). In the QBM
-context, one is interested in the probability p(v) of measuring the
-visible qubits in computational basis state v.  If the full thermal
-state lives on both visible and hidden qubits, this probability is
-</p>
-
-$$
-p_\theta(v) \;=\; \Tr\bigl[\Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
-$$
-
-<p>where \(\Pi_v^{(\text{vis})}=|v\>\<v|\) acts on the visible subspace.
-Equivalently, one may &#8220;trace out&#8221; the hidden qubits and work with the
-reduced density matrix on the visible subsystem.  Computing these
-probabilities requires preparing or approximating the Gibbs state of
-H.  In practice this is done either by quantum simulators, quantum
-annealers, or variational algorithms.
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="energy-based-training-objective-and-gradients">Energy-Based Training Objective and Gradients </h2>
 
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
 <p>RQBM training is analogous to the classical case: we have a dataset of
-bitstrings \{v^{(k)}\} from an unknown distribution p_{\rm data}(v).
-The goal is to adjust the Hamiltonian parameters \theta so that the
-model distribution \(p_\theta(v)=\<v|\rho(\theta)|v\>\) approximates
-p_{\rm data}(v).  Equivalently, one can view the data distribution as
-a target density matrix \eta (diagonal in the computational basis) and
+bitstrings \( \{v^{(k)}\} \) from an unknown distribution \( p_{\rm data}(v) \).
+</p>
+</div>
+ 
+
+<div class="alert alert-block alert-block alert-text-normal">
+<b></b>
+<p>
+<p>The goal is to adjust the Hamiltonian parameters \theta so that the
+model distribution
+</p>
+$$
+\(p_\theta(v)=\ < v|\rho(\theta)|v\>\),
+$$
+
+<p>approximates
+\( p_{\rm data}(v) \).  Equivalently, one can view the data distribution as
+a target density matrix \( \eta \) (diagonal in the computational basis) and
 minimize the quantum relative entropy (quantum KL divergence)
 </p>
-
 $$
-S(\eta\Vert \rho(\theta)) = \Tr\!\bigl[\eta\ln\eta\bigr] - \Tr\!\bigl[\eta\ln\rho(\theta)\bigr] \;.
+S(\eta\Vert \rho(\theta)) = \mathrm{Tr}\!\bigl[\eta\ln\eta\bigr] - \mathrm{Tr}\!\bigl[\eta\ln\rho(\theta)\bigr].
 $$
-
+</div>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="non-negative-loss">Non-negative loss </h2>
-<p>This loss is non-negative and equals zero only when \eta=\rho(\theta).
-Writing \rho=e^{-H}/Z, one finds the gradient of the relative entropy
-(for parameter \theta in H) as
+
+<p>This loss is non-negative and equals zero only when \( \eta=\rho(\theta) \).
+Writing \( \rho=e^{-H}/Z \), one finds the gradient of the relative entropy
+(for parameter \theta in \( H \)) as
 </p>
 $$
 \frac{\partial}{\partial\theta} S(\eta\Vert\rho)
-= \Tr\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
-= \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \Tr[\rho\,\partial_\theta H]\Bigr).
+= \mathrm{Tr}\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
+= \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \mathrm{Tr}[\rho\,\partial_\theta H]\Bigr).
 $$
 
 <p>In other words,</p>
@@ -771,12 +784,17 @@ $$
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="analogy-with-classical-rbm">Analogy with classical RBM </h2>
+
 <p>This is directly analogous to the classical RBM gradient: the update
 for each parameter is proportional to the difference between its
 expectation under the data distribution and under the model&#8217;s Gibbs
-distribution.  (Equation: \( S(\eta\Vert\rho)={\rm Tr}[\eta\ln\eta]-{\rm
-Tr}[\eta\ln\rho] \) .)  In practice, one computes \( \langle
-\partial_\theta H\rangle_{\rm data} \) by averaging over the training
+distribution
+</p>
+$$
+\eta\Vert\rho)=\mathrm{Tr}[\eta\ln\eta]-\mathrm{Tr}[\eta\ln\rho].
+$$
+
+<p>In practice, one computes $\langle \( \partial_\theta H\rangle_{\rm data} \) by averaging over the training
 set, and estimates \( \langle \partial_\theta H\rangle_{\rm model} \) by
 sampling from the quantum model.
 </p>
@@ -907,232 +925,6 @@ interpreted analogously to a classical unit, but the \( \sigma^x \) term
 induces quantum superposition.  One can also include \( \sigma^y \) or
 more complex terms, but we focus on this common ansatz.
 </p>
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="code-1">Code 1 </h2>
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.datasets</span> <span style="color: #008000; font-weight: bold">import</span> fetch_openml
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.model_selection</span> <span style="color: #008000; font-weight: bold">import</span> train_test_split
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
-
-<span style="color: #408080; font-style: italic"># Load and binarize MNIST</span>
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">load_binarized_mnist</span>():
-    <span style="color: #008000">print</span>(<span style="color: #BA2121">&quot;Downloading MNIST...&quot;</span>)
-    mnist <span style="color: #666666">=</span> fetch_openml(<span style="color: #BA2121">&#39;mnist_784&#39;</span>, version<span style="color: #666666">=1</span>)
-    X <span style="color: #666666">=</span> mnist<span style="color: #666666">.</span>data<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32) <span style="color: #666666">/</span> <span style="color: #666666">255.0</span>
-    X <span style="color: #666666">=</span> (X <span style="color: #666666">&gt;</span> <span style="color: #666666">0.5</span>)<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32)  <span style="color: #408080; font-style: italic"># Binarize</span>
-    <span style="color: #008000; font-weight: bold">return</span> X
-
-<span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">RBM</span>:
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">__init__</span>(<span style="color: #008000">self</span>, n_visible, n_hidden, learning_rate<span style="color: #666666">=0.1</span>):
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_visible <span style="color: #666666">=</span> n_visible
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_hidden <span style="color: #666666">=</span> n_hidden
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>learning_rate <span style="color: #666666">=</span> learning_rate
-
-        <span style="color: #408080; font-style: italic"># Parameters</span>
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>W <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>normal(<span style="color: #666666">0</span>, <span style="color: #666666">0.01</span>, size<span style="color: #666666">=</span>(n_visible, n_hidden))
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>v_bias <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(n_visible)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>h_bias <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(n_hidden)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">sigmoid</span>(<span style="color: #008000">self</span>, x):
-        <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">1</span> <span style="color: #666666">/</span> (<span style="color: #666666">1</span> <span style="color: #666666">+</span> np<span style="color: #666666">.</span>exp(<span style="color: #666666">-</span>x))
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">sample</span>(<span style="color: #008000">self</span>, probs):
-        <span style="color: #008000; font-weight: bold">return</span> (np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>rand(<span style="color: #666666">*</span>probs<span style="color: #666666">.</span>shape) <span style="color: #666666">&lt;</span> probs)<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">train</span>(<span style="color: #008000">self</span>, data, epochs<span style="color: #666666">=10</span>, batch_size<span style="color: #666666">=64</span>):
-        <span style="color: #408080; font-style: italic"># Convert the DataFrame to a NumPy array with reset indices to avoid the KeyError.</span>
-        data <span style="color: #666666">=</span> data<span style="color: #666666">.</span>reset_index(drop<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)<span style="color: #666666">.</span>to_numpy() 
-        
-        n_samples <span style="color: #666666">=</span> data<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>]
-
-        <span style="color: #008000; font-weight: bold">for</span> epoch <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(epochs):
-            np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>shuffle(data) <span style="color: #408080; font-style: italic"># Now shuffles the NumPy array with default integer indices</span>
-            epoch_error <span style="color: #666666">=</span> <span style="color: #666666">0</span>
-    
-
-            <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">0</span>, n_samples, batch_size):
-                v0 <span style="color: #666666">=</span> data[i:i <span style="color: #666666">+</span> batch_size]
-                h0_prob <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sigmoid(np<span style="color: #666666">.</span>dot(v0, <span style="color: #008000">self</span><span style="color: #666666">.</span>W) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>h_bias)
-                h0_sample <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sample(h0_prob)
-
-                <span style="color: #408080; font-style: italic"># Gibbs step</span>
-                v1_prob <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sigmoid(np<span style="color: #666666">.</span>dot(h0_sample, <span style="color: #008000">self</span><span style="color: #666666">.</span>W<span style="color: #666666">.</span>T) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>v_bias)
-                v1_sample <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sample(v1_prob)
-                h1_prob <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sigmoid(np<span style="color: #666666">.</span>dot(v1_sample, <span style="color: #008000">self</span><span style="color: #666666">.</span>W) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>h_bias)
-
-                <span style="color: #408080; font-style: italic"># Update</span>
-                <span style="color: #008000">self</span><span style="color: #666666">.</span>W <span style="color: #666666">+=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>learning_rate <span style="color: #666666">*</span> (np<span style="color: #666666">.</span>dot(v0<span style="color: #666666">.</span>T, h0_prob) <span style="color: #666666">-</span> np<span style="color: #666666">.</span>dot(v1_sample<span style="color: #666666">.</span>T, h1_prob)) <span style="color: #666666">/</span> batch_size
-                <span style="color: #008000">self</span><span style="color: #666666">.</span>v_bias <span style="color: #666666">+=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>learning_rate <span style="color: #666666">*</span> np<span style="color: #666666">.</span>mean(v0 <span style="color: #666666">-</span> v1_sample, axis<span style="color: #666666">=0</span>)
-                <span style="color: #008000">self</span><span style="color: #666666">.</span>h_bias <span style="color: #666666">+=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>learning_rate <span style="color: #666666">*</span> np<span style="color: #666666">.</span>mean(h0_prob <span style="color: #666666">-</span> h1_prob, axis<span style="color: #666666">=0</span>)
-
-                epoch_error <span style="color: #666666">+=</span> np<span style="color: #666666">.</span>mean((v0 <span style="color: #666666">-</span> v1_sample) <span style="color: #666666">**</span> <span style="color: #666666">2</span>)
-
-            <span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Epoch </span><span style="color: #BB6688; font-weight: bold">{</span>epoch <span style="color: #666666">+</span> <span style="color: #666666">1</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">: Reconstruction error = </span><span style="color: #BB6688; font-weight: bold">{</span>epoch_error<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.4f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">gibbs_sample</span>(<span style="color: #008000">self</span>, v_start, k<span style="color: #666666">=1</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Perform k steps of Gibbs sampling starting from visible vector v_start&quot;&quot;&quot;</span>
-        v <span style="color: #666666">=</span> v_start<span style="color: #666666">.</span>copy()
-        <span style="color: #008000; font-weight: bold">for</span> _ <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(k):
-            h_prob <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sigmoid(np<span style="color: #666666">.</span>dot(v, <span style="color: #008000">self</span><span style="color: #666666">.</span>W) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>h_bias)
-            h <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sample(h_prob)
-            v_prob <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sigmoid(np<span style="color: #666666">.</span>dot(h, <span style="color: #008000">self</span><span style="color: #666666">.</span>W<span style="color: #666666">.</span>T) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>v_bias)
-            v <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>sample(v_prob)
-        <span style="color: #008000; font-weight: bold">return</span> v
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">generate</span>(<span style="color: #008000">self</span>, n_samples<span style="color: #666666">=10</span>, k<span style="color: #666666">=100</span>):
-        <span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;Generate new samples via Gibbs sampling from random initial states&quot;&quot;&quot;</span>
-        samples <span style="color: #666666">=</span> []
-        <span style="color: #008000; font-weight: bold">for</span> _ <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_samples):
-            v_start <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randint(<span style="color: #666666">0</span>, <span style="color: #666666">2</span>, size<span style="color: #666666">=</span>(<span style="color: #666666">1</span>, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_visible))<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32)
-            v_sample <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>gibbs_sample(v_start, k<span style="color: #666666">=</span>k)
-            samples<span style="color: #666666">.</span>append(v_sample[<span style="color: #666666">0</span>])
-        <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>array(samples)
-
-<span style="color: #408080; font-style: italic"># Load and split MNIST</span>
-X <span style="color: #666666">=</span> load_binarized_mnist()
-X_train, X_test <span style="color: #666666">=</span> train_test_split(X, test_size<span style="color: #666666">=0.1</span>, random_state<span style="color: #666666">=42</span>)
-
-<span style="color: #408080; font-style: italic"># Train RBM</span>
-rbm <span style="color: #666666">=</span> RBM(n_visible<span style="color: #666666">=784</span>, n_hidden<span style="color: #666666">=128</span>, learning_rate<span style="color: #666666">=0.1</span>)
-rbm<span style="color: #666666">.</span>train(X_train, epochs<span style="color: #666666">=10</span>, batch_size<span style="color: #666666">=64</span>)
-
-<span style="color: #408080; font-style: italic"># Generate digits</span>
-generated_digits <span style="color: #666666">=</span> rbm<span style="color: #666666">.</span>generate(n_samples<span style="color: #666666">=10</span>, k<span style="color: #666666">=200</span>)
-
-<span style="color: #408080; font-style: italic"># Display generated digits</span>
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">show_generated</span>(images):
-    fig, axes <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>subplots(<span style="color: #666666">1</span>, <span style="color: #008000">len</span>(images), figsize<span style="color: #666666">=</span>(<span style="color: #666666">15</span>, <span style="color: #666666">2</span>))
-    <span style="color: #008000; font-weight: bold">for</span> ax, img <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">zip</span>(axes, images):
-        ax<span style="color: #666666">.</span>imshow(img<span style="color: #666666">.</span>reshape(<span style="color: #666666">28</span>, <span style="color: #666666">28</span>), cmap<span style="color: #666666">=</span><span style="color: #BA2121">&quot;gray&quot;</span>)
-        ax<span style="color: #666666">.</span>axis(<span style="color: #BA2121">&quot;off&quot;</span>)
-    plt<span style="color: #666666">.</span>suptitle(<span style="color: #BA2121">&quot;Generated Digits from RBM via Gibbs Sampling&quot;</span>)
-    plt<span style="color: #666666">.</span>show()
-
-show_generated(generated_digits)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="code-2">Code 2 </h2>
-
-<!-- code=python (!bc pycod) typeset with pygments style "default" -->
-<div class="cell border-box-sizing code_cell rendered">
-  <div class="input">
-    <div class="inner_cell">
-      <div class="input_area">
-        <div class="highlight" style="background: #f8f8f8">
-  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qml</span>
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">import</span> numpy <span style="color: #008000; font-weight: bold">as</span> np
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.datasets</span> <span style="color: #008000; font-weight: bold">import</span> fetch_openml
-<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.model_selection</span> <span style="color: #008000; font-weight: bold">import</span> train_test_split
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
-
-<span style="color: #408080; font-style: italic"># Load and binarize MNIST</span>
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">load_binarized_mnist</span>(n_samples<span style="color: #666666">=1000</span>):
-    <span style="color: #008000">print</span>(<span style="color: #BA2121">&quot;Downloading MNIST...&quot;</span>)
-    mnist <span style="color: #666666">=</span> fetch_openml(<span style="color: #BA2121">&#39;mnist_784&#39;</span>, version<span style="color: #666666">=1</span>)
-    X <span style="color: #666666">=</span> mnist<span style="color: #666666">.</span>data[:n_samples]<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32) <span style="color: #666666">/</span> <span style="color: #666666">255.0</span>
-    X <span style="color: #666666">=</span> (X <span style="color: #666666">&gt;</span> <span style="color: #666666">0.5</span>)<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32)
-    <span style="color: #008000; font-weight: bold">return</span> X
-
-<span style="color: #408080; font-style: italic"># Quantum device and number of hidden qubits</span>
-n_visible <span style="color: #666666">=</span> <span style="color: #666666">8</span>  <span style="color: #408080; font-style: italic"># We will use only 8 pixels for this toy example</span>
-n_hidden <span style="color: #666666">=</span> <span style="color: #666666">4</span>
-dev <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>device(<span style="color: #BA2121">&quot;default.qubit&quot;</span>, wires<span style="color: #666666">=</span>n_hidden)
-
-<span style="color: #408080; font-style: italic"># Define quantum circuit as hidden layer</span>
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">qrbm_circuit</span>(v, weights):
-    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_hidden):
-        qml<span style="color: #666666">.</span>Hadamard(wires<span style="color: #666666">=</span>i)
-        qml<span style="color: #666666">.</span>RZ(weights[i], wires<span style="color: #666666">=</span>i)
-    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_hidden <span style="color: #666666">-</span> <span style="color: #666666">1</span>):
-        qml<span style="color: #666666">.</span>CNOT(wires<span style="color: #666666">=</span>[i, i <span style="color: #666666">+</span> <span style="color: #666666">1</span>])
-    <span style="color: #008000; font-weight: bold">return</span> [qml<span style="color: #666666">.</span>expval(qml<span style="color: #666666">.</span>PauliZ(i)) <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(n_hidden)]
-
-<span style="color: #408080; font-style: italic"># QRBM class</span>
-<span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">QRBM</span>:
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">__init__</span>(<span style="color: #008000">self</span>, n_visible, n_hidden, lr<span style="color: #666666">=0.1</span>):
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_visible <span style="color: #666666">=</span> n_visible
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>n_hidden <span style="color: #666666">=</span> n_hidden
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>weights <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(<span style="color: #666666">0</span>, <span style="color: #666666">2</span> <span style="color: #666666">*</span> np<span style="color: #666666">.</span>pi, n_hidden, requires_grad<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>visible_bias <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros(n_visible, requires_grad<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)
-        <span style="color: #008000">self</span><span style="color: #666666">.</span>optimizer <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>GradientDescentOptimizer(stepsize<span style="color: #666666">=</span>lr)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">reconstruct</span>(<span style="color: #008000">self</span>, v):
-        <span style="color: #408080; font-style: italic"># Use quantum circuit to sample hidden state</span>
-        h_exp <span style="color: #666666">=</span> hidden_layer(v, <span style="color: #008000">self</span><span style="color: #666666">.</span>weights)
-        v_recon <span style="color: #666666">=</span> np<span style="color: #666666">.</span>tanh(np<span style="color: #666666">.</span>dot(h_exp, np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #008000">self</span><span style="color: #666666">.</span>n_hidden, <span style="color: #008000">self</span><span style="color: #666666">.</span>n_visible)) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>visible_bias)
-        <span style="color: #008000; font-weight: bold">return</span> (v_recon <span style="color: #666666">&gt;</span> <span style="color: #666666">0.5</span>)<span style="color: #666666">.</span>astype(np<span style="color: #666666">.</span>float32)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">cost</span>(<span style="color: #008000">self</span>, v):
-        recon <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>reconstruct(v)
-        <span style="color: #008000; font-weight: bold">return</span> np<span style="color: #666666">.</span>mean((v <span style="color: #666666">-</span> recon) <span style="color: #666666">**</span> <span style="color: #666666">2</span>)
-
-    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">train</span>(<span style="color: #008000">self</span>, data, epochs<span style="color: #666666">=10</span>):
-        <span style="color: #008000; font-weight: bold">for</span> epoch <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(epochs):
-            total_cost <span style="color: #666666">=</span> <span style="color: #666666">0</span>
-            <span style="color: #008000; font-weight: bold">for</span> v <span style="color: #AA22FF; font-weight: bold">in</span> data:
-                v <span style="color: #666666">=</span> v[:<span style="color: #008000">self</span><span style="color: #666666">.</span>n_visible]
-                <span style="color: #008000">self</span><span style="color: #666666">.</span>weights, cost_val <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>optimizer<span style="color: #666666">.</span>step_and_cost(<span style="color: #008000; font-weight: bold">lambda</span> w: <span style="color: #008000">self</span><span style="color: #666666">.</span>cost(v), <span style="color: #008000">self</span><span style="color: #666666">.</span>weights)
-                total_cost <span style="color: #666666">+=</span> cost_val
-            <span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Epoch </span><span style="color: #BB6688; font-weight: bold">{</span>epoch<span style="color: #666666">+1</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">: Cost = </span><span style="color: #BB6688; font-weight: bold">{</span>total_cost <span style="color: #666666">/</span> <span style="color: #008000">len</span>(data)<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.4f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
-<span style="color: #408080; font-style: italic"># Load and reduce MNIST</span>
-X <span style="color: #666666">=</span> load_binarized_mnist(n_samples<span style="color: #666666">=500</span>)
-X_train, X_test <span style="color: #666666">=</span> train_test_split(X, test_size<span style="color: #666666">=0.1</span>, random_state<span style="color: #666666">=42</span>)
-
-<span style="color: #408080; font-style: italic"># Train QRBM</span>
-qrbm <span style="color: #666666">=</span> QRBM(n_visible<span style="color: #666666">=</span>n_visible, n_hidden<span style="color: #666666">=</span>n_hidden, lr<span style="color: #666666">=0.3</span>)
-<span style="color: #408080; font-style: italic"># Convert X_train to a NumPy array before training</span>
-qrbm<span style="color: #666666">.</span>train(X_train<span style="color: #666666">.</span>to_numpy(), epochs<span style="color: #666666">=10</span>) <span style="color: #408080; font-style: italic"># Converting X_train to numpy array</span>
-
-<span style="color: #408080; font-style: italic"># Visualize a reconstruction</span>
-<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">show_reconstruction</span>(original, reconstructed):
-    fig, axes <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>subplots(<span style="color: #666666">1</span>, <span style="color: #666666">2</span>)
-    axes[<span style="color: #666666">0</span>]<span style="color: #666666">.</span>imshow(original[:n_visible]<span style="color: #666666">.</span>reshape(<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>), cmap<span style="color: #666666">=</span><span style="color: #BA2121">&quot;gray&quot;</span>, aspect<span style="color: #666666">=</span><span style="color: #BA2121">&#39;auto&#39;</span>)
-    axes[<span style="color: #666666">0</span>]<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&quot;Original&quot;</span>)
-    axes[<span style="color: #666666">1</span>]<span style="color: #666666">.</span>imshow(reconstructed<span style="color: #666666">.</span>reshape(<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>), cmap<span style="color: #666666">=</span><span style="color: #BA2121">&quot;gray&quot;</span>, aspect<span style="color: #666666">=</span><span style="color: #BA2121">&#39;auto&#39;</span>)
-    axes[<span style="color: #666666">1</span>]<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&quot;Reconstruction&quot;</span>)
-    plt<span style="color: #666666">.</span>show()
-
-<span style="color: #408080; font-style: italic"># Access the first row using .iloc to avoid the KeyError</span>
-sample <span style="color: #666666">=</span> X_test<span style="color: #666666">.</span>iloc[<span style="color: #666666">0</span>]<span style="color: #666666">.</span>values <span style="color: #408080; font-style: italic"># Access the first row and convert to NumPy array</span>
-reconstruction <span style="color: #666666">=</span> qrbm<span style="color: #666666">.</span>reconstruct(sample[:n_visible])
-show_reconstruction(sample, reconstruction)
-</pre>
-</div>
-      </div>
-    </div>
-  </div>
-  <div class="output_wrapper">
-    <div class="output">
-      <div class="output_area">
-        <div class="output_subarea output_stream output_stdout output_text">          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ------------------- end of main content --------------- -->
 <center style="font-size:80%">
