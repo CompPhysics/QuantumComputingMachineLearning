@@ -56,5 +56,3 @@ for step in range(steps):
     if step % 10 == 0:
         current_loss = rqbm_loss(weights, visible_bias, hidden_bias)
         print(f"Step {step}: Loss = {current_loss:.4f}")
-
-B
