@@ -104,7 +104,11 @@ doconce format html week16.do.txt --html_style=bootstrap --pygments_html_style=d
               ('Implementation with PennyLane',
                2,
                None,
-               'implementation-with-pennylane')]}
+               'implementation-with-pennylane'),
+              ('Kullback-Leibler divergence',
+               2,
+               None,
+               'kullback-leibler-divergence')]}
 end of tocinfo -->
 
 <body>
@@ -166,6 +170,7 @@ MathJax.Hub.Config({
      <!-- navigation toc: --> <li><a href="#gibbs-sampling" style="font-size: 80%;">Gibbs sampling</a></li>
      <!-- navigation toc: --> <li><a href="#parameter-optimization-and-variational-techniques" style="font-size: 80%;">Parameter Optimization and Variational Techniques</a></li>
      <!-- navigation toc: --> <li><a href="#implementation-with-pennylane" style="font-size: 80%;">Implementation with PennyLane</a></li>
+     <!-- navigation toc: --> <li><a href="#kullback-leibler-divergence" style="font-size: 80%;">Kullback-Leibler divergence</a></li>
 
         </ul>
       </li>
@@ -241,8 +246,7 @@ correlations that classical models cannot .
 first classical Boltzmann machines and restricted Boltzmann machines (RBMs).
 Thereafter we
 introduce QBMs and their restricted variant (RQBM), discuss training
-methods, and illustrate practical implementation using
-PennyLane. 
+methods, and illustrate practical implementation using PennyLane. 
 </p>
 </div>
 </div>
@@ -623,16 +627,15 @@ $$
 \langle \hat{O}\rangle = \mathrm{Tr} (\rho \hat{O}).
 $$
 
-<p>In the QBM
-context, one is interested in the probability \( p(v) \) of measuring the
+<p>In the QBM context, one is interested in the probability \( p(v) \) of measuring the
 visible qubits in computational basis state \( v \).  If the full thermal
 state lives on both visible and hidden qubits, this probability is
 </p>
 $$
-p_\Theta(v)=\mathrm{Tr}\bigl[Pi_v^{(\text{vis})}\,\rho(\theta)\bigr],
+p_{\Theta}(v)=\mathrm{Tr}\bigl[\Pi_v^{(\mathrm{vis})}\rho(\Theta)\bigr],
 $$
 
-<p>where \( Pi_v^{(\text{vis})}=|v\>\ < v| \) acts on the visible subspace.</p>
+<p>where \( \Pi_v^{(\mathrm{vis})}=\vert v\rangle\langle v\vert \) acts on the visible subspace.</p>
 
 <p>Equivalently, one may <em>trace out</em> the hidden qubits and work with the
 reduced density matrix on the visible subsystem.  Computing these
@@ -645,7 +648,7 @@ annealers, or variational algorithms (add refs here).
 <h2 id="quantum-boltzmann-machines" class="anchor">Quantum Boltzmann Machines </h2>
 
 <p>The model distribution over
-classical bitstrings \( v \) is given by the diagonal of the quantum Gibbs
+classical bitstrings \( v \) is given by the diagonal of the quantum Gibbs (see whiteboard notes for definition of quantum Gibbs state)
 state \( \rho = e^{-H}/Z \).
 </p>
 
@@ -679,7 +682,7 @@ qubits respectively, \( a_i,b_j \) are biases, \( w_{ij} \) are visible-hidden
 couplings, and \( V_{ii{\prime}} \) are possible visible-visible couplings.
 (Classically, \( V=0 \) in an RBM).
 Importantly, there are no hidden-hidden \( ZZ \) terms in
-this restricted model.  Equation&#8239;xxxx  is a
+this restricted model.  The above equation  is a
 direct quantum analogue of the RBM energy function, promoting it to an
 operator acting on qubits.  
 .
@@ -701,40 +704,41 @@ bitstrings \( \{v^{(k)}\} \) from an unknown distribution \( p_{\rm data}(v) \).
 <div class="panel panel-default">
 <div class="panel-body">
 <!-- subsequent paragraphs come in larger fonts, so start with a paragraph -->
-<p>The goal is to adjust the Hamiltonian parameters \theta so that the
+<p>The goal is to adjust the Hamiltonian parameters \( \Theta \) so that the
 model distribution
 </p>
 $$
-\(p_\theta(v)=\ < v|\rho(\theta)|v\>\),
+p_{\Theta}(v)=\langle v\vert\rho(\Theta)\vert v\rangle,
 $$
 
 <p>approximates
-\( p_{\rm data}(v) \).  Equivalently, one can view the data distribution as
+\( p_{\mathrm{data}}(v) \).  Equivalently, one can view the data distribution as
 a target density matrix \( \eta \) (diagonal in the computational basis) and
 minimize the quantum relative entropy (quantum KL divergence)
 </p>
 $$
-S(\eta\Vert \rho(\theta)) = \mathrm{Tr}\!\bigl[\eta\ln\eta\bigr] - \mathrm{Tr}\!\bigl[\eta\ln\rho(\theta)\bigr].
+S(\eta\vert \rho(\Theta)) = \mathrm{Tr}\!\bigl[\eta\ln\eta\bigr] - \mathrm{Tr}\!\bigl[\eta\ln\rho(\Theta)\bigr].
 $$
 </div>
 </div>
+
 
 <!-- !split -->
 <h2 id="non-negative-loss" class="anchor">Non-negative loss </h2>
 
 <p>This loss is non-negative and equals zero only when \( \eta=\rho(\theta) \).
 Writing \( \rho=e^{-H}/Z \), one finds the gradient of the relative entropy
-(for parameter \theta in \( H \)) as
+(for parameter \( \Theta \) in \( H \)) as
 </p>
 $$
-\frac{\partial}{\partial\theta} S(\eta\Vert\rho)
-= \mathrm{Tr}\!\Bigl[\eta\,\partial_\theta(\beta H + \ln Z)\Bigr]
-= \beta\Bigl(\Tr[\eta\,\partial_\theta H] - \mathrm{Tr}[\rho\,\partial_\theta H]\Bigr).
+\frac{\partial}{\partial\Theta} S(\eta\vert\rho)
+= \mathrm{Tr}\!\Bigl[\eta\,\partial_\Theta(\beta H + \ln Z)\Bigr]
+= \beta\Bigl(\mathrm{Tr}[\eta\,\partial_\theta H] - \mathrm{Tr}[\rho\,\partial_\Theta H]\Bigr).
 $$
 
 <p>In other words,</p>
 $$
-\nabla_\theta S \;=\; \beta\Bigl(\langle \partial_\theta H\rangle_{\rm data} \;-\; \langle \partial_\theta H\rangle_{\rm model}\Bigr).
+\nabla_\Theta S = \beta\Bigl(\langle \partial_\Theta H\rangle_{\rm data}-\langle \partial_\Theta H\rangle_{\rm model}\Bigr).
 $$
 
 
@@ -747,11 +751,11 @@ expectation under the data distribution and under the model&#8217;s Gibbs
 distribution
 </p>
 $$
-\eta\Vert\rho)=\mathrm{Tr}[\eta\ln\eta]-\mathrm{Tr}[\eta\ln\rho].
+\eta\vert\rho)=\mathrm{Tr}[\eta\ln\eta]-\mathrm{Tr}[\eta\ln\rho].
 $$
 
-<p>In practice, one computes $\langle \( \partial_\theta H\rangle_{\rm data} \) by averaging over the training
-set, and estimates \( \langle \partial_\theta H\rangle_{\rm model} \) by
+<p>In practice, one computes \( \langle \partial_{\Theta} H\rangle_{\mathrm{data}} \) by averaging over the training
+set, and estimates \( \langle \partial_{\theta} H\rangle_{\mathrm{model}} \) by
 sampling from the quantum model.
 </p>
 
@@ -761,7 +765,7 @@ sampling from the quantum model.
 <p>Note that preparing exact Gibbs samples of a non-commuting Hamiltonian
 is hard.  Many methods have been proposed to approximate the model
 expectation.  For example, one may use a bound on the quantum free
-energy (as in Amin et al. ), or perform contrastive divergence with a
+energy, or perform contrastive divergence with a
 quantum device.  Recent theoretical work shows that minimizing the
 relative entropy in QBM training can be done with stochastic gradient
 descent in polynomial sample complexity under reasonable assumptions .
@@ -770,7 +774,7 @@ descent in polynomial sample complexity under reasonable assumptions .
 <!-- !split -->
 <h2 id="parameter-optimization-and-variational-techniques" class="anchor">Parameter Optimization and Variational Techniques </h2>
 
-<p>Given the gradient above, one can optimize \theta by standard
+<p>Given the gradient above, one can optimize \( \Theta \) by standard
 gradient-based methods (SGD, Adam, etc.).  In a gate-based setting, we
 implement the RQBM Hamiltonian via a parameterized quantum circuit
 (ansatz) and use variational quantum algorithms (VQAs).  Each
@@ -779,39 +783,11 @@ gradient of a circuit expectation can be obtained by the
 parameter-shift rule or automatic differentiation.
 </p>
 
-<p>One approach is the \( \beta \)-Variational Quantum Eigensolver (&#946;-VQE)
-technique.  Liu et al. (2021) proposed a variational ansatz to
-represent a thermal (mixed) state using a combination of a classical
-neural network and a quantum circuit.  Huijgen et al. (2024) applied
-this to QBM training: an inner loop runs &#946;-VQE to approximate the
-Gibbs state of H(\theta), while an outer loop updates \theta to
-minimize the relative entropy to the data .  This &#8220;nested loop&#8221;
-algorithm effectively sidesteps direct sampling of the true quantum
-Boltzmann state by variational approximation.  It has been shown to
-work on both classical and quantum target data, achieving
-high-fidelity learning for up to 10 qubits .
-</p>
-
-<p>Other sophisticated ans&#228;tze exist.  For example, Evolved Quantum
-Boltzmann Machines (Minervini et al., 2025) prepare a thermal state
-under one Hamiltonian and then evolve it under another, combining
-imaginary- and real-time evolution.  They derive analytical gradient
-formulas and propose natural-gradient variants .  There are also
-&#8220;semi-quantum&#8221; RBMs (sqRBMs) which commute in the visible subspace and
-treat the hidden units quantum-mechanically.  Intriguingly, sqRBMs
-were found to be expressively equivalent to classical RBMs, requiring
-fewer hidden units for the same number of parameters . In practice,
-however, variational optimization in high dimensions can suffer from
-barren plateaus. Recent analysis shows that training QBMs using the
-relative entropy objective avoids many of these concentration issues,
-with provably polynomial complexity under realistic conditions .
-</p>
-
 <!-- !split -->
 <h2 id="implementation-with-pennylane" class="anchor">Implementation with PennyLane </h2>
 
 <p>As a concrete example, we outline how to implement an RQBM in
-PennyLane. We consider n_v visible and n_h hidden qubits. The ansatz
+PennyLane. We consider \( n_v \) visible and \( n_h \) hidden qubits. The ansatz
 can be, for instance, layers of parameterized single-qubit rotations
 and entangling gates that respect the bipartite structure.  Below is
 illustrative code (in Python) using PennyLane&#8217;s default.qubit
@@ -822,17 +798,20 @@ simulator.
 
 <!-- !ec -->
 
-<p>This circuit takes a parameter vector params of length n_v+n_h and
-returns the probabilities q_\theta(v) of measuring each visible
-bitstring v.  Notice we measure only the visible wires (the
-wires=list(range(n_v)) in qml.probs marginalizes out the hidden
+<p>This circuit takes a parameter vector params of length \( n_v+n_h \) and
+returns the probabilities \( p_{\Theta}(v) \) of measuring each visible
+bitstring \( v \).  Notice we measure only the visible wires (the
+wires=list(range(n$\_$v)) in qml.probs marginalizes out the hidden
 qubit).
 </p>
 
+<!-- !split -->
+<h2 id="kullback-leibler-divergence" class="anchor">Kullback-Leibler divergence </h2>
+
 <p>Next, we train this model to match a target dataset distribution.
-Suppose our data has distribution target = [p(00), p(01), p(10),
-p(11)].  We can define the (classical) loss as the Kullback-Leibler
-divergence D_{\rm KL}(p_{\rm data}\Vert q_\theta) or simply the
+Suppose our data has distribution target = \( [p(00), p(01), p(10),
+p(11)] \).  We can define the (classical) loss as the Kullback-Leibler
+divergence \( D_{\mathrm{KL}}(p_{\mathrm{data}}\vert\vert q_\Theta) \) or simply the
 negative log-likelihood.  Then we update params by gradient descent.
 PennyLane&#8217;s automatic differentiation can compute gradients via the
 parameter-shift rule, but we show an explicit parameter-shift
@@ -869,19 +848,6 @@ automatic gradients, and more sophisticated optimizers (Adam, natural
 gradient, etc.). The above shows that PennyLane can seamlessly
 integrate quantum circuit definitions with classical training logic.
 </p>
-
-$$
-H = -\sum_{a=1}^N \Gamma_a,\sigma^x_a ;-;\sum_{a=1}^N b_a,\sigma^z_a ;-;\sum_{a < b} u_{ab},\sigma^z_a \sigma^z_b,
-$$
-
-<p>where \( \sigma_a^x,\sigma_a^z \) are the Pauli matrices on qubit \( a \),
-\( \Gamma_a \) is a &#8220;transverse&#8221; field, \( b_a \) are local fields (biases),
-and \( u_{ab} \) are interaction strengths .  Here each qubit can be
-interpreted analogously to a classical unit, but the \( \sigma^x \) term
-induces quantum superposition.  One can also include \( \sigma^y \) or
-more complex terms, but we focus on this common ansatz.
-</p>
-
 <!-- ------------------- end of main content --------------- -->
 </div>  <!-- end container -->
 <!-- include javascript, jQuery *first* -->
