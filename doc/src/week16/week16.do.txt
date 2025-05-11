@@ -571,51 +571,99 @@ parameter-shift rule or automatic differentiation.
 !split
 ===== Implementation with PennyLane =====
 
+Below we sketch a toy example: a two-qubit Quantum Circuit Born Machine
+(QCBM), which generates a probability distribution via a parameterized
+quantum circuit. While a QCBM is not exactly a QBM (it has no thermal
+state), it serves to show how to code a quantum generative model.
 
-
-As a concrete example, we outline how to implement an RQBM in
-PennyLane. We consider $n_v$ visible and $n_h$ hidden qubits. The ansatz
-can be, for instance, layers of parameterized single-qubit rotations
-and entangling gates that respect the bipartite structure.  Below is
-illustrative code (in Python) using PennyLane’s default.qubit
-simulator.
-
-#!bc pycod
-
-#!ec
-
-
-
-This circuit takes a parameter vector params of length $n_v+n_h$ and
-returns the probabilities $p_{\Theta}(v)$ of measuring each visible
-bitstring $v$.  Notice we measure only the visible wires (the
-wires=list(range(n$\_$v)) in qml.probs marginalizes out the hidden
-qubit).
-
-!split
-===== Kullback-Leibler divergence =====
-
-Next, we train this model to match a target dataset distribution.
-Suppose our data has distribution target = $[p(00), p(01), p(10),
-p(11)]$.  We can define the (classical) loss as the Kullback-Leibler
-divergence $D_{\mathrm{KL}}(p_{\mathrm{data}}\vert\vert q_\Theta)$ or simply the
-negative log-likelihood.  Then we update params by gradient descent.
-PennyLane’s automatic differentiation can compute gradients via the
-parameter-shift rule, but we show an explicit parameter-shift
-computation for demonstration:
 
 !bc pycod
-Initialize parameters and perform a simple gradient descent
+import pennylane as qml
+from pennylane import numpy as np
+
+# Use a 2-qubit simulator
+dev = qml.device('default.qubit', wires=2)
+
+# Define a simple 2-qubit QCBM circuit
+@qml.qnode(dev)
+def circuit(params):
+    # params = 4 angles
+    qml.RX(params[0], wires=0)
+    qml.RY(params[1], wires=1)
+    qml.CNOT(wires=[0, 1])
+    qml.RX(params[2], wires=0)
+    qml.RY(params[3], wires=1)
+    return qml.probs(wires=[0,1])  # return probabilities of |00>,|01>,|10>,|11>
+
+# Initialize random parameters
+params = np.random.randn(4, requires_grad=True)
+
+# Get the output distribution from the circuit
+probs = circuit(params)
+print("Probabilities:", probs)
 !ec
 
+In this code, we create a two-qubit variational circuit and return the
+probabilities of each basis state. One could train params to match a
+target distribution by defining a cost function between
+probs and the data distribution, and using PennyLane’s automatic
+differentiation to update params.  Though not a true QBM (no
+Hamiltonian or Gibbs state), this demonstrates how one might build and
+train a small quantum generative model in PennyLane.
 
 
 
+To make it more QBM-like, one could encode the classical visible units
+as fixed inputs. For example, to compute the energy of a QBM
+Hamiltonian for a given visible bitstring, one might do:
 
-This code illustrates the training loop.  At each epoch we evaluate
-the loss, compute gradients (via two forward passes per parameter),
-and update the parameters.  In practice one can use qml.grad for
-automatic gradients, and more sophisticated optimizers (Adam, natural
-gradient, etc.). The above shows that PennyLane can seamlessly
-integrate quantum circuit definitions with classical training logic.
+!bc pycod
+# Example: compute expectation of a simple Hamiltonian for a given state |v>
+H = 1.5 * qml.PauliZ(0) + 0.7 * qml.PauliZ(1) + 0.9 * qml.PauliZ(0)@qml.PauliZ(1)
+
+@qml.qnode(dev)
+def energy_of_state():
+    # Prepare visible qubits in state |v> = |01>, say
+    qml.PauliX(wires=1)  # flips qubit 1 to |1>
+    # No hidden qubits in this simple example
+    # Return expectation of H in this state
+    return qml.expval(H)
+
+print("Energy of |01> state:", energy_of_state())
+!ec
+
+Here, we used a two-qubit Hamiltonian
+$H=1.5\sigma_z^0+0.7\sigma_z^1+0.9\sigma_z^0\sigma_z^1$ and prepared
+the state $\vert v\rangle=\vert 01\rangle $. The _expval(H)_ call returns
+!bt
+\[
+\langle 01 \vert H \vert 01\rangle = -1.5 + 0.7 - 0.9 = -1.7,
+\]
+!et
+(up to sign
+conventions). This shows how PennyLane can compute energies of basis
+states, which is a key step in evaluating the QBM energy and
+probability of data states.
+
+
+
+In practice, training a QBM in PennyLane would involve preparing
+quantum states corresponding to the Gibbs distribution. One could use
+functions like qml.qaoa.cost.Hamiltonian or custom circuits to
+approximate $\exp{-\beta H}$, and then use PennyLane’s optimizers. Also,
+PennyLane can interface with PyTorch or TensorFlow, enabling hybrid
+optimization of quantum circuits with classical parameters (e.g. the
+Hamiltonian weights).
+
+
+!split
+===== Summary of steps in PennyLane implementation =====
+
+o Define a quantum device (qml.device) with enough wires for visibles+hidden.
+0 Construct a parametric quantum circuit (ansatz) that depends on trainable parameters (e.g. angles in rotations and entangling gates).
+o If modeling an RQBM, one might clamp visible qubits (preparing them according to training data) and apply gates only to hidden qubits.
+o Measure relevant observables: one can return probabilities (probs) or expectation values (expval) of Pauli operators, depending on the chosen loss function.
+o Define a cost function, such as the negative log-likelihood or a distance between output and target distribution.
+Use an optimizer (e.g. gradient descent, Adam) with PennyLane’s gradient calculations to update parameters.
+
 
