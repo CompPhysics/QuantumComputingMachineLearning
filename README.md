@@ -22,6 +22,8 @@ themes can be covered:
 - QisKit at https://www.ibm.com/quantum/qiskit
 - PySCF for traditional quantum mechanical methods at https://pyscf.org/user/install.html#how-to-install-pyscf. This library can be integrated with QisKit for quantum computing simulations.
 - Qbraid at https://www.qbraid.com
+- QuTip at https://qutip.org/
+- PennyLane at https://pennylane.ai/
 
 ### Time: Each Wednesday at 215pm-4pm CET and exercise sessions 4pm-5pm (The lecture sessions will be recorded)
 -Permanent Zoom link for the whole semester is https://uio.zoom.us/my/mortenhj
