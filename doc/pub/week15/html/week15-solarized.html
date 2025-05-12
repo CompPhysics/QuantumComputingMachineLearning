@@ -99,6 +99,10 @@ div.toc p,a {
                2,
                None,
                'what-will-we-need-in-the-case-of-a-quantum-computer'),
+              ('Parameterized quantum circuits',
+               2,
+               None,
+               'parameterized-quantum-circuits'),
               ('The most general ansatz', 2, None, 'the-most-general-ansatz'),
               ('Quantum SVM', 2, None, 'quantum-svm'),
               ('Defining the Quantum Kernel',
@@ -504,27 +508,36 @@ just as in classical SVMs.
 <div class="alert alert-block alert-block alert-text-normal">
 <b></b>
 <p>
-<p>We will have to translate the classical data point \( \vec{x} \)
-into a quantum datapoint \( \vert \Phi{(\vec{x})} \rangle \). This can
-be achieved by a circuit \( \mathcal{U}_{\Phi(\vec{x})} \vert 0\rangle \).
+<p>We will have to translate the classical data point \( \boldsymbol{x} \)
+into a quantum datapoint \( \vert \Phi{(\boldsymbol{x})} \rangle \). This can
+be achieved by a circuit \( \mathcal{U}_{\Phi(\boldsymbol{x})} \vert 0\rangle \).
 </p>
 
 <p>Here \( \Phi() \) could be any classical function applied
-on the classical data \( \vec{x} \).
+on the classical data \( \boldsymbol{x} \).
 </p>
 </div>
 
 <div class="alert alert-block alert-block alert-text-normal">
 <b></b>
 <p>
-<p>We need a parameterized quantum circuit \( W(\theta) \) that
+<p>We need a parameterized quantum circuit \( W(\Theta) \) that
 processes the data in a way that in the end we
 can apply a measurement that returns a classical value \( -1 \) or
-\( 1 \) for each classical input \( \vec{x} \) that indentifies the label
+\( 1 \) for each classical input \( \boldsymbol{x} \) that indentifies the label
 of the classical data.
 </p>
 </div>
 
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="parameterized-quantum-circuits">Parameterized quantum circuits </h2>
+
+<br/><br/>
+<center>
+<p><img src="figures/pqc.png" width="900" align="bottom"></p>
+</center>
+<br/><br/>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="the-most-general-ansatz">The most general ansatz </h2>
@@ -533,7 +546,7 @@ of the classical data.
 which is
 </p>
 $$
-W(\theta) \mathcal{U}_{\Phi}(\vec{x}) \vert 0 \rangle.
+W(\Theta) \mathcal{U}_{\Phi}(\boldsymbol{x}) \vert 0 \rangle.
 $$
 
 <p>These kind of ansatzes are called quantum variational circuits.</p>
@@ -543,7 +556,7 @@ $$
 
 <p>In the case of a quantum SVM we will only use the quantum feature maps</p>
 $$
-\mathcal{U}_{\Phi(\vec{x})},
+\mathcal{U}_{\Phi(\boldsymbol{x})},
 $$
 
 <p>to translate the classical data into
@@ -559,12 +572,12 @@ can train the Quantum SVM the same way as the classical SVM.
 case. We take the inner product
 </p>
 $$
-K(\vec{x}, \vec{z}) = \vert \langle \Phi (\vec{x}) \vert \Phi(\vec{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\vec{x})}^{t} \mathcal{U}_{\Phi(\vec{z})} \vert 0^n \rangle,
+K(\boldsymbol{x}, \boldsymbol{z}) = \vert \langle \Phi (\boldsymbol{x}) \vert \Phi(\boldsymbol{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\boldsymbol{x})}^{t} \mathcal{U}_{\Phi(\boldsymbol{z})} \vert 0^n \rangle,
 $$
 
 <p>but now with the quantum feature maps</p>
 $$
-\mathcal{U}_{\Phi(\vec{x})}.
+\mathcal{U}_{\Phi(\boldsymbol{x})}.
 $$
 
 <p>The idea is that if we choose a quantum feature maps that is not easy
@@ -926,8 +939,8 @@ when trained by minimizing a loss, are mathematically equivalent to
 kernel machines with a particular kernel determined by the circuit .
 In fact, one can often find a kernel SVM that matches or outperforms
 the variational model.  In practice, one can combine these: use a
-trainable quantum embedding \( U(\boldsymbol{x};\theta) \) with tunable
-parameters \( \theta \), and optimize \( \theta \) to maximize the SVM
+trainable quantum embedding \( U(\boldsymbol{x};\Theta) \) with tunable
+parameters \( \Theta \), and optimize \( \Theta \) to maximize the SVM
 classification accuracy.  This is called a quantum kernel learning
 approach.
 </p>
@@ -1897,8 +1910,8 @@ quantum circuit with adjustable parameters is trained by a classical
 optimizer .  In this framework, a Variational Quantum Circuit (VQC)
 typically has three parts : (i) a state preparation or feature map
 that encodes classical input \( \mathbf{x} \) into a quantum state; (ii) a
-parameterized circuit \( W(\boldsymbol\theta) \) (often called the ansatz)
-that depends on trainable parameters \( \boldsymbol\theta \); and (iii) a
+parameterized circuit \( W(\boldsymbol\Theta) \) (often called the ansatz)
+that depends on trainable parameters \( \boldsymbol\Theta \); and (iii) a
 measurement that extracts a classical output from the final quantum
 state.
 </p>
@@ -1914,18 +1927,18 @@ $$
 
 <p>where \( U(\mathbf{x}) \) is a unitary (possibly composed of rotations)
 that depends on the data.  We then apply the variational circuit
-\( W(\boldsymbol\theta) \), often built as a product of layers
-\( V_j(\theta_j) \), so that the final state is
+\( W(\boldsymbol\Theta) \), often built as a product of layers
+\( V_j(\Theta_j) \), so that the final state is
 </p>
 
 $$
-\vert \Psi(\mathbf{x};\boldsymbol\theta)\rangle = W(\boldsymbol\theta),U(\mathbf{x}),|0\rangle^{\otimes n}.
+\vert \Psi(\mathbf{x};\boldsymbol\Theta)\rangle = W(\boldsymbol\Theta),U(\mathbf{x}),|0\rangle^{\otimes n}.
 $$
 
 <p>For instance, one common ansatz is the hardware-efficient circuit:
 layers of parameterized single-qubit rotations and entangling gates
 (like CNOTs) repeated several times.  The structure of
-\( W(\boldsymbol\theta) \) can dramatically affect the circuit&#8217;s
+\( W(\boldsymbol\Theta) \) can dramatically affect the circuit&#8217;s
 expressivity and trainability.
 </p>
 
@@ -1937,17 +1950,17 @@ observables \( \hat B_k \) on the final state.  The network&#8217;s output is
 given by the expectation values:
 </p>
 $$
-f_k(\mathbf{x};\boldsymbol\theta) ;=; \langle \Psi(\mathbf{x};\boldsymbol\theta) | \hat B_k | \Psi(\mathbf{x};\boldsymbol\theta)\rangle.
+f_k(\mathbf{x};\boldsymbol\Theta) ;=; \langle \Psi(\mathbf{x};\boldsymbol\Theta) | \hat B_k | \Psi(\mathbf{x};\boldsymbol\Theta)\rangle.
 $$
 
 <p>Equivalently, with</p>
 $$
-\vert \Psi(\mathbf{x};\boldsymbol\theta)\rangle = W(\boldsymbol\theta)U(\mathbf{x})|0\rangle,
+\vert \Psi(\mathbf{x};\boldsymbol\Theta)\rangle = W(\boldsymbol\Theta)U(\mathbf{x})|0\rangle,
 $$
 
 <p>one has</p>
 $$
-f_k(\mathbf{x};\boldsymbol\theta) = \langle 0|U(\mathbf{x})^\dagger W(\boldsymbol\theta)^\dagger ,\hat B_k, W(\boldsymbol\theta) U(\mathbf{x}),|0\rangle.
+f_k(\mathbf{x};\boldsymbol\Theta) = \langle 0|U(\mathbf{x})^\dagger W(\boldsymbol\Theta)^\dagger ,\hat B_k, W(\boldsymbol\Theta) U(\mathbf{x}),|0\rangle.
 $$
 
 <p>Commonly \( \hat B \) is a Pauli operator (e.g. \( Z \) on one qubit).  In practice one runs many shots on quantum hardware or simulates this circuit classically to estimate \( \langle \hat B_k\rangle \) .</p>
@@ -1956,9 +1969,9 @@ $$
 <h2 id="short-summary">Short summary </h2>
 
 <p>In summary, a variational quantum model
-\( f(\mathbf{x};\boldsymbol\theta) \) maps inputs to outputs via the
+\( f(\mathbf{x};\boldsymbol\Theta) \) maps inputs to outputs via the
 hybrid quantum-classical procedure.  During training, the classical
-optimizer adjusts \( \boldsymbol\theta \) (e.g. by gradient descent) to
+optimizer adjusts \( \boldsymbol\Theta \) (e.g. by gradient descent) to
 minimize a cost function (like mean-squared error) defined on a
 dataset.  Because the mapping is inherently quantum, these models can,
 in principle, harness the high-dimensional Hilbert space for richer
@@ -1976,18 +1989,18 @@ $$
 
 <p>and a variational layer is</p>
 $$
-V(\boldsymbol\theta)=R_y(\theta_1)\otimes R_y(\theta_2),\mathrm{CNOT}(0,1),
+V(\boldsymbol\Theta)=R_y(\Theta_1)\otimes R_y(\Theta_2),\mathrm{CNOT}(0,1),
 $$
 
 <p>(apply \( R_y \) on each qubit then entangle).  After
-applying \( W(\boldsymbol\theta)=V(\boldsymbol\theta) \) to \( |0,0\rangle \),
+applying \( W(\boldsymbol\Theta)=V(\boldsymbol\Theta) \) to \( |0,0\rangle \),
 we measure \( \hat B=Z\otimes I \) on qubit 0.  The output is
 </p>
 $$
-f(\mathbf{x};\boldsymbol\theta) = \langle 0,0|,U(\mathbf{x})^\dagger,V(\boldsymbol\theta)^\dagger, (Z\otimes I), V(\boldsymbol\theta),U(\mathbf{x}),|0,0\rangle.
+f(\mathbf{x};\boldsymbol\Theta) = \langle 0,0|,U(\mathbf{x})^\dagger,V(\boldsymbol\Theta)^\dagger, (Z\otimes I), V(\boldsymbol\Theta),U(\mathbf{x}),|0,0\rangle.
 $$
 
-<p>This \( f(x;\theta) \) is then compared to the target in a cost function for optimization.</p>
+<p>This \( f(x;\Theta) \) is then compared to the target in a cost function for optimization.</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="key-elements">Key elements </h2>
@@ -1999,14 +2012,14 @@ VQC&#8217;s expressivity.  Simple encodings use rotations (e.g. \( R_x(x_i) \))
 on each qubit , while more complex feature maps may exploit
 entanglement.  The circuit output is obtained via expectation values
 of observables (e.g. Pauli-Z), yielding a differentiable function
-\( f(\mathbf{x};\boldsymbol\theta) \) .
+\( f(\mathbf{x};\boldsymbol\Theta) \) .
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="test-yourself-exercises">Test yourself exercises </h2>
 
 <ol>
-<li> Compute the state \( |\Psi(\mathbf{x};\boldsymbol\theta)\rangle \) explicitly for a 1-qubit VQC with \( U(x)=R_x(x) \) and \( W(\theta)=R_y(\theta) \). What is \( \langle Z\rangle \) as a function of \( x,\theta \)?</li>
+<li> Compute the state \( |\Psi(\mathbf{x};\boldsymbol\Theta)\rangle \) explicitly for a 1-qubit VQC with \( U(x)=R_x(x) \) and \( W(\Theta)=R_y(\Theta) \). What is \( \langle Z\rangle \) as a function of \( x,\Theta \)?</li>
 <li> Draw (or describe) a hardware-efficient ansatz for 3 qubits with 2 layers of rotations and CNOTs. How many parameters does it have?</li>
 </ol>
 <p>For the above ansatz, derive the effect of each layer on the state&#8217;s parameters.</p>
@@ -2052,7 +2065,7 @@ feature circuits, then lets the optimizer adjust the ansatz.
 <h2 id="qnn-architecture-and-models">QNN Architecture and Models </h2>
 
 <p>A general QNN can be viewed as a parameterized unitary
-\( U(\mathbf{x},\boldsymbol\theta) \) acting on \( n \) qubits, followed by
+\( U(\mathbf{x},\boldsymbol\Theta) \) acting on \( n \) qubits, followed by
 measurements.  Fig. 2 (placeholder) might depict a generic QNN with
 several layers of trainable gates. Each layer can entangle qubits,
 building up complexity. The output is then a (classical) vector of
@@ -2067,8 +2080,8 @@ measured values, analogous to the output layer in a classical network.
 <p>
 <ol>
 <li> Embedding Layer: Convert \( \mathbf{x} \) to \( |0\rangle^{\otimes n} \) via \( U(\mathbf{x}) \).</li>
-<li> Variational Layers: Repeat \( L \) blocks of parameterized gates \( W(\boldsymbol\theta^{(l)}) \) (each block may act on all or subsets of qubits).</li>
-<li> Measurement: Measure selected qubits or observables to obtain the output predictions \( f(\mathbf{x};\boldsymbol\theta) \).</li>
+<li> Variational Layers: Repeat \( L \) blocks of parameterized gates \( W(\boldsymbol\Theta^{(l)}) \) (each block may act on all or subsets of qubits).</li>
+<li> Measurement: Measure selected qubits or observables to obtain the output predictions \( f(\mathbf{x};\boldsymbol\Theta) \).</li>
 </ol>
 </div>
 
@@ -2077,8 +2090,8 @@ measured values, analogous to the output layer in a classical network.
 <h2 id="example">Example </h2>
 
 <p>For example, a 2-layer QNN on 2 qubits might apply encoding
-\( R_x(x_1)\otimes R_x(x_2) \), then apply \( W(\theta^{(1)}) \), then again
-encoding (or not), then \( W(\theta^{(2)}) \), and finally measure. In
+\( R_x(x_1)\otimes R_x(x_2) \), then apply \( W(\Theta^{(1)}) \), then again
+encoding (or not), then \( W(\Theta^{(2)}) \), and finally measure. In
 classification tasks, one typically assigns a label based on the sign
 of \( \langle Z\rangle \) or uses multiple measurements for multi-class
 outputs.
@@ -2095,17 +2108,17 @@ suffer from trainability issues.
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="training-output-and-cost-loss-function">Training output and Cost/Loss-function </h2>
 
-<p>Given a QNN with output \( f(\mathbf{x};\boldsymbol\theta) \) (a real
+<p>Given a QNN with output \( f(\mathbf{x};\boldsymbol\Theta) \) (a real
 number or vector of real values), one must define a loss function to
 train on data. Common choices are the mean squared error (MSE) for
 regression or cross-entropy for classification.  For a training set
 \( {\mathbf{x}i,y_i} \), the MSE cost/loss-function is
 </p>
 $$
-C(\boldsymbol\theta) = \frac{1}{N} \sum_{i=1}^N \bigl(f(\mathbf{x}i;\boldsymbol\theta) - y_i\bigr)^2.
+C(\boldsymbol\Theta) = \frac{1}{N} \sum_{i=1}^N \bigl(f(\mathbf{x}i;\boldsymbol\Theta) - y_i\bigr)^2.
 $$
 
-<p>One then computes gradients \( \nabla{\boldsymbol\theta}C \) and updates
+<p>One then computes gradients \( \nabla{\boldsymbol\Theta}C \) and updates
 parameters via gradient descent or other optimizers.
 </p>
 
@@ -2113,7 +2126,7 @@ parameters via gradient descent or other optimizers.
 <h2 id="exampe-variational-classifier">Exampe: Variational Classifier </h2>
 
 <p>A binary classifier can output
-\( f(\mathbf{x};\boldsymbol\theta)=\langle Z_0\rangle \) on qubit 0, and
+\( f(\mathbf{x};\boldsymbol\Theta)=\langle Z_0\rangle \) on qubit 0, and
 predict label \( +1 \) if \( f\ge0 \), else \( -1 \).
 </p>
 
@@ -2150,13 +2163,13 @@ gradient-based methods.  However, VQCs have unique features, as listed here.
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="gradient-computation">Gradient Computation </h2>
 
-<p>Gradients \( \partial f/\partial\theta_j \) are obtained using the parameter-shift rule.  For many gates \( e^{-i\theta P/2} \) (with \( P \) a Pauli), one can compute</p>
+<p>Gradients \( \partial f/\partial\Theta_j \) are obtained using the parameter-shift rule.  For many gates \( e^{-i\Theta P/2} \) (with \( P \) a Pauli), one can compute</p>
 $$
-\frac{\partial}{\partial\theta}\langle B\rangle
-= \frac{1}{2}\Bigl[\langle B\rangle_{\theta+\pi/2} - \langle B\rangle_{\theta-\pi/2}\Bigr],
+\frac{\partial}{\partial\Theta}\langle B\rangle
+= \frac{1}{2}\Bigl[\langle B\rangle_{\Theta+\pi/2} - \langle B\rangle_{\Theta-\pi/2}\Bigr],
 $$
 
-<p>where \( \langle B\rangle_{\theta\pm\pi/2} \) are expectation values
+<p>where \( \langle B\rangle_{\Theta\pm\pi/2} \) are expectation values
 evaluated at shifted parameter values.  This formula allows exact
 gradients by two circuit evaluations per parameter (independent of
 circuit size).  PennyLane automatically applies parameter-shift rule
@@ -2193,7 +2206,7 @@ crucial for making QNN training feasible on near-term devices.
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="cost-loss-landscape-visualization">Cost/Loss-landscape visualization </h2>
 
-<p>One can imagine the cost/loss function \( C(\boldsymbol\theta) \) over the
+<p>One can imagine the cost/loss function \( C(\boldsymbol\Theta) \) over the
 parameter space.  Unlike convex classical problems, this landscape may
 have many local minima and saddle points.  Barren plateaus correspond
 to regions where \( \nabla C\approx 0 \) almost everywhere.  Even if
@@ -2214,8 +2227,8 @@ restarts to find good minima.
 <h2 id="exercises">Exercises </h2>
 
 <ol>
-<li> Compute a gradient by hand: For a circuit with one qubit and \( f(\theta)=\langle0|R_y(\theta)^\dagger Z R_y(\theta)|0\rangle \), use the parameter-shift rule to compute \( df/d\theta \).</li>
-<li> Explore barren plateaus: Numerically evaluate \( \partial f/\partial\theta \) for a simple 5-qubit random circuit as depth increases. Observe the trend of gradient norms. What does this suggest?</li>
+<li> Compute a gradient by hand: For a circuit with one qubit and \( f(\Theta)=\langle0|R_y(\Theta)^\dagger Z R_y(\Theta)|0\rangle \), use the parameter-shift rule to compute \( df/d\Theta \).</li>
+<li> Explore barren plateaus: Numerically evaluate \( \partial f/\partial\Theta \) for a simple 5-qubit random circuit as depth increases. Observe the trend of gradient norms. What does this suggest?</li>
 <li> Optimizer effects: Implement a small QNN (2 qubits) and train with both SGD and Adam optimizers. Compare convergence speed.</li>
 </ol>
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
