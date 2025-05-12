@@ -163,6 +163,7 @@ which leads to
 
 !split
 ===== Expression for the gradients =====
+
 This leads to the following equation
 !bt
 \[
@@ -170,7 +171,7 @@ This leads to the following equation
 \]
 !et
 
-The first term is called the positive phase and we assume that we have a model for the function $f$ from which we can sample values. Below we will develop an explicit model for this.
+The first term is called the positive phase and we assume that we have a model for the function $f$ from which we can sample values. 
 The second term is called the negative phase and is the one which leads to more difficulties.
 
 !split
@@ -184,35 +185,11 @@ Z(\bm{\Theta})=\sum_{x_i\in \bm{X}}\sum_{h_j\in \bm{H}} f(x_i,h_j;\bm{\Theta}),
 !et
 is in general the most problematic term. In principle both $x$ and $h$ can span large degrees of freedom, if not even infinitely many ones, and computing the partition function itself is often not desirable or even feasible. The above derivative of the partition function can however be written in terms of an expectation value which is in turn evaluated  using Monte Carlo sampling and the theory of Markov chains, popularly shortened to MCMC (or just MC$^2$).
 
-!split
-===== Explicit expression for the derivative =====
-We can rewrite
-!bt
-\[
-\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{\nabla_{\bm{\Theta}}Z(\bm{\Theta})}{Z(\bm{\Theta})},
-\]
-!et
-which reads in more detail
-!bt
-\[
-\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{\nabla_{\bm{\Theta}} \sum_{x_i\in \bm{X}}f(x_i;\bm{\Theta})   }{Z(\bm{\Theta})}.
-\]
-!et
-
-We can rewrite the function $f$ (we have assumed that is larger or
-equal than zero) as $f=\exp{\log{f}}$. We can then reqrite the last
-equation as
-
-!bt
-\[
-\nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{ \sum_{x_i\in \bm{X}} \nabla_{\bm{\Theta}}\exp{\log{f(x_i;\bm{\Theta})}}   }{Z(\bm{\Theta})}.
-\]
-!et
 
 !split
 ===== Final expression =====
 
-Taking the derivative gives us
+Summarizing, we have
 !bt
 \[
 \nabla_{\bm{\Theta}}\log{Z(\bm{\Theta})}=\frac{ \sum_{x_i\in \bm{X}}f(x_i;\bm{\Theta}) \nabla_{\bm{\Theta}}\log{f(x_i;\bm{\Theta})}   }{Z(\bm{\Theta})}, 
@@ -232,10 +209,28 @@ that is
 !et
 
 This quantity is evaluated using Monte Carlo sampling, with Gibbs
-sampling as the standard sampling rule.  Before we discuss the
-explicit algorithms, we need to remind ourselves about Markov chains
-and sampling rules like the Metropolis-Hastings algorithm and Gibbs
-sampling.
+sampling as the standard sampling rule.  
+
+
+!split
+===== Kullback-Leibler divergence =====
+
+The Kullback–Leibler (KL) divergence, labeled $D_{KL}$,   measures how one probability distribution $p$ diverges from a second expected probability distribution $q$,
+that is
+!bt
+\[
+D_{KL}(p \| q) = \int_x p(x) \log \frac{p(x)}{q(x)} dx.
+\]
+!et
+
+The KL-divergence $D_{KL}$ achieves the minimum zero when $p(x) == q(x)$ everywhere.
+
+Note that the KL divergence is asymmetric. In cases where $p(x)$ is
+close to zero, but $q(x)$ is significantly non-zero, the $q$'s effect
+is disregarded. It could cause buggy results when we just want to
+measure the similarity between two equally important distributions.
+
+
 
 !split
 ===== Introducing the energy model =====
@@ -291,6 +286,11 @@ and
 \]
 !et
 
+!split
+===== More details on Boltzmann machines =====
+
+For a binary-binary model, these are the equations for the various gradients which are needed in the setup of a neural network.
+For more details see URL:"https://github.com/CompPhysics/AdvancedMachineLearning/blob/main/doc/pub/week11/ipynb/week11.ipynb"
 
 !split
 ===== Code example =====
@@ -565,8 +565,10 @@ parameter in H is encoded as a gate angle or circuit parameter.  The
 gradient of a circuit expectation can be obtained by the
 parameter-shift rule or automatic differentiation.
 
+!split
+===== Variational Quantum Boltzmann machines (VQBM) =====
 
-
+See whiteboard notes.
 
 !split
 ===== Implementation with PennyLane =====
@@ -661,110 +663,110 @@ Hamiltonian weights).
 !split
 ===== More code examples =====
 
-!bc pycod
-# Code example for a Quantum Boltzmann Machine (QBM) applied to a binary classification problem using PennyLane. This example uses a simplified dataset (XOR problem) and trains a parameterized quantum circuit to model the joint distribution of features and labels.
+This code defines a target distribution (e.g., classical binary data) using a Variational Quantum Boltzmann machines (VQBM).
+At each epoch it trains the model and samples the model and final computes the   histogram probabilities.
 
+!bc pycod
 import pennylane as qml
 from pennylane import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from collections import Counter
 
-# Define the target probabilities for the XOR dataset
-target_probs = np.zeros(8)
-target_indices = [0, 3, 5, 6]  # Binary: 000, 011, 101, 110
-for idx in target_indices:
-   target_probs[idx] = 0.25
+# Config
+num_visible = 2
+num_hidden = 2
+num_qubits = num_visible + num_hidden
+epochs = 50
+shots = 1000
 
-# Quantum circuit configuration
-num_qubits = 3  # 2 features + 1 label
-dev = qml.device("default.qubit", wires=num_qubits)
+dev = qml.device("default.qubit", wires=num_qubits, shots=shots)
+
+# Target data (biased toward '11' and '00')
+target_bitstrings = ['11', '11', '11', '00', '00', '01']
+target_counts = Counter(target_bitstrings)
+target_probs = {
+    format(i, f'0{num_visible}b'): target_counts.get(format(i, f'0{num_visible}b'), 0) / len(target_bitstrings)
+    for i in range(2**num_visible)
+}
+
+
+# Ansatz
+def vqbm_ansatz(params):
+    for i in range(num_qubits):
+        qml.RY(params[i], wires=i)
+    for i in range(num_qubits - 1):
+        qml.CNOT(wires=[i, i + 1])
+    for i in range(num_qubits):
+        qml.RZ(params[i + num_qubits], wires=i)
+
+# Hamiltonian
+def generate_hamiltonian():
+    coeffs = []
+    observables = []
+    for i in range(num_qubits):
+        coeffs.append(np.random.uniform(-1, 1))
+        observables.append(qml.PauliZ(wires=i))
+    for i in range(num_qubits):
+        for j in range(i + 1, num_qubits):
+            coeffs.append(np.random.uniform(-1, 1))
+            observables.append(qml.PauliZ(wires=i) @ qml.PauliZ(wires=j))
+    return qml.Hamiltonian(coeffs, observables)
+
+H = generate_hamiltonian()
+
 
 @qml.qnode(dev)
-def circuit(params):
-   # First rotation layer
-   for i in range(num_qubits):
-       qml.RX(params[0][i], wires=i)
-       qml.RY(params[1][i], wires=i)
+def energy_expectation(params):
+    vqbm_ansatz(params)
+    return qml.expval(H)
 
-   # Entangling gates
-   qml.CNOT(wires=[0, 1])
-   qml.CNOT(wires=[1, 2])
-   qml.CNOT(wires=[0, 2])
+@qml.qnode(dev)
+def sample_circuit(params):
+    vqbm_ansatz(params)
+    return qml.sample(wires=range(num_visible))
 
-   # Second rotation layer
-   for i in range(num_qubits):
-       qml.RX(params[2][i], wires=i)
-       qml.RY(params[3][i], wires=i)
+# Helper: Convert samples to bitstring histogram
+def get_distribution(samples):
+    bitstrings = ["".join(str(bit) for bit in s) for s in samples]
+    counts = Counter(bitstrings)
+    total = sum(counts.values())
+    return {
+        format(i, f'0{num_visible}b'): counts.get(format(i, f'0{num_visible}b'), 0) / total
+        for i in range(2**num_visible)
+    }
 
-   return qml.probs(wires=range(num_qubits))
-
-# Initialize parameters
-params = [
-   np.random.uniform(0, 2*np.pi, size=num_qubits, requires_grad=True),
-   np.random.uniform(0, 2*np.pi, size=num_qubits, requires_grad=True),
-   np.random.uniform(0, 2*np.pi, size=num_qubits, requires_grad=True),
-   np.random.uniform(0, 2*np.pi, size=num_qubits, requires_grad=True)
-]
-
-# Cost function (KL divergence)
-def cost(params):
-   model_probs = circuit(params)
-   cost = 0.0
-   for idx in target_indices:
-       q = model_probs[idx]
-       cost += 0.25 * (np.log(0.25) - np.log(q + 1e-10))  # Add small epsilon to avoid log(0)
-   return cost
-
-# Optimization
+# Training and storing distributions
+params = 0.01 * np.random.randn(2 * num_qubits, requires_grad=True)
 opt = qml.AdamOptimizer(stepsize=0.1)
-max_iterations = 100
+history = []
 
-for i in range(max_iterations):
-   params, current_cost = opt.step_and_cost(cost, params)
-   if i % 10 == 0:
-       print(f"Iteration {i+1}: Cost = {current_cost}")
+for epoch in range(epochs):
+    params = opt.step(energy_expectation, params)
+    learned_dist = get_distribution(sample_circuit(params))
+    history.append(learned_dist)
+    if epoch % 10 == 0:
+        print(f"Epoch {epoch} energy: {energy_expectation(params):.4f}")
 
-# Prediction function
-def predict(features):
-   # Calculate probabilities for both possible labels
-   all_probs = circuit(params)
-   feature_mask = (int(f"{features[0]}{features[1]}", 2) << 1)
-   p0 = all_probs[feature_mask]
-   p1 = all_probs[feature_mask | 1]
-   total = p0 + p1
-   return p0/total if total != 0 else 0.5, p1/total if total != 0 else 0.5
+# Animation setup
+states = [format(i, f'0{num_visible}b') for i in range(2**num_visible)]
 
-# Test the model
-test_cases = [(0,0), (0,1), (1,0), (1,1)]
-print("\nPredictions:")
-for features in test_cases:
-   prob_0, prob_1 = predict(features)
-   print(f"Features {features}: P(0)={prob_0:.2f}, P(1)={prob_1:.2f}")
+fig, ax = plt.subplots()
+bar1 = ax.bar(states, [0]*len(states), color='skyblue', label="VQBM")
+bar2 = ax.bar(states, [target_probs[s] for s in states], color='orange', alpha=0.6, label="Target")
+ax.set_ylim(0, 1)
+ax.set_ylabel("Probability")
+ax.set_title("VQBM Learning Over Epochs")
+ax.legend()
 
-"""
-**Key components explained:**
+def update(frame):
+    dist = history[frame]
+    for i, state in enumerate(states):
+        bar1[i].set_height(dist[state])
+    ax.set_title(f"Epoch {frame}")
 
-1. **Dataset**: Uses XOR problem with binary features and labels encoded in 3 qubits (2 features, 1 label).
-
-2. **Quantum Circuit**:
-  - Uses rotation gates (RX, RY) and entangling gates (CNOT)
-  - Parameters are optimized to match the target distribution
-  - Outputs probabilities for all possible 8 states
-
-3. **Training**:
-  - Minimizes KL divergence between model and target probabilities
-  - Uses Adam optimizer for better convergence
-
-4. **Prediction**:
-  - Calculates conditional probabilities p(label|features) by marginalizing the joint distribution
-  - Normalizes probabilities for classification
-
-**Note:** This is a simplified example. For real-world applications, you would need to:
-1. Handle continuous features (e.g., using amplitude encoding)
-2. Use more sophisticated ansatz architectures
-3. Implement proper batching for larger datasets
-4. Add regularization to prevent overfitting
-
-The output should show decreasing cost during training and high probabilities for correct labels in predictions. Actual results may vary due to random initialization and optimization challenges.
-"""
+ani = FuncAnimation(fig, update, frames=len(history), repeat=False)
+plt.show()
 
 !ec
 
@@ -780,5 +782,10 @@ o If modeling an RQBM, one might clamp visible qubits (preparing them according 
 o Measure relevant observables: one can return probabilities (probs) or expectation values (expval) of Pauli operators, depending on the chosen loss function.
 o Define a cost function, such as the negative log-likelihood or a distance between output and target distribution.
 Use an optimizer (e.g. gradient descent, Adam) with PennyLane’s gradient calculations to update parameters.
+
+
+
+
+
 
 

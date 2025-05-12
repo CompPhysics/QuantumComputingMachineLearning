@@ -169,17 +169,21 @@ div.toc p,a {
                2,
                None,
                'the-derivative-of-the-partition-function'),
-              ('Explicit expression for the derivative',
+              ('Final expression', 2, None, 'final-expression'),
+              ('Kullback-Leibler divergence',
                2,
                None,
-               'explicit-expression-for-the-derivative'),
-              ('Final expression', 2, None, 'final-expression'),
+               'kullback-leibler-divergence'),
               ('Introducing the energy model',
                2,
                None,
                'introducing-the-energy-model'),
               ('More compact notation', 2, None, 'more-compact-notation'),
               ('Derivatives', 2, None, 'derivatives'),
+              ('More details on Boltzmann machines',
+               2,
+               None,
+               'more-details-on-boltzmann-machines'),
               ('Code example', 2, None, 'code-example'),
               ('Quantum Boltzmann Machines (QBMs)',
                2,
@@ -205,10 +209,16 @@ div.toc p,a {
                2,
                None,
                'parameter-optimization-and-variational-techniques'),
+              ('Variational Quantum Boltzmann machines (VQBM)',
+               2,
+               None,
+               'variational-quantum-boltzmann-machines-vqbm'),
               ('Implementation with PennyLane',
                2,
                None,
                'implementation-with-pennylane'),
+              ('Training of a QBM', 2, None, 'training-of-a-qbm'),
+              ('More code examples', 2, None, 'more-code-examples'),
               ('Summary of steps in PennyLane implementation',
                2,
                None,
@@ -417,12 +427,13 @@ $$
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="expression-for-the-gradients">Expression for the gradients </h2>
+
 <p>This leads to the following equation</p>
 $$
 \nabla_{\boldsymbol{\Theta}}\log{p(\boldsymbol{X};\boldsymbol{\Theta})}=\nabla_{\boldsymbol{\Theta}}\left(\sum_{x_i\in \boldsymbol{X}}\log{f(x_i;\boldsymbol{\Theta})}\right)-\nabla_{\boldsymbol{\Theta}}\log{Z(\boldsymbol{\Theta})}=0.
 $$
 
-<p>The first term is called the positive phase and we assume that we have a model for the function \( f \) from which we can sample values. Below we will develop an explicit model for this.
+<p>The first term is called the positive phase and we assume that we have a model for the function \( f \) from which we can sample values. 
 The second term is called the negative phase and is the one which leads to more difficulties.
 </p>
 
@@ -437,31 +448,9 @@ $$
 <p>is in general the most problematic term. In principle both \( x \) and \( h \) can span large degrees of freedom, if not even infinitely many ones, and computing the partition function itself is often not desirable or even feasible. The above derivative of the partition function can however be written in terms of an expectation value which is in turn evaluated  using Monte Carlo sampling and the theory of Markov chains, popularly shortened to MCMC (or just MC$^2$).</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
-<h2 id="explicit-expression-for-the-derivative">Explicit expression for the derivative </h2>
-<p>We can rewrite</p>
-$$
-\nabla_{\boldsymbol{\Theta}}\log{Z(\boldsymbol{\Theta})}=\frac{\nabla_{\boldsymbol{\Theta}}Z(\boldsymbol{\Theta})}{Z(\boldsymbol{\Theta})},
-$$
-
-<p>which reads in more detail</p>
-$$
-\nabla_{\boldsymbol{\Theta}}\log{Z(\boldsymbol{\Theta})}=\frac{\nabla_{\boldsymbol{\Theta}} \sum_{x_i\in \boldsymbol{X}}f(x_i;\boldsymbol{\Theta})   }{Z(\boldsymbol{\Theta})}.
-$$
-
-<p>We can rewrite the function \( f \) (we have assumed that is larger or
-equal than zero) as \( f=\exp{\log{f}} \). We can then reqrite the last
-equation as
-</p>
-
-$$
-\nabla_{\boldsymbol{\Theta}}\log{Z(\boldsymbol{\Theta})}=\frac{ \sum_{x_i\in \boldsymbol{X}} \nabla_{\boldsymbol{\Theta}}\exp{\log{f(x_i;\boldsymbol{\Theta})}}   }{Z(\boldsymbol{\Theta})}.
-$$
-
-
-<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="final-expression">Final expression </h2>
 
-<p>Taking the derivative gives us</p>
+<p>Summarizing, we have</p>
 $$
 \nabla_{\boldsymbol{\Theta}}\log{Z(\boldsymbol{\Theta})}=\frac{ \sum_{x_i\in \boldsymbol{X}}f(x_i;\boldsymbol{\Theta}) \nabla_{\boldsymbol{\Theta}}\log{f(x_i;\boldsymbol{\Theta})}   }{Z(\boldsymbol{\Theta})}, 
 $$
@@ -477,10 +466,25 @@ $$
 $$
 
 <p>This quantity is evaluated using Monte Carlo sampling, with Gibbs
-sampling as the standard sampling rule.  Before we discuss the
-explicit algorithms, we need to remind ourselves about Markov chains
-and sampling rules like the Metropolis-Hastings algorithm and Gibbs
-sampling.
+sampling as the standard sampling rule.  
+</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="kullback-leibler-divergence">Kullback-Leibler divergence </h2>
+
+<p>The Kullback&#8211;Leibler (KL) divergence, labeled \( D_{KL} \),   measures how one probability distribution \( p \) diverges from a second expected probability distribution \( q \),
+that is
+</p>
+$$
+D_{KL}(p \| q) = \int_x p(x) \log \frac{p(x)}{q(x)} dx.
+$$
+
+<p>The KL-divergence \( D_{KL} \) achieves the minimum zero when \( p(x) == q(x) \) everywhere.</p>
+
+<p>Note that the KL divergence is asymmetric. In cases where \( p(x) \) is
+close to zero, but \( q(x) \) is significantly non-zero, the \( q \)'s effect
+is disregarded. It could cause buggy results when we just want to
+measure the similarity between two equally important distributions.
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
@@ -532,6 +536,13 @@ $$
 \frac{\partial E(\boldsymbol{x}, \boldsymbol{h};\boldsymbol{\Theta})}{\partial b_j}=-h_j.
 $$
 
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-details-on-boltzmann-machines">More details on Boltzmann machines </h2>
+
+<p>For a binary-binary model, these are the equations for the various gradients which are needed in the setup of a neural network.
+For more details see <a href="https://github.com/CompPhysics/AdvancedMachineLearning/blob/main/doc/pub/week11/ipynb/week11.ipynb" target="_blank"><tt>https://github.com/CompPhysics/AdvancedMachineLearning/blob/main/doc/pub/week11/ipynb/week11.ipynb</tt></a>
+</p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="code-example">Code example </h2>
@@ -827,6 +838,11 @@ parameter-shift rule or automatic differentiation.
 </p>
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="variational-quantum-boltzmann-machines-vqbm">Variational Quantum Boltzmann machines (VQBM) </h2>
+
+<p>See whiteboard notes.</p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="implementation-with-pennylane">Implementation with PennyLane </h2>
 
 <p>Below we sketch a toy example: a two-qubit Quantum Circuit Born Machine
@@ -942,6 +958,9 @@ states, which is a key step in evaluating the QBM energy and
 probability of data states.
 </p>
 
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="training-of-a-qbm">Training of a QBM </h2>
+
 <p>In practice, training a QBM in PennyLane would involve preparing
 quantum states corresponding to the Gibbs distribution. One could use
 functions like qml.qaoa.cost.Hamiltonian or custom circuits to
@@ -950,6 +969,136 @@ PennyLane can interface with PyTorch or TensorFlow, enabling hybrid
 optimization of quantum circuits with classical parameters (e.g. the
 Hamiltonian weights).
 </p>
+
+<!-- !split --><br><br><br><br><br><br><br><br><br><br>
+<h2 id="more-code-examples">More code examples </h2>
+
+<p>This code defines a target distribution (e.g., classical binary data) using a Variational Quantum Boltzmann machines (VQBM).
+At each epoch it trains the model and samples the model and final computes the   histogram probabilities.
+</p>
+
+
+<!-- code=python (!bc pycod) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">qml</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">pennylane</span> <span style="color: #008000; font-weight: bold">import</span> numpy <span style="color: #008000; font-weight: bold">as</span> np
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">matplotlib.animation</span> <span style="color: #008000; font-weight: bold">import</span> FuncAnimation
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">collections</span> <span style="color: #008000; font-weight: bold">import</span> Counter
+
+<span style="color: #408080; font-style: italic"># Config</span>
+num_visible <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+num_hidden <span style="color: #666666">=</span> <span style="color: #666666">2</span>
+num_qubits <span style="color: #666666">=</span> num_visible <span style="color: #666666">+</span> num_hidden
+epochs <span style="color: #666666">=</span> <span style="color: #666666">50</span>
+shots <span style="color: #666666">=</span> <span style="color: #666666">1000</span>
+
+dev <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>device(<span style="color: #BA2121">&quot;default.qubit&quot;</span>, wires<span style="color: #666666">=</span>num_qubits, shots<span style="color: #666666">=</span>shots)
+
+<span style="color: #408080; font-style: italic"># Target data (biased toward &#39;11&#39; and &#39;00&#39;)</span>
+target_bitstrings <span style="color: #666666">=</span> [<span style="color: #BA2121">&#39;11&#39;</span>, <span style="color: #BA2121">&#39;11&#39;</span>, <span style="color: #BA2121">&#39;11&#39;</span>, <span style="color: #BA2121">&#39;00&#39;</span>, <span style="color: #BA2121">&#39;00&#39;</span>, <span style="color: #BA2121">&#39;01&#39;</span>]
+target_counts <span style="color: #666666">=</span> Counter(target_bitstrings)
+target_probs <span style="color: #666666">=</span> {
+    <span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span>num_visible<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>): target_counts<span style="color: #666666">.</span>get(<span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span>num_visible<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>), <span style="color: #666666">0</span>) <span style="color: #666666">/</span> <span style="color: #008000">len</span>(target_bitstrings)
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">2**</span>num_visible)
+}
+
+
+<span style="color: #408080; font-style: italic"># Ansatz</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">vqbm_ansatz</span>(params):
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(num_qubits):
+        qml<span style="color: #666666">.</span>RY(params[i], wires<span style="color: #666666">=</span>i)
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(num_qubits <span style="color: #666666">-</span> <span style="color: #666666">1</span>):
+        qml<span style="color: #666666">.</span>CNOT(wires<span style="color: #666666">=</span>[i, i <span style="color: #666666">+</span> <span style="color: #666666">1</span>])
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(num_qubits):
+        qml<span style="color: #666666">.</span>RZ(params[i <span style="color: #666666">+</span> num_qubits], wires<span style="color: #666666">=</span>i)
+
+<span style="color: #408080; font-style: italic"># Hamiltonian</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">generate_hamiltonian</span>():
+    coeffs <span style="color: #666666">=</span> []
+    observables <span style="color: #666666">=</span> []
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(num_qubits):
+        coeffs<span style="color: #666666">.</span>append(np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(<span style="color: #666666">-1</span>, <span style="color: #666666">1</span>))
+        observables<span style="color: #666666">.</span>append(qml<span style="color: #666666">.</span>PauliZ(wires<span style="color: #666666">=</span>i))
+    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(num_qubits):
+        <span style="color: #008000; font-weight: bold">for</span> j <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(i <span style="color: #666666">+</span> <span style="color: #666666">1</span>, num_qubits):
+            coeffs<span style="color: #666666">.</span>append(np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(<span style="color: #666666">-1</span>, <span style="color: #666666">1</span>))
+            observables<span style="color: #666666">.</span>append(qml<span style="color: #666666">.</span>PauliZ(wires<span style="color: #666666">=</span>i) <span style="color: #666666">@</span> qml<span style="color: #666666">.</span>PauliZ(wires<span style="color: #666666">=</span>j))
+    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>Hamiltonian(coeffs, observables)
+
+H <span style="color: #666666">=</span> generate_hamiltonian()
+
+
+<span style="color: #AA22FF">@qml</span><span style="color: #666666">.</span>qnode(dev)
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">energy_expectation</span>(params):
+    vqbm_ansatz(params)
+    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>expval(H)
+
+<span style="color: #AA22FF">@qml</span><span style="color: #666666">.</span>qnode(dev)
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">sample_circuit</span>(params):
+    vqbm_ansatz(params)
+    <span style="color: #008000; font-weight: bold">return</span> qml<span style="color: #666666">.</span>sample(wires<span style="color: #666666">=</span><span style="color: #008000">range</span>(num_visible))
+
+<span style="color: #408080; font-style: italic"># Helper: Convert samples to bitstring histogram</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">get_distribution</span>(samples):
+    bitstrings <span style="color: #666666">=</span> [<span style="color: #BA2121">&quot;&quot;</span><span style="color: #666666">.</span>join(<span style="color: #008000">str</span>(bit) <span style="color: #008000; font-weight: bold">for</span> bit <span style="color: #AA22FF; font-weight: bold">in</span> s) <span style="color: #008000; font-weight: bold">for</span> s <span style="color: #AA22FF; font-weight: bold">in</span> samples]
+    counts <span style="color: #666666">=</span> Counter(bitstrings)
+    total <span style="color: #666666">=</span> <span style="color: #008000">sum</span>(counts<span style="color: #666666">.</span>values())
+    <span style="color: #008000; font-weight: bold">return</span> {
+        <span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span>num_visible<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>): counts<span style="color: #666666">.</span>get(<span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span>num_visible<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>), <span style="color: #666666">0</span>) <span style="color: #666666">/</span> total
+        <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">2**</span>num_visible)
+    }
+
+<span style="color: #408080; font-style: italic"># Training and storing distributions</span>
+params <span style="color: #666666">=</span> <span style="color: #666666">0.01</span> <span style="color: #666666">*</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>randn(<span style="color: #666666">2</span> <span style="color: #666666">*</span> num_qubits, requires_grad<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
+opt <span style="color: #666666">=</span> qml<span style="color: #666666">.</span>AdamOptimizer(stepsize<span style="color: #666666">=0.1</span>)
+history <span style="color: #666666">=</span> []
+
+<span style="color: #008000; font-weight: bold">for</span> epoch <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(epochs):
+    params <span style="color: #666666">=</span> opt<span style="color: #666666">.</span>step(energy_expectation, params)
+    learned_dist <span style="color: #666666">=</span> get_distribution(sample_circuit(params))
+    history<span style="color: #666666">.</span>append(learned_dist)
+    <span style="color: #008000; font-weight: bold">if</span> epoch <span style="color: #666666">%</span> <span style="color: #666666">10</span> <span style="color: #666666">==</span> <span style="color: #666666">0</span>:
+        <span style="color: #008000">print</span>(<span style="color: #BA2121">f&quot;Epoch </span><span style="color: #BB6688; font-weight: bold">{</span>epoch<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121"> energy: </span><span style="color: #BB6688; font-weight: bold">{</span>energy_expectation(params)<span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">.4f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+
+<span style="color: #408080; font-style: italic"># Animation setup</span>
+states <span style="color: #666666">=</span> [<span style="color: #008000">format</span>(i, <span style="color: #BA2121">f&#39;0</span><span style="color: #BB6688; font-weight: bold">{</span>num_visible<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">b&#39;</span>) <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">2**</span>num_visible)]
+
+fig, ax <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>subplots()
+bar1 <span style="color: #666666">=</span> ax<span style="color: #666666">.</span>bar(states, [<span style="color: #666666">0</span>]<span style="color: #666666">*</span><span style="color: #008000">len</span>(states), color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;skyblue&#39;</span>, label<span style="color: #666666">=</span><span style="color: #BA2121">&quot;VQBM&quot;</span>)
+bar2 <span style="color: #666666">=</span> ax<span style="color: #666666">.</span>bar(states, [target_probs[s] <span style="color: #008000; font-weight: bold">for</span> s <span style="color: #AA22FF; font-weight: bold">in</span> states], color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;orange&#39;</span>, alpha<span style="color: #666666">=0.6</span>, label<span style="color: #666666">=</span><span style="color: #BA2121">&quot;Target&quot;</span>)
+ax<span style="color: #666666">.</span>set_ylim(<span style="color: #666666">0</span>, <span style="color: #666666">1</span>)
+ax<span style="color: #666666">.</span>set_ylabel(<span style="color: #BA2121">&quot;Probability&quot;</span>)
+ax<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">&quot;VQBM Learning Over Epochs&quot;</span>)
+ax<span style="color: #666666">.</span>legend()
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">update</span>(frame):
+    dist <span style="color: #666666">=</span> history[frame]
+    <span style="color: #008000; font-weight: bold">for</span> i, state <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>(states):
+        bar1[i]<span style="color: #666666">.</span>set_height(dist[state])
+    ax<span style="color: #666666">.</span>set_title(<span style="color: #BA2121">f&quot;Epoch </span><span style="color: #BB6688; font-weight: bold">{</span>frame<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+
+ani <span style="color: #666666">=</span> FuncAnimation(fig, update, frames<span style="color: #666666">=</span><span style="color: #008000">len</span>(history), repeat<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)
+plt<span style="color: #666666">.</span>show()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- !split --><br><br><br><br><br><br><br><br><br><br>
 <h2 id="summary-of-steps-in-pennylane-implementation">Summary of steps in PennyLane implementation </h2>
