@@ -1,0 +1,401 @@
+The main difference between a classical BM (CBM)  and a quantum BM (QBM), is that the latter employs nodes that are defined by Pauli matrices rather than binary units, and therefore constructs a network defined by a parameterized Hamiltonian:
+\begin{equation}
+    \mathcal{H}(\Theta) = -\sum_{i} b_i \sigma^z_i - \sum_{\{i, j\}} w_{ij} \sigma^z_i \sigma^z_j.
+\end{equation}
+In this case, the \ac{QBM} is defined as the Gibbs state
+\begin{equation}
+    \rho(\Theta, \mathcal{H}) = \frac{\exp{-\beta \mathcal{H}(\Theta)}}{Z(\Theta)},
+\end{equation}
+where
+\begin{equation}
+    \cZ(\beta, \cH) = \Tr{e^{-\beta \cH(\vb, \vw)}}.
+\end{equation}
+
+The cost function is thus the generalized Kullback-Leibler divergence for density matrices, which corresponds to the quantum relative entropy:
+\begin{equation}
+    \cS(\sigma \| \rho(\beta, \cH)) = \Tr{\sigma \ln \sigma} - \Tr{\sigma \ln \rho(\beta, \cH)},
+\end{equation}
+where $\sigma$ is the target density matrix representing the data embedded into a mixed state.
+
+The goal of \ac{QBM} training is to find a set of weights and biases
+of the Hamiltonian, such that the Gibbs state approximates the target
+density matrix. There are various methods of tackling the training of
+\acp{QBM}~\cite{Gacon2022, Zoufal2021, Coopmans2023, Kalis2023,
+  Huijgen2023}, and an analogous problem to \ac{QBM} training is
+Hamiltonian learning~\cite{Anshu2021}.
+
+\section{Variational Gibbs State Preparation} \label{sec:VGSP}
+
+In this section we will describe how one can prepare a Gibbs state
+using a \ac{VQA} with the free energy as a cost function, specifically
+discussing the algorithm presented in
+Ref.~\cite{Consiglio2023}. Section~\ref{sec:vn_entropy}
+and~\ref{sec:free_energy} are intended to serve as a qualitative
+description of the estimation of the von Neumann entropy and the free
+energy, respectively. Consequently, in Section~\ref{sec:framework}, a
+quantitative description of the framework of the \ac{VQA} is carried
+out, mathematically linking the von Neumann entropy and energy
+expectation, with the estimation of the free energy.
+
+Suppose one chooses a Hamiltonian $\cH$ and inverse temperature
+$\beta$. For a general state $\rho$, one can define a generalized
+Helmholtz free energy as
+
+
+\begin{equation}
+    \cF(\rho) = \Tr{\cH \rho} - \beta^{-1}\cS(\rho),
+    \label{eq:helmholtz_free_energy}
+\end{equation}
+where the von Neumann entropy $\cS(\rho)$ can be expressed in terms of the eigenvalues, $p_i$, of $\rho$,
+\begin{equation}
+    \cS(\rho) = -\sum_{i=0}^{d - 1} p_i \ln p_i.
+    \label{eq:von_neumann}
+\end{equation}
+Since the Gibbs state is the unique state that minimizes the free energy of $\cH$~\cite{Matsui1994}, a variational form can be put forward that takes Eq.~\eqref{eq:helmholtz_free_energy} as an objective function, such that
+\begin{equation}
+    \rho(\beta, \cH) = \underset{\rho}{\arg\min}~\cF(\rho).
+\end{equation}
+In this case, $p_i = \exp\left(-\beta E_i\right)/\cZ(\beta, \cH)$ is the probability of getting the eigenstate $\ket{E_i}$ from the ensemble $\rho(\beta, \cH)$.
+
+\subsection{Computing the von Neumann Entropy}~\label{sec:vn_entropy}
+
+The difficulty in measuring the von Neumann entropy, defined by
+Eq.~\eqref{eq:von_neumann}, of a quantum state on a \ac{NISQ} device
+is typically the challenging part of variational Gibbs state
+preparation algorithms, since $\cS(\rho)$ is not an observable. To
+exactly compute the von Neumann entropy on a quantum device, one would
+have to perform full state tomography on the Gibbs state, which has a
+time complexity of $\cO(3^n)$ and a space complexity of $\cO(4^n)$. As
+a consequence, different works have employed various techniques to
+compute an approximation for the von Neumann entropy, such as using: a
+Fourier series approximation to the von Neumann
+entropy~\cite{Chowdhury2020}; a thermal multi-scale entanglement
+renormalization ansatz~\cite{Sewell2022}; sums of R\'enyi
+entropies~\cite{Foldager2022}; among others. On the other hand,
+Ref.~\cite{Consiglio2023} devised a method of computing the von
+Neumann exactly, via post-processing of measurement results acting on
+ancillary register.
+
+When preparing an $n$-qubit state, the unitary gates used in quantum
+computers ensure that the final quantum state of the entire register,
+starting from the input state $\ket{0}^{\otimes n}$, remains pure. As
+a result, in order to prepare an $n$-qubit Gibbs state on the system
+register, an $m \leq n$-qubit ancillary register is required. For
+example, in the case of the infinite-temperature Gibbs state, which is
+a fully mixed state, $m = n$ qubits are needed in the ancillary
+register to achieve maximal von Neumann entropy. To accurately
+evaluate the von Neumann entropy without any approximations, the
+complete Boltzmann distribution is prepared on the ancillary register,
+thus, $m = n$ is set regardless of the temperature.
+
+\subsection{Computing the Free Energy}~\label{sec:free_energy}
+
+Following the prescription of Ref.~\cite{Consiglio2023}, we shall
+denote the ancillary register as $A$, while the preparation of the
+Gibbs state will be carried out on the system register $S$. The
+purpose of the \ac{VQA} is to effectively create the Boltzmann
+distribution on $A$, which is then imposed on $S$, via intermediary
+\textsc{CNOT} gates, to generate a diagonal mixed state in the
+computational basis. In the ancillary register we can choose a unitary
+ansatz capable of preparing such a probability distribution. Thus, the
+ancillary qubits are responsible for classically mixing in the
+probabilities of the thermal state, while also being able to access
+these probabilities via measurements in the computational basis. On
+the other hand, the system register will host the preparation of the
+Gibbs state, as well as the measurement of the expectation value of
+our desired Hamiltonian during the optimization routine.
+
+The specific design of the \ac{PQC} allows classical post-processing
+of simple measurement results, carried out on ancillary qubits in the
+computational basis, to determine the von Neumann entropy. A
+diagrammatic representation of the structure of the \ac{PQC} is shown
+in Fig.~\ref{fig:gibbs_circuit}. Note that while the \ac{PQC} of the
+algorithm has to have a particular structure --- a unitary acting on
+the ancillae and a unitary acting on the system, connected by
+intermediary \textsc{CNOT} gates --- it is not dependent on the choice
+of Hamiltonian $\cH$, inverse temperature $\beta$, or the variational
+ans\"atze, $U_A$ and $U_S$, employed within. This is in addition to
+enjoying a sub-exponential scaling in the number of shots needed to
+precisely compute the Boltzmann probabilities. A qualitative analysis
+of a power-law scaling is presented in
+Section~\ref{sec:error_analysis}.
+
+\subsection{Modular Structure of the PQC}~\label{sec:framework}
+
+The \ac{PQC}, as shown in Fig.~\ref{fig:gibbs_circuit} for the
+\ac{VQA}, is composed of a unitary gate $U_A$ acting on the ancillary
+qubits, and a unitary gate $U_S$ acting on the system qubits, with
+\textsc{CNOT} gates in between. Note that the circuit notation we are
+using here means that there are $n$ qubits for both the system and the
+ancillae, as well as $n$ \textsc{CNOT} gates that act in parallel, and
+are denoted as
+
+\begin{equation}
+    \textsc{CNOT}_{AS} \equiv \bigotimes\limits_{i=0}^{n - 1}\textsc{CNOT}_{A_i S_i}.
+\end{equation}
+
+The parametrized unitary $U_A$ acting on the ancillae, followed by
+\textsc{CNOT} gates between the ancillary and system qubits, is
+responsible for preparing a probability distribution on the
+system. The parametrized unitary $U_S$ is then applied on the system
+qubits to transform the computational basis states into the
+eigenstates of the Hamiltonian.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pqc.pdf}
+    \caption{\ac{PQC} for Gibbs state preparation, with systems $A$ and $S$ each carrying $n$ qubits. \textsc{CNOT} gates act between each qubit $A_i$ and corresponding $S_i$.}
+    \label{fig:gibbs_circuit}
+\end{figure}
+
+Throughout the paper we will describe unitary operations and density
+matrices in the computational basis: $\ket{0} \equiv
+\left(1~0\right)^\top$ and $\ket{1} \equiv \left(0~1\right)^\top$,
+which is spanned by one qubit (and products of the basis states in the
+case of multiple qubits). We will also denote the $n$-fold tensor
+product of a state $\ket{\psi}$, of an $n$-qubit register $R$, as
+$\ket{\psi}_R^{\otimes n} \equiv \bigotimes_{i = 0}^{n - 1}
+\ket{\psi}_i$, where $i \in R$. Denote a general unitary gate of
+dimension $d = 2^n$, as $U_A = (u_{i, j})_{0\leq i, j \leq
+  d-1}$. Starting with the initial state of the $2n$-qubit register,
+$\ket{0}_{AS}^{\otimes 2n}$, we apply the unitary gate $U_A$ on the
+ancillae to get a quantum state $\ket{\psi}_A$, such that
+
+\begin{equation}
+    (U_A \otimes I_S) \ket{0}_{AS}^{\otimes 2n} = \ket{\psi}_{A} \otimes \ket{0}_{S}^{\otimes n},
+    \label{eq:U_A}
+\end{equation}
+
+where $\ket{\psi}_A = \sum_{i=0}^{d - 1} u_{i,0} \ket{i}_A$ and $I_S$
+is the identity acting on the system. Since Eq.~\eqref{eq:U_A} is
+applied to the all-zero state in the ancillary register, then the
+operation serves to extract the first column of the unitary operator
+$U_A$. The next step is to prepare a classical probability mixture on
+the system qubits, which can be done by applying \textsc{CNOT} gates
+between each ancilla and system qubit. This results in a state
+
+\begin{align}
+    \textsc{CNOT}_{AS} \left( \ket{\psi}_{A} \otimes \ket{0}_{S}^{\otimes n} \right) = \sum_{i=0}^{d - 1} u_{i,0} \ket{i}_A \otimes \ket{i}_S.
+    \label{eq:pre_tfd}
+\end{align}
+By then tracing out the ancillary qubits, we arrive at
+\begin{align}
+    \PTr{A}{\left( \sum_{i=0}^{d-1} u_{i,0}\ket{i}_A \otimes \ket{i}_S \right) \left( \sum_{j=0}^{d-1} u_{j,0}^* \bra{j}_A \otimes \bra{j}_S \right)} = &\sum_{i,j=0}^{d-1} u_{i,0}u_{j,0}^* \braket{i}{j} \ketbra{i}{j}_S \nonumber \\ = \
+    &\sum_{i=0}^{d-1} |u_{i,0}|^2 \ketbra{i}{i}_S,
+    \label{eq:diag}
+\end{align}
+
+ending up with a diagonal mixed state on the system, with
+probabilities given directly by the absolute square of the entries of
+the first column of $U_A$, that is, $p_i = |u_{i,0}|^2$. If the system
+qubits were traced out instead, we would end up with the same diagonal
+mixed state,
+
+\begin{align}
+    \PTr{S}{\left( \sum_{i=0}^{d-1} u_{i,0}\ket{i}_A \otimes \ket{i}_S \right) \left( \sum_{j=0}^{d-1} u_{j,0}^* \bra{j}_A \otimes \bra{j}_S \right)} = &\sum_{i,j=0}^{d-1} u_{i,0}u_{j,0}^* \braket{i}{j} \ketbra{i}{j}_A \nonumber \\ = \
+    &\sum_{i=0}^{d-1} |u_{i,0}|^2 \ketbra{i}{i}_A.
+\end{align}
+
+This implies that by measuring in the computational basis of the
+ancillary qubits, we can determine the probabilities $p_i$, which can
+then be post-processed to determine the von Neumann entropy $\cS$ of
+the state $\rho$ via Eq.~\eqref{eq:von_neumann} (since the entropy of
+$A$ is the same as that of $S$). As a result, since $U_A$ only serves
+to create a probability distribution from the entries of the first
+column, we can do away with a parametrized orthogonal (real unitary)
+operator, thus requiring less gates and parameters for the ancillary
+ansatz.
+
+The unitary gate $U_S$ then serves to transform the computational
+basis states of the system qubits to the eigenstates of the Gibbs
+state, once it is optimized by the \ac{VQA}, such that
+
+
+\begin{align}
+    \rho = U_S \left( \sum_{i=0}^{d-1} |u_{i,0}|^2 \ketbra{i}{i}_S \right) U_S^\dagger = \sum_{i=0}^{d - 1} p_i \ketbra{\psi_i},
+\end{align}
+
+where the expectation value $\Tr{\cH \rho}$ of the Hamiltonian can be
+measured. Ideally, at the end of the optimization procedure, $p_i =
+\exp\left(-\beta E_i\right)/\cZ(\beta, \cH)$ and $\ket{\psi_i} =
+\ket{E_i}$, so that we get
+
+\begin{equation}
+    \rho(\beta, \cH) = \sum_{i=0}^{d - 1} \frac{e^{-\beta E_i}}{\cZ(\beta, \cH)} \ketbra{E_i}.
+\end{equation}
+
+The \ac{VQA} therefore avoids the entire difficulty of measuring the
+von Neumann entropy of a mixed state on a quantum computer, and
+instead transfers the task of post-processing measurement results to
+the classical computer, which is much more tractable.
+
+\subsection{Objective Function}
+
+Finally, we can define the objective function of our \ac{VQA} to
+minimize the free energy~\eqref{eq:helmholtz_free_energy}, via our
+constructed \ac{PQC}, to obtain the Gibbs state
+
+\begin{align}
+    \rho(\beta, \cH) &= \underset{\bm{\theta}, \bm{\varphi}}{\arg\min} \ \cF\left(\rho\left(\bm{\theta}, \bm{\varphi}\right)\right) \nonumber \\ &= \underset{\bm{\theta}, \bm{\varphi}}{\arg\min} \left( \Tr{\cH \rho_S(\bm{\theta}, \bm{\varphi})} - \beta^{-1}\cS\left(\rho_A(\bm{\theta})\right) \right).
+    \label{eq:gibbs_state}
+\end{align}
+
+It is noteworthy to mention that while the energy expectation depends
+on both sets of angles $\bm{\theta}$ (as $U_A$ is responsible for
+parameterizing the Boltzmann distribution) and $\bm{\varphi}$ (as
+$U_S$ is responsible for parameterizing the eigenstates of the Gibbs
+state), the calculation of the von Neumann entropy only depends on
+$\bm{\theta}$.
+
+Furthermore, once we obtain the optimal parameters $\bm{\theta^*}$,
+$\bm{\varphi^*}$, preparing the Gibbs state $\rho(\beta, \cH)$ on the
+system qubits $S$, one can place the same unitary $U_S$ with optimal
+parameters $\bm{\varphi^*}$ on the ancillary qubits to prepare the
+\ac{TFD} state on the quantum computer, as shown in
+Fig.~\ref{fig:tfd_circuit}. Notice that this is equivalent to
+Eq.~\eqref{eq:pre_tfd} followed by applying the optimized $U_S$ on
+both registers. Tracing out either the ancilla or system register
+yields the same Gibbs state on the other register.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\textwidth]{tfd.pdf}
+    \caption{Optimal \ac{PQC} for \ac{TFD} state preparation, with systems $A$ and $S$ each carrying $n$ qubits. \textsc{CNOT} gates act between each qubit $A_i$ and corresponding $S_i$.}
+    \label{fig:tfd_circuit}
+\end{figure}
+
+\section{Preparing Gibbs states of the \textit{XY} model} \label{sec:results}
+
+In this Section we assess the performance of the \ac{VQA} for Gibbs
+state preparation of an $XY$ model. The $XY$ model~\cite{Lieb1961} is
+defined as
+
+\begin{equation}
+    \cH = -\sum_{i=1}^n \left( \frac{1 + \gamma}{2} \sigma_i^x \sigma_{i+1}^x + \frac{1 - \gamma}{2} \sigma_i^y \sigma_{i+1}^y \right) - h \sum_{i=1}^n \sigma_i^z.
+    \label{eq_XY}
+\end{equation}
+
+Here we only report one relevant property for implementing a
+problem-inspired ansatz for $U_S$. The Hamiltonian in
+Eq.~\eqref{eq_XY} commutes with the parity operator
+$\cP=\prod_{i=0}^{n - 1} \sigma^z_i$. As a consequence, the
+eigenstates of $\cH$ have definite parity, and so will the eigenstates
+of $\rho_{\beta}$.
+
+To assess the performance of the \ac{VQA}, we utilize the
+Uhlmann-Josza fidelity as a figure of merit~\cite{Uhlmann2011},
+defined as $F\left(\rho,\sigma\right) =
+\left(\Tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}\right)^2$. This
+fidelity measure quantifies the ``closeness'' between the prepared
+state and the target Gibbs state, making it a commonly-employed metric
+for distinguishability. However, alternative measures exist, each with
+its own interpretation. For instance, the trace
+distance~\cite{Nielsen2010} can be used, which guarantees that if its
+value between two states is bounded by $\epsilon$, the expectation
+values computed on the effectively prepared state will differ from
+those of the true Gibbs state by at most an amount proportional to
+$\epsilon$\cite{Holmes2022}. Another option is the relative
+entropy\cite{Nielsen2010}, which characterizes the distinguishability
+between the two states as the surprise that arises when an event
+occurs that is not possible with the true Gibbs
+state~\cite{Vedral2002}.
+
+We use an alternating, entangling brick-wall \ac{PQC} for the unitary
+$U_A$, composed of parametrized $R_Y(\theta_i)$ gates, and
+\textsc{CNOT}s as the entangling gates. This ansatz is hardware
+efficient and is sufficient to produce real amplitudes for preparing
+the probability distribution. Note that we require the use of
+entangling gates~\cite{Consiglio2023}, as otherwise we will not be
+able to prepare any arbitrary probability distribution, including the
+Boltzmann distribution of the $XY$ model.
+
+For the unitary $U_S$, We employ a brick-wall structure solely using
+parity-preserving gates --- $R_{XY}(\varphi_i)$ followed by
+$R_{YX}(\varphi_j)$ gates. If we combine the two gates, which we
+denote as $R_P(\varphi_i, \varphi_j)$, we get
+
+\begin{align}
+    R_P(\varphi_i, \varphi_j) &= R_{YX}(\varphi_j)\cdot R_{XY}(\varphi_i) \nonumber \\
+    &=
+    \left(
+    \begin{array}{cccc}
+     \cos \left(\frac{\varphi_i +\varphi_j }{2}\right) & 0 & 0 & \sin \left(\frac{\varphi_i +\varphi_j }{2}\right) \\
+     0 & \cos \left(\frac{\varphi_i -\varphi_j }{2}\right) & -\sin \left(\frac{\varphi_i -\varphi_j }{2}\right) & 0 \\
+     0 & \sin \left(\frac{\varphi_i -\varphi_j }{2}\right) & \cos \left(\frac{\varphi_i -\varphi_j }{2}\right) & 0 \\
+     -\sin \left(\frac{\varphi_i +\varphi_j }{2}\right) & 0 & 0 & \cos \left(\frac{\varphi_i +\varphi_j }{2}\right) \\
+    \end{array}
+    \right),
+    \label{eq:R_P}
+\end{align}
+
+which can be decomposed into two \textsc{CNOT} gates six $\sqrt{X}$
+gates, and ten $R_Z$ gates. The decomposed unitary is shown in
+Fig.~\ref{fig:R_P}. One layer of the unitary acting on the system
+qubits consists of a brick-wall structure, composed of an even-odd
+sublayer of $R_P$ gates, followed by an odd-even sublayer of $R_P$
+gates. Table~\ref{tab:scaling} shows the scaling of the \ac{VQA}
+assuming a closed ladder connectivity, for $n > 2$. An example of a
+\ac{PQC}, split into a four-qubit ancilla register, and a four-qubit
+system register, is shown in Fig.~\ref{fig:pqc_4qubits}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{R_P.pdf}
+    \caption{Decomposed $R_P$ gate in Eq.~\eqref{eq:R_P}.}
+    \label{fig:R_P}
+\end{figure}
+
+\begin{table}[t]
+\caption{Scaling of the \ac{VQA} assuming a closed ladder connectivity, for $n > 2$, where $l_A$ and $l_S$ are the number of ancilla ansatz and system ansatz layers, respectively, and $P$ is 2 when $n$ is even and 3 when $n$ is odd. Circuit depth is calculated on the depth of \textsc{CNOT} gates.}
+\centering
+\begin{tabular}{|l|l|l|} 
+    \hline
+    \# of parameters & $n(l_A + 1) + 2nl_S$ & $\cO(n(l_A + l_S))$ \\ 
+    \hline
+    \# of \textsc{CNOT} gates & $nl_A + 2nl_S + n$ & $\cO(n(l_A + l_S))$ \\
+    \hline
+    \# of $\sqrt{X}$ gates & $2n(l_A + 1) + 6nl_S$ & $\cO(n(l_A + l_S))$ \\ 
+    \hline
+    Circuit depth & $P l_A + 2Pl_S + 1$ & $\cO(l_A + l_S)$ \\ 
+    \hline
+\end{tabular}
+\label{tab:scaling}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{pqc_4qubits.pdf}
+    \caption{Example of an eight-qubit \ac{PQC}, consisting of three ancilla layers acting on a four-qubit register, and three system layers acting on another four-qubit register. Each $R_Y$ gate is parametrized with one parameter $\theta_i$, while each $R_P$ gate has two parameters $\varphi_i$ and $\varphi_j$. The $R_P$ gate is defined in Eq.~\eqref{eq:R_P} with its decomposition shown in Fig.~\ref{fig:R_P}. Note that the intermediary \textsc{CNOT} gates, as well as the \textsc{CNOT} and $R_P$ gates acting on qubits two and three, and on qubits one and four of the ancilla and system, respectively, can be carried out in parallel, respectively.}
+    \label{fig:pqc_4qubits}
+\end{figure}
+
+\subsection{Statevector Results} \label{sec:statevector_results}
+
+Fig.~\ref{fig:statevector_fidelity} shows the fidelity of the generated mixed state when compared with the exact Gibbs state of the $XY$ model with $h = 0.5$, and $\gamma$ ranging from 0.1 to 0.9 in steps of 0.1, across a range of temperatures for system sizes between two to seven qubits. The \ac{VQA} was carried out using statevector simulations with the \ac{BFGS} optimizer~\cite{Nocedal2006}. We used $n - 1$ layers for both the ancilla ansatz and for the system ansatz, with the scaling highlighted in Table~\ref{tab:scaling_2}. The number of layers was heuristically chosen to satisfy, at most, a polynomial scaling in quantum resources (but linear in depth), while achieving a fidelity higher than 99\%. Furthermore, in order to alleviate the issue of getting stuck in local minima, the optimizer was embedded in a Monte Carlo framework, that is, taking ten random initial positions and carrying out a local optimization from each position --- which we call a `run' --- and finally taking the global minimum to be the minimum over all runs.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{9fidelity_statevector.pdf}
+    \caption{Fidelity $F$, of the obtained state via statevector simulations (using \ac{BFGS}) with the exact Gibbs state, vs inverse temperature $\beta$, for two to seven qubits of the $XY$ model with $\gamma$ between 0.1 and 0.9, and $h = 0.5$. A total of ten runs are made for each point, with the optimal state taken to be the one that maximizes the fidelity.}
+    \label{fig:statevector_fidelity}
+\end{figure}
+
+\begin{table}[t]
+\caption{Scaling of the \ac{VQA} assuming a closed ladder connectivity, for $n > 2$, with $l_A = n - 1$, and $l_S = n - 1$, and $P$ is 2 when $n$ is even and 3 when $n$ is odd. Circuit depth is calculated on the depth of \textsc{CNOT} gates.}
+\centering
+\begin{tabular}{|l|l|l|} 
+    \hline
+    \# of parameters & $n(3n - 2)$ & $\cO(n^2)$ \\ 
+    \hline
+    \# of \textsc{CNOT} gates & $3n^2 - 2n$ & $\cO(n^2)$ \\
+    \hline
+    \# of $\sqrt{X}$ gates & $2n(4n - 3)$ & $\cO(n^2)$ \\ 
+    \hline
+    Circuit depth & $3P(n - 1) + 1$ & $\cO(n)$ \\
+    \hline
+\end{tabular}
+\label{tab:scaling_2}
+\end{table}
+
+A total of ten runs of \ac{BFGS} per $\beta$ were carried out to verify the reachability of the \ac{PQC}, with Fig.~\ref{fig:statevector_fidelity} showcasing the maximal fidelity achieved for each $\beta$ out of all runs. The results show that, indeed, our \ac{VQA}, is able to reach a very high fidelity $F > 99\%$ for up to seven-qubit Gibbs states of the $XY$ model. In the case of the extremal points, that is $\beta \rightarrow 0$ and $\beta \rightarrow \infty$, the fidelity reaches unity, for all investigated system sizes. For $\beta \rightarrow 0$, the problem reduces to maximizing the von Neumann entropy, where the problem becomes independent of the energy, and therefore, independent of the prepared eigenstates by $U_S$. For $\beta \rightarrow \infty$, the problem reduces to minimizing the energy, which is equivalent to finding the ground-state of the Hamiltonian, and so, independent of $U_A$. This is in contrast with intermediary temperatures $\beta \sim 1$, where the fidelity decreases with the number of qubits. This could be attributed to the fact that at intermediate temperatures, a substantial amount of Boltzmann probabilities are necessary for evaluating the von Neumann entropy with a high precision, and similarly, a large number of eigenstates contribute to preparing the Gibbs state, resulting in a dip in the fidelity at those temperatures.
+
