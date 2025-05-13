@@ -145,8 +145,7 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Quantum neural networks, theory and code examples
   - Video of lecture, first part at https://youtu.be/L9kvkEW1ZgQ
   - Video of lecture, second part with discussion of codes at https://youtu.be/73V0LipuHac
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/20\
-25/NotesMay7.pdf
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMay7.pdf
 
 ## May 12-16, 2025
   - Quantum neural networks, theory and code examples, contn from last week
