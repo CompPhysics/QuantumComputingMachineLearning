@@ -1,0 +1,83 @@
+#%matplotlib inline
+
+import numpy as np
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
+# Load and preprocess MNIST
+def load_binarized_mnist():
+    print("Downloading MNIST...")
+    mnist = fetch_openml('mnist_784', version=1)
+    X = mnist.data.astype(np.float32) / 255.0
+    X = (X > 0.5).astype(np.float32)  # Binarize
+    return X
+
+class RBM:
+    def __init__(self, n_visible, n_hidden, learning_rate=0.1):
+        self.n_visible = n_visible
+        self.n_hidden = n_hidden
+        self.learning_rate = learning_rate
+
+        # Initialize weights and biases
+        self.W = np.random.normal(0, 0.01, size=(n_visible, n_hidden))
+        self.v_bias = np.zeros(n_visible)
+        self.h_bias = np.zeros(n_hidden)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def sample(self, probs):
+        return (np.random.rand(*probs.shape) < probs).astype(np.float32)
+
+    def train(self, data, epochs=10, batch_size=64):
+        n_samples = data.shape[0]
+        # Convert the DataFrame to a NumPy array to avoid the KeyError.
+        data = data.to_numpy()  
+        for epoch in range(epochs):
+            np.random.shuffle(data)
+            epoch_error = 0
+
+            for i in range(0, n_samples, batch_size):
+                v0 = data[i:i + batch_size]
+                h0_prob = self.sigmoid(np.dot(v0, self.W) + self.h_bias)
+                h0_sample = self.sample(h0_prob)
+
+                v1_prob = self.sigmoid(np.dot(h0_sample, self.W.T) + self.v_bias)
+                h1_prob = self.sigmoid(np.dot(v1_prob, self.W) + self.h_bias)
+
+                # Weight and bias updates
+                self.W += self.learning_rate * (np.dot(v0.T, h0_prob) - np.dot(v1_prob.T, h1_prob)) / batch_size
+                self.v_bias += self.learning_rate * np.mean(v0 - v1_prob, axis=0)
+                self.h_bias += self.learning_rate * np.mean(h0_prob - h1_prob, axis=0)
+
+                epoch_error += np.mean((v0 - v1_prob) ** 2)
+
+            print(f"Epoch {epoch + 1}: Reconstruction error = {epoch_error:.4f}")
+
+    def reconstruct(self, v):
+        h = self.sigmoid(np.dot(v, self.W) + self.h_bias)
+        v_recon = self.sigmoid(np.dot(h, self.W.T) + self.v_bias)
+        return v_recon
+
+# Load and split MNIST
+X = load_binarized_mnist()
+X_train, X_test = train_test_split(X, test_size=0.1, random_state=42)
+
+# Initialize and train RBM
+rbm = RBM(n_visible=784, n_hidden=128, learning_rate=0.1)
+rbm.train(X_train, epochs=10, batch_size=64)
+
+# Visualize reconstruction
+def show_reconstruction(original, reconstructed):
+    fig, axes = plt.subplots(1, 2)
+    axes[0].imshow(original.reshape(28, 28), cmap="gray")
+    axes[0].set_title("Original")
+    axes[1].imshow(reconstructed.reshape(28, 28), cmap="gray")
+    axes[1].set_title("Reconstruction")
+    plt.show()
+
+sample = X_test[0]
+reconstruction = rbm.reconstruct(sample[np.newaxis, :])
+show_reconstruction(sample, reconstruction[0])
+
