@@ -110,12 +110,10 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-
 ## March 31-April 4, 2025
   - Discrete Fourier transforms (DFTs, reminder from last week) ) and the fast Fourier Transform (FFT)
   - Quantum Fourier transforms (QFTs), reminder from last week
   - Setting up circuits for QFTs
-  - Quantum phase estimation algorithm (QPE)
   - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
 
 ## April 7-11, 2025
@@ -150,13 +148,9 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
 ## May 12-16, 2025
   - Quantum neural networks, theory and code examples, contn from last week
   - Quantum and classical Boltzmann machines
-  - Video of lecture at https://youtu.be
+  - Video of lecture at https://youtu.be/icHV-pgq6uQ
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMay14.pdf
 
 
 ## May 19-23, 2025
-  - Quantum Boltzmann machines
-  - Summary of course
   - Discussion of project 2
-  - Video of lecture at https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMay21.pdf
