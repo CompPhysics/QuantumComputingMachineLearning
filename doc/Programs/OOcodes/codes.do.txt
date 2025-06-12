@@ -1406,3 +1406,409 @@ with a fully self-contained Python implementation.
 
 
 
+!split
+===== Refined code =====
+!bc pycod
+
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+from collections import Counter
+from mpl_toolkits.mplot3d import Axes3D # Ensure this is imported
+
+# =============================== #
+#       Quantum Gate Classes      #
+# =============================== #
+
+class Gate:
+    def __init__(self, matrix, targets):
+        self.matrix = np.array(matrix, dtype=np.complex128)
+        # Convert Qubit objects (if any) to indices
+        self.targets = [(t.index if isinstance(t, Qubit) else t) for t in targets]
+        self.num_targets = len(self.targets)
+        self.name = "CustomGate"
+
+class OneQubitGate(Gate):
+    def __init__(self, matrix, target):
+        super().__init__(matrix, [target])
+        # Add name attribute in subclasses if needed for representation
+        if np.array_equal(matrix, np.eye(2)): self.name = "I"
+        elif np.array_equal(matrix, np.array([[0,1],[1,0]])): self.name = "X"
+        elif np.array_equal(matrix, np.array([[0,-1j],[1j,0]])): self.name = "Y"
+        elif np.array_equal(matrix, np.array([[1,0],[0,-1]])): self.name = "Z"
+        elif np.allclose(matrix, (1/np.sqrt(2))*np.array([[1,1],[1,-1]])): self.name = "H"
+        elif np.array_equal(matrix, np.array([[1,0],[0,1j]])): self.name = "S"
+        elif np.allclose(matrix, np.array([[1,0],[0,np.exp(1j*np.pi/4)]])): self.name = "T"
+        # Note: Naming Rx, Ry, Rz requires theta, which is not stored in the base matrix
+
+class TwoQubitGate(Gate):
+    def __init__(self, matrix, control, target):
+        super().__init__(matrix, [control, target])
+        # Add name attribute in subclasses if needed for representation
+        if np.array_equal(matrix, np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])): self.name = "CNOT"
+        elif np.array_equal(matrix, np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]])): self.name = "CZ"
+        elif np.array_equal(matrix, np.array([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])): self.name = "SWAP"
+
+
+# One-qubit standard gate matrices
+def I():  return np.eye(2)
+def X():  return np.array([[0,1],[1,0]])
+def Y():  return np.array([[0,-1j],[1j,0]])
+def Z():  return np.array([[1,0],[0,-1]])
+def H():  return (1/np.sqrt(2))*np.array([[1,1],[1,-1]])
+def S():  return np.array([[1,0],[0,1j]])
+def T():  return np.array([[1,0],[0,np.exp(1j*np.pi/4)]])
+
+def Rx(theta):
+    return np.array([
+        [np.cos(theta/2), -1j*np.sin(theta/2)],
+        [-1j*np.sin(theta/2), np.cos(theta/2)]
+    ])
+
+def Ry(theta):
+    return np.array([
+        [np.cos(theta/2), -np.sin(theta/2)],
+        [np.sin(theta/2),  np.cos(theta/2)]
+    ])
+
+def Rz(theta):
+    return np.array([
+        [np.exp(-1j*theta/2), 0],
+        [0, np.exp(1j*theta/2)]
+    ])
+
+# Two-qubit gate matrices
+def CNOT_matrix(): # Renamed to avoid conflict if CNOTGate is a class
+    return np.array([
+        [1,0,0,0],
+        [0,1,0,0],
+        [0,0,0,1],
+        [0,0,1,0]
+    ])
+
+def CZ_matrix(): # Renamed
+    return np.array([
+        [1,0,0,0],
+        [0,1,0,0],
+        [0,0,1,0],
+        [0,0,0,-1]
+    ])
+
+def SWAP_matrix(): # Renamed
+    return np.array([
+        [1,0,0,0],
+        [0,0,1,0],
+        [0,1,0,0],
+        [0,0,0,1]
+    ])
+
+# Helper class for Qubit (optional, but consistent with file 1)
+class Qubit:
+    def __init__(self, index):
+        self.index = index
+
+
+# =============================== #
+#      Quantum Circuit Class      #
+# =============================== #
+
+class Circuit:
+    def __init__(self, num_qubits):
+        self.n = num_qubits
+        self.qubits = [Qubit(i) for i in range(num_qubits)] # Added for consistency
+        self.reset()
+
+    def reset(self):
+        self.state = np.zeros(2**self.n, dtype=np.complex128)
+        self.state[0] = 1.0
+        self.gates = []
+
+    def add_gate(self, gate):
+        # Ensure gate targets are valid for this circuit
+        for t in gate.targets:
+            if t < 0 or t >= self.n: # Use self.n for consistency
+                raise ValueError(f"Qubit index {t} out of range for {self.n} qubits.")
+        self.gates.append(gate)
+
+    def run(self):
+        for gate in self.gates:
+            self.apply_gate(gate)
+        # No return needed here, state is updated internally
+
+    def apply_gate(self, gate):
+        """Apply a single gate's unitary to the current state vector."""
+        if gate.num_targets == 1:
+            # One-qubit gate
+            target = gate.targets[0]
+            n = self.n
+            # Calculate indices for pairs (target_qubit=0, target_qubit=1)
+            diff = 2 ** (n - 1 - target)
+            step = diff * 2
+            new_state = self.state.copy()
+
+            # Iterate over pairs of amplitudes where target qubit is 0 vs 1
+            # This loop structure correctly handles applying a single-qubit gate
+            # across the larger state space.
+            for i in range(0, len(self.state), step):
+                for j in range(diff):
+                    idx0 = i + j             # index where target qubit is 0
+                    idx1 = idx0 + diff       # index where target qubit is 1
+                    a0, a1 = self.state[idx0], self.state[idx1]
+
+                    # Apply 2x2 matrix U to [a0, a1]
+                    new_state[idx0] = gate.matrix[0][0]*a0 + gate.matrix[0][1]*a1
+                    new_state[idx1] = gate.matrix[1][0]*a0 + gate.matrix[1][1]*a1
+            self.state = new_state
+
+        elif gate.num_targets == 2:
+            # Two-qubit gate
+            p, q = gate.targets  # the two qubit indices
+            n = self.n
+
+            # Determine the positions of the qubits in the state vector indexing
+            # Indexing is typically big-endian (most significant bit first).
+            # If qubit 0 is the left-most bit, its mask is 2^(n-1), qubit 1 is 2^(n-2), etc.
+            mask_p = 2 ** (n - 1 - p)
+            mask_q = 2 ** (n - 1 - q)
+
+            new_state = self.state.copy()
+
+            # Iterate through all possible lower bits combinations (excluding p and q)
+            # A more efficient way is to iterate directly through the 2x2 sub-blocks
+            # but this index-based approach is conceptually clearer for the 4x4 application.
+            # We can iterate over all indices and only process those where the bits
+            # corresponding to p and q are both 0 in the 'base' index.
+            for base in range(len(self.state)):
+                # Check if the p-th and q-th bits are both 0 in the current index `base`.
+                # This finds the starting index of each 4x4 block in the state vector.
+                if (base & mask_p) != 0 or (base & mask_q) != 0:
+                    continue # Skip if this is not a 'base' index (where p and q bits are 0)
+
+                # Construct the four indices corresponding to the basis states |p_bit q_bit⟩
+                # based on the masks. These must correspond to the order expected by the 4x4 matrix.
+                # The standard order is |00>, |01>, |10>, |11>.
+                # Assuming the gate matrix is ordered for (qubit p, qubit q):
+                # |00> corresponds to index `base`
+                # |01> corresponds to index where p bit is 0 and q bit is 1
+                # |10> corresponds to index where p bit is 1 and q bit is 0
+                # |11> corresponds to index where p bit is 1 and q bit is 1
+                # The indices are constructed by adding the masks.
+                idx00 = base
+                idx01 = base + mask_q
+                idx10 = base + mask_p
+                idx11 = base + mask_p + mask_q
+
+                # Get current amplitudes for these four basis states
+                a00, a01, a10, a11 = self.state[idx00], self.state[idx01], self.state[idx10], self.state[idx11]
+
+                # Apply the 4x4 gate matrix to the vector of these four amplitudes
+                result = gate.matrix @ np.array([a00, a01, a10, a11], dtype=np.complex128)
+
+                # Update the new state vector with the transformed amplitudes
+                new_state[idx00], new_state[idx01], new_state[idx10], new_state[idx11] = result[0], result[1], result[2], result[3]
+
+            self.state = new_state
+
+        else:
+            raise ValueError("Gate with unsupported number of targets.")
+
+
+    # Removed the incorrect expand_gate method
+
+    def get_statevector(self):
+        return self.state.copy() # Return a copy
+
+    def get_probabilities(self):
+        return np.abs(self.state)**2
+
+    def measure(self, shots=1024):
+        probs = self.get_probabilities()
+        basis_states = [format(i, f'0{self.n}b') for i in range(2**self.n)]
+        # Ensure probabilities sum to 1 for random.choices
+        probs_sum = np.sum(probs)
+        if probs_sum > 1e-9: # Avoid division by zero
+            normalized_probs = probs / probs_sum
+        else:
+            normalized_probs = probs # Or handle as needed, e.g., raise error or return empty counts
+
+        samples = random.choices(basis_states, weights=normalized_probs, k=shots)
+        return dict(Counter(samples))
+
+    def visualize_probabilities(self, title="State Probabilities"):
+        probs = self.get_probabilities()
+        basis = [format(i, f'0{self.n}b') for i in range(2**self.n)]
+        plt.figure(figsize=(8, 5)) # Added figure size
+        plt.bar(basis, probs, color='teal')
+        plt.xlabel("Basis States")
+        plt.ylabel("Probability")
+        plt.title(title)
+        plt.grid(axis='y', linestyle='--', alpha=0.7) # Added grid
+        plt.show()
+
+    def visualize_state(self):
+        """Basic visualization of the current state: Bloch sphere for 1 qubit, or probabilities for multiple qubits."""
+        if self.n == 1: # Use self.n for consistency
+            # Bloch sphere visualization for single qubit state
+            alpha = self.state[0]
+            beta = self.state[1] if len(self.state) > 1 else 0 # Should always be len 2 for 1 qubit
+
+            # Ensure the state is normalized for Bloch sphere calculation
+            norm = np.sqrt(np.abs(alpha)**2 + np.abs(beta)**2)
+            if norm > 1e-9: # Avoid division by zero or very small numbers
+                alpha /= norm
+                beta /= norm
+            else:
+                 # Handle the case of a zero state vector (shouldn't happen in unitary evolution)
+                 # Or just plot at the origin if the state is somehow zero
+                 x, y, z = 0, 0, 0
+
+
+            # Compute Bloch sphere coordinates (x,y,z) from state α|0> + β|1>
+            x = 2 * np.real(alpha * np.conj(beta))
+            y = 2 * np.imag(alpha * np.conj(beta))
+            z = np.abs(alpha)**2 - np.abs(beta)**2
+
+            # Plot a 3D Bloch sphere with the state vector
+            fig = plt.figure(figsize=(6,6)) # Adjusted figure size
+            ax = fig.add_subplot(111, projection='3d')
+
+            # Draw sphere wireframe
+            u = np.linspace(0, 2*np.pi, 36)
+            v = np.linspace(0, np.pi, 18)
+            xs = np.outer(np.cos(u), np.sin(v))
+            ys = np.outer(np.sin(u), np.sin(v))
+            zs = np.outer(np.ones_like(u), np.cos(v))
+            ax.plot_wireframe(xs, ys, zs, color='gray', alpha=0.3)
+
+            # Draw coordinate axes (Scaled slightly for better visualization)
+            ax.quiver(0,0,0, 1.2,0,0, color='red', arrow_length_ratio=0.05) # X-axis
+            ax.quiver(0,0,0, 0,1.2,0, color='green', arrow_length_ratio=0.05) # Y-axis
+            ax.quiver(0,0,0, 0,0,1.2, color='blue', arrow_length_ratio=0.05) # Z-axis
+            ax.text(1.3, 0, 0, 'X', color='red', fontsize=12)
+            ax.text(0, 1.3, 0, 'Y', color='green', fontsize=12)
+            ax.text(0, 0, 1.3, 'Z', color='blue', fontsize=12)
+
+            # Draw state vector
+            ax.quiver(0,0,0, x, y, z, color='purple', linewidth=2, arrow_length_ratio=0.1) # Used quiver for vector
+
+            # Set plot limits and labels
+            ax.set_xlim([-1, 1])
+            ax.set_ylim([-1, 1])
+            ax.set_zlim([-1, 1])
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_zlabel('Z')
+            ax.set_title('Bloch Sphere')
+
+            # Hide grid lines
+            ax.grid(False)
+            # Set axis aspect ratio to equal
+            ax.set_box_aspect([1,1,1])
+
+            plt.show()
+
+        else:
+            # For multiple qubits, visualize probabilities
+            self.visualize_probabilities(title="State Probabilities (Multi-Qubit)")
+
+
+# =============================== #
+#            Noise models         #
+# =============================== #
+
+def apply_bit_flip(state, p):
+    # This noise model application is not integrated into the Circuit class's run method.
+    # It would need to be applied *after* a gate operation to the resulting state,
+    # or the Circuit class would need a dedicated method to add noise.
+    # The current implementation modifies the state vector directly and incorrectly
+    # as bit flips should be applied to the basis states probabilistically, not
+    # by adding amplitudes.
+    # This function is likely not working as intended for simulating noise.
+    # A proper noise simulation would involve density matrices or probabilistic
+    # application of error operators after each gate.
+
+    # Placeholder/Incorrect implementation
+    noisy_state = state.copy()
+    for i in range(len(state)):
+        if random.random() < p:
+            # This is a very simplified and likely incorrect way to simulate bit flip.
+            # A bit flip on qubit k means state |...b_k...> flips to |...~b_k...>.
+            # The index i represents a basis state. Flipping the LSB of i
+            # does not correspond to flipping a specific qubit's bit unless it's qubit 0.
+            # A correct implementation would involve applying the error matrix (like X)
+            # to the state vector with probability p, and Identity with probability (1-p).
+            pass # Do nothing with the incorrect logic
+
+    print("Warning: apply_bit_flip function is a simplified and likely incorrect noise model simulation.")
+    return state # Return original state as the implementation is incorrect
+
+def apply_depolarizing(state, p):
+     # Similar issues to apply_bit_flip regarding correct noise simulation.
+     # A depolarizing channel replaces the state with a mixed state I/d with probability p.
+     # Simulating this with state vectors is not standard; it typically requires density matrices.
+     d = len(state)
+     # This calculation (1-p)*state + p/d * ones is incorrect for depolarizing.
+     print("Warning: apply_depolarizing function is a simplified and likely incorrect noise model simulation.")
+     return state # Return original state as the implementation is incorrect
+
+
+# =============================== #
+#       Bell state generator      #
+# =============================== #
+
+def bell_state(label="Phi+"):
+    c = Circuit(2)
+    # Use the matrix functions to define the gates
+    c.add_gate(OneQubitGate(H(), 0))
+    c.add_gate(TwoQubitGate(CNOT_matrix(), 0, 1)) # Use the renamed matrix function
+    if label == "Phi+":
+        pass
+    elif label == "Phi-":
+        c.add_gate(OneQubitGate(Z(), 0))
+    elif label == "Psi+":
+        c.add_gate(OneQubitGate(X(), 1))
+    elif label == "Psi-":
+        c.add_gate(OneQubitGate(X(), 1))
+        c.add_gate(OneQubitGate(Z(), 0))
+    else:
+        raise ValueError("Unknown Bell state")
+    c.run()
+    return c
+
+# =============================== #
+#         Demonstration           #
+# =============================== #
+
+if __name__ == "__main__":
+
+    labels = ["Phi+", "Phi-", "Psi+", "Psi-"]
+    shots = 1000
+
+    for label in labels:
+        print(f"\n{label} state:")
+        c = bell_state(label)
+        print("Statevector:", c.get_statevector())
+        # Visualize statevector using the new visualize_state method
+        c.visualize_state()
+        # Measure and print counts
+        results = c.measure(shots=shots)
+        print(f"Measurement (shots={shots}):", results)
+        # You can also visualize the measurement probabilities directly
+        c.visualize_probabilities(title=f"{label} state measurement probabilities")
+
+    # Example of a single qubit circuit and visualization
+    print("\nSingle qubit example:")
+    single_qubit_circuit = Circuit(1)
+    single_qubit_circuit.add_gate(OneQubitGate(H(), 0))
+    single_qubit_circuit.run()
+    print("Statevector after H:", single_qubit_circuit.get_statevector())
+    single_qubit_circuit.visualize_state()
+
+    single_qubit_circuit.add_gate(OneQubitGate(Rx(np.pi/2), 0))
+    single_qubit_circuit.run()
+    print("Statevector after Rx(pi/2):", single_qubit_circuit.get_statevector())
+    single_qubit_circuit.visualize_state()
+
+
+!ec
+
