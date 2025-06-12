@@ -1,0 +1,770 @@
+TITLE: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo, Norway
+DATE: February 5, 2025
+
+
+!split
+===== Plans for the week of February 3-7, 2025 =====
+!bblock 
+o Quantum circuits and operations (one-, two- and three-qubit gates
+o Hands-on exercises, see end of these slides
+o Discussion of the first exercise of project 1
+o "Video of lecture":"https://youtu.be/9XrDKgTQL6I"
+#o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary14.pdf"
+!eblock
+
+
+!split
+===== Running on the IBM machines =====
+
+For the projects and exercises, using for example Qiskit, we can run (as of now) on IBM's 127 qubit machine (Osaka).
+The Bell-state simulations below here perform this. To get started with the IBM machines, you need an account. Here's the recipe you need to follow:
+o Go to URL:"quantum.ibm.com" and create an account and follow the instructions.
+o After you have set up your account, go to the account icon and find the token. You need this to identify your self when running jobs. See the code example below.
+o Clicking on the _jobs_ link you can see which machines are availbale and where your job is, whether it is a queue or whether it is pending.
+
+The example at the end of this week's slides shows you how can run on IBM-Osaka, the 127 qubit machine which is presently available.
+Make sure you copy in your own token,  as that is your unique identifier.
+
+!split
+===== Explicit instructions =====
+
+!bc pycod
+# Install qiskit and various packages
+pip install -q qiskit
+pip install -q qiskit-aer
+pip install -q qiskit-ibmq-provider
+!ec
+
+!split
+===== Setting up your IBM run =====
+!bc pycod
+# Provide your IBM Quantum Experience API token here
+# Paste in this from your IBM account
+api_token = 'your_api_token'
+# Load your IBM Quantum account
+IBMQ.save_account(api_token, overwrite=True)  # This stores your credentials locally
+IBMQ.load_account()
+# Get the least busy backend
+provider = IBMQ.get_provider(hub='ibm-q', group ='open', project='main')
+# Run on the 127-qubit machine IBM-Osaka
+backend = provider.get_backend('ibm_osaka')
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+!ec
+
+
+!split
+===== Quantum gates, circuits and simple algorithms =====
+
+
+Quantum gates are physical actions that are applied to the physical
+system representing the qubits. Mathematically, they are
+complex-valued, unitary matrices which act on the complex-values
+normalized vectors that represent qubits. As the quantum analog of
+classical logic gates (such as AND and OR), there is a corresponding
+quantum gate for every classical gate; however, there are quantum
+gates that have no classical counter-part. They act on a set of qubits
+and, changing their state. That is, if $U$ is a quantum gate and
+$\vert q \rangle $ is a qubit, then acting the gate $U$ on the qubit $\vert q \rangle $
+transforms the qubit as follows:
+
+!bt
+\begin{align}
+\vert q \rangle \overset{U}{\to}U\vert q \rangle 
+.\end{align}
+!et
+
+
+!split
+===== Quantum circuits =====
+
+Quantum circuits are diagrammatic representations of quantum
+algorithms. The horizontal dimension corresponds to time; moving left
+to right corresponds to forward motion in time. They consist of a set
+of qubits $\vert q_n\rangle$ which are stacked vertically on the left-hand
+side of the diagram. Lines, called quantum wires, extend horizontally
+to the right from each qubit, representing its state moving forward in
+time. Additionally, they contain a set of quantum gates that are
+applied to the quantum wires. Gates are applied chronologically, left
+to right.
+
+
+!split
+===== Single-Qubit Gates =====
+
+A single-qubit gate is a physical action that is applied to one
+qubit. It can be represented by a matrix $U$ from the group SU(2). Any
+single-qubit gate can be parameterized by three angles: $\theta$,
+$\phi$, and $\lambda$ as follows
+
+!bt
+\[
+U(\theta,\phi,\lambda)=\begin{bmatrix}
+\cos\frac{\theta}{2} & -e^{i\lambda}\sin\frac{\theta}{2}
+\\
+e^{i\phi}\sin\frac{\theta}{2} & e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
+\end{bmatrix}.
+\]
+!et
+
+!split
+===== Widely used gates =====
+
+There are several widely used quantum gates. Perhaps the most famous are 
+the Pauli gates correspond to the Pauli matrices
+
+!bt
+\[
+I=\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix},
+\]
+!et
+
+!bt
+\[
+X =\begin{bmatrix} 0 & 1 \\ 1 & 0\end{bmatrix},
+\]
+!et
+
+!bt
+\[
+Y=\begin{bmatrix}0 & -i \\i & 0\end{bmatrix},
+\]
+!et
+
+!bt
+\[
+Z=\begin{bmatrix} 1 & 0 \\ 0 & -1\end{bmatrix}.
+\]
+!et
+
+!split
+===== Algebra basis =====
+
+These gates form a basis for
+the algebra $\mathfrak{su}(2)$. Exponentiating them will thus give us
+a basis for SU(2), the group within which all single-qubit gates
+live.
+
+
+!split
+===== Exponentiated Pauli gates =====
+
+These exponentiated Pauli gates are called rotation gates
+$R_{\sigma}(\theta)$ because they rotate the quantum state around the
+axis $\sigma=X,Y,Z$ of the Bloch sphere by an angle $\theta$. They are
+defined as
+
+!bt
+\[
+R_X(\theta)=e^{-i\frac{\theta}{2}X}=
+\begin{bmatrix}
+\cos\frac{\theta}{2} & -i\sin\frac{\theta}{2} \\
+-i\sin\frac{\theta}{2} & \cos\frac{\theta}{2} 
+\end{bmatrix},
+\]
+!et
+!bt
+\[
+R_Y(\theta)=e^{-i\frac{\theta}{2}Y}=
+\begin{bmatrix}
+\cos\frac{\theta}{2} & -\sin\frac{\theta}{2} \\
+\sin\frac{\theta}{2} & \cos\frac{\theta}{2} 
+\end{bmatrix},
+\]
+!et
+!bt
+\[
+R_Z(\theta)=e^{-i\frac{\theta}{2}Z}=\begin{bmatrix}
+e^{-i\theta/2} & 0 \\
+0 & e^{i\theta/2}\end{bmatrix}.
+\]
+!et
+
+!split
+===== Basis for $\mathrm{SU}(2)$ =====
+
+Because they form a basis for $\mathrm{SU}(2)$, any single-qubit gate
+can be decomposed into three rotation gates. Indeed
+!bt
+\[
+R_z(\phi)R_y(\theta)R_z(\lambda)=
+\begin{bmatrix}
+e^{-i\phi/2} & 0 \\
+0 & e^{i\phi/2}
+\end{bmatrix}
+\begin{bmatrix}
+\cos\frac{\theta}{2} & -\sin\frac{\theta}{2} \\
+\sin\frac{\theta}{2} & \cos\frac{\theta}{2} 
+\end{bmatrix}
+\begin{bmatrix}
+e^{-i\lambda/2} & 0 \\
+0 & e^{i\lambda/2}
+\end{bmatrix}
+\]
+!et
+which we can rewite as
+!bt
+\[
+e^{-i(\phi+\lambda)/2}
+\begin{bmatrix}
+\cos\frac{\theta}{2} & -e^{i\lambda}\sin\frac{\theta}{2}\\
+e^{i\phi}\sin\frac{\theta}{2} & e^{i(\phi+\lambda)}\cos\frac{\theta}{2}
+\end{bmatrix},
+\]
+!et
+
+which is, up to a global phase, equal to the expression for an arbitrary single-qubit gate.
+
+!split
+===== Two-Qubit Gates =====
+
+A two-qubit gate is a physical action that is applied to two
+qubits. It can be represented by a matrix $U$ from the group
+SU(4). One important type of two-qubit gates are controlled gates,
+which work as follows: Suppose $U$ is a single-qubit gate. A
+controlled-$U$ gate ($CU$) acts on two qubits: a control qubit
+$\vert x \rangle $ and a target qubit $\vert y \rangle $. The controlled-$U$ gate
+applies the identity $I$ or the single-qubit gate $U$ to the target
+qubit if the control gate is in the zero state $\vert 0\rangle$ or the one
+state $\vert 1\rangle$, respectively.
+
+
+!split
+===== Control qubit =====
+The control qubit is not acted
+upon. This can be represented as follows if
+!bt
+\[CU\vert xy\rangle=
+\vert xy\rangle \hspace{0.1cm} \mathrm{if} \hspace{0.1cm}  \vert x \rangle =\vert 0\rangle.
+\]
+!et
+
+
+!split
+===== In matrix form =====
+
+It is easier to see in a matrix form.
+It can be written in matrix form by writing it as a superposition of
+the two possible cases, each written as a simple tensor product
+
+!bt
+\[
+CU = \vert 0\rangle\langle 0\vert\otimes I + \vert 1\rangle\langle 1 \vert \otimes U=\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & u_{00} & u_{01} \\
+0 & 0 & u_{10} & u_{11}
+\end{bmatrix}.
+\]
+!et
+
+
+!split
+===== CNOT gate =====
+
+One of the most fundamental controlled gates is the CNOT gate. It is
+defined as the controlled-$X$ gate $CX$. It can be written in matrix form as follows:
+
+!bt
+\[
+\mathrm{CNOT}=\mathrm{CX}=\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0
+\end{bmatrix}.
+\]
+!et
+
+!split
+===== $\mathrm{CX}$ gate =====
+
+It changes, when operating on a two-qubit state where the first qubit is the control qubit and the second qubit is the target qubit, the states (check this)
+!bt
+\[
+\mathrm{CX}\vert 00\rangle=\vert 00\rangle,
+\]
+!et
+!bt
+\[
+\mathrm{CX}\vert 10\rangle= \vert 11\rangle,
+\]
+!et
+!bt
+\[
+\mathrm{CX}\vert 01\rangle= \vert 01\rangle,
+\]
+!et
+!bt
+\[
+\mathrm{CX}\vert 11\rangle= \vert 10\rangle,
+\]
+!et
+which you can easily see by simply multiplying the above matrix with any of the above states.
+
+
+
+
+!split
+===== Swap gate =====
+
+A widely used two-qubit gate that goes beyond the simple controlled function is the SWAP gate. It swaps the states of the two qubits it acts upon
+
+!bt
+\[
+\mathrm{SWAP}\vert xy\rangle=\vert yx\rangle.
+\]
+!et
+and has the following matrix form
+
+!bt
+\[
+\mathrm{SWAP}
+=\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix}.
+\]
+!et
+
+
+
+
+!split
+===== Introduction to "Qiskit":"https://qiskit.org/" =====
+
+This part is best seen using the jupyter-notebook.
+
+
+For the installation
+!bc pycod
+pip install qiskit
+pip install qiskit-ibm-runtime
+!ec
+
+Documentation can be found at URL:"https://docs.quantum.ibm.com/api/qiskit "
+
+
+!split
+===== Simple code =====
+
+!bc pycod
+#!/usr/bin/env python
+# coding: utf-8
+import numpy as np
+import qiskit as qk
+from scipy.optimize import minimize
+
+
+# # Initialize registers and circuit
+
+n_qubits = 1 #Number of qubits
+n_cbits = 1 #Number of classical bits (the number of qubits you want to measure at the end of the circuit)
+qreg = qk.QuantumRegister(n_qubits) #Create a quantum register
+creg = qk.ClassicalRegister(n_cbits) #Create a classical register
+circuit = qk.QuantumCircuit(qreg,creg) #Create your quantum circuit
+
+
+circuit.draw() #Draw circuit. It is empty
+!ec
+
+Thereafter we perform operations on qubit
+
+!bc pycod 
+circuit.x(qreg[0]) #Applies a Pauli X gate to the first qubit in the quantum register
+circuit.draw()
+!ec
+
+and select  a qubit to measure and encode the results to a classical bit
+
+
+!bc pycod 
+#Measure the first qubit in the quantum register
+#and encode the results to the first qubit in the classical register
+circuit.measure(qreg[0],creg[0])
+circuit.draw()
+!ec
+
+Thereafter we execute the circuit
+
+
+!bc pycod 
+backend = qk.Aer.get_backend('qasm_simulator') 
+#This is the device you want to use. It is an ideal simulation of a quantum device
+
+
+job = backend.run(circuit,shots=1000) #Run the circuit 1000 times
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+circuit.draw()
+
+
+circuit.h(qreg[0]) #Apply a Hadamard gate to the first qubit of the quantum register
+circuit.measure(qreg,creg)
+print(circuit.draw())
+
+
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+Now we create a two-qubit circuit and set up a Bell state
+
+
+!bc pycod 
+n_qubits = 2
+n_cbits = 2
+qreg = qk.QuantumRegister(n_qubits)
+creg = qk.ClassicalRegister(n_cbits)
+circuit = qk.QuantumCircuit(qreg,creg)
+circuit.draw()
+
+
+
+circuit.h(qreg[0])
+circuit.cx(qreg[0],qreg[1]) 
+#This is a controlled operation. Apply a Pauli X gate to the second qubit (qreg[1]) if the first qubit (qreg[0])
+#is in the |1> state. Else do nothing
+
+circuit.draw()
+
+circuit.measure(qreg,creg)
+circuit.draw()
+!ec
+
+
+
+!bc pycod 
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+We apply a rotation to a qubit
+
+!bc pycod 
+theta = np.pi/3
+circuit.rx(theta, qreg[0]) #R_x(theta) rotation on the first qubit (qreg[0])
+circuit.measure(qreg,creg)
+print(circuit.draw())
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+circuit.clear()
+print(counts)
+!ec
+
+
+!split
+===== Exercises on Bell states =====
+
+!bc pycod
+import qiskit as qk
+from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from qiskit.visualization import plot_histogram
+from qiskit_aer import AerSimulator
+import matplotlib.pyplot as plt
+!ec
+
+Setting up a circuit
+
+!bc pycod
+qreg_q = QuantumRegister(2) # 2 qubits
+creg_c = ClassicalRegister(2) # 2 classical bits
+
+qc = QuantumCircuit(qreg_q, creg_c) # alternatively, circuit = QuantumCircuit(2, 2)
+
+qc.h(qreg_q[0]) # apply the hadamard gate to the first qubit (to the right)
+
+# apply the CNOT gate with the first qubit being the control qubit and the second qubit being the target qubit
+qc.cx(qreg_q[0], qreg_q[1]) 
+
+
+# measure the qubits, specify which qubit you want to measure
+qc.measure(qreg_q[0], creg_c[0])
+qc.measure(qreg_q[1], creg_c[1])
+!ec
+
+Next we will use an ideal(noiseless) simulator (AerSimulator) to run
+our circuit. We will use the qasm$\_$simulator backend. This simulator
+returns a result object which contains the counts, or number of times
+each qubit was measured in the zero state and the one state. We can
+then use the plot$\_$histogram function to see the result of our circuit.
+
+!bc pycod
+# Initialize a simulator
+simulator = AerSimulator()
+
+job = qk.execute(qc, simulator, shots=1000) # shots are the number of times the circuit is executed
+results = job.result().get_counts(qc) # Done! check out the results!
+print(results)
+!ec
+Is this what you expected? Visualise it!
+!bc pycod
+plot_histogram(results)
+!ec
+
+Now it's your turn to make create the other three bell states, which are
+
+$$ \vert \Phi_+\rangle = \frac{|00\rangle + |11\rangle}{\sqrt{2}} $$
+$$ \vert \Phi_-\rangle = \frac{|00\rangle - |11\rangle}{\sqrt{2}} $$
+$$ \vert \Psi_+\rangle = \frac{|01\rangle + |10\rangle}{\sqrt{2}} $$
+$$ \vert \Psi_-\rangle = \frac{|01\rangle - |10\rangle}{\sqrt{2}} $$
+
+
+!bc pycod
+# SOLUTIONS
+
+phi_plus = QuantumCircuit(2,2)
+phi_plus.h(0)
+phi_plus.cx(0,1)
+phi_plus.measure([0,1],[0,1])
+
+
+phi_minus = QuantumCircuit(2,2)
+phi_minus.h(0)
+phi_minus.cx(0,1)
+phi_minus.z(0) # you can flip 1 in this case too, but not both obviously
+phi_minus.measure([0,1],[0,1])
+
+
+psi_plus = QuantumCircuit(2,2)
+psi_plus.h(0)
+psi_plus.cx(0,1)
+psi_plus.x(0) 
+psi_plus.measure([0,1],[0,1])
+
+
+psi_minus = QuantumCircuit(2,2)
+psi_minus.h(0)
+psi_minus.cx(0,1)
+psi_minus.x(0)
+psi_minus.z(0)
+psi_minus.measure([0,1],[0,1])
+
+
+bell_states = [phi_plus, phi_minus, psi_plus, psi_minus]
+!ec
+Have a look at them side by side
+!bc pycod
+all_results = []
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+for i,state in enumerate(bell_states):
+    print(results)
+    job = qk.execute(state, simulator, shots=1000)
+    all_results.append(job.result().get_counts(state))
+    plot_histogram(all_results[-1], ax=axes[int(i/2),i%2])
+!ec
+
+How can you distinguish $|\Phi_+\rangle$ and $|\Phi_-\rangle$? (and
+similarly $|\Psi_+\rangle$ and $|\Psi_-\rangle$)
+
+You can play around with the gates at URL:"https://quantum.ibm.com/composer".
+We'll look at the example with $|\Phi_+\rangle$ and $|\Phi_-\rangle$.
+
+!bc pycod
+# Solution: change basis
+
+phi_plus = QuantumCircuit(2,2)
+phi_plus.h(0)
+phi_plus.cx(0,1)
+phi_plus.h(0)
+phi_plus.h(1)
+phi_plus.measure([0,1],[0,1])
+
+
+phi_minus = QuantumCircuit(2,2)
+phi_minus.h(0)
+phi_minus.cx(0,1)
+phi_minus.z(0) # you can flip 1 in this case too, but not both obviously
+phi_minus.h(0)
+phi_minus.h(1)
+phi_minus.measure([0,1],[0,1])
+
+for state in [phi_plus, phi_minus]:
+    job = qk.execute(state, simulator, shots=1000)
+    print(job.result().get_counts(state))
+    plot_histogram(job.result().get_counts(state))
+!ec
+
+
+
+!split
+===== Testing the Bell states =====
+!bc pycod
+from qiskit import QuantumCircuit, transpile, assemble, IBMQ
+from qiskit.visualization import circuit_drawer
+import qiskit_aer
+import matplotlib.pyplot as plt
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+
+# Apply Hadamard gate to the first qubit
+bell_circuit.h(0)
+
+# Apply a CNOT gate with the first qubit as the control and the second qubit as the target
+bell_circuit.cx(0, 1)
+
+# Add measurements to the circuit
+bell_circuit.measure([0, 1], [0, 1])
+
+# Visualize the circuit
+print("Quantum Circuit:")
+print(bell_circuit)
+!ec
+
+!split
+===== Running the calculations =====
+!bc pycod
+# Number of shots
+num_shots = 10000
+
+# Simulate the circuit using the Aer simulator
+simulator = qiskit_aer.Aer.get_backend('qasm_simulator')
+
+# Transpile the circuit for the simulator
+transpiled_circuit = transpile(bell_circuit, simulator)
+
+# Execute the transpiled circuit on the simulator with the specified number of shots
+result = simulator.run(transpiled_circuit, shots=num_shots).result()
+
+# Get measurement counts
+counts = result.get_counts(bell_circuit)
+
+# Get and print the measurement results
+counts = result.get_counts(bell_circuit)
+print("\nMeasurement Results:")
+print(counts)
+!ec
+
+!split
+===== Then plotting the histogram over counts =====
+!bc pycod
+# Plot the histogram using Matplotlib
+plt.bar(counts.keys(), counts.values())
+plt.title('Bell State Measurement Results')
+plt.ylabel('Counts')
+plt.show()
+!ec
+
+!split
+===== Getting serious, Quantum Simulator with Hardware noise model =====
+!bc pycod
+from qiskit import QuantumCircuit, transpile, assemble, Aer, IBMQ
+from qiskit.visualization import plot_histogram
+from qiskit.providers.aer.noise import NoiseModel
+
+# you will not be able to run unless you provide your token here
+api_token = 'your_api_token'
+# Load your IBM Quantum account
+IBMQ.save_account(api_token, overwrite=True)  # This stores your credentials locally
+IBMQ.load_account()
+# Get the least busy backend
+provider = IBMQ.get_provider(hub='ibm-q', group ='open', project='main')
+#backend = provider.get_backend('your_preferred_backend')
+backend = provider.get_backend('ibm_osaka')
+
+# Get the noise model for the selected backend
+noise_model = NoiseModel.from_backend(backend)
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+
+# Apply Hadamard gate to the first qubit
+bell_circuit.h(0)
+
+# Apply a CNOT gate with the first qubit as the control and the second qubit as the target
+bell_circuit.cx(0, 1)
+
+# Add measurements to the circuit
+bell_circuit.measure([0, 1], [0, 1])
+
+# Visualize the circuit
+print("Quantum Circuit:")
+print(bell_circuit)
+!ec
+
+
+!split
+===== Then run and visualize it =====
+!bc pycod
+# Number of shots
+num_shots = 10000
+
+# Simulate the circuit using the Aer simulator with the noise model
+simulator = Aer.get_backend('qasm_simulator')
+noisy_transpiled_circuit = transpile(bell_circuit, simulator, optimization_level=0)
+noisy_circuit = assemble(noisy_transpiled_circuit, shots=num_shots, noise_model=noise_model)
+
+# Execute the noisy circuit on the simulator
+result = simulator.run(noisy_circuit).result()
+
+# Get and print the measurement results
+counts = result.get_counts(bell_circuit)
+print("\nMeasurement Results:")
+print(counts)
+# Plot the histogram using Matplotlib
+plot_histogram(counts, title='Bell State Measurement Results')
+!ec
+
+!split
+===== And without the noise model =====
+
+!bc pycod
+# Provide your IBM Quantum Experience API token here
+api_token = 'your_api_token'
+# Load your IBM Quantum account
+IBMQ.save_account(api_token, overwrite=True)  # This stores your credentials locally
+IBMQ.load_account()
+
+# Get the least busy backend
+#provider = IBMQ.get_provider(hub='your_hub', group='your_group', project='your_project')
+provider = IBMQ.get_provider(hub='ibm-q', group ='open', project='main')
+#backend = provider.get_backend('your_preferred_backend')
+backend = provider.get_backend('ibm_osaka')
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+
+# Apply Hadamard gate to the first qubit
+bell_circuit.h(0)
+
+# Apply a CNOT gate with the first qubit as the control and the second qubit as the target
+bell_circuit.cx(0, 1)
+
+# Add measurements to the circuit
+bell_circuit.measure([0, 1], [0, 1])
+
+# Transpile the circuit for the chosen backend
+transpiled_circuit = transpile(bell_circuit, backend)
+
+# Execute the transpiled circuit on the IBM Quantum computer
+qobj = assemble(transpiled_circuit, shots=1024)  # You can adjust the number of shots
+result = backend.run(qobj).result()
+
+# Get measurement counts
+counts = result.get_counts(bell_circuit)
+print("\nMeasurement Results:")
+print(counts)
+
+# Plot the histogram using Matplotlib
+plt.bar(counts.keys(), counts.values())
+plt.title('Bell State Measurement Results')
+plt.ylabel('Counts')
+plt.show()
+!ec
+
+
+
