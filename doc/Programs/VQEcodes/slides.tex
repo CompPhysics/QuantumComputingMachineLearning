@@ -1,0 +1,170 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\title{Variational Quantum Simulation of 2D Spin Models in Qiskit}
+\date{}
+\begin{document}
+
+\begin{frame}{Introduction to Quantum Spin Models}
+\begin{itemize}
+\item Spin lattice models such as the Ising and Heisenberg models are fundamental in condensed matter physics, describing magnetism and correlated quantum many-body systems [oai_citation:0‡en.wikipedia.org](https://en.wikipedia.org/wiki/Transverse-field_Ising_model#:~:text=Image%3A%20%7B%5Cdisplaystyle%20H%3D,j%7D%5Cright) [oai_citation:1‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=intrinsic%20gates%20to%20design%20the,in%20a%20magnetic%20field%20B).
+\item These models have non-commuting terms (e.g. $Z_iZ_j$ vs $X_i$) that make classical simulation intractable for large lattices [oai_citation:2‡en.wikipedia.org](https://en.wikipedia.org/wiki/Transverse-field_Ising_model#:~:text=Image%3A%20%7B%5Cdisplaystyle%20H%3D,j%7D%5Cright).
+\item Quantum computers can efficiently encode the $2^N$-dimensional Hilbert space of $N$ spins; variational algorithms like VQE are promising for finding ground states on near-term (NISQ) devices [oai_citation:3‡learning.quantum.ibm.com](https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver#:~:text=Variational%20quantum%20algorithms%20are%20promising,Given%20that).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{2D Transverse-Field Ising Model}
+\begin{itemize}
+\item The 2D transverse-field Ising Hamiltonian on a square lattice is given by
+\[
+H_{\text{Ising}} = -J \sum_{\langle i,j\rangle} Z_i Z_j \;-\; h \sum_{i} X_i,
+\]
+where $\langle i,j\rangle$ denotes nearest neighbors, $J$ is the coupling, and $h$ the transverse field strength [oai_citation:4‡en.wikipedia.org](https://en.wikipedia.org/wiki/Transverse-field_Ising_model#:~:text=Image%3A%20%7B%5Cdisplaystyle%20H%3D,j%7D%5Cright).
+\item The first term ($Z_iZ_j$) favors aligned or anti-aligned spins on adjacent sites; the second term ($X_i$) applies a perpendicular magnetic field.
+\item Here $X_i,Z_i$ are Pauli matrices on qubit (spin) $i$. The competition of these non-commuting terms leads to a quantum phase transition in large lattices.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{2D Isotropic Heisenberg Model}
+\begin{itemize}
+\item The 2D isotropic Heisenberg model on a square lattice is
+\[
+H_{\text{Heis}} = J \sum_{\langle i,j\rangle} \bigl(X_i X_j + Y_i Y_j + Z_i Z_j\bigr),
+\]
+with the same coupling $J$ for $XX$, $YY$, and $ZZ$ interactions.
+\item This SU(2)-symmetric model describes exchange interactions between neighboring spins. It is a prototypical model for quantum magnetism.
+\item On a 2×2 lattice (4 spins), each spin has 2 neighbors (in an open boundary scenario, there are 4 edges in total).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Variational Quantum Eigensolver (VQE)}
+\begin{itemize}
+\item VQE is a hybrid quantum-classical algorithm for finding the ground state energy of a Hamiltonian [oai_citation:5‡learning.quantum.ibm.com](https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver#:~:text=Variational%20quantum%20algorithms%20are%20promising,Given%20that).
+\item A parameterized quantum circuit $U(\boldsymbol{\theta})$ (the ansatz) prepares a trial state $\ket{\psi(\boldsymbol{\theta})} = U(\boldsymbol{\theta})\ket{0}$; the cost function is the energy expectation
+\[
+E(\boldsymbol{\theta}) = \bra{0}\,U^\dagger(\boldsymbol{\theta})\,H\,U(\boldsymbol{\theta})\ket{0},
+\]
+which is iteratively minimized [oai_citation:6‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=The%20first%20variational%20algorithm%20that,qubit%20photonic%20processor).
+\item Classical optimizers update the parameters $\boldsymbol{\theta}$ to drive $E(\boldsymbol{\theta})$ toward the ground-state energy. VQE requires fewer coherent gates than quantum phase estimation, making it suitable for NISQ devices [oai_citation:7‡learning.quantum.ibm.com](https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver#:~:text=Variational%20quantum%20algorithms%20are%20promising,Given%20that) [oai_citation:8‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=In%20comparison%20to%20QPE%2C%20which,optimization%20of%20the%20variational%20parameters).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Hamiltonian Construction in Qiskit}
+\begin{itemize}
+\item In Qiskit, Hamiltonians are expressed as sums of Pauli operators using tensor products [oai_citation:9‡medium.com](https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3#:~:text=hamiltonian%20%3D%20SparsePauliOp.from_list%28%5B%28%E2%80%9CII%E2%80%9D%2C%20,0.01%29%2C%20%28%E2%80%9CYX%E2%80%9D%2C%200.1).
+\item One can construct a \texttt{SparsePauliOp} (or \texttt{PauliSumOp}) from a list of Pauli strings and coefficients. For example, a 2×2 Ising Hamiltonian uses terms like \verb|"ZZII"|-J, \verb|"IZZI"|-J, \verb|"XIII"|-h, etc.
+\item Pseudo-code example:
+\begin{verbatim}
+from qiskit.quantum_info import SparsePauliOp
+# Define Pauli terms for H_Ising on 4 qubits
+paulis = [("ZZII", -J), ("IZZI", -J), ("ZIZI", -J), ("IIZZ", -J),
+         ("XIII", -h), ("IXII", -h), ("IIXI", -h), ("IIIX", -h)]
+H = SparsePauliOp.from_list(paulis)
+\end{verbatim}
+\item This leverages Qiskit's operator algebra to build $H$ directly from Pauli products [oai_citation:10‡medium.com](https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3#:~:text=hamiltonian%20%3D%20SparsePauliOp.from_list%28%5B%28%E2%80%9CII%E2%80%9D%2C%20,0.01%29%2C%20%28%E2%80%9CYX%E2%80%9D%2C%200.1).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ansatz Design and Optimization}
+\begin{itemize}
+\item We use the \texttt{TwoLocal} ansatz from Qiskit: alternating single-qubit rotation layers and entangling gates [oai_citation:11‡medium.com](https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3#:~:text=estimator%20%3D%20Estimator,%E2%80%9Cry%E2%80%9D%2C%20%E2%80%9Crz%E2%80%9D%5D%2C%20entanglement_blocks%3D%E2%80%9Dcz%E2%80%9D).
+\item For instance, use rotations around Y and Z axes (\texttt{ry}, \texttt{rz}) on each qubit, and controlled-Z (\texttt{cz}) entangling gates. Layers (reps) can be increased for expressiveness.
+\item In a 2×2 lattice, entangling gates are applied along the edges (e.g. CZ between qubits 0–1, 0–2, 1–3, 2–3) to reflect the lattice geometry.
+\item The VQE is executed on a statevector simulator (e.g.\ \texttt{BasicAer.get_backend('statevector_simulator')}) with a classical optimizer (COBYLA, SLSQP, etc.) to minimize the energy.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Implementation: 2×2 Transverse Ising}
+\begin{itemize}
+\item Construct the 4-qubit Hamiltonian and run VQE as follows:
+\begin{verbatim}
+from qiskit.quantum_info import SparsePauliOp
+from qiskit.circuit.library import TwoLocal
+from qiskit.algorithms import VQE
+from qiskit.algorithms.optimizers import COBYLA
+from qiskit import BasicAer
+
+# Define Pauli terms for H = -J sum Z_i Z_j - h sum X_i
+paulis = [
+("ZZII",-J), ("IZZI",-J), ("ZIZI",-J), ("IIZZ",-J),
+("XIII",-h), ("IXII",-h), ("IIXI",-h), ("IIIX",-h)
+]
+H = SparsePauliOp.from_list(paulis)
+
+ansatz = TwoLocal(num_qubits=4, rotation_blocks=['ry','rz'],
+                 entanglement_blocks='cz', reps=2)
+
+result = VQE(ansatz, COBYLA(),
+            quantum_instance=BasicAer.get_backend('statevector_simulator')
+           ).compute_minimum_eigenvalue(operator=H)
+E0 = result.eigenvalue
+\end{verbatim}
+\item This yields the estimated ground-state energy $E_0$ of the 2×2 Ising model. The exact ground energy (from diagonalizing $H$) can be used to verify accuracy.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Implementation: 2×2 Heisenberg}
+\begin{itemize}
+\item Construct the Hamiltonian with $XX$, $YY$, and $ZZ$ terms for each neighbor:
+\begin{verbatim}
+edges = [(0,1),(0,2),(1,3),(2,3)]
+paulis = []
+for (i,j) in edges:
+   pX = ["I"]*4; pX[i] = "X"; pX[j] = "X"
+   paulis.append(("".join(pX), J))
+   pY = ["I"]*4; pY[i] = "Y"; pY[j] = "Y"
+   paulis.append(("".join(pY), J))
+   pZ = ["I"]*4; pZ[i] = "Z"; pZ[j] = "Z"
+   paulis.append(("".join(pZ), J))
+H = SparsePauliOp.from_list(paulis)
+
+ansatz = TwoLocal(num_qubits=4, rotation_blocks=['ry','rz'],
+                 entanglement_blocks='cz', reps=2)
+
+result = VQE(ansatz, COBYLA(),
+            quantum_instance=BasicAer.get_backend('statevector_simulator')
+           ).compute_minimum_eigenvalue(operator=H)
+E0 = result.eigenvalue
+\end{verbatim}
+\item This provides the ground-state energy estimate for the 2×2 Heisenberg model. The true ground energy (via exact diagonalization) can similarly validate VQE performance.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ground State Energy vs Coupling}
+\begin{itemize}
+\item By varying the coupling parameter ($h$ for the Ising model, $J$ for the Heisenberg model) and rerunning VQE (or exact diagonalization), one obtains the ground-state energy $E_0$ as a function of that parameter.
+\item For example, for a fixed $J=1$ in the Ising model, compute $E_0(h)$ for $h$ in some range (e.g.\ $0$ to $2$). Similarly, compute $E_0(J)$ for the Heisenberg model.
+\item These data points can be plotted to show the variation of $E_0$ with the coupling (see figure caption below). The resulting curves (monotonic in these simple cases) serve as a benchmark of the model’s physics and the VQE’s accuracy.
+\item Such plots are useful to observe trends or phase transitions in the ground state as parameters change, and to compare VQE vs exact results.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lattice Connectivity and Circuit Illustration}
+\begin{itemize}
+\item The 2×2 lattice connectivity forms a square: qubits 0–1–3–2 (with 0–2 and 1–3 as vertical edges, 0–1 and 2–3 as horizontal edges).
+\item In the quantum circuit, each qubit corresponds to a spin. Entangling gates (e.g.\ CZ or CNOT) are placed between qubits that are neighbors on the lattice to capture interactions.
+\item For instance, in the ansatz we apply CZ gates on pairs (0,1), (0,2), (1,3), (2,3) to reflect the 2D nearest-neighbor edges.
+\item (A circuit diagram would show single-qubit rotations on each qubit and CZ gates along the edges of a 2×2 grid, with the pattern of entanglement matching the lattice graph.)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Scaling and Limitations}
+\begin{itemize}
+\item The Hilbert space dimension grows as $2^N$ for $N$ spins, so exact simulation is intractable for large $N$. VQE helps but still faces challenges as system size grows.
+\item The number of variational parameters and required measurements increases with lattice size. Large parameter counts can lead to optimization difficulties (such as barren plateaus where gradients vanish) [oai_citation:12‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=Another%20field%20of%20research%20concerns,New%20ways%20to).
+\item NISQ limitations (finite coherence time, gate errors) restrict circuit depth and qubit connectivity. Shallow ansätze may not capture the true ground state entanglement; deeper circuits are more accurate but more error-prone.
+\item To date, most VQE demonstrations on spin models have been limited to small lattices (few qubits) [oai_citation:13‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=intrinsic%20gates%20to%20design%20the,in%20a%20magnetic%20field%20B). Scaling to larger 2D systems is an ongoing research challenge.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+\begin{itemize}
+\item IBM Quantum (2021), \emph{Variational Quantum Eigensolver} tutorial [oai_citation:14‡learning.quantum.ibm.com](https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver#:~:text=Variational%20quantum%20algorithms%20are%20promising,Given%20that) [oai_citation:15‡learning.quantum.ibm.com](https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver#:~:text=Like%20many%20classical%20optimization%20problems%2C,the%20Qiskit%20Runtime%20Estimator%20directly).
+\item Wright, K. \emph{et al.}, Qiskit blog “Introducing Qiskit Algorithms with Primitives” (2023) [oai_citation:16‡medium.com](https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3#:~:text=hamiltonian%20%3D%20SparsePauliOp.from_list%28%5B%28%E2%80%9CII%E2%80%9D%2C%20,0.01%29%2C%20%28%E2%80%9CYX%E2%80%9D%2C%200.1) [oai_citation:17‡medium.com](https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3#:~:text=estimator%20%3D%20Estimator,%E2%80%9Cry%E2%80%9D%2C%20%E2%80%9Crz%E2%80%9D%5D%2C%20entanglement_blocks%3D%E2%80%9Dcz%E2%80%9D).
+\item Gras, A. \emph{et al.}, “Quantum many-body simulations on digital quantum computers”, \emph{Nat. Commun.} \textbf{15}, 104 (2024) [oai_citation:18‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=Another%20field%20of%20research%20concerns,New%20ways%20to) [oai_citation:19‡nature.com](https://www.nature.com/articles/s41467-024-46402-9?error=cookies_not_supported&code=e0d86c6c-d400-4a7e-9dda-2e6669633ed5#:~:text=The%20first%20variational%20algorithm%20that,qubit%20photonic%20processor).
+\item Wikipedia (2025), “Transverse-field Ising model” (accessed June 2025) [oai_citation:20‡en.wikipedia.org](https://en.wikipedia.org/wiki/Transverse-field_Ising_model#:~:text=Image%3A%20%7B%5Cdisplaystyle%20H%3D,j%7D%5Cright).
+\end{itemize}
+\end{frame}
+
+\end{document}
