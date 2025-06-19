@@ -1,0 +1,185 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usepackage{amsmath,amssymb,braket}
+\usepackage{tikz}
+\usepackage{quantikz}
+\title{The Jordan–Wigner Transformation}
+\author{Lecture Notes}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Fermionic Operators and Second Quantization}
+\begin{frame}{Fermionic Operators and Second Quantization}
+\begin{itemize}
+  \item \textbf{Fermionic modes:} Defined by creation ($a_p^\dagger$) and annihilation ($a_p$) operators for each mode $p=0,\dots,N-1$.  These operators obey the {\it canonical anticommutation relations}:
+  \[
+    \{a_p, a_q\} = 0, 
+    \quad 
+    \{a_p, a_q^\dagger\} = \delta_{pq},
+  \] 
+  where $\{A,B\}=AB+BA$.  (Vacuum: $a_p|\text{vac}\rangle=0$) [oai_citation:0‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=A%20system%20of%20,relations%20have%20the%20following%20consequences).
+  \item \textbf{Fock space basis:} The number (occupation) basis is 
+  $$
+  |n_0,\dots,n_{N-1}\rangle = (a_0^\dagger)^{n_0}(a_1^\dagger)^{n_1}\cdots|\text{vac}\rangle,\quad n_p\in\{0,1\}.
+  $$
+  Each $a_p^\dagger$ toggles the occupancy of mode $p$ [oai_citation:1‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=,vectors).
+  \item \textbf{Pauli exclusion:} Fermionic operators satisfy $a_p^2=0$; one cannot create two fermions in the same mode [oai_citation:2‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=,in%20the%20same%20mode%20twice).  Equivalently, $a_p^\dagger a_p$ has eigenvalues 0 or 1 (occupation number).
+\end{itemize}
+\end{frame}
+
+\section{Anticommutation Relations}
+\begin{frame}{Anticommutation and Consequences}
+\begin{itemize}
+  \item \textbf{Canonical Anticommutation:} $\{a_p,a_q\}=0$ and $\{a_p,a_q^\dagger\}=\delta_{pq}$ by definition [oai_citation:3‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=A%20system%20of%20,relations%20have%20the%20following%20consequences).
+  \item \textbf{Occupation operators commute:} $[n_p,n_q]=0$ with $n_p=a_p^\dagger a_p$, and each $n_p$ has eigenvalues 0 or 1 [oai_citation:4‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=the%20anticommutation%20relations%20have%20the,following%20consequences).
+  \item \textbf{Vacuum state:} There is a unique vacuum $|\text{vac}\rangle$ annihilated by all $a_p$; each $a_p^\dagger$ creates a fermion in mode $p$ (raising its occupation to 1) [oai_citation:5‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=,eigenvector%20of%20all%20the%C2%A0%5C%28a%5E%5Cdagger_p%20a_p).
+  \item \textbf{Anticommutation implications:} $a_p^2=0$ (Pauli exclusion) and $(a_p^\dagger)^2=0$.  On a basis state, 
+  $a_p|n_0\ldots 1_p \ldots n_{N-1}\rangle = (-1)^{\sum_{q<p}n_q}|n_0\ldots 0_p\ldots n_{N-1}\rangle$ [oai_citation:6‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=%5C%5B%5Cbegin,1%7D%20%5Crangle%20%26%3D%200%20%5C%2C.%5Cend%7Baligned) (sign from earlier occupations), and annihilation on an empty mode gives 0.
+\end{itemize}
+\end{frame}
+
+\section{Motivation for Mapping Fermions to Qubits}
+\begin{frame}{Why Map Fermions to Qubits?}
+\begin{itemize}
+  \item \textbf{Quantum simulation:} We wish to simulate fermionic systems (e.g.\ electrons in molecules or lattice models) on a quantum computer of qubits.  To do so, we need an explicit map of fermionic operators to qubit operators that preserves anticommutation [oai_citation:7‡futureofmatter.com](https://futureofmatter.com/assets/fermions_and_jordan_wigner.pdf#:~:text=system%20of%20Fermions,his%20famous%201982%20paper%20on).
+  \item \textbf{Spin-fermion equivalence:} The Jordan–Wigner transform shows spin-$\frac12$ chains (qubits) can be mapped to fermions.  Conversely, fermionic Hamiltonians can be expressed as qubit (spin) Hamiltonians.  For example, 1D spin chains like the Ising/XY models are exactly solvable by mapping to free fermions [oai_citation:8‡en.wikipedia.org](https://en.wikipedia.org/wiki/Jordan%E2%80%93Wigner_transformation#:~:text=The%20Jordan%E2%80%93Wigner%20transformation%20is%20a,operators%20and%20then%20diagonalizing%20in).
+  \item \textbf{Electronic structure:} Molecular electronic Hamiltonians (second-quantized fermionic operators) can be encoded into qubit Hamiltonians for quantum chemistry simulations.  Each fermionic mode (spin-orbital) corresponds to one qubit under Jordan–Wigner [oai_citation:9‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Jordan,the%20occupation%20of%20one%20qubit).
+  \item \textbf{Benchmark models:} Models like the Fermi–Hubbard (strongly correlated electrons on lattice) are prime targets for quantum simulators [oai_citation:10‡nature.com](https://www.nature.com/articles/s41467-022-33335-4?error=cookies_not_supported&code=099d8369-c950-46da-9d82-052da949e39d#:~:text=solution%20of%20physical%20problems%20that,excellent%20benchmark%20for%20quantum%20algorithms).  Mapping to qubits allows use of quantum algorithms (VQE, QPE) to study these systems.
+\end{itemize}
+\end{frame}
+
+\section{Jordan–Wigner Transformation: Formalism}
+\begin{frame}{Jordan–Wigner: Operator Mapping}
+The Jordan–Wigner (JW) transform explicitly maps each fermionic mode to a qubit.  The annihilation operator $a_p$ is mapped to a product of Pauli matrices on qubits:
+\[
+a_p \;\mapsto\; \frac{1}{2}\,(X_p + iY_p)\,Z_0 Z_1\cdots Z_{p-1},
+\]
+and the creation operator $a_p^\dagger$ to its Hermitian conjugate:
+\[
+a_p^\dagger \;\mapsto\; \frac{1}{2}\,(X_p - iY_p)\,Z_0 Z_1\cdots Z_{p-1}.
+\]
+That is, each fermionic mode $p$ is represented by qubit $p$, with a string of $Z$ operators on all lower-index qubits [oai_citation:11‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=%5C%5B%5Cbegin,aligned).
+\begin{itemize}
+  \item This mapping ensures the correct anticommutation: the $Z$-string introduces a sign $(-1)^{\sum_{q<p}n_q}$ when swapping fermions, reproducing Fermi statistics.
+  \item In terms of Pauli operators: 
+  \[
+    a_p = (X_p + iY_p)/2 \prod_{k=0}^{p-1} Z_k, \quad 
+    a_p^\dagger = (X_p - iY_p)/2 \prod_{k=0}^{p-1} Z_k\,. 
+  \] [oai_citation:12‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=%5C%5B%5Cbegin,aligned)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{JW: Operator Identities}
+Using the mapping, one can express standard fermionic operators in Pauli form:
+\begin{itemize}
+  \item \textbf{Number operator:} 
+  $$n_p = a_p^\dagger a_p = \frac{I - Z_p}{2},$$ 
+  since $a_p^\dagger a_p$ has eigenvalue 1 if qubit $p$ is $|1\rangle$ and 0 if $|0\rangle$.
+  \item \textbf{Fermionic parity:} 
+  $$(-1)^{\sum_{q<p}n_q} = \prod_{k=0}^{p-1} Z_k,$$ 
+  implemented by the string of $Z$'s in the mapping.
+  \item \textbf{Spin operators:} The Pauli-$Z$ on qubit $j$ corresponds to $2a_j^\dagger a_j - I$ (local fermion number parity) [oai_citation:13‡futureofmatter.com](https://futureofmatter.com/assets/fermions_and_jordan_wigner.pdf#:~:text=operators%20in%20terms%20of%20the,for%20Xj%20by%20noting%20that).  For nearest-neighbor products:
+  \[
+    X_j X_{j+1} + Y_j Y_{j+1} 
+    \;=\; a_j^\dagger a_{j+1} + a_{j+1}^\dagger a_j,
+  \]
+  showing how hopping terms map to two-qubit terms.
+  \item \textbf{Inverse transform:} The Pauli operators can be expressed in terms of $a,a^\dagger$. For example, 
+  \[
+    Z_j = a_j a_j^\dagger - a_j^\dagger a_j,
+  \]
+  \[
+    X_j = - (Z_0 Z_1 \cdots Z_{j-1})(a_j + a_j^\dagger),
+  \] 
+  \[
+    Y_j = i(Z_0 Z_1 \cdots Z_{j-1})(a_j^\dagger - a_j),
+  \] 
+  which one can verify yields the usual Pauli matrices [oai_citation:14‡futureofmatter.com](https://futureofmatter.com/assets/fermions_and_jordan_wigner.pdf#:~:text=operators%20in%20terms%20of%20the,for%20Xj%20by%20noting%20that).
+\end{itemize}
+\end{frame}
+
+\section{Example: 2-Mode Fermionic Hamiltonian}
+\begin{frame}{Example: 2-Mode Hamiltonian}
+Consider a two-mode fermionic Hamiltonian (e.g.\ tight-binding or Hubbard dimer):
+\[
+H = \varepsilon\,(a_0^\dagger a_0 + a_1^\dagger a_1) + t\,(a_0^\dagger a_1 + a_1^\dagger a_0).
+\]
+Under Jordan–Wigner:
+\[
+a_0^\dagger a_0 = \frac{I - Z_0}{2}, 
+\quad
+a_1^\dagger a_1 = \frac{I - Z_1}{2},
+\]
+\[
+a_0^\dagger a_1 + a_1^\dagger a_0 
+= \frac{1}{2}(X_0X_1 + Y_0Y_1).
+\]
+Thus the qubit Hamiltonian becomes
+\[
+H_{q} = \frac{\varepsilon}{2}(2I - Z_0 - Z_1) \;+\; \frac{t}{2}(X_0X_1 + Y_0Y_1).
+\]
+All terms are now products of Pauli operators acting on qubits 0 and 1.  (This illustrates the mapping of on-site energies to $Z$ and hopping to $XX+YY$ interactions.)
+\end{frame}
+
+\section{Circuit Representations}
+\begin{frame}{Circuit Representation of JW Operators}
+Fermionic operators mapped to Pauli operators can be implemented by quantum circuits:
+\begin{itemize}
+  \item \textbf{Single-mode phases:} A term like $Z_p$ (from number operators) is a simple single-qubit phase-flip gate.
+  \item \textbf{Hopping terms (XX+YY):}  For example, the two-qubit interaction 
+  $e^{-i\frac{\theta}{2}(X_0X_1 + Y_0Y_1)}$ can be realized by standard gate decompositions.  One method: 
+  apply Hadamard gates to bring $X\!X$ coupling into a $Z\!Z$ form on a basis, perform a controlled-$Z$ rotation, and undo the basis change.
+  \item \textbf{RYY / RXX gates:} Modern frameworks include gates like $R_{XX}(\theta)=e^{-i\theta X\otimes X}$ and $R_{YY}(\theta)=e^{-i\theta Y\otimes Y}$ [oai_citation:15‡docs.quantum.ibm.com](https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.RYYGate#:~:text=A%20parametric%202,rotation%20about%20YY).  For instance, IBM Qiskit has an RYY gate implementing $e^{-i\theta\,Y\otimes Y}$ [oai_citation:16‡docs.quantum.ibm.com](https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.RYYGate#:~:text=A%20parametric%202,rotation%20about%20YY).
+  \item \textbf{Circuit example:} To implement $e^{-i(\phi/2)X_0X_1}$, use two Hadamards and a controlled-$Z$ rotation:
+  \[
+    \Qcircuit @C=1em @R=0.7em {
+      \lstick{\ket{q_0}} & \gate{H} & \ctrl{1} & \gate{H} & \qw \\
+      \lstick{\ket{q_1}} & \qw      & \targ    & \gate{R_z(2\phi)} & \qw 
+    }
+  \]
+  (Similar constructions exist for $X\otimes X + Y\otimes Y$ by combining rotations.) 
+\end{itemize}
+\end{frame}
+
+\section{Applications in Quantum Simulation}
+\begin{frame}{Applications: Quantum Simulations}
+\begin{itemize}
+  \item \textbf{Quantum Chemistry:} Electronic structure Hamiltonians (in second quantization) map directly to qubit Hamiltonians via JW.  Each molecular orbital/spin-orbital is a fermionic mode→ qubit [oai_citation:17‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Jordan,the%20occupation%20of%20one%20qubit).  For example, Qiskit Nature uses JW for initial mappings of small molecules.
+  \item \textbf{Spin Chains and Lattice Fermions:} The JW transform is classic for solving 1D spin chains (Ising, XY) by mapping to free fermions [oai_citation:18‡en.wikipedia.org](https://en.wikipedia.org/wiki/Jordan%E2%80%93Wigner_transformation#:~:text=The%20Jordan%E2%80%93Wigner%20transformation%20is%20a,operators%20and%20then%20diagonalizing%20in).  Conversely, simulating lattice fermion models (e.g.\ Fermi–Hubbard) on a qubit array uses JW to encode creation/annihilation operators.  The 1D Fermi–Hubbard model is a common benchmark for quantum computers [oai_citation:19‡nature.com](https://www.nature.com/articles/s41467-022-33335-4?error=cookies_not_supported&code=099d8369-c950-46da-9d82-052da949e39d#:~:text=solution%20of%20physical%20problems%20that,excellent%20benchmark%20for%20quantum%20algorithms).
+  \item \textbf{Tapering via Symmetry:} In some cases, e.g.\ systems with fixed particle number or spin parity, the JW-mapped Hamiltonian has symmetries (global $Z$-parities) that allow qubit reduction (tapering) [oai_citation:20‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Parity%20mapping%20is%20the,is%20delocalized%20over%20all%20qubits).
+\end{itemize}
+\end{frame}
+
+\section{Other Fermion-to-Qubit Mappings}
+\begin{frame}{Alternative Mappings (Parity, Bravyi–Kitaev)}
+\begin{itemize}
+  \item \textbf{Parity mapping:} A variant of JW where parity information is stored locally on qubits.  In parity mapping, occupation information is delocalized, and the qubit index encodes parity of lower modes [oai_citation:21‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Parity%20mapping%20is%20the,is%20delocalized%20over%20all%20qubits).  This mapping often enables qubit tapering by conserving total particle number.
+  \item \textbf{Bravyi–Kitaev (BK):} A mapping that balances locality between JW and parity.  BK uses a binary-tree structure to achieve $O(\log N)$ Pauli-weight for parity and update operations [oai_citation:22‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=already%20supports%20the%20following%20fermionic,mappings).  It generally reduces the number of gates for some operators at the cost of more complex index management.
+  \item \textbf{Comparison:} 
+  JW is simplest (long $Z$-strings, $O(N)$ weight), parity and BK trade off Pauli string lengths differently.  The best choice depends on hardware connectivity and symmetry exploitation [oai_citation:23‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=already%20supports%20the%20following%20fermionic,mappings) [oai_citation:24‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Parity%20mapping%20is%20the,is%20delocalized%20over%20all%20qubits).
+\end{itemize}
+\end{frame}
+
+\section{References}
+\begin{frame}[allowframebreaks]{References}
+\footnotesize
+\begin{thebibliography}{10}
+\bibitem M.\ Nielsen, “The Fermionic CCRs and the Jordan–Wigner Transform,” {\it arXiv:}quant-ph/0205030 (2005) [oai_citation:25‡futureofmatter.com](https://futureofmatter.com/assets/fermions_and_jordan_wigner.pdf#:~:text=system%20of%20Fermions,his%20famous%201982%20paper%20on) [oai_citation:26‡futureofmatter.com](https://futureofmatter.com/assets/fermions_and_jordan_wigner.pdf#:~:text=operators%20in%20terms%20of%20the,for%20Xj%20by%20noting%20that).
+\bibitem I.\ S.\ Wang {\it et al.}, {\it OpenFermion tutorials} (Google Quantum AI), *Jordan–Wigner and Bravyi–Kitaev Transforms* [oai_citation:27‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=A%20system%20of%20,relations%20have%20the%20following%20consequences) [oai_citation:28‡quantumai.google](https://quantumai.google/openfermion/tutorials/jordan_wigner_and_bravyi_kitaev_transforms#:~:text=Under%20the%20Jordan,to%20qubit%20operators%20as%20follows).
+\bibitem A.\ Moll {\it et al.}, “Fermionic mappings in electronic structure,” Qiskit Nature Tutorial (2022) [oai_citation:29‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Jordan,the%20occupation%20of%20one%20qubit) [oai_citation:30‡qiskit-community.github.io](https://qiskit-community.github.io/qiskit-nature/tutorials/06_qubit_mappers.html#:~:text=The%20Parity%20mapping%20is%20the,is%20delocalized%20over%20all%20qubits).
+\bibitem Wikipedia, *Jordan–Wigner transformation*, (provides background and context) [oai_citation:31‡en.wikipedia.org](https://en.wikipedia.org/wiki/Jordan%E2%80%93Wigner_transformation#:~:text=The%20Jordan%E2%80%93Wigner%20transformation%20is%20a,operators%20and%20then%20diagonalizing%20in).
+\bibitem Qiskit Documentation, *RYYGate*, describes $e^{-i\theta Y\otimes Y}$ implementations [oai_citation:32‡docs.quantum.ibm.com](https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.RYYGate#:~:text=A%20parametric%202,rotation%20about%20YY).
+\bibitem S.\ Stanisic {\it et al.}, “Observing Fermi–Hubbard ground state properties,” *Nat.\ Commun.* 13, 5743 (2022) [oai_citation:33‡nature.com](https://www.nature.com/articles/s41467-022-33335-4?error=cookies_not_supported&code=099d8369-c950-46da-9d82-052da949e39d#:~:text=solution%20of%20physical%20problems%20that,excellent%20benchmark%20for%20quantum%20algorithms).
+\end{thebibliography}
+\end{frame}
+
+\end{document}
