@@ -1,0 +1,95 @@
+
+Uses a random 8×8 Hermitian matrix (for 3 qubits)
+Decomposes it into Pauli terms
+Runs VQE using a TwoLocal ansatz
+Uses the statevector simulator
+Visualizes: 
+The convergence of VQE (energy vs iteration)
+The circuit structure of the ansatz
+
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from qiskit import Aer
+from qiskit.opflow import PauliSumOp, MatrixOp
+from qiskit.quantum_info import Operator
+from qiskit.circuit.library import TwoLocal
+from qiskit.algorithms import VQE
+from qiskit.algorithms.optimizers import COBYLA
+from qiskit.utils import QuantumInstance, algorithm_globals
+
+# --- Parameters ---
+n_qubits = 3
+dim = 2**n_qubits
+np.random.seed(42)
+algorithm_globals.random_seed = 42
+
+# --- Generate a random Hermitian matrix ---
+A = np.random.randn(dim, dim) + 1j * np.random.randn(dim, dim)
+H_np = (A + A.conj().T) / 2
+
+# --- Convert to Pauli decomposition ---
+H_op = MatrixOp(H_np)
+H_pauli = PauliSumOp.from_operator(Operator(H_op))
+
+# --- Exact eigenvalues for comparison ---
+eigvals = np.linalg.eigvalsh(H_np)
+exact_energy = np.min(eigvals)
+
+# --- Ansatz circuit ---
+ansatz = TwoLocal(n_qubits, rotation_blocks=['ry', 'rz'],
+                  entanglement_blocks='cz', entanglement='full', reps=2)
+print("\nAnsatz circuit:")
+print(ansatz.decompose().draw())
+
+# --- Track convergence ---
+energy_log = []
+
+def store_intermediate_result(eval_count, params, energy, stddev):
+    energy_log.append(energy)
+
+# --- Optimizer and simulator ---
+optimizer = COBYLA(maxiter=200)
+backend = Aer.get_backend('aer_simulator_statevector')
+quantum_instance = QuantumInstance(backend)
+
+# --- Run VQE ---
+vqe = VQE(ansatz=ansatz,
+          optimizer=optimizer,
+          quantum_instance=quantum_instance,
+          callback=store_intermediate_result)
+
+result = vqe.compute_minimum_eigenvalue(operator=H_pauli)
+vqe_energy = np.real(result.eigenvalue)
+
+# --- Output results ---
+print("\n=== Results ===")
+print(f"Exact ground energy: {exact_energy:.6f}")
+print(f"VQE estimated ground energy: {vqe_energy:.6f}")
+print("Full spectrum:", np.round(eigvals, 6))
+
+# --- Plot convergence ---
+plt.figure(figsize=(6,4))
+plt.plot(energy_log, marker='o')
+plt.xlabel("VQE iteration")
+plt.ylabel("Energy estimate")
+plt.title("VQE Convergence on Random 8×8 Hermitian Hamiltonian")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+Random Hermitian matrix: size 8 \times 8 → 3 qubits
+Pauli decomposition: PauliSumOp.from_operator() converts the dense matrix to a sum of Pauli strings
+TwoLocal ansatz: ry, rz, and cz with 2 layers
+Callback tracking: logs energy per iteration
+Plots: 
+Convergence of VQE
+Circuit diagram of the ansatz
+
+
+
+

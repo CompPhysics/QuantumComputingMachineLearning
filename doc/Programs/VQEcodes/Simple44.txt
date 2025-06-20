@@ -1,0 +1,74 @@
+
+Uses a random 4×4 Hermitian matrix as the Hamiltonian
+Maps this matrix to a 2-qubit operator (since 2^2 = 4)
+Implements VQE using: 
+A TwoLocal ansatz
+The statevector simulator
+A classical optimizer (COBYLA)
+
+Estimates the ground state energy of the matrix via VQE
+Compares the result to the exact lowest eigenvalue from NumPy
+
+
+
+import numpy as np
+from qiskit import Aer
+from qiskit.opflow import MatrixOp
+from qiskit.circuit.library import TwoLocal
+from qiskit.algorithms import VQE
+from qiskit.algorithms.optimizers import COBYLA
+from qiskit.utils import QuantumInstance
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Step 1: Generate a random 4x4 Hermitian matrix
+A = np.random.randn(4, 4) + 1j * np.random.randn(4, 4)
+H_np = (A + A.conj().T) / 2  # Hermitian
+
+# Step 2: Wrap it as a Qiskit MatrixOp (2 qubits)
+hamiltonian = MatrixOp(H_np)
+
+# Step 3: Define a 2-qubit variational ansatz
+ansatz = TwoLocal(num_qubits=2, rotation_blocks=['ry', 'rz'],
+                  entanglement_blocks='cz', reps=1)
+
+# Step 4: Set up the VQE algorithm
+optimizer = COBYLA(maxiter=200)
+backend = Aer.get_backend('aer_simulator_statevector')
+vqe = VQE(ansatz=ansatz,
+          optimizer=optimizer,
+          quantum_instance=QuantumInstance(backend))
+
+# Step 5: Run VQE
+result = vqe.compute_minimum_eigenvalue(operator=hamiltonian)
+vqe_energy = np.real(result.eigenvalue)
+
+# Step 6: Compute exact eigenvalues for comparison
+true_eigenvalues = np.linalg.eigvalsh(H_np)
+exact_ground_energy = np.min(true_eigenvalues)
+
+# Step 7: Print results
+print("\n=== VQE Result ===")
+print(f"VQE estimated ground state energy: {vqe_energy:.6f}")
+print(f"Exact ground state energy        : {exact_ground_energy:.6f}")
+print("Full spectrum:", np.round(true_eigenvalues, 6))
+
+
+
+
+
+=== VQE Result ===
+VQE estimated ground state energy: -4.152306
+Exact ground state energy        : -4.152306
+Full spectrum: [-4.152306 -1.431249  0.566301  3.657211]
+
+
+
+
+
+MatrixOp lets you plug in any matrix (like a Hermitian Hamiltonian) without constructing a Pauli decomposition.
+Only 2 qubits are needed since the matrix is 4×4.
+This example is useful for testing VQE convergence on arbitrary problem Hamiltonians.
+
+
