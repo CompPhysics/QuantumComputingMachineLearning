@@ -1,0 +1,145 @@
+
+Variational Quantum Eigensolver (VQE) Implementation (3 Qubits)
+
+
+The Variational Quantum Eigensolver (VQE) is a hybrid quantum-classical algorithm that approximates the ground-state energy of a Hamiltonian by preparing a parameterized quantum state (ansatz) and minimizing the expectation value ⟨ψ(θ)|H|ψ(θ)⟩ .  We represent a system of 3 qubits as an 8-dimensional complex statevector (since n qubits span a 2^n-dimensional Hilbert space ).  In code we build a random 8×8 Hermitian matrix H = (A + A†)/2 (so that its eigenvalues are real) and use the initial state |000⟩ = [1,0,…,0].
+
+
+Variational Ansatz (RY + CNOT)
+
+
+We manually construct a variational ansatz with layers of single-qubit Ry rotations and CNOT entangling gates.  Single-qubit rotations plus CNOT form a universal gate set , meaning any state can in principle be prepared with such gates.  Concretely, we use two layers of Ry(θ) on each qubit, with CNOTs connecting qubit 0→1 and qubit 1→2 between layers.  In simulation, each gate is represented by a matrix acting on the statevector .  For example, the Ry(θ) gate has matrix
+Ry(θ) = [[cos(θ/2), -sin(θ/2)],
+         [sin(θ/2),  cos(θ/2)]]
+and the CNOT flips the target qubit when the control is |1⟩.  We apply these gates by constructing the appropriate multi-qubit operator (via tensor products or index manipulation) and multiplying it with the statevector .  The ansatz thus has 6 parameters (three angles per layer).
+
+
+Energy Expectation and Optimization
+
+
+For a given parameter vector θ, we prepare the state ψ(θ) by applying the ansatz gates to |000⟩.  We compute the energy expectation as
+E(θ) = ⟨ψ(θ)| H |ψ(θ)⟩ = ψ(θ)† · (H ψ(θ)) 
+(which returns a real number since H is Hermitian).  We then use SciPy’s COBYLA optimizer to minimize E over the parameters  .  A callback function records the energy at each iteration, so we can track convergence.  COBYLA is a suitable choice here (as in many VQE examples ), though any gradient-free optimizer could be used.
+
+
+Results and Convergence
+
+
+The optimization yields an estimate of the ground-state energy.  We record the energy at each iteration and plot it to check convergence. For illustration, a typical VQE convergence curve (energy vs. iteration) is shown below:
+
+Figure: Example VQE energy convergence (energy expectation ⟨ψ|H|ψ⟩ vs. iteration) during optimization.
+
+Finally, a text summary of the ansatz circuit is printed. For example:
+Ansatz circuit (text form):
+  Layer 1: RY(θ0) on qubit 0, RY(θ1) on qubit 1, RY(θ2) on qubit 2
+           CNOT(0→1), CNOT(1→2)
+  Layer 2: RY(θ3) on qubit 0, RY(θ4) on qubit 1, RY(θ5) on qubit 2
+           CNOT(0→1), CNOT(1→2)
+Below is a complete Python implementation. It is modular and documented with comments for clarity.
+import numpy as np
+from scipy.optimize import minimize
+
+# --- Generate a random Hermitian Hamiltonian (8x8) ---
+np.random.seed(0)
+A = np.random.randn(8,8) + 1j*np.random.randn(8,8)
+H = (A + A.conj().T) / 2    # Hermitian Hamiltonian
+
+# --- Define single-qubit and two-qubit gates ---
+def ry(theta):
+    """2x2 rotation around Y by angle theta."""
+    return np.array([[np.cos(theta/2), -np.sin(theta/2)],
+                     [np.sin(theta/2),  np.cos(theta/2)]], dtype=complex)
+
+def apply_single_qubit_gate(state, gate, target, n_qubits=3):
+    """Apply a single-qubit gate to 'target' qubit of the statevector."""
+    # Build full operator as tensor product of identities and the gate
+    op = 1
+    for q in range(n_qubits):
+        op = np.kron(op, gate if q==target else np.eye(2))
+    return op.dot(state)
+
+def apply_cnot(state, control, target, n_qubits=3):
+    """Apply a CNOT gate with given control and target on the statevector."""
+    new_state = np.zeros_like(state)
+    for idx, amp in enumerate(state):
+        bits = list(map(int, format(idx, f'0{n_qubits}b')))
+        # If control qubit is |1>, flip the target bit
+        if bits[control] == 1:
+            bits[target] ^= 1
+        new_idx = int("".join(str(b) for b in bits), 2)
+        new_state[new_idx] += amp
+    return new_state
+
+# --- Ansatz state preparation ---
+def prepare_state(params):
+    """
+    Prepare the 3-qubit statevector from parameters.
+    Ansatz: 2 layers of Ry + chain of CNOTs.
+    params: list or array of length 6 [θ0,...,θ5].
+    """
+    # Start in |000>
+    state = np.zeros(8, dtype=complex)
+    state[0] = 1.0
+    
+    # Layer 1: RY on each qubit 0,1,2
+    for q in range(3):
+        state = apply_single_qubit_gate(state, ry(params[q]), q)
+    # Entangling CNOTs
+    state = apply_cnot(state, control=0, target=1)
+    state = apply_cnot(state, control=1, target=2)
+    
+    # Layer 2: another RY on each qubit
+    for q in range(3):
+        state = apply_single_qubit_gate(state, ry(params[3+q]), q)
+    # Another round of CNOTs
+    state = apply_cnot(state, control=0, target=1)
+    state = apply_cnot(state, control=1, target=2)
+    
+    return state
+
+# --- Energy expectation function ---
+def energy_expectation(params):
+    """
+    Return the expectation value <psi(θ)|H|psi(θ)> for the ansatz state.
+    """
+    psi = prepare_state(params)
+    # ⟨psi|H|psi⟩ = psi.conj().T @ H @ psi
+    return np.real(np.vdot(psi, H.dot(psi)))
+
+# --- Optimization with COBYLA and convergence tracking ---
+energy_history = []  # to record energy at each iteration
+
+def callback(params):
+    """Callback to store energy at each iteration."""
+    energy_history.append(energy_expectation(params))
+
+# Random initial parameters (e.g., in [0,2π])
+init_params = np.random.rand(6) * 2*np.pi
+energy_history.append(energy_expectation(init_params))  # record initial energy
+
+res = minimize(energy_expectation, init_params, method='COBYLA',
+               callback=callback, options={'maxiter': 200, 'tol': 1e-6})
+
+print("Optimization success:", res.success)
+print("Minimum energy found:", res.fun)
+print("Ground-state eigenvalue (True):", np.min(np.linalg.eigvalsh(H)))
+
+# --- Display convergence curve (matplotlib can be used here) ---
+import matplotlib.pyplot as plt
+
+plt.plot(energy_history, marker='o')
+plt.title("VQE Convergence (Energy vs Iteration)")
+plt.xlabel("Iteration")
+plt.ylabel("Energy ⟨ψ|H|ψ⟩")
+plt.grid(True)
+plt.show()
+
+# --- Print ansatz structure (text) ---
+print("\nAnsatz circuit (text form):")
+print("  Layer 1: RY(θ0) on qubit 0, RY(θ1) on qubit 1, RY(θ2) on qubit 2")
+print("           CNOT(0→1), CNOT(1→2)")
+print("  Layer 2: RY(θ3) on qubit 0, RY(θ4) on qubit 1, RY(θ5) on qubit 2")
+print("           CNOT(0→1), CNOT(1→2)")
+Explanation of key steps: We generate a random Hermitian H and start in |000⟩.  The ansatz state is built by applying two layers of Ry rotations and CNOTs (as described above) using NumPy arrays and kron/indexing.  The energy ⟨ψ|H|ψ⟩ is computed by a vector-matrix-vector multiplication.  We minimize this energy using scipy.optimize.minimize(method='COBYLA') , storing the energy after each step.  Finally, we plot the recorded energy vs. iteration (as shown) and print a textual description of the ansatz circuit. This fully implements VQE without relying on Qiskit or PennyLane.
+
+Sources: The VQE method and energy-minimization principle are discussed in standard references .  Quantum states are vectors and gates are matrices in simulation , and using single-qubit Ry rotations with CNOTs is a universal ansatz .  We use the COBYLA optimizer from SciPy as recommended for VQE tasks .
