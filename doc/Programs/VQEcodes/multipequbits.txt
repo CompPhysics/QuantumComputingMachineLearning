@@ -1,0 +1,131 @@
+Let’s say you want to compute the expectation value of the two-qubit Pauli operator:
+
+
+
+\langle \psi(\boldsymbol{\theta}) | X \otimes Y | \psi(\boldsymbol{\theta}) \rangle
+
+
+
+This operator acts non-trivially on both qubits, so:
+
+
+
+You must measure both qubits,
+And you must rotate their measurement bases so you’re measuring in the X and Y bases, respectively.
+
+
+
+
+
+
+
+Start in standard basis: All measurements are by default in the computational basis (Z-basis).
+Change basis for X and Y:
+To measure X, apply a Hadamard gate (H):
+H |0\rangle = |+\rangle, H |1\rangle = |-\rangle
+To measure Y, apply S† followed by H:
+H S^\dagger |0\rangle = |+_y\rangle, \quad H S^\dagger |1\rangle = |- _y\rangle
+
+Measure both qubits in Z basis, then multiply results:
+Convert bitstrings to eigenvalues: 0 \mapsto +1, 1 \mapsto -1
+Compute average of product (qubit 0 value × qubit 1 value)
+
+
+
+
+
+
+
+
+
+
+✅ Qiskit example
+
+
+
+from qiskit import QuantumCircuit, Aer, transpile
+from qiskit.primitives import Sampler
+import numpy as np
+
+# Create a simple 2-qubit state for testing
+qc = QuantumCircuit(2)
+qc.h(0)
+qc.cx(0, 1)  # Create Bell state (|00> + |11>)/sqrt(2)
+
+# Rotate to X⊗Y measurement basis
+qc.h(0)                 # Measure X on qubit 0
+qc.sdg(1); qc.h(1)      # Measure Y on qubit 1
+
+# Add measurement
+qc.measure_all()
+
+# Sample
+sampler = Sampler()
+result = sampler.run(qc, shots=1000).result()
+counts = result.quasi_dists[0]
+
+# Map bitstrings to +1/-1 eigenvalues
+def pauli_xy_expectation(counts):
+    expval = 0
+    for bitstring, prob in counts.items():
+        # Qiskit stores bitstring as little-endian
+        b0 = 1 if bitstring[-1] == '0' else -1  # qubit 0 (X)
+        b1 = 1 if bitstring[-2] == '0' else -1  # qubit 1 (Y)
+        expval += b0 * b1 * prob
+    return expval
+
+print("Estimated ⟨X ⊗ Y⟩:", pauli_xy_expectation(counts))
+💡 Expected result: ~0 for Bell state, because ⟨X⊗Y⟩ vanishes due to symmetry.
+
+
+
+
+
+
+
+✅ PennyLane version
+
+
+
+import pennylane as qml
+from pennylane import numpy as np
+
+dev = qml.device("default.qubit", wires=2, shots=1000)
+
+@qml.qnode(dev)
+def xy_expectation():
+    # Prepare Bell state
+    qml.Hadamard(0)
+    qml.CNOT([0, 1])
+    # Measure X⊗Y
+    return qml.expval(qml.PauliX(0) @ qml.PauliY(1))
+
+print("Estimated ⟨X ⊗ Y⟩:", xy_expectation())
+This uses PennyLane’s abstract Pauli operators and handles basis rotation for you internally.
+
+
+
+
+
+
+
+
+🧠 Summary
+
+
+
+Goal
+
+What you do
+
+Measure ⟨X⟩
+
+Apply H, then measure
+
+Measure ⟨Y⟩
+
+Apply S† + H, then measure
+
+Measure ⟨X ⊗ Y⟩
+
+Apply above rotations to both qubits, measure both, and post-process
