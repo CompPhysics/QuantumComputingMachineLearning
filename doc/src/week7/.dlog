@@ -422,3 +422,206 @@ states, again as expected due to the ratio of the interaction matrix
 elements and the single-particle energies.
 
 
+*** error: more than one subsection in a slide (insert missing !split):
+% !split
+\subsection{Quantum computing and solving  the eigenvalue problem for the Lipkin model}
+
+We will study a simpler variant of the Lipkin model without the $W$-term and a total spin of $J=1$ only as maximum value of the spin.
+This corresponds to a system with $N=2$ particles (fermions in our case).
+Our Hamiltonian is given by the quasispin operators (see below) 
+\[
+     \hat{H} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
+\]
+
+As discussed earlier
+the quasispin operators act like lowering and raising angular momentum
+operators.
+
+With these properties we can calculate the Hamiltonian
+matrix for the Lipkin model by computing the various matrix elements
+\begin{equation}
+\langle JJ_z|H|JJ_z'\rangle,
+\end{equation}
+where the non-zero elements are given by
+\[
+\begin{split}
+\langle JJ_z|H|JJ_z'\rangle & = \epsilon J_z\\
+\langle JJ_z|H|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H|JJ_z'\rangle \\ &= -\frac{1}{2}VC,
+\end{split}
+\]
+where $C$ is the Clebsch-Gordan coefficients (from the raising and lowering operators) one gets when
+$J_{\pm}^2$ operates on the state $|JJ_z\rangle$.  Using the above
+definitions we can calculate the exact solution to the Lipkin model.
+
+With the $V$-interaction terms, we obtain the following Hamiltonian matrix
+\begin{equation}
+\begin{pmatrix}-\epsilon & 0 & -V\\
+ 0&0&0\\
+ -V&0&\epsilon
+\end{pmatrix}
+\end{equation}
+
+\subsection{Quantum Circuit, rewriting the Lipkin model in terms of Pauli matrices}
+
+Before we proceed however, we need to rewrite the quasispin operators in terms of Pauli spin matrices/operators.
+
+We take the liberty here of reminding you of some of the derivations done previously.
+
+We defined the number operator as
+\[
+N=\sum_{n\sigma}a^\dagger_{n\sigma}a_{n\sigma},
+\]
+
+which commutes with the Lipkin Hamiltonian. This can be seen by
+examining the Lipkin model Hamiltonian and noticing that the one-body
+part simply counts particles while the two-body term moves particles
+in pairs. Thus, the Hamiltonian conserves particle number. To find
+more symmetries we rewrote the Lipkin Hamiltonian in terms of $SU(2)$ quasispin
+operators
+\begin{align}
+H = \epsilon J_z + \frac{1}{2}V(J^2_++J^2_-),
+\end{align}
+via the mappings
+\[
+J_z=\sum_{n}j_z^{(n)},
+\]
+and
+\[
+J_\pm=\sum_nj^{(n)}_{\pm},
+\]
+where we have the onebody operators
+\[
+j_z^{(n)}=\frac{1}{2}\sum_{\sigma}\sigma a^\dagger_{n\sigma}a_{n\sigma},
+\]
+and
+\[
+j^{(n)}_{\pm}=a^\dagger_{n\pm}a_{n\mp}.
+\]
+
+These operators obey the $SU(2)$ commutation relations
+
+\[
+[J_+,J_-]=2J_z,
+\]
+and
+\[
+[J_z,J_\pm]=\pm J_\pm.
+\]
+Here the ladder operators are defined as $J_{\pm}= J_x\pm iJ_y$. With this rewriting, we can see that the total spin operator $J^2$, which is defined as 
+\[
+J^2= J^2_x+J^2_y+J^2_z =
+\frac{1}{2}\{J_+,J_-\}+J_z^2,
+\]
+commutes with the Hamiltonian since the Hamiltonian.
+We note also that the rotation operator
+\[
+R=e^{i\phi J_z},
+\]
+commutes with the Hamiltonian, which can be explained as follows. Writing $J_z$ as
+\[
+J_z=\frac{1}{2}(N_+-N_-),
+\]
+where $N_\pm=\sum_{n\pm}a^\dagger_{n\pm}a_{n\pm}$, allows us to see that it measures half the difference between the number of particles in the upper and lower levels. Thus, the possible eigenvalues $r$ of the signature operator are
+\begin{align}
+r=+1, & j_z=2n \\
+r=+i, & j_z=2n+\frac{1}{2} \\
+r=-1, & j_z=2n+1 \\
+r=-i, & j_z=2n+\frac{3}{2} \\
+\end{align}
+
+for $n\in\mathbb{Z}$. Note that $r$ is real or imaginary if the number
+of particles $N$ is even or odd, respectively. Since, as discussed
+above, the Lipkin Hamiltonian conserves $N$, $r$ cannot jump between
+being real and imaginary. Additionally, because particles must be
+moved in pairs, and $J_z$ measures half the difference between
+particles in the upper and lower levels, $j_z$ can only change by as
+
+\[
+j_z\rightarrow \frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
+\]
+or $j_z\rightarrow J_z\pm2n$.
+
+To solve the Lipkin model with a quantum computer, the first step is
+to map the system to a set of qubits. We will restrict ourselves here
+to the half-filled case where the number of particles $N$ equals the
+degeneracy of the states $\Omega$. One could assign each possible
+state $(n,\sigma)$ a qubit such that the qubit being in the state
+$\vert 1\rangle$ or $\vert 0\rangle$ would imply that the state
+$(n,\sigma)$ is occupied or unoccupied, respectively. This mapping
+scheme (which we will call occupation mapping) requires 2$\Omega$
+qubits.
+
+However, because there are only two energy levels in the Lipkin model,
+any other natural mapping is possible. In this mapping scheme (which
+we will call level mapping) each doublet ($(n,+1)$, $(n,-1)$) would be
+assigned a qubit such that the qubit being in the state $\vert 0\rangle$ or
+$\vert 1\rangle$ would imply that the particle is in the $(n,+1)$ or $(n,-1)$
+state, respectively. Note that these are the only two possible
+configurations of the doublet as we are restricting ourselves to the
+half-filled case and the Lipkin Hamiltonian only moves particles
+between energy levels, not degenerate states. Thus the level mapping
+only requires $\Omega$ qubits which is half that of the occupation
+mapping.
+
+The Hamiltonian takes the form
+
+\begin{align}
+H=\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
+\end{align}
+
+Plugging the mapping from the total $J$ operators to the individual one-body $j$ operators yields
+
+\begin{align}
+H &= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\left[\left(\sum_nj^{(n)}_{+}\right)^2+\left(\sum_nj^{(n)}_{-}\right)^2\right]
+\\
+&= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\sum_{n,m}\left(j^{(n)}_+j^{(m)}_++j^{(n)}_-j^{(m)}_-\right)
+\\
+&= \epsilon\sum_{n}j_z^{(n)} + 2V\sum_{n<m}\left(j^{(n)}_xj^{(m)}_x-j^{(n)}_yj^{(m)}_y\right),
+\end{align}
+where we have used the definitions
+\[
+j_{\pm}^{(n)}=j_x^{(n)}\pm ij_y^{(n)}.
+\]
+To convert to Pauli matrices, we make the transformations
+\[
+j_x^{(n)} \rightarrow X_n/2,
+\]
+and
+\[
+j_y^{(n)} \rightarrow Y_n/2,
+\]
+and finally
+\[
+j_z^{(n)} \rightarrow Z_n/2,
+\]
+which preserve the above $SU(2)$  commutation relations.
+The factor of $1/2$
+is due to the eigenvalues of the Pauli matrices being $\pm 1$
+while we are dealing with spin $1/2$ particles.
+
+This transforms our Hamiltonian into
+\[
+H=\frac{1}{2}\epsilon\sum_{k=1}^nZ_k+\frac{1}{2}V\sum_{n\neq j=1}^N(X_kX_j-Y_kY_j).
+\]
+
+With this form, we can clearly see that the first (one-body) term in
+the Hamiltonian returns the energy $-\epsilon/2$ or $+\epsilon/2$ if
+the qubit representing the particle of a doublet is in the ground
+($\vert 1\rangle$) or excited ($\vert 0\rangle$) state,
+respectively. The action of the second (two-body) term in the
+Hamiltonian can be determined by noting that
+\begin{align}
+\frac{1}{2}(XX-YY)\vert 00\rangle &= \vert 11\rangle,
+\\
+\frac{1}{2}(XX-YY)\vert 01\rangle &= 0,
+\\
+\frac{1}{2}(XX-YY)\vert 10\rangle &= 0,
+\\
+\frac{1}{2}(XX-YY)\vert 11\rangle &= \vert 00\rangle.
+\end{align}
+
+That is, the two-body term moves a pair of particles between the
+ground states $\vert 00\rangle$ and the excited states $\vert
+11\rangle$ of their respective doublets.
+
+
