@@ -26,9 +26,9 @@ def measure_xx(params):
 @qml.qnode(dev)
 def measure_yy(params):
     ansatz(params)
-    qml.S(0).inv()
+    qml.adjoint(qml.S(0))
     qml.Hadamard(0)
-    qml.S(1).inv()
+    qml.adjoint(qml.S(1))
     qml.Hadamard(1)
     return qml.expval(qml.PauliZ(0) @ qml.PauliZ(1))
 
