@@ -1,0 +1,187 @@
+From: Morten Hjorth-Jensen <morten.hjorth-jensen@fys.uio.no>
+Subject: Code
+Date: June 25, 2025 at 2:43:08 PM GMT+2
+To: Morten Hjorth-Jensen <morten.hjorth-jensen@fys.uio.no>
+
+ 
+Classical Simulation of the HHL Quantum Algorithm
+ 
+ 
+The Harrow–Hassidim–Lloyd (HHL) algorithm solves a linear system A\vec{x}=\vec{b} by preparing a quantum state proportional to A^{-1}\ket{b}.  In our classical simulation we pick a small Hermitian matrix A and normalized vector \ket{b} (so that \|\ket{b}\|=1) .  For example, consider a 2\times2 Hermitian A with known eigenvalues \lambda_1,\lambda_2\in(0,1) and an input vector b.  The steps of HHL are:
+ 
+	•	(State preparation) Load \ket{b} into the main register.
+	•	(Phase estimation) Use Quantum Phase Estimation (QPE) on the unitary e^{2\pi i A} to encode eigenvalues into an auxiliary register .
+	•	(Eigenvalue inversion) Perform controlled rotations on another ancilla qubit, with angles \theta_j = 2\arcsin(C/\lambda_j) (where C is a normalization constant) to effect amplitudes proportional to 1/\lambda_j .
+	•	(Uncompute QPE) Apply the inverse QPE (inverse QFT and inverse controlled unitaries) to disentangle the eigenvalue register .
+	•	(Measurement) Measure the ancilla.  Upon obtaining \ket{1}, the main register is left in the (normalized) solution state \ket{x}\propto A^{-1}\ket{b} .
+ 
+ 
+Below we implement these steps with NumPy/SciPy, simulating each quantum operation on the full state vector.  We avoid any external quantum SDK.  (All calculations are exact for this small example.)
+import numpy as np
+from scipy.linalg import expm
+ 
+# --- Problem setup: Define A (2x2 Hermitian) and b (normalized) ---
+P = np.array([[1/np.sqrt(2),  1/np.sqrt(2)],
+              [1/np.sqrt(2), -1/np.sqrt(2)]], dtype=complex) 
+# Diagonal eigenvalues 0.25 and 0.75
+D = np.diag([0.25, 0.75])
+A = P @ D @ P.conj().T             # A is Hermitian with eigenvalues 0.25, 0.75
+b = np.array([1.0, 2.0], dtype=complex)
+b = b / np.linalg.norm(b)         # normalize |b> [oai_citation:5‡docs.classiq.io](https://docs.classiq.io/latest/user-guide/practice/hhl_workshop/hhl_workshop/#:~:text=For%20simplicity%2C%20the%20demo%20below,the%20end%20of%20this%20demo)
+# Classical solution (for comparison, unnormalized)
+x_classical = np.linalg.solve(A, b)
+ 
+# Check Hermitian and eigenvalues (sanity)
+assert np.allclose(A, A.conj().T), "A must be Hermitian"
+eigvals, eigvecs = np.linalg.eigh(A)
+print("Eigenvalues of A:", eigvals)
+ 
+# --- Compute and display the classical solution ---
+print("Classical solution x (unnormalized):", x_classical)
+We normalize \ket{b} so it becomes a valid quantum state .  In our example A has eigenvalues \lambda_1=0.25,\lambda_2=0.75.  The classical solution is x=A^{-1}b, which we compute and show for reference.
+# Solve Ax = b classically for comparison
+x_classical = np.linalg.solve(A, b)
+print("Classical solution (unnormalized):", x_classical)
+ 
+State Preparation
+ 
+ 
+We start with the joint state \ket{0}{\text{phase}}\ket{0}{\text{ancilla}}\ket{b}_{\text{main}}.  Here we use 2 qubits in the “phase register” (to store eigenvalue phases), 1 qubit as an ancilla for the rotation, and 1 qubit as the main register for \ket{b}.  The combined state vector has dimension 2^4=16.  We initialize:
+ 
+	1.	Phase register in \ket{00} (dimension 4, basis vector at index 0).
+	2.	Main register in the amplitude-encoded state \ket{b}.
+	3.	Ancilla in \ket{0}.
+ 
+# Build the initial quantum state |00>_phase ⊗ |b>_main ⊗ |0>_ancilla
+phase0 = np.zeros(4, dtype=complex); phase0[0] = 1.0  # |00> in 2-qubit space (dim=4)
+anc0 = np.array([1.0+0j, 0+0j])  # single-qubit |0>
+state = np.kron(phase0, np.kron(b, anc0))
+At this point the state is \ket{00}{\text{phase}}\otimes\ket{b}{\text{main}}\otimes\ket{0}_{\text{anc}}.
+ 
+ 
+Quantum Phase Estimation (QPE)
+ 
+ 
+We apply Hadamard gates on each of the 2 phase qubits to create a uniform superposition over \ket{0},\ket{1},\ket{2},\ket{3} (binary 00,01,10,11) .  In code we do:
+# Apply H on both phase qubits: (H⊗H⊗I⊗I) on 4-qubit state
+H = np.array([[1,1],[1,-1]], dtype=complex)/np.sqrt(2)
+I2 = np.eye(2, dtype=complex)
+U_hadamard = np.kron(np.kron(H,H), np.kron(I2, I2))
+state = U_hadamard @ state
+Next we implement the controlled unitaries for phase estimation.  For QPE we use the unitary U=e^{2\pi iA}.  We precompute U and U^2 (since 2^2=4 basis states for 2 qubits):
+# Controlled U-rotations: construct U = exp(2πi A) and U^2 = (exp(2πi A))^2
+U = expm(2j * np.pi * A)
+U2 = expm(2j * np.pi * A * 2)  # which equals U^2
+ 
+# Controlled-U^2 by phase qubit 0 (MSB): if bit0=1 apply U2 on main
+P0 = np.array([[1,0],[0,0]], dtype=complex); P1 = np.array([[0,0],[0,1]], dtype=complex)
+CU2 = np.kron(P0, np.kron(I2, np.kron(I2, I2))) + np.kron(P1, np.kron(I2, np.kron(U2, I2)))
+state = CU2 @ state
+ 
+# Controlled-U^1 by phase qubit 1 (LSB): if bit1=1 apply U on main
+CU1 = np.kron(np.kron(I2, P0), np.kron(I2, I2)) + np.kron(np.kron(I2, P1), np.kron(U, I2))
+state = CU1 @ state
+Each controlled gate entangles the phase register with the main register so that eigenstates \ket{u_j} pick up a phase e^{2\pi i \lambda_j} encoded in the phase register.  Finally we apply the inverse Quantum Fourier Transform (QFT) on the phase register to complete the phase estimation :
+# Inverse QFT on 2 phase qubits (4x4 FFT matrix, conjugate-transpose of QFT)
+N = 4
+F = np.zeros((N,N), complex)
+for k in range(N):
+    for l in range(N):
+        F[k,l] = np.exp(2j*np.pi*k*l/N)
+F = F/np.sqrt(N)
+F_dag = F.conj().T
+IQFT = np.kron(F_dag, np.kron(I2, I2))
+state = IQFT @ state
+After inverse QFT, ideally the phase register holds \ket{\lambda_j 00\dots} in binary and the main register holds the corresponding eigenvector components of \ket{b}.
+ 
+ 
+Controlled Rotation (Eigenvalue Inversion)
+ 
+ 
+Now we perform rotations on the ancilla qubit controlled by the phase register.  The goal is to encode 1/\lambda_j into amplitudes.  We compute the eigenvalues \lambda_1, \lambda_2 of A and choose a constant C\le\min(\lambda_j).  We set rotation angles \theta_j=2\arcsin(C/\lambda_j) so that \sin(\theta_j/2)=C/\lambda_j .  In our example \lambda_1=0.25,\lambda_2=0.75 and C=0.25.  The two-qubit phase states k=1 (binary 01) corresponds to \lambda_1 and k=3 (11) to \lambda_2.  We build a controlled-R_y operation on the ancilla:
+# Compute eigenvalues and rotation angles
+eigvals, _ = np.linalg.eigh(A)
+lam1, lam2 = eigvals
+C = lam1  # smallest eigenvalue = 0.25
+theta1 = 2*np.arcsin(C/lam1)
+theta2 = 2*np.arcsin(C/lam2)
+ 
+# Rotation matrices on ancilla
+def R_y(angle):
+    return np.array([[np.cos(angle/2), -np.sin(angle/2)],
+                     [np.sin(angle/2),  np.cos(angle/2)]], dtype=complex)
+R1 = R_y(theta1)
+R2 = R_y(theta2)
+ 
+# Build controlled-Ry: project phase states and apply R_y or I
+rot_op = np.zeros((16,16), complex)
+for k in range(4):
+    # Projector |k><k| on 2-qubit phase register
+    e = np.zeros(4); e[k]=1
+    Pk = np.outer(e,e)
+    if k == 1:
+        rot_op += np.kron(Pk, np.kron(I2, R1))
+    elif k == 3:
+        rot_op += np.kron(Pk, np.kron(I2, R2))
+    else:
+        rot_op += np.kron(Pk, np.kron(I2, I2))
+state = rot_op @ state
+This entangles the ancilla with amplitudes proportional to 1/\lambda_j .
+ 
+ 
+Inverse Phase Estimation (Uncompute)
+ 
+ 
+We now “uncompute” the phase register by reversing QPE.  We apply the forward QFT on the phase qubits, then controlled unitaries U^{-1} in reverse order, and finally Hadamards on the phase bits:
+# Forward QFT on phase
+QFT = np.kron(F, np.kron(I2, I2))
+state = QFT @ state
+ 
+# Controlled U^{-1}: U_inv = U†, U2_inv = (U2)†
+U_inv = U.conj().T
+U2_inv = U2.conj().T
+CU1_inv = np.kron(np.kron(I2, P0), np.kron(I2, I2)) + np.kron(np.kron(I2, P1), np.kron(U_inv, I2))
+state = CU1_inv @ state
+CU2_inv = np.kron(P0, np.kron(I2, np.kron(I2, I2))) + np.kron(P1, np.kron(I2, np.kron(U2_inv, I2)))
+state = CU2_inv @ state
+ 
+# Hadamards on phase qubits to complete inverse QPE
+state = np.kron(np.kron(H,H), np.kron(I2,I2)) @ state
+After this uncomputation, the phase register should return to \ket{00} and the solution information is left in the amplitudes of the main and ancilla.
+ 
+ 
+Measurement and Solution Extraction
+ 
+ 
+Finally, we measure the ancilla qubit.  Conditioning on the outcome \ket{1}, the state of the main register is proportional to
+\sum_j \beta_j \frac{C}{\lambda_j}\ket{u_j},
+which is the solution \ket{x}=A^{-1}\ket{b} up to normalization .  In our simulation, we simply extract the portion of the final state with ancilla = 1:
+# Extract main register state for ancilla = 1
+final_state = state
+main_dim = 2
+solution_state = np.zeros(main_dim, complex)
+for idx, amp in enumerate(final_state):
+    anc_bit = idx % 2
+    if anc_bit == 1:
+        # main index is bit 2 of idx in our ordering
+        main_index = (idx // 2) % 2
+        solution_state[main_index] += amp
+ 
+# Normalize the resulting main register state
+solution_state /= np.linalg.norm(solution_state)
+print("HHL result state |x>:", np.round(solution_state, 3))
+print("Normalized classical x:", np.round(x_classical/np.linalg.norm(x_classical), 3))
+We find that the simulated quantum state matches the classical normalized solution.  For example, our output might be:
+HHL result state |x>: [0.625+0.j 0.781+0.j]
+Normalized classical x: [0.625+0.j 0.781+0.j]
+This confirms the quantum algorithm (simulated classically) successfully prepared the solution state.
+ 
+ 
+Assumptions and Limitations
+ 
+ 
+This simulation is purely classical and only feasible for tiny systems.  We explicitly chose a 2\times2 A with eigenvalues in (0,1) so that the QPE phases are exact.  In practice, HHL requires A to be sparse and well-conditioned; the exponential speedup only holds under these conditions .  Moreover, a real quantum device would not directly give the full vector \vec{x}; it yields a state \ket{x} from which one can only efficiently estimate certain global properties (like inner products) rather than read out all entries .  In our classical simulation we simply compute amplitudes and compare them, bypassing the need for measurement statistics.  Finally, we ignored all noise and assume ideal gates (e.g. exact QFT and Hamiltonian simulation).  Despite these simplifications, the script above illustrates each conceptual step of HHL in matrix form.
+ 
+References: The HHL algorithm uses QPE to encode eigenvalues and controlled rotations to invert them, as described in standard references .  (See also the original HHL paper and reviews for more details.) The simulation above follows these steps exactly, without relying on quantum libraries.
+
+Morten Hjorth-Jensen, Michigan State University and University of Oslo, Norway. http://mhjgit.github.io/info/doc/web
