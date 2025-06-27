@@ -1,0 +1,111 @@
+\documentclass{beamer}
+\usepackage{amsmath,amsthm,amsfonts}
+\title{Quantum Operations and Kraus Representation}
+\author{Graduate Lecture on Quantum Information}
+\date{\today}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Motivation and Background}
+\begin{frame}{Motivation: Beyond Unitary Evolution}
+ \begin{itemize}
+   \item In closed quantum systems, evolution is unitary: $\rho\to U\rho U^\dagger$. However, real systems interact with environments, undergo measurements, or experience noise, so evolution is more general [oai_citation:0‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_operation#:~:text=In%20quantum%20mechanics%20%2C%20a,is%20called%20a%20%2058).
+   \item A **quantum operation** (or **quantum channel**) is a mathematical map describing the general transformation of a quantum state including open-system dynamics [oai_citation:1‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_operation#:~:text=In%20quantum%20mechanics%20%2C%20a,is%20called%20a%20%2058) [oai_citation:2‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=where%20T%20is%20a%20unitary,A%29%20%11).
+   \item Such maps must be **completely positive and trace-preserving (CPTP)** to ensure valid quantum states remain valid [oai_citation:3‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=where%20T%20is%20a%20unitary,A%29%20%11) [oai_citation:4‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).
+   \item Intuition: any CPTP map can be realized by coupling the system to an environment, evolving unitarily, and then ignoring (tracing out) the environment [oai_citation:5‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=%E2%80%A2%20It%20can%20be%20shown,27) [oai_citation:6‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).
+ \end{itemize}
+\end{frame}
+
+\section{Quantum Operations (CPTP Maps)}
+\begin{frame}{Definition: Quantum Operation (CPTP Map)}
+ \begin{block}{Definition (Quantum Operation)}
+   A **quantum operation** $\mathcal{E}$ is a linear map on density operators that is (i) trace-preserving and (ii) completely positive.  Physically, it represents the most general state evolution (including noise and measurements) [oai_citation:7‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=where%20T%20is%20a%20unitary,A%29%20%11) [oai_citation:8‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).
+ \end{block}
+ \pause
+ \begin{itemize}
+   \item Equivalently, by the Stinespring dilation theorem, any quantum operation can be written as
+     \[
+       \mathcal{E}(\rho) = \Tr_E\bigl[\, U\,(\rho \otimes |0\rangle\langle0|)\,U^\dagger \bigr],
+     \]
+     where $U$ is a unitary on the joint system+environment, and the environment is initialized in a fixed pure state $|0\rangle$ [oai_citation:9‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=4,A%29%20%3D%20Trf%20%10%20T) [oai_citation:10‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=%E2%80%A2%20It%20can%20be%20shown,27).
+   \item In this model, the environment Hilbert space is traced out after the joint unitary, yielding an effective map on the system alone.
+   \item Properties: Such $\mathcal{E}$ automatically preserves positivity, hermiticity, and trace of $\rho$ [oai_citation:11‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=where%20T%20is%20a%20unitary,A%29%20%11).
+ \end{itemize}
+\end{frame}
+
+\section{Kraus Representation Theorem}
+\begin{frame}{Kraus Representation Theorem}
+ \begin{theorem}[Kraus Representation]
+   Any CPTP map $\mathcal{E}$ on a finite-dimensional system can be expressed in **operator-sum form**:
+   \[
+     \mathcal{E}(\rho) \;=\; \sum_{k} K_{k}\,\rho\, K_{k}^\dagger,
+   \]
+   where $\{K_k\}$ are called **Kraus operators**, satisfying the completeness relation $\sum_k K_k^\dagger K_k = I$ (for trace-preserving maps) [oai_citation:12‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=form%20S,%2837) [oai_citation:13‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).
+   Conversely, any map of this form is CPTP.
+ \end{theorem}
+ \pause
+ {\footnotesize (Here $I$ is the identity on the system Hilbert space. The condition $\sum_k K_k^\dagger K_k = I$ ensures $\Tr(\mathcal{E}(\rho))=\Tr(\rho)$ [oai_citation:14‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_depolarizing_channel#:~:text=Image%3A%20%7B%5Cdisplaystyle%20K_%7B0%7D%3D%7B%5Csqrt%20%7B1,4%7D%7D%7DZ) [oai_citation:15‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).)}
+\end{frame}
+
+\section{Derivation of Kraus Representation}
+\begin{frame}{Derivation: Unitary + Partial Trace}
+ Consider a system $S$ and environment $E$ with joint unitary $U$ and environment initialized in $|e_0\rangle$. Then for any system state $\rho$:
+ \[
+   \mathcal{E}(\rho) \;=\; \Tr_E\Bigl[\, U\bigl(\rho \otimes |e_0\rangle\langle e_0|\bigr)U^\dagger \Bigr].
+ \]
+ Using an orthonormal basis $\{|e_i\rangle\}$ for the environment, the partial trace is
+ $\Tr_E(X)=\sum_i \langle e_i| X |e_i\rangle$.  Thus
+ \begin{align*}
+   \mathcal{E}(\rho)
+   &= \sum_i \langle e_i|\, U\, (\rho\otimes|e_0\rangle\langle e_0|)\, U^\dagger \,|e_i\rangle \\
+   &= \sum_i \Bigl(\langle e_i|U|e_0\rangle\Bigr)\,\rho\,\Bigl(\langle e_i|U|e_0\rangle\Bigr)^\dagger.
+ \end{align*}
+ Define the operators on $S$: $K_i \equiv \langle e_i|U|e_0\rangle$.  Then
+ \[
+   \mathcal{E}(\rho) = \sum_i K_i\,\rho\,K_i^\dagger,
+ \]
+ which is the Kraus (operator-sum) representation.  The trace-preserving condition $\Tr(\mathcal{E}(\rho))=\Tr(\rho)$ implies $\sum_i K_i^\dagger K_i = I$.
+\end{frame}
+
+\section{Example: Depolarizing Channel}
+\begin{frame}{Example: Depolarizing Channel}
+ \begin{example}[Single-Qubit Depolarizing Channel]
+   The qubit depolarizing channel $\Delta_\lambda$ with parameter $\lambda$ acts as
+   \[
+     \Delta_\lambda(\rho) = (1-\lambda)\rho + \tfrac{\lambda}{3}(X\rho X + Y\rho Y + Z\rho Z).
+   \]
+   In Kraus form, one convenient set of operators is [oai_citation:16‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_depolarizing_channel#:~:text=Image%3A%20%7B%5Cdisplaystyle%20K_%7B0%7D%3D%7B%5Csqrt%20%7B1,4%7D%7D%7DZ):
+   \[
+     K_0 = \sqrt{1-\tfrac{3\lambda}{4}}\,I,\quad
+     K_1 = \sqrt{\tfrac{\lambda}{4}}\,X,\quad
+     K_2 = \sqrt{\tfrac{\lambda}{4}}\,Y,\quad
+     K_3 = \sqrt{\tfrac{\lambda}{4}}\,Z,
+   \]
+   so that $\Delta_\lambda(\rho)=\sum_{i=0}^3 K_i\,\rho\,K_i^\dagger$.  These satisfy $\sum_i K_i^\dagger K_i = I$, ensuring trace preservation.
+ \end{example}
+\end{frame}
+
+\section{Summary}
+\begin{frame}{Summary of Key Points}
+ \begin{itemize}
+   \item {\bf Quantum operations (channels)} generalize unitary evolution to open systems and must be completely positive and trace-preserving [oai_citation:17‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=where%20T%20is%20a%20unitary,A%29%20%11) [oai_citation:18‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).
+   \item {\bf Stinespring dilation:} Any CPTP map can be implemented by a unitary on a larger system plus partial trace over an environment [oai_citation:19‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=%E2%80%A2%20It%20can%20be%20shown,27).
+   \item {\bf Kraus representation:} By choosing an environment basis, one derives $\mathcal{E}(\rho)=\sum_k K_k \rho K_k^\dagger$ with $\sum K_k^\dagger K_k=I$ [oai_citation:20‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=form%20S,%2837) [oai_citation:21‡cs.umd.edu](https://www.cs.umd.edu/class/fall2024/cmsc657/Lecture-4.pdf#:~:text=Theorem%201%20%28Kraus%20decomposition%29,with%20P%20k%20A).
+   \item {\bf Example:} The depolarizing channel’s Kraus operators are $K_0=\sqrt{1-\frac{3\lambda}{4}}I, K_{1,2,3}=\sqrt{\frac{\lambda}{4}}\,\{X,Y,Z\}$ [oai_citation:22‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_depolarizing_channel#:~:text=Image%3A%20%7B%5Cdisplaystyle%20K_%7B0%7D%3D%7B%5Csqrt%20%7B1,4%7D%7D%7DZ).
+   \item Kraus operators are not unique (different bases give unitary-equivalent sets) [oai_citation:23‡quantum.phys.cmu.edu](https://quantum.phys.cmu.edu/QCQI/qitd412.pdf#:~:text=%E2%80%A2%20The%20main%20advantage%20of,other%20by%20a%20unitary%20matrix).  However, the operator-sum form provides a practical tool to analyze quantum noise.
+ \end{itemize}
+\end{frame}
+
+\end{document}
