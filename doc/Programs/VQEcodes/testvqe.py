@@ -1,0 +1,209 @@
+import numpy as np
+from scipy.optimize import minimize
+
+# Define Pauli matrices (2x2) as NumPy arrays for convenience
+I2 = np.array([[1, 0],
+               [0, 1]], dtype=complex)
+X2 = np.array([[0, 1],
+               [1, 0]], dtype=complex)
+Y2 = np.array([[0, -1j],
+               [1j, 0]], dtype=complex)
+Z2 = np.array([[1, 0],
+               [0, -1]], dtype=complex)
+
+# Define common single-qubit gates: Hadamard (H) and phase (S) gates
+H2 = (1/np.sqrt(2)) * np.array([[1,  1],
+                                [1, -1]], dtype=complex)   # Hadamard gate
+S2 = np.array([[1, 0],
+               [0, 1j]], dtype=complex)                   # Phase gate (90° rotation around Z)
+Sdg2 = np.array([[1,   0],
+                 [0, -1j]], dtype=complex)                # S† (conjugate transpose of S)
+
+def generate_random_hamiltonian(n_qubits, n_terms=3):
+    """
+    Generate a random Hermitian Hamiltonian for n_qubits, expressed as a list of Pauli terms.
+    Each term is a tuple (coeff, pauli_string), where pauli_string is e.g. 'XZIY' (length = n_qubits).
+    """
+    paulis = ['I', 'X', 'Y', 'Z']
+    terms = []
+    for _ in range(n_terms):
+        # Randomly choose a Pauli (or Identity) for each qubit
+        P_str = ''.join(np.random.choice(paulis) for _ in range(n_qubits))
+        # Ensure the term is not the all-identity (which just adds a constant energy)
+        if set(P_str) == {'I'}:
+            # If we accidentally got all 'I's, flip one qubit to a random Pauli
+            idx = np.random.randint(0, n_qubits)
+            P_str_list = list(P_str)
+            P_str_list[idx] = np.random.choice(['X', 'Y', 'Z'])
+            P_str = ''.join(P_str_list)
+        # Random coefficient (real number)
+        coeff = np.random.uniform(-1.0, 1.0)
+        terms.append((coeff, P_str))
+    return terms
+
+def apply_one_qubit_gate(state_vec, gate_matrix, qubit_index, n_qubits):
+    """
+    Apply a single-qubit gate (2x2 unitary) to the state vector on the given qubit index.
+    state_vec: 1D NumPy array of length 2^n (complex amplitudes).
+    gate_matrix: 2x2 unitary matrix to apply.
+    qubit_index: which qubit (0-indexed) the gate acts on (0 = most significant qubit).
+    Returns a new state vector of length 2^n after applying the gate.
+    """
+    # Reshape state vector into an n-dimensional tensor of shape (2,2,...,2)
+    state_tensor = state_vec.reshape([2] * n_qubits)
+    # Move the target qubit axis to the front (axis 0) for easy manipulation
+    # After this, state_tensor has shape (2, 2^(n-1))
+    state_tensor = np.moveaxis(state_tensor, qubit_index, 0)
+    state_tensor = state_tensor.reshape(2, -1)  # flatten remaining qubits into second dimension
+    # Apply the 2x2 gate matrix to this 2 x (2^(n-1)) matrix of amplitudes
+    new_state_tensor = gate_matrix @ state_tensor  # matrix multiplication
+    # Reshape back to the tensor of shape (2,2,...,2)
+    new_state_tensor = new_state_tensor.reshape([2] * n_qubits)
+    # Move the axes back to original order (put the qubit axis back to its original position)
+    new_state_tensor = np.moveaxis(new_state_tensor, 0, qubit_index)
+    # Flatten back to 1D state vector
+    return new_state_tensor.reshape(-1)
+
+def apply_two_qubit_gate(state_vec, gate_matrix, q1, q2, n_qubits):
+    """
+    Apply a two-qubit gate (4x4 unitary) to the state vector on qubits q1 and q2.
+    q1, q2: indices of the two qubits (0-indexed). The 4x4 gate_matrix is assumed to correspond 
+            to (qubit q1, qubit q2) in that order.
+    """
+    if q1 == q2:
+        raise ValueError("q1 and q2 must be two different qubits")
+    # Determine order of qubits for matrix application
+    # We'll bring q1 and q2 to the front as axes 0 and 1 of the tensor
+    axes = list(range(n_qubits))
+    # Put q1 and q2 as the first two axes (in their original relative order)
+    new_axes = [q1, q2] + [ax for ax in axes if ax not in (q1, q2)]
+    # Reshape state to a 2^n tensor and permute axes so that q1->axis0, q2->axis1
+    state_tensor = state_vec.reshape([2] * n_qubits).transpose(new_axes)
+    # state_tensor now has shape (2,2, 2^(n-2))
+    original_shape = state_tensor.shape  # will be (2, 2, 2^(n-2))
+    state_tensor = state_tensor.reshape(4, -1)  # combine the two qubit axes into one of length 4
+    # Apply the 4x4 gate matrix 
+    new_state_tensor = gate_matrix @ state_tensor
+    # Reshape back to separate the two qubit axes
+    new_state_tensor = new_state_tensor.reshape(original_shape)
+    # Inverse permutation to restore original axis order
+    inv_axes = np.argsort(new_axes)  # indices to invert the axis permutation
+    new_state_tensor = new_state_tensor.transpose(inv_axes)
+    # Flatten back to 1D
+    return new_state_tensor.reshape(-1)
+
+def ansatz_state(params, n_qubits, layers):
+    """
+    Build the ansatz (trial state) for given parameters.
+    params: 1D array of rotation angles, length = layers * n_qubits (each layer has one angle per qubit).
+    n_qubits: number of qubits.
+    layers: number of layers in the ansatz.
+    Returns the final state vector (1D complex array of length 2^n).
+    """
+    # Start in the initial state |00...0>
+    state = np.zeros(2**n_qubits, dtype=complex)
+    state[0] = 1.0
+    # Iterate through layers of the ansatz
+    param_index = 0
+    for layer in range(layers):
+        # 1. Apply parameterized single-qubit rotations (Ry) on each qubit
+        for q in range(n_qubits):
+            theta = params[param_index]
+            param_index += 1
+            # Rotation around Y-axis by angle theta: 
+            # Ry(theta) = [[cos(theta/2), -sin(theta/2)], [sin(theta/2), cos(theta/2)]]
+            Ry = np.array([[np.cos(theta/2), -np.sin(theta/2)],
+                           [np.sin(theta/2),  np.cos(theta/2)]], dtype=complex)
+            state = apply_one_qubit_gate(state, Ry, q, n_qubits)
+        # 2. Apply entangling gates (use CNOTs between neighboring qubits in a chain)
+        # For example, for qubits [0,1,2,...,n-1], apply CNOT(0->1), CNOT(1->2), ..., CNOT(n-2 -> n-1)
+        if n_qubits > 1:
+            # Define CNOT gate matrix (4x4) with control = first qubit, target = second qubit
+            CNOT = np.array([[1, 0, 0, 0],
+                             [0, 1, 0, 0],
+                             [0, 0, 0, 1],
+                             [0, 0, 1, 0]], dtype=complex)
+            for q in range(n_qubits - 1):
+                # Apply CNOT with control = q, target = q+1
+                state = apply_two_qubit_gate(state, CNOT, q, q+1, n_qubits)
+    return state
+
+def estimate_energy(params, hamiltonian, n_qubits, layers, shots=1000):
+    """
+    Estimate the expectation value of the Hamiltonian for given ansatz parameters.
+    - params: array of ansatz parameters.
+    - hamiltonian: list of (coeff, pauli_string) terms defining H.
+    - n_qubits: number of qubits.
+    - layers: number of ansatz layers.
+    - shots: number of measurement samples to draw for estimating expectation.
+    Returns: estimated energy (expectation value <psi(theta)|H|psi(theta)>).
+    """
+    # First, get the trial state vector for these parameters
+    psi = ansatz_state(params, n_qubits, layers)
+    energy_est = 0.0
+    # Loop over each term in the Hamiltonian
+    for coeff, Pstr in hamiltonian:
+        # Copy the state vector because we will modify it for measurement basis rotation
+        psi_term = psi.copy()
+        # For each qubit, apply a basis transformation so that measuring in Z-basis corresponds to measuring this Pauli
+        # e.g., if Pstr has 'X' on qubit i, apply H on qubit i (since H|0/1> = |+/->, aligning Z-basis to X-basis)
+        #       if 'Y' on qubit i, apply S† then H (aligns Z-basis to Y-basis) [oai_citation:8‡raw.githubusercontent.com](https://raw.githubusercontent.com/stfnmangini/VQE_from_scratch/refs/heads/master/vqe_from_scratch.ipynb#:~:text=,in).
+        for qubit, P in enumerate(Pstr):
+            if P == 'X':
+                psi_term = apply_one_qubit_gate(psi_term, H2, qubit, n_qubits)
+            elif P == 'Y':
+                psi_term = apply_one_qubit_gate(psi_term, Sdg2, qubit, n_qubits)
+                psi_term = apply_one_qubit_gate(psi_term, H2, qubit, n_qubits)
+            elif P == 'Z':
+                # Z: no basis change needed (Z eigenstates are |0>, |1>)
+                pass
+            elif P == 'I':
+                # I (identity): this term doesn't depend on qubit state, no change needed
+                pass
+        # Now psi_term is expressed in the measurement basis for this term.
+        # Simulate measuring all qubits in Z basis 'shots' times:
+        probabilities = np.abs(psi_term)**2  # probability of each computational basis state
+        probabilities = probabilities.real  # (should be real, within numerical error)
+        probabilities /= probabilities.sum()  # normalize (safety, should already sum to 1)
+        # Sample bitstring outcomes according to these probabilities
+        outcomes = np.random.choice(len(probabilities), size=shots, p=probabilities)
+        # Compute the Pauli term's value (+1 or -1) for each outcome
+        # We do this by computing the product of eigenvalues for each qubit in the term.
+        # For a computational basis outcome, each qubit's Z measurement gives 0 or 1 as result (|0> -> eigenvalue +1, |1> -> -1 for Z).
+        # For X or Y terms, we already rotated the basis, so the Z measurement gives the X or Y eigenvalue.
+        values = np.ones(shots)  # will hold the product of eigenvalues for each shot
+        for qubit, P in enumerate(Pstr):
+            if P == 'I':
+                continue  # identity contributes a factor of 1
+            # Determine the bit (0 or 1) of this outcome for the current qubit
+            # We interpret the binary representation of outcome index with qubit0 as MSB.
+            bit = (outcomes >> (n_qubits - 1 - qubit)) & 1  # extract the bit of 'outcomes' at position 'qubit'
+            # Map bit to eigenvalue: 0 -> +1, 1 -> -1
+            value = 1 - 2 * bit  # if bit=0, value=1; if bit=1, value=-1
+            values *= value       # multiply into the running product
+        # The expectation value of this term is the average of these values
+        term_expectation = values.mean()
+        # Accumulate contribution to energy: coeff * <P>
+        energy_est += coeff * term_expectation
+    return energy_est
+
+# Example usage (if run as a script):
+if __name__ == "__main__":
+    np.random.seed(42)  # for reproducibility
+    # Problem setup
+    n_qubits = 4            # number of qubits (flexible)
+    layers = 2              # number of ansatz layers
+    H = generate_random_hamiltonian(n_qubits, n_terms=3)  # random Hamiltonian with 3 terms
+    print("Hamiltonian (coeff, Pauli_term):", H)
+    # Initial guess for parameters (random angles between 0 and 2π for each parameter)
+    num_params = layers * n_qubits
+    init_params = np.random.uniform(0, 2*np.pi, num_params)
+    # Objective function for optimizer: VQE energy as a function of parameters
+    def objective(params):
+        return estimate_energy(params, H, n_qubits, layers, shots=1000)
+    # Run classical optimization (gradient-based) to minimize the energy
+    result = minimize(objective, init_params, method="BFGS", options={'maxiter': 100, 'disp': True})
+    optimal_params = result.x
+    min_energy = result.fun
+    print(f"\nOptimized parameters: {optimal_params}")
+    print(f"Estimated minimum energy: {min_energy:.6f}")
