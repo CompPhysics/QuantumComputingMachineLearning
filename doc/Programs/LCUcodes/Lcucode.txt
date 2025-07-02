@@ -1,0 +1,159 @@
+# Linear Combination of Unitaries (LCU) Algorithm Simulation
+# This script demonstrates the LCU method [oai_citation:0‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=,of%20the%20target%20operator) for applying a non-unitary operator (like a Hamiltonian H 
+# expressed as a sum of unitaries) to a quantum state by embedding it into a larger unitary with an ancilla [oai_citation:1‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=The%20LCU%20method%20is%20a,into%20a%20larger%20unitary%20circuit).
+# We simulate ground state energy estimation and time evolution for a random Hamiltonian using NumPy (state-vector simulation).
+
+import numpy as np
+import numpy.linalg as la
+import scipy.linalg
+
+# Define single-qubit Pauli matrices (and identity) as our set of unitaries
+I2 = np.array([[1, 0],
+               [0, 1]], dtype=complex)
+X  = np.array([[0, 1],
+               [1, 0]], dtype=complex)
+Y  = np.array([[0, -1j],
+               [1j, 0]], dtype=complex)
+Z  = np.array([[1, 0],
+               [0,-1]], dtype=complex)
+pauli_ops = {'I': I2, 'X': X, 'Y': Y, 'Z': Z}
+
+def kron_n(mats):
+    """Kronecker product of a list of matrices (multiqubit operator)."""
+    result = np.array([[1]], dtype=complex)
+    for m in mats:
+        result = np.kron(result, m)
+    return result
+
+def generate_random_hamiltonian(num_qubits, num_terms):
+    """
+    Generate a random Hermitian operator H on `num_qubits` expressed as a 
+    weighted sum of `num_terms` Pauli-string unitaries: H = sum_j alpha_j U_j.
+    Returns the Hamiltonian matrix, original coefficients, Pauli terms, 
+    and the modified coefficients/unitaries for LCU (with positive weights).
+    """
+    pauli_strings = []
+    coeffs = []
+    for _ in range(num_terms):
+        # Randomly choose a Pauli string (tensor product of I, X, Y, Z on each qubit)
+        s = ''.join(np.random.choice(list(pauli_ops.keys())) for _ in range(num_qubits))
+        pauli_strings.append(s)
+        coeffs.append(np.random.uniform(-1, 1))  # random weight in [-1, 1]
+    coeffs = np.array(coeffs)
+    H = np.zeros((2**num_qubits, 2**num_qubits), dtype=complex)
+    mod_weights = []    # |alpha_j| for LCU ancilla probabilities
+    mod_unitaries = []  # potentially sign-adjusted unitaries for negative coefficients
+    for w, s in zip(coeffs, pauli_strings):
+        U = kron_n([pauli_ops[p] for p in s])   # unitary matrix for Pauli string
+        if w < 0:
+            # If coefficient is negative, flip the sign of U so that the weight becomes positive [oai_citation:2‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=,of%20the%20target%20operator).
+            U = -U
+            mod_weights.append(-w)
+        else:
+            mod_weights.append(w)
+        mod_unitaries.append(U)
+        H += w * U   # accumulate H
+    mod_weights = np.array(mod_weights, dtype=float)
+    return H, coeffs, pauli_strings, mod_weights, mod_unitaries
+
+# --- Simulation Parameters (feel free to modify) ---
+num_qubits = 2       # number of system qubits
+num_ancilla = 2      # number of ancilla qubits for LCU (controls how many terms can be combined)
+time_param = 1.0     # time parameter t for Hamiltonian time evolution simulation
+
+# Generate a random Hamiltonian H = sum_i alpha_i U_i (each U_i is a Pauli-string unitary)
+num_terms = 2 ** num_ancilla  # we will use 2^ancilla states for terms
+H, orig_coeffs, pauli_terms, mod_weights, mod_unitaries = generate_random_hamiltonian(num_qubits, num_terms)
+dim = H.shape[0]
+print(f"Generated a random {dim}x{dim} Hamiltonian on {num_qubits} qubit(s):")
+for coeff, term in zip(orig_coeffs, pauli_terms):
+    # List each term as coefficient * tensor_product(Paulis)
+    term_ops = ' ⊗ '.join(term)  # pretty print with tensor product symbol
+    print(f"  {coeff:+.3f} * ({term_ops})")
+# Compute eigenvalues and eigenvectors for reference (ground state energy, etc.)
+eigenvals, eigenvecs = la.eigh(H)
+ground_energy = eigenvals[0]
+print(f"Ground state energy (smallest eigenvalue): {ground_energy:.6f}")
+
+# Prepare an initial state for simulation.
+# For ground state energy estimation, we use the ground state (eigenvector of H with eigenvalue = ground_energy).
+psi0 = eigenvecs[:, 0]  # ground state (normalized)
+# Verify that the expectation value of H on psi0 equals the ground energy
+exp_val = np.vdot(psi0, H.dot(psi0)).real
+print(f"Verification: <psi_ground|H|psi_ground> = {exp_val:.6f}")
+
+# --- Ground State Energy Estimation via LCU ---
+# We will apply the LCU block-encoding of H on |psi0>. 
+# The LCU circuit structure: PREPARE (oracle) → SELECT → PREPARE† [oai_citation:3‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=,of%20the%20target%20operator).
+# Prepare: ancilla in superposition ∑_i sqrt(alpha_i/λ) |i>, where α_i = |coeff_i| and λ = ∑_i α_i [oai_citation:4‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=%5C%5B%5Cmathrm).
+lambda_sum = mod_weights.sum()  # λ = sum of positive coefficients
+anc_state = np.sqrt(mod_weights / lambda_sum)               # ancilla state vector after PREPARE
+combined_state = np.kron(anc_state, psi0)                   # joint state after preparation (ancilla entangled with nothing yet)
+# SELECT: apply U_i to the system conditioned on ancilla state |i> [oai_citation:5‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=,i%5Crangle).
+combined_state = combined_state.reshape((len(mod_weights), -1))  # reshape to (ancilla_dim, system_dim)
+for i, U in enumerate(mod_unitaries):
+    combined_state[i, :] = U.dot(combined_state[i, :])
+# Now the joint state is ∑_i sqrt(α_i/λ) |i> ⊗ (U_i |psi0>).
+# Unprepare (PREPARE†): invert the ancilla preparation. We find the amplitude of ancilla returning to |0> (the initial ancilla basis state).
+# The success probability of post-selecting ancilla |0> is proportional to || A|psi0> ||^2 / λ^2 [oai_citation:6‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=The%20LCU%20protocol%20is%20deemed,and%20the%20transformed%20target%20variable), where A = ∑_i α_i U_i = H.
+main_proj = anc_state.conjugate().T @ combined_state   # project ancilla onto the prepared superposition (equivalent to measuring ancilla in |0> after unprepare)
+success_prob = la.norm(main_proj) ** 2
+print(f"LCU success probability (postselect ancilla = |0>): {success_prob:.4f}")
+if success_prob > 1e-12:
+    psi_post = main_proj / np.linalg.norm(main_proj)   # normalized system state after successful postselection
+    overlap = np.vdot(psi_post, psi0)
+    print(f"Post-selection main state overlap with initial state: {abs(overlap):.4f}")
+# If |psi0> is the true ground state, H|psi0> = E0|psi0>. In that case, the ancilla |0> success probability = (E0/λ)^2 and the post-selected state returns to |psi0> (global phase e^{-iE0t} acquired).
+# In a real algorithm, one could measure the ancilla success frequency to infer |E0/λ|, or use amplitude amplification to boost success probability [oai_citation:7‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=The%20success%20probability%20depends%20on,included%20as%20an%20experimental%20feature).
+# (Amplitude amplification can make the LCU nearly deterministic [oai_citation:8‡arxiv.org](https://arxiv.org/abs/1202.5822#:~:text=technique,a%20large%20class%20of%20methods) [oai_citation:9‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=The%20success%20probability%20depends%20on,included%20as%20an%20experimental%20feature) at the cost of more gates.)
+
+# --- Time Evolution via LCU (Hamiltonian Simulation) ---
+# We approximate U(t) = exp(-i H * time_param) using the LCU method for Hamiltonian simulation.
+# Using a first-order Taylor/Trotter expansion [oai_citation:10‡journals.aps.org](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.6.010359#:~:text=Our%20algorithm%2C%20called%20Trotter%20LCU%2C,model%2C%20making%20it%20a%20powerful): e^{-iH Δt} ≈ I - i H Δt for small Δt.
+# This means we treat A = I - i H Δt as a linear combination of the identity and the H terms.
+# To implement A via LCU, we add an extra ancilla basis state for the identity term.
+segments = max(1, int(np.ceil(lambda_sum * time_param)))  # number of segments to break time evolution into (more segments = higher accuracy)
+print(f"\nSimulating time evolution for t = {time_param} with {segments} segment(s).")
+psi = psi0.copy()
+cumulative_success = 1.0
+show_steps = (segments <= 10)  # only print step-by-step if few segments
+if not show_steps:
+    print("Using many segments, skipping per-segment details...")
+for seg in range(segments):
+    dt = time_param / segments
+    # Coefficients for A = I - i H dt: weight_0 = 1 (identity), and weight_i = |α_i| * dt for each H term (α_i = mod_weights[i])
+    weights_time = [1.0] + list(mod_weights * dt)
+    lambda_time = sum(weights_time)
+    anc_state_time = np.sqrt(np.array(weights_time) / lambda_time)  # ancilla state including identity term
+    # Build joint state for this segment
+    state_mat = np.kron(anc_state_time, psi).reshape((len(weights_time), -1))
+    # SELECT: apply identity for ancilla index 0 (do nothing), and apply each U_i with appropriate phase for ancilla i>0.
+    for i in range(1, len(weights_time)):
+        # Original coefficient (could be negative) determines a phase: -i * sign(original_coeff) [oai_citation:11‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=,of%20the%20target%20operator).
+        orig_coeff = orig_coeffs[i-1]
+        phase = -1j * np.sign(orig_coeff)       # phase factor to account for -i * sign
+        U = phase * mod_unitaries[i-1]          # modified unitary with phase
+        state_mat[i, :] = U.dot(state_mat[i, :])
+    # Unprepare ancilla (project onto |0> equivalent state anc_state_time):
+    main_proj_time = anc_state_time.conjugate().T @ state_mat
+    p_success = la.norm(main_proj_time) ** 2
+    cumulative_success *= p_success
+    if p_success < 1e-12:
+        # Failure (very low success probability); break to avoid division by zero
+        psi = np.zeros_like(psi)
+        break
+    psi = main_proj_time / np.sqrt(p_success)   # normalize state after successful postselection
+    if show_steps:
+        print(f" Segment {seg+1}: success probability = {p_success:.4f}")
+if segments > 1:
+    print(f" Combined success probability (one try per segment) = {cumulative_success:.4e}")
+# Now `psi` is the final state after simulated evolution (if all segments succeeded).
+# For verification, compute the exact state by directly exponentiating H.
+psi_exact = scipy.linalg.expm(-1j * H * time_param).dot(psi0)
+fidelity = np.abs(np.vdot(psi, psi_exact))**2
+print(f"Final state fidelity vs exact e^(-iHt)|psi0>: {fidelity:.4f}")
+if la.norm(psi_exact) > 1e-12:
+    phase_diff = np.angle(np.vdot(psi, psi_exact))
+    print(f"Global phase difference (simulated vs exact) [rad]: {phase_diff:.4f}")
+# Note: The first-order LCU approximation incurs error O((H Δt)^2). Using more segments (smaller Δt) or higher-order formulas can improve accuracy [oai_citation:12‡journals.aps.org](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.6.010359#:~:text=challenging,high%20accuracy%20with%20minimal%20resources).
+# The success probability may decrease with larger segments, but one can use repeat-until-success or oblivious amplitude amplification to eventually obtain the final state [oai_citation:13‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=The%20LCU%20protocol%20is%20deemed,and%20the%20transformed%20target%20variable) [oai_citation:14‡qrisp.eu](https://qrisp.eu/reference/Primitives/LCU.html#:~:text=The%20success%20probability%20depends%20on,included%20as%20an%20experimental%20feature).
