@@ -2,7 +2,7 @@ import numpy as np
 from scipy.linalg import expm
 
 # --- Simulation Parameters (user configurable) ---
-num_qubits = 3            # Number of qubits in the system
+num_qubits = 2            # Number of qubits in the system
 num_terms = 3 * num_qubits  # Number of random Pauli terms in H (e.g., 3*n)
 total_time = 1.0          # Total evolution time
 trotter_steps = 10        # Number of Trotter steps (N)
