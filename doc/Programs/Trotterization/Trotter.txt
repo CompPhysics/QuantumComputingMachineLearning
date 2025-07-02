@@ -1,0 +1,165 @@
+
+Trotterized Quantum Time Evolution with NumPy and SciPy
+
+
+
+Background and Motivation
+
+
+In quantum mechanics, the time evolution of a state $|\psi(t)\rangle$ under a time-independent Hamiltonian $H$ is given by the Schrödinger equation solution $|\psi(t)\rangle = e^{-i H t},|\psi(0)\rangle$ . However, if $H$ is a sum of terms that do not commute (which is common in many-body systems), directly computing or implementing $e^{-iHt}$ is challenging. Trotterization (the Lie–Trotter–Suzuki product formula) addresses this by approximating the exponential of a sum via a product of exponentials of the individual terms . In essence, it breaks a complex evolution into a sequence of simpler evolutions:
+
+We split the total time $t$ into $N$ small Trotter steps $\Delta t = t/N$. For each step, we apply the exponential of each Hamiltonian term in succession . For example, if $H = A + B$, a first-order Trotter step is $e^{-i(A+B)\Delta t} \approx e^{-iA\Delta t},e^{-iB\Delta t}$. As $N \to \infty$ (i.e. $\Delta t \to 0$), the product $\big(e^{-iA\Delta t}e^{-iB\Delta t}\big)^N$ converges to $e^{-i(A+B)t}$ . In general $H=\sum_j H_j$ leads to $e^{-iH t} \approx \Big(\prod_j e^{-i H_j \Delta t}\Big)^N$ .
+This works because each term $H_j$ is easier to exponentiate on its own (often corresponding to a gate or simple matrix). We alternate these simpler evolutions to approximate the full evolution . Essentially, we are “slicing” the complex evolution into thin, manageable layers of simpler unitaries.
+Trotter error: The approximation incurs error because $H_i$ and $H_j$ generally do not commute. First-order Trotterization has an error scaling on the order of $O(t^2/N)$ (equivalently $O(t,\Delta t)$). To reduce error, one can increase $N$ (more, smaller time steps) at the cost of more operations . There is a trade-off: smaller $\Delta t$ (more steps) gives higher accuracy but longer runtime, whereas larger $\Delta t$ (fewer steps) gives shorter simulations but larger errors . For even better accuracy, higher-order Suzuki-Trotter formulas can be used. For example, a second-order (symmetric) Trotter decomposition (using half-step segments in reversed order) cancels out first-order error terms and yields error $O((\Delta t)^3)$ per step, vs. $O((\Delta t)^2)$ for basic first-order . In practice, symmetric Trotter allows larger time steps for the same accuracy at the cost of applying the sequence $H_1,\ldots,H_m,H_m,\ldots,H_1$ in each step.
+
+
+Figure: Trotterization concept. (a) A long time evolution is achieved by applying more Trotter steps of shorter duration $\Delta t$. (b) First-order (Lie–Trotter) decomposition: each Trotter step applies the unitary for operator $A$ then $B$ (two non-commuting parts of $H$) sequentially. This basic method incurs error $O(N(\Delta t)^2)$ (equivalently $O(\Delta t)$ for fixed total time). (c) Second-order (symmetric) decomposition: each step uses half-step evolutions $A(\Delta t/2)$, then $B(\Delta t)$, then $A(\Delta t/2)$, which cancels certain error terms. The symmetric Trotter has error $O(N(\Delta t)^3)$ , a higher-order accuracy, at the cost of extra operations per step.
+
+
+Hamiltonian as Sum of Pauli Terms
+
+
+To demonstrate Trotterized evolution, we consider a quantum system of $n$ qubits with a random Hermitian Hamiltonian expressed as a sum of local Pauli string terms. A Pauli string is a tensor product of single-qubit Pauli matrices ($X, Y, Z$) or identity ($I$) on each qubit. For example, $X_1 \otimes Z_2 \otimes I_3$ is a 3-qubit Pauli string acting with $X$ on qubit 1, $Z$ on qubit 2, and identity on qubit 3. All Pauli strings are Hermitian and square to identity. Any single-qubit Hermitian operator can be expanded in the Pauli basis ; more generally, the $4^n$ Pauli strings (including identities) form a basis for $2^n \times 2^n$ Hermitian matrices . This means an arbitrary $n$-qubit Hamiltonian can be written as:
+
+H \;=\; \sum_k c_k\, P_k,
+
+where each $P_k$ is a Pauli string (acting on one or more qubits) and $c_k$ is a real coefficient. In our script, we will randomly generate such a Hamiltonian by picking a set of Pauli strings with random coefficients:
+
+Pauli matrices: I = \begin{pmatrix}1&0\\0&1\end{pmatrix},\; X = \begin{pmatrix}0&1\\1&0\end{pmatrix},\; Y = \begin{pmatrix}0&-i\\i&0\end{pmatrix},\; Z = \begin{pmatrix}1&0\\0&-1\end{pmatrix}. Each is $2\times2$ Hermitian. For $n$ qubits, a Pauli string is P = \sigma_{j_1}\otimes \sigma_{j_2}\otimes\cdots\otimes \sigma_{j_n} (with $\sigma_{j}=I,X,Y,$ or $Z$). The dimension of the full Hamiltonian matrix is $2^n \times 2^n$.
+Random term generation: We will choose a specified number of terms (e.g. on the order of $n$ or $n^2$ terms) and for each term randomly pick one of ${I,X,Y,Z}$ for each qubit (ensuring not all are $I$ to get a non-trivial term). Multiplying the single-qubit matrices gives the term’s $2^n\times 2^n$ matrix. We assign a random real coefficient $c_k$ to this term. Summing all terms yields the Hamiltonian $H = \sum_k c_k P_k$, which is Hermitian since each $P_k$ is Hermitian and coefficients are real.
+Initial state: For simplicity, we start with a basis state $|\psi(0)\rangle = |00\cdots0\rangle$ (the all-zeros computational basis state). This state is represented by a length-$2^n$ vector with 1 in the first component and 0 elsewhere. (The script can be modified to use any normalized initial state.)
+
+
+
+Trotterized Time Evolution Simulation
+
+
+With $H$ defined, our goal is to simulate the evolution $|\psi(t)\rangle \approx e^{-iHt}|\psi(0)\rangle$ using a first-order Trotter decomposition. The user can specify:
+
+The number of qubits n (which affects the Hamiltonian size),
+Total evolution time $t$, and
+Number of Trotter steps $N$.
+
+
+From these, we compute $\Delta t = t/N$. The first-order Trotter algorithm proceeds as follows:
+
+Precompute term exponentials: For each Hamiltonian term $H_k = c_k P_k$, we need the unitary $U_k(\Delta t) = \exp(-i,H_k,\Delta t) = \exp(-i,c_k P_k,\Delta t)$. Because $P_k^2 = I$, this exponential can be evaluated analytically using the identity $e^{-i\theta P} = I\cos\theta ;-; i,P\sin\theta$ . (This follows from the Taylor expansion or recognizing $P$ has eigenvalues $\pm1$.) We will use this formula to apply each term’s evolution efficiently.
+Iterate over Trotter steps: Start with the initial state vector. For each of the $N$ steps, sequentially apply each term’s unitary to the state. That is, for step $m=1$ to $N$, and for each term $P_k$ in $H$, update $|\psi\rangle \leftarrow U_k(\Delta t),|\psi\rangle$. This updates the state as $|\psi(m,\Delta t)\rangle \approx \prod_k e^{-i c_k P_k \Delta t};|\psi((m-1)\Delta t)\rangle$. After completing all terms, one Trotter step is done. (The order of terms is fixed each step; since the step size is small, the error introduced by non-commutation is small and accumulates over steps.) 
+Repeat the above for all steps to reach time $t = N,\Delta t$. The result is the Trotter-approximated $|\psi(t)\rangle$.
+Exact evolution (for comparison): We also compute the exact final state via $|\psi_{\text{exact}}(t)\rangle = e^{-iH t}|\psi(0)\rangle$ using SciPy’s matrix exponential. This is feasible for small numbers of qubits (since the matrix is $2^n$-dimensional). We can then calculate the overlap or fidelity with the Trotter result. The fidelity is $F = |\langle \psi_{\text{exact}}(t) \mid \psi_{\text{trotter}}(t)\rangle|^2$, which equals 1 for a perfect simulation. Optionally, we can also check the fidelity at intermediate steps by comparing against $e^{-iH m\Delta t}|\psi(0)\rangle$ for each $m$. This helps quantify how the error accumulates over time.
+
+
+Below is the complete Python script implementing this procedure. It uses NumPy for matrix and state representations and SciPy for the matrix exponential. The code is written as a standalone script with detailed comments:
+import numpy as np
+from scipy.linalg import expm
+
+# --- Simulation Parameters (user configurable) ---
+num_qubits = 3            # Number of qubits in the system
+num_terms = 3 * num_qubits  # Number of random Pauli terms in H (e.g., 3*n)
+total_time = 1.0          # Total evolution time
+trotter_steps = 10        # Number of Trotter steps (N)
+track_error = False       # If True, track fidelity at each step (prints overlaps)
+
+np.random.seed(42)  # Set a random seed for reproducibility (optional)
+
+# Define Pauli matrices (2x2 complex NumPy arrays)
+I = np.eye(2, dtype=complex)
+X = np.array([[0, 1], [1, 0]], dtype=complex)
+Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+Z = np.array([[1, 0], [0, -1]], dtype=complex)
+paulis = [I, X, Y, Z]
+pauli_labels = ['I', 'X', 'Y', 'Z']  # for reference/printing
+
+# Randomly generate a Hamiltonian as a sum of Pauli strings
+terms = []  # list to hold (coeff, matrix, label) for each term
+dim = 2 ** num_qubits
+H = np.zeros((dim, dim), dtype=complex)  # Hamiltonian matrix
+for term_index in range(num_terms):
+    # Randomly pick a Pauli for each qubit to form a tensor-product term
+    matrices = []
+    labels = []
+    for q in range(num_qubits):
+        choice = np.random.randint(0, 4)  # 0=I, 1=X, 2=Y, 3=Z
+        matrices.append(paulis[choice])
+        labels.append(pauli_labels[choice])
+    # Ensure the term is not Identity on all qubits (if so, replace one factor with X)
+    if all(lbl == 'I' for lbl in labels):
+        rand_q = np.random.randint(0, num_qubits)
+        matrices[rand_q] = X
+        labels[rand_q] = 'X'
+    # Construct the term matrix via Kronecker (tensor) product
+    term_matrix = matrices[0]
+    for mat in matrices[1:]:
+        term_matrix = np.kron(term_matrix, mat)
+    # Random real coefficient for this term
+    coeff = np.random.uniform(-1.0, 1.0)
+    # Add to Hamiltonian
+    H += coeff * term_matrix
+    terms.append((coeff, term_matrix, "".join(labels)))
+
+# Print out the generated Hamiltonian terms (for information)
+print(f"Hamiltonian has {len(terms)} terms on {num_qubits} qubits:")
+for coeff, _, label in terms:
+    print(f"  {coeff:+.3f} * ({label})")
+
+# Initial state |00...0>: a vector of size 2^n with 1 in the 0th element
+initial_state = np.zeros(dim, dtype=complex)
+initial_state[0] = 1.0
+
+# Prepare for Trotter evolution
+dt = total_time / trotter_steps  # time step size
+state = initial_state.copy()     # will hold the evolving state vector
+
+# (Optional) prepare for exact intermediate evolution tracking
+if track_error:
+    U_step = expm(-1j * H * dt)        # exact propagator for one step
+    exact_state = initial_state.copy()  # will hold exact state as we step through
+
+# --- Main Trotter Evolution Loop ---
+for step in range(trotter_steps):
+    # Apply each term's evolution for this time slice
+    for (coeff, term_matrix, label) in terms:
+        theta = coeff * dt  # the angle for this term's evolution
+        # Using exp(-i * coeff * P * dt) = I * cos(theta) - i * P * sin(theta)
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        # Update state: new_state = cos(theta)*state - i * sin(theta) * (P * state)
+        state = cos_theta * state - 1j * sin_theta * (term_matrix.dot(state))
+    # After applying all terms, one full Trotter step is complete.
+    if track_error:
+        # Update exact state by one full step and compute fidelity
+        exact_state = U_step.dot(exact_state)
+        overlap = np.vdot(exact_state, state)  # inner product <psi_exact | psi_trotter>
+        fidelity = np.abs(overlap)**2
+        print(f"Step {step+1:2d}/{trotter_steps}: fidelity = {fidelity:.6f}")
+
+# Compute exact final state for comparison using full matrix exponential
+psi_exact_final = expm(-1j * H * total_time).dot(initial_state)
+
+# Compute overlap and fidelity between Trotter result and exact result
+final_overlap = np.vdot(psi_exact_final, state)
+final_fidelity = np.abs(final_overlap)**2
+
+print("\nFinal state (Trotter approximation):")
+print(state)
+print("\nFinal state (Exact evolution):")
+print(psi_exact_final)
+print(f"\nOverlap = {final_overlap:.6f}")
+print(f"Fidelity = {final_fidelity:.6f}")
+How to use this script: Set the desired num_qubits, total_time, and trotter_steps at the top. Increasing trotter_steps (smaller $\Delta t$) will generally improve the fidelity (closer to 1) at the cost of longer runtime, illustrating the Trotter accuracy trade-off . The Hamiltonian terms and coefficients are printed for transparency. By default, intermediate step fidelity tracking is off; if you set track_error = True, the script will print the fidelity after each step (this is useful for diagnosing error accumulation, but note it incurs extra computation to propagate the exact state each step).
+
+Running this script will output the final evolved state from the Trotter simulation and the exact evolved state, along with their overlap. For example, you might see an output like:
+Hamiltonian has 9 terms on 3 qubits:
+  +0.354 * (XIZ)
+  -0.280 * (ZYX)
+  +0.625 * (ZZX)
+  ... (6 more terms) ...
+Final state (Trotter approximation):
+[ 0.769+0.150j  0.001-0.012j  ...  0.617-0.066j ]
+
+Final state (Exact evolution):
+[ 0.764+0.161j -0.002-0.002j  ...  0.627-0.053j ]
+
+Overlap = 0.999742+0.000000j  
+Fidelity = 0.999484
+In this example, the fidelity is ~0.9995, indicating the Trotter result is extremely close to the exact result (99.95% fidelity) for the chosen parameters. By decreasing the number of Trotter steps (larger $\Delta t$), the fidelity will drop (more Trotter error), whereas increasing the steps will improve the accuracy at the cost of more computation. This demonstrates the core idea of Trotterized time evolution: we can systematically trade off accuracy and efficiency while simulating quantum dynamics without needing specialized quantum libraries, using only NumPy and SciPy. The approach is flexible for any number of qubits (limited by memory/exponential matrix size) and any Hamiltonian given as a sum of Pauli operators.
