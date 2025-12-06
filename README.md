@@ -110,27 +110,30 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
-## March 30-April 3, 2026
+## March 30 - April 3, 2026, Public holiday in Norway no classes
+
+
+## April 6-10, 2026
   - Discrete Fourier transforms (DFTs, reminder from last week) ) and the fast Fourier Transform (FFT)
   - Quantum Fourier transforms (QFTs), reminder from last week
   - Setting up circuits for QFTs
   - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
 
-## April 7-11, 2026
+## April 13-17, 2026
   - Setting up circuits for QFTs
   - Quantum phase estimation algorithm (QPE)
   - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
   - Video of lecture at https://youtu.be/3myI1qFLVN8
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesApril7.pdf
 
-## April 14-18, 2026, Public holidays in Norway no classes
 
-## April 21-15, 2026 Quantum Machine Learning
+
+## April 20-24, 2026 Quantum Machine Learning
   - Basics of quantum machine learning and discussion of support vector machines
   - Video of lecture at https://youtu.be/C36Kg4eaO7A
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesApril23.pdf  
 
-## April 28-May 2, 2026 Quantum machine learning
+## April 27-May 1, 2026 Quantum machine learning
   - Classical Support Vector Machines, reminder from last week
   - Classical Kernels and transition to Quantum Kernels
   - Quantum Support Vector Machines
@@ -138,19 +141,19 @@ v- Teaching material in different formats at https://github.com/CompPhysics/Quan
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesApril30.pdf
 
 
-## May 5-9, 2026 Quantum Machine Learning
+## May 4-8, 2026 Quantum Machine Learning
   - Quantum support vector machines, theory and code examples
   - Quantum neural networks, theory and code examples
   - Video of lecture, first part at https://youtu.be/L9kvkEW1ZgQ
   - Video of lecture, second part with discussion of codes at https://youtu.be/73V0LipuHac
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMay7.pdf
 
-## May 12-16, 2026
+## May 11-15, 2026
   - Quantum neural networks, theory and code examples, contn from last week
   - Quantum and classical Boltzmann machines
   - Video of lecture at https://youtu.be/icHV-pgq6uQ
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMay14.pdf
 
 
-## May 19-23, 2026
+## May 18-22, 2026
   - Discussion of project 2
