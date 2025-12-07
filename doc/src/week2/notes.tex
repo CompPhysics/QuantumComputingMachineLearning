@@ -1,0 +1,360 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsfonts, bm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{physics}
+\usepackage{braket}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{setspace}
+\onehalfspacing
+
+\title{Lindlad, Noise and possible links with PMMs}
+\author{Collaboration on Noise, Open quantum systems and more}
+\date{November 2}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+This note provides an extremely abridged, and perhaps overly
+practical, introduction to open quantum systems. The goal is to
+provide the basis for understanding and implementing an open quantum
+system using the Lindblad master equation. And then hopefully link this with PMMs.
+
+\section{Open?}
+
+In quantum mechanics, a system is considered \emph{closed} if it is
+isolated from its environment. In contrast, an \emph{open quantum
+system} interacts with its environment, which can cause the system to
+lose coherence and entanglement.
+
+All this boils down to whether or not energy is conserved. In a closed
+system, energy is conserved, while in an open system, energy is not
+conserved.
+
+
+\section{Density Matrices}
+
+As opposed to the wavefunction (a so-called pure state) in closed
+(Hermitian) quantum mechanics, the density matrix uniquely describes
+the state of a quantum system in an open system, as well as in closed
+systems.
+
+With pure states, the state of a quantum system is deterministic and
+leads to probabilities of outcomes of measurements. In contrast, what
+if the state itself is uncertain and therefore probabilistic? This is
+what density matrices describe.\footnote{A natural question might be:
+“What about probabilistic mixtures of density matrices?” Luckily, such
+systems are also just described by density matrices.}
+
+The important properties are summarized here:
+\begin{itemize}
+    \item The density matrix of a pure state $\ket{\psi}$ is $\rho = \ket{\psi}\bra{\psi}$.
+    \item $\rho$ is Hermitian, positive semi-definite (all eigenvalues non-negative), and has unit trace:
+    \[
+    \rho = \rho^\dagger, \quad \lambda(\rho) \ge 0, \quad \Tr(\rho) = 1.
+    \]
+    \item Given a probabilistic mixture of states with probabilities $\{p_i\}$ and states $\{\ket{\psi_i}\}$,
+    \[
+    \rho = \sum_i p_i \ket{\psi_i}\bra{\psi_i}.
+    \]
+    \item For a $d \times d$ density matrix $\rho$, there exists an orthonormal basis $\{\ket{b_i}\}$ such that
+    \[
+    \rho = \sum_i \lambda_i \ket{b_i}\bra{b_i},
+    \]
+    where $\lambda_i$ are probabilities.
+    \item The expectation value of an observable $X$ is
+    \[
+    \langle X \rangle = \Tr(\rho X) = \sum_i \lambda_i \bra{b_i} X \ket{b_i}.
+    \]
+    \item The time evolution in a closed system with Hamiltonian $H$ is
+    \[
+    \rho(t) = e^{-iHt} \rho(0) e^{iHt}.
+    \]
+\end{itemize}
+
+\subsection{One Qubit Example}
+
+The codes for these various examples are included as a separate Python code..
+Consider a single qubit system that has a 50\% chance of being in
+$\ket{0}$, a 25\% chance of being in $\ket{+} =
+\frac{1}{\sqrt{2}}(\ket{0}+\ket{1})$, and a 25\% chance of being in
+$\ket{-} = \frac{1}{\sqrt{2}}(\ket{0}-\ket{1})$. Then
+
+\[
+\rho = \frac{1}{2}\ket{0}\bra{0} + \frac{1}{4}\ket{+}\bra{+} + \frac{1}{4}\ket{-}\bra{-} =
+\begin{bmatrix}
+3/4 & 0 \\[4pt]
+0 & 1/4
+\end{bmatrix}.
+\]
+
+\subsection{Two Qubit Example}
+
+Consider a system of two qubits that has a 90\% chance of being in the Bell state
+\[
+\ket{B_+} = \frac{1}{\sqrt{2}}(\ket{00} + \ket{11}).
+\]
+The remaining 10\% is distributed among $\ket{01}$, $\ket{10}$, and $\ket{B_-} = \frac{1}{\sqrt{2}}(\ket{00}-\ket{11})$ in the ratio 3:2:1. Then
+\[
+\rho = \frac{9}{10}\ket{B_+}\bra{B_+} + \frac{1}{20}\ket{01}\bra{01} + \frac{1}{30}\ket{10}\bra{10} + \frac{1}{60}\ket{B_-}\bra{B_-}.
+\]
+
+\section{Subsystems and Partial Traces}
+
+An open quantum system is a subsystem of a closed system composed of system + environment. To describe only the system, we trace out the environment:
+\[
+\rho_A = \Tr_B(\rho).
+\]
+For a pure state $\ket{\psi} = \ket{a}\otimes\ket{b}$, the reduced density matrix is
+\[
+\rho_A = \sum_j (I_A \otimes \bra{j}) \rho (I_A \otimes \ket{j}).
+\]
+
+\subsection{Two Qubit Example}
+
+From the two-qubit example,
+\[
+\rho_1 = \Tr_2(\rho) =
+\begin{bmatrix}
+61/120 & 0 \\[4pt]
+0 & 59/120
+\end{bmatrix},
+\qquad
+\rho_2 = \Tr_1(\rho) =
+\begin{bmatrix}
+59/120 & 0 \\[4pt]
+0 & 61/120
+\end{bmatrix}.
+\]
+
+\section{von Neumann Equation}
+
+For the total density matrix $\rho_T$ of system plus environment with total Hamiltonian $H_T$,
+\[
+\frac{d\rho_T}{dt} = -i[H_T, \rho_T].
+\]
+
+\section{Lindblad Master Equation}
+
+Writing $H_T = H + H_E + H_I$, where $H$ is the system Hamiltonian, $H_E$ the environment Hamiltonian, and $H_I$ their interaction, tracing out the environment and assuming weak coupling yields:
+\[
+\frac{d\rho}{dt} = -i[H,\rho] + \sum_k \gamma_k \left( L_k \rho L_k^\dagger - \frac{1}{2}\{L_k^\dagger L_k, \rho\} \right),
+\]
+where $\rho$ is the reduced density matrix, $\gamma_k \ge 0$ are decay rates, and $L_k$ are jump operators.
+
+The Heisenberg picture form is
+\[
+\frac{dX}{dt} = i[H,X] + \sum_k \gamma_k \left( L_k^\dagger X L_k - \frac{1}{2}\{L_k^\dagger L_k, X\} \right),
+\]
+and the identity operator satisfies $\frac{dI}{dt}=0$.
+
+\subsection{Liouvillian Superoperator}
+
+Define the superoperator $\mathcal{L}$ by
+\[
+\mathcal{L}[\rho] = -i[H,\rho] + \sum_k \gamma_k \left( L_k\rho L_k^\dagger - \frac{1}{2}\{L_k^\dagger L_k, \rho\} \right),
+\]
+so that
+\[
+\frac{d\rho}{dt} = \mathcal{L}[\rho].
+\]
+
+\subsection{Vectorization: The Fock–Liouville Space}
+
+Define $\ket{A\!\rangle\!\rangle}$ as the column-stacked vectorization of an operator $A$. The inner product is
+\[
+\braket{\!\braket{A|B}} = \Tr(A^\dagger B),
+\]
+and
+\[
+\frac{d}{dt}\ket{\!\braket{\rho}} = \hat{\mathcal{L}}\ket{\!\braket{\rho}},
+\]
+with solution
+\[
+\ket{\!\braket{\rho(t)}} = e^{\hat{\mathcal{L}}t} \ket{\!\braket{\rho(0)}}.
+\]
+Diagonalizing $\hat{\mathcal{L}}$ gives eigenvalues $\lambda_i$ and eigenvectors $\ket{\!\braket{r_i}}$ and $\bra{\!\braket{l_i}}$, allowing
+\[
+\ket{\!\braket{\rho(t)}} = \sum_i e^{\lambda_i t} \braket{\!\braket{l_i|\rho(0)}} \ket{\!\braket{r_i}}.
+\]
+
+\subsection{Steady State}
+
+The steady state $\ket{\!\braket{\rho_{\text{ss}}}}$ satisfies
+\[
+\hat{\mathcal{L}}\ket{\!\braket{\rho_{\text{ss}}}} = 0.
+\]
+
+\subsection{Harmonic Oscillator Coupled to a Bath}
+
+For $H = \omega a^\dagger a$ and jump operators $L_1 = \sqrt{\gamma(\tau+1)}\,a$, $L_2 = \sqrt{\gamma\tau}\,a^\dagger$, the Lindblad equation reads:
+\[
+\frac{d\rho}{dt} = -i[\omega a^\dagger a, \rho] + \gamma(\tau+1)\left[a\rho a^\dagger - \frac{1}{2}\{a^\dagger a,\rho\}\right]
++ \gamma\tau\left[a^\dagger\rho a - \frac{1}{2}\{aa^\dagger,\rho\}\right].
+\]
+
+See separate Python code
+
+\section{Project 1: studies of Markovian and non-Markovian noise}
+
+More text to come here.
+
+\section{Project 2: roadmap for beyond zero noise extrapolation for quantum computing using PMMs}
+
+{\bf This text will be improved upon.}
+
+
+In the Noisy Intermediate Scale Quantum (NISQ) computing era, error
+mitigation is vital to obtain meaningful results from quantum
+algorithms running on existing hardware. This project aims to develop
+a Parametric Matrix Model (PMM) which learns the underlying open
+quantum system nature of today’s noisy quantum computers in order to
+better understand the sources of error and directly extrapolate to
+results with zero noise.
+
+
+
+Quantum gates are often modeled idealistically as unitary operators
+acting on a quantum state. However, in practice, quantum gates are
+subject to noise which can be modeled as a quantum channel. The noise
+can be characterized by a superoperator acting on the density matrix
+of the quantum state. There are many equivalent formalisms including
+the Liouville superoperator and the Kraus operator
+sum~\cite{wood2015tensor}.
+
+A simplified mathematical overview is that if a noiseless operation can be represented as a unitary operator \( U \) acting on a pure state \( |\psi\rangle \),
+\[
+|\psi\rangle \rightarrow U |\psi\rangle,
+\]
+then a noisy operation can be represented as a superoperator \( S \) acting on a vectorized density matrix \( |\rho\rangle\rangle \),
+\[
+|\rho\rangle\rangle \rightarrow S |\rho\rangle\rangle.
+\]
+Vectorization is a central operation in the Liouville formalism. The vectorization of a matrix \( A \) is formed by stacking the columns of \( A \) into a single column vector.
+
+Any noiseless quantum circuit can be represented by a product of unitary operators \( U_1, U_2, \ldots, U_n \) acting on the initial state \( |\psi_0\rangle \),
+\[
+|\psi_0\rangle \rightarrow U_n U_{n-1} \cdots U_1 |\psi_0\rangle.
+\]
+The corresponding noisy circuit can be represented by a product of superoperators \( S_1, S_2, \ldots, S_n \) acting on the vectorized initial density matrix \( |\rho_0\rangle\rangle \),
+\[
+|\rho_0\rangle\rangle \rightarrow S_n S_{n-1} \cdots S_1 |\rho_0\rangle\rangle.
+\]
+
+Unitary operators have many nice properties such as:
+\begin{itemize}
+    \item \( U^\dagger U = U U^\dagger = I \) (unitarity),
+    \item \( \lambda(U) = \{ e^{i\theta} : \theta \in \mathbb{R} \} \) (eigenvalues on the unit circle),
+    \item \( \|Ux\|_2 = \|x\|_2 \) (norm preservation).
+\end{itemize}
+
+In contrast, superoperators for quantum channels must be \emph{completely positive and trace preserving} (CPTP). For a map \( \Phi : L(H) \rightarrow L(H) \), this means:
+\begin{itemize}
+    \item For any positive semidefinite operator \( X \), \( \Phi(X) \) is also positive semidefinite.
+    \item For any Hilbert space \( H' \), \( \Phi \otimes I_{H'} \) is also positive.
+    \item \( \mathrm{tr}(\Phi(X)) = \mathrm{tr}(X) \) (trace preserving).
+\end{itemize}
+
+Completely positive maps are always positive, and every CPTP map
+represents a valid quantum channel. The matrix representation of a
+superoperator can be reshaped into a positive semidefinite matrix,
+guaranteeing complete positivity. Other properties, such as trace
+preservation and Hermiticity preservation, arise from related
+transformations.
+
+Choosing a formalism and parameterization that respects these
+properties is crucial for any PMM that aims to learn the underlying
+noise model of a quantum computer.
+
+A possible goal of this project is to develop a PMM that can learn (perhaps a
+low-dimensional representation of) the underlying open quantum system
+nature of a real quantum circuit on a real quantum computer. Using
+this, we aim to demonstrate zero-noise extrapolation using the PMM
+that is more physically constrained and potentially more accurate than
+current state-of-the-art ZNE (Zero-noise extrapolation) techniques.
+
+
+By learning the underlying noise model of each gate on a physical
+quantum computer, we can potentially use this information to construct
+circuits that are more robust to noise.
+
+
+\subsection{Implementing Hamiltonians onto a Circuit}
+
+Here one could use Qiskit to implement a Hamiltonian onto a circuit. As an examnple, we could start with a classic, the   Ising Model:
+\[
+H = B \sum_i X_i + J \sum_i Z_i Z_{i+1},
+\]
+where \( X \) and \( Z \) are Pauli operators. See Ref.~\cite{smith2019simulating} for guidance on encoding many-body Hamiltonians.
+
+\subsection{Zero-Noise Extrapolation}
+
+One could then
+study sources of noise during computation and the presence of
+different noise channels. A useful reference is Nielsen and Chuang’s
+\emph{Quantum Computation and Quantum Information}. The depolarizing
+noise channel is typically used in ZNE. Implement ZNE following
+Ref.~\cite{giurgica2020digital}, or use the \texttt{mitiq} Python
+library (\url{https://mitiq.readthedocs.io/}).
+
+Note to self: need to perform a literature search on ZNE techniques enhanced
+with neural networks (recent results within the last 1–2 years) to
+possibly include as comparison.
+
+\subsection{Exact Simulation of Simple Circuit}
+
+One could then implement an exact unitary simulation of a simple
+circuit, such as Bell-state generation and measurement. Then extend it
+to an exact noisy simulation.
+
+\subsection{PMM for Noiseless Simple Circuit}
+
+The next step is to implement a PMM for the noiseless circuit and
+train it to reproduce observables or states. Explore larger circuits
+to study potential dimensionality reduction.
+
+\subsection{PMM for Noisy Simple Circuit}
+
+
+Develop a PMM for the noisy circuit. Demonstrate that it can learn the
+underlying noise model and extrapolate to the noiseless case. Explore
+larger circuits as before.
+
+\subsection{Comparison with Traditional ZNE}
+
+Compare PMM performance with traditional ZNE methods for the simple
+circuit. This may involve real quantum hardware or realistic noise
+simulators. Here one could
+demonstrate the PMM method on real quantum hardware, comparing it with existing ZNE techniques such as those in \texttt{mitiq}. One could extend this to include tensor-network approaches (MPS, DMRG, TEBD) to reduce computational complexity.
+
+\section*{References}
+
+\begin{thebibliography}{9}
+
+\bibitem{manzano2019}  D. Manzano, \emph{A Short Introduction to the Lindblad Master Equation}, \href{https://arxiv.org/abs/1906.04478}{arXiv:1906.04478}, 2020.
+\bibitem{yuen2022}  H. Yuen, \emph{Lecture 2: Mixed States and Density Matrices}, \href{https://www.henryyuen.net/spring2022/lec2-mixed-states.pdf}{2022}.
+
+\bibitem{giurgica2020digital}
+T.~Giurgica-Tiron, Y.~Hindy, R.~LaRose, A.~Mari, and W.~J.~Zeng,
+\newblock ``Digital zero noise extrapolation for quantum error mitigation,''
+\newblock in \emph{IEEE International Conference on Quantum Computing and Engineering (QCE)}, pp. 306–316, 2020.
+
+\bibitem{smith2019simulating}
+A.~Smith, M.~S.~Kim, F.~Pollmann, and J.~Knolle,
+\newblock ``Simulating quantum many-body dynamics on a current digital quantum computer,''
+\newblock \emph{npj Quantum Information}, 5(1):106, 2019.
+
+\bibitem{wood2015tensor}
+C.~J.~Wood, J.~D.~Biamonte, and D.~G.~Cory,
+\newblock ``Tensor networks and graphical calculus for open quantum systems,'' 2015.
+
+\end{thebibliography}
+
+\end{document}
+
+
