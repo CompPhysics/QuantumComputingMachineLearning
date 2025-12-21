@@ -25,7 +25,7 @@ themes can be covered:
 - QuTip at https://qutip.org/
 - PennyLane at https://pennylane.ai/
 
-### Time: Each Wednesday at 1015am-12pm CET and exercise sessions 915-10am (The lecture sessions will be recorded)
+### Time: Each Wednesday at 1015am-12pm CET and exercise sessions 815-10am (The lecture sessions will be recorded)
 -Permanent Zoom link for the whole semester is https://uio.zoom.us/my/mortenhj
 
 
