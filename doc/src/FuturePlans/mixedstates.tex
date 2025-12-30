@@ -126,3 +126,324 @@ The trace distance between $\rho$ and $\sigma$ is defined as
 The trace distance quantifies the optimal distinguishability of two quantum states and satisfies symmetry, the triangle inequality, monotonicity under partial trace, and unitary invariance.
 
 \end{document}
+
+
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{braket}    % For bra-ket notation
+\usepackage{amsthm}    % For definitions, theorems, proofs
+\usepackage{physics}   % For \outerproduct, \trace, etc.
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{remark}
+\newtheorem{example}{Example}
+\theoremstyle{plain}
+\newtheorem{proofthm}{Proof}
+
+\title{Mixed States and Density Matrices in Quantum Computing}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Quantum States and Pure State Formalism}
+
+\begin{frame}{Quantum States and Hilbert Space}
+  \begin{definition}[State Vector (Pure State)]
+    A \emph{quantum state} (for a closed system) is represented by a unit-length vector (ket) $\ket{\psi}$ in a complex Hilbert space $\mathcal{H}$. For example, a single \emph{qubit} lives in a 2-dimensional complex Hilbert space (spanned by basis $\{\ket{0}, \ket{1}\}$). Two state vectors that differ only by an overall phase represent the same physical state [oai_citation:0‡en.wikipedia.org](https://en.wikipedia.org/wiki/Bloch_sphere#:~:text=Mathematically%20each%20quantum%20mechanical%20system,a%20Hilbert%20space%20of%20dimension). The dual vector (bra) is denoted $\bra{\psi}$, and the inner product is $\braket{\phi|\psi}$.
+  \end{definition}
+
+  \begin{itemize}
+    \item \textbf{Bra-ket notation:} $\ket{\psi}$ is a column vector in some basis; $\bra{\psi} = \ket{\psi}^\dagger$ is its conjugate transpose (row vector). The inner product $\braket{\phi | \psi}$ is a complex number, and $\ket{\psi}\bra{\phi}$ denotes the outer product (a rank-1 operator).
+    \item \textbf{Normalization:} $\braket{\psi|\psi} = 1$. We generally assume states are normalized.
+    \item \textbf{Orthonormal basis:} A set $\{\ket{i}\}$ with $\braket{i|j} = \delta_{ij}$ spans $\mathcal{H}$. Any state can be expanded as $\ket{\psi} = \sum_i c_i \ket{i}$. 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Superposition Principle}
+  \begin{itemize}
+    \item A pure state can be a \textit{superposition}: e.g., for a qubit, $\ket{\psi} = \alpha\ket{0} + \beta\ket{1}$ (with $|\alpha|^2+|\beta|^2=1$). This is a coherent linear combination of basis states.
+    \item Example: $\ket{+} = \frac{1}{\sqrt{2}}(\ket{0} + \ket{1})$. This state is an equal superposition of $\ket{0}$ and $\ket{1}$.
+    \item Different choices of basis reveal different aspects of a state. In the $\{\ket{0},\ket{1}\}$ basis, $\ket{+}$ has equal overlap with $\ket{0}$ and $\ket{1}$. In the $\{\ket{+},\ket{-}\}$ basis (where $\ket{-}=\frac{1}{\sqrt{2}}(\ket{0}-\ket{1})$), the state $\ket{+}$ is actually one of the basis vectors.
+  \end{itemize}
+
+  \begin{example}[Measurement in Different Bases]
+    Consider $\ket{\psi} = \ket{+} = \frac{1}{\sqrt{2}}(\ket{0}+\ket{1})$. 
+    \begin{itemize}
+      \item If we measure in the computational basis $\{\ket{0},\ket{1}\}$, the outcomes $\ket{0}$ or $\ket{1}$ occur with probabilities $|\frac{1}{\sqrt{2}}|^2 = 1/2$ each (random bit).
+      \item If we measure in the $\{\ket{+},\ket{-}\}$ basis, the outcome will \emph{definitely} be $\ket{+}$ with probability 1 (since $\ket{+}$ is an eigenstate of that measurement).
+    \end{itemize}
+    Thus, the result of a measurement depends on the basis: every pure state is deterministic in some basis (its own basis) and appears as a superposition in others.
+  \end{example}
+\end{frame}
+
+\begin{frame}{Quantum Measurements (State-Vector Formalism)}
+  In the state-vector (pure state) formalism, a projective measurement is defined by an orthonormal set of \textbf{measurement basis states} $\{\ket{m_i}\}$ (eigenstates of an observable). Key postulates:
+  \begin{itemize}
+    \item \textbf{Born rule:} If the system is in state $\ket{\psi}$, the probability of outcome corresponding to $\ket{m_i}$ is $p(i) = |\braket{m_i|\psi}|^2$.
+    \item \textbf{State collapse:} Immediately after obtaining outcome $i$, the state collapses to the corresponding eigenstate $\ket{m_i}$ (or the normalized projection of $\ket{\psi}$ onto $\ket{m_i}$).
+    \item \textbf{Observable expectation:} For an observable (Hermitian operator) $M = \sum_i \lambda_i \ket{m_i}\bra{m_i}$, the expectation value is $\bra{\psi}M\ket{\psi} = \sum_i \lambda_i |\braket{m_i|\psi}|^2$.
+  \end{itemize}
+  \vspace{1ex}
+  \textit{Example:} Measuring $\ket{+}$ in $\{\ket{0},\ket{1}\}$ basis yields outcomes 0 or 1 with equal probability as shown above. In contrast, measuring in $\{\ket{+},\ket{-}\}$ yields $\lambda_{+}$ with 100\% certainty.
+\end{frame}
+
+\begin{frame}{Unitary Evolutions (Quantum Gates)}
+  The time evolution of an isolated quantum system is unitary. A \textbf{quantum gate} is represented by a unitary operator $U$ (i.e. $U^\dagger U = I$) acting on the state:
+  \[
+    \ket{\psi'} = U \ket{\psi}.
+  \]
+  \begin{itemize}
+    \item Unitaries preserve inner products and probabilities. If $\ket{\psi}$ is normalized, so is $U\ket{\psi}$.
+    \item Example: \textit{Hadamard gate} $H$ on a qubit: 
+      $H\ket{0} = \frac{1}{\sqrt{2}}(\ket{0}+\ket{1}) = \ket{+}$, 
+      $H\ket{1} = \frac{1}{\sqrt{2}}(\ket{0}-\ket{1}) = \ket{-}$. 
+      It creates superposition from basis states (and vice versa).
+    \item Multiple qubits: Unitaries can act on multi-qubit states (e.g. CNOT gate entangles two qubits). The state space of a composite system is the tensor product $\mathcal{H}_{AB} = \mathcal{H}_A \otimes \mathcal{H}_B$.
+  \end{itemize}
+  \textit{Important:} Pure state evolution under gates stays pure (a unitary sends pure states to pure states). However, as we will see, interactions with an environment or measurement can take pure states to \emph{mixed} states, requiring a more general formalism.
+\end{frame}
+
+\section{Mixed States and the Density Operator}
+
+\begin{frame}{Motivation for Mixed States}
+  Not all quantum systems can be described by a single known state vector. Situations requiring a \textbf{mixed state} description include:
+  \begin{itemize}
+    \item \textbf{Classical uncertainty:} We have a probabilistic ensemble of possible states. E.g., a qubit is prepared as $\ket{0}$ or $\ket{+}$ each with 50$\%$ probability (due to a random process or lack of knowledge). Before we observe it, we need a description of this uncertain state.
+    \item \textbf{Noise and decoherence:} Interaction with environment can randomize phases or states, effectively producing a mixture (e.g. thermal states).
+    \item \textbf{Subsystem of entangled state:} A subsystem of an entangled composite system cannot be described by a pure state alone.
+
+We will see that tracing out part of an entangled system yields a mixed state for the remainder.
+  \end{itemize}
+  In all such cases, we require a formalism that captures \emph{probabilistic mixtures of quantum states}. This is provided by the \textbf{density operator} (or \textbf{density matrix}) approach.
+\end{frame}
+
+\begin{frame}{Density Matrix: Definition}
+  \begin{definition}[Density Operator]
+    A \emph{density matrix} (density operator) $\rho$ is a positive semi-definite, Hermitian operator on the Hilbert space, with unit trace
+    %[oai_citation:7‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=A%20density%20matrix%20is%20a,outer%20products%20of%20a%20vector).
+    Equivalently, $\rho$ can be defined as 
+    \[
+       \rho = \sum_i p_i \ket{\psi_i}\bra{\psi_i},
+    \] 
+    where $\{ \ket{\psi_i} \}$ are (not necessarily orthogonal) state vectors and $p_i$ is the probability of the system being in state $\ket{\psi_i}$, with $p_i \ge 0$ and $\sum_i p_i = 1$
+    %[oai_citation:8‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=More%20generally%2C%20a%20mixture%20over,because%20it%20has%20trace%20one) [oai_citation:9‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=Tr%20X%20i%20pi,%3D%20X%20i).
+  \end{definition}
+  \begin{itemize}
+    \item Each term $\ket{\psi_i}\bra{\psi_i}$ is the projector onto state $\ket{\psi_i}$. The ensemble $\{p_i, \ket{\psi_i}\}$ represents a classical probabilistic mixture of quantum states.
+    \item The density matrix $\rho$ encapsulates all statistical predictions about the state. Along the diagonal (in any basis), the entries represent probabilities of corresponding basis states [oai_citation:10‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=Given%20some%20density%20matrix%2C%20we,measure%20of%20the%20superposition%2C%20or),
+    while the off-diagonal terms carry phase coherence information (indicating quantum superposition) [oai_citation:11‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=Given%20some%20density%20matrix%2C%20we,measure%20of%20the%20superposition%2C%20or). If all off-diagonals are zero (in some basis), the state is purely classical mixture in that basis.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Examples of Pure vs. Mixed States in Density Form}
+  \begin{example}[Pure state as a density matrix]
+    If the system is known to be in a pure state $\ket{\psi}$, the density operator is $\rho = \ket{\psi}\bra{\psi}$. For instance, $\ket{+\!} = \frac{1}{\sqrt{2}}(\ket{0}+\ket{1})$ corresponds to 
+    \[
+      \rho_{+} = \ket{+}\bra{+} = \frac{1}{2}\begin{pmatrix}1 & 1\\ 1 & 1\end{pmatrix},
+    \] 
+    in the $\{\ket{0},\ket{1}\}$ basis. This $\rho_{+}$ has off-diagonal terms $=1/2$, reflecting coherence between $\ket{0}$ and $\ket{1}$. A pure state's density matrix satisfies $\rho^2 = \rho$ and has $\mathrm{Tr}(\rho^2)=1$ (rank 1).
+  \end{example}
+
+  \begin{example}[A classical probabilistic mixture]
+    Suppose a qubit is prepared as $\ket{0}$ with probability $1/2$ or $\ket{1}$ with probability $1/2$. The density matrix is 
+    \[
+      \rho = \frac{1}{2}\ket{0}\bra{0} + \frac{1}{2}\ket{1}\bra{1} = \frac{1}{2}\begin{pmatrix}1 & 0\\0 & 1\end{pmatrix} = \frac{I_2}{2}.
+    \] 
+    This is the \emph{maximally mixed state} in 2D. In any basis, $\rho$ is represented by a diagonal matrix $(\frac{1}{2}, \frac{1}{2})$, and all outcomes are equally likely. Note $\rho$ has no coherence (all off-diagonals zero in every basis) and $\mathrm{Tr}(\rho^2)=1/2 < 1$, indicating it is mixed.
+  \end{example}
+\end{frame}
+
+\begin{frame}{Ensemble Interpretation and Non-uniqueness}
+  A key insight is that the same density matrix can be obtained from different ensembles of pure states:
+  \begin{example}[Different ensembles, same $\rho$]
+    Consider two scenarios for a qubit:
+    \begin{itemize}
+      \item Ensemble $E_1$: 50% $\ket{0}$, 50% $\ket{1}$. $\quad$ (Clearly yields $\rho = I/2$.)
+      \item Ensemble $E_2$: 50% $\ket{+}$, 50% $\ket{-}$. ($\ket{\pm} = \frac{1}{\sqrt{2}}(\ket{0}\pm\ket{1})$).
+    \end{itemize}
+    Both $E_1$ and $E_2$ produce the same density matrix $\rho = \frac{1}{2}I$ [oai_citation:12‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=), the totally mixed state. There is \textit{no observable difference} between these two preparations, since $\rho$ contains all physical information. This illustrates that the decomposition of $\rho$ into pure states is not unique [oai_citation:13‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=) (except in the special case of $\rho$ being pure itself).
+  \end{example}
+  \textit{Implication:} The density operator provides a complete description of the quantum state for statistical predictions, but it does not record which specific pure state from an ensemble one might have; many different mixtures correspond to the same $\rho$. 
+\end{frame}
+
+\begin{frame}{Theorem: Characterization of Density Matrices}
+  \begin{theorem}[Density Matrix Conditions]
+    A matrix $\rho$ on a $d$-dimensional Hilbert space is a valid density matrix if and only if:
+    \begin{itemize}
+      \item $\rho$ is Hermitian: $\rho = \rho^\dagger$.
+      \item $\rho$ is positive semi-definite: $\bra{\phi}\rho\ket{\phi} \ge 0$ for all $\ket{\phi}$. (All eigenvalues $\lambda_i \ge 0$.)
+      \item $\mathrm{Tr}(\rho) = 1$ (unit trace).
+    \end{itemize}
+    Moreover, any such $\rho$ can be expressed as a convex combination of pure states (outer products).
+  \end{theorem}
+  \begin{proof}
+    ($\Rightarrow$) If $\rho = \sum_i p_i \ket{\psi_i}\bra{\psi_i}$ as per definition:
+    Hermiticity and positivity follow because each $\ket{\psi_i}\bra{\psi_i}$ is Hermitian positive semi-definite, and $\rho$ is their nonnegative linear combination. $\mathrm{Tr}(\rho) = \sum_i p_i \mathrm{Tr}(\ket{\psi_i}\bra{\psi_i}) = \sum_i p_i = 1$ %[oai_citation:14‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=Tr%20X%20i%20pi,%3D%20X%20i).
+    
+    ($\Leftarrow$) Conversely, given a Hermitian $\rho$ with $\mathrm{Tr}(\rho)=1$ and eigenvalues $\lambda_i \ge 0$, we use the spectral theorem [oai_citation:15‡quantum.cloud.ibm.com](https://quantum.cloud.ibm.com/learning/en/courses/general-formulation-of-quantum-information/density-matrices/convex-combinations#:~:text=Theorem): there is an orthonormal basis $\{\ket{e_i}\}$ of eigenvectors and $\rho = \sum_{i=1}^d \lambda_i \ket{e_i}\bra{e_i}$. Since $\lambda_i \ge 0$ and $\sum_i \lambda_i = \mathrm{Tr}(\rho) = 1$, these can be interpreted as probabilities. Thus $\rho$ is of the form $\sum_i \lambda_i \ket{e_i}\bra{e_i}$, a valid ensemble representation %[oai_citation:16‡quantum.cloud.ibm.com](https://quantum.cloud.ibm.com/learning/en/courses/general-formulation-of-quantum-information/density-matrices/convex-combinations#:~:text=We%20can%20apply%20the%20spectral,This%20allows%20us%20to%20write) [oai_citation:17‡quantum.cloud.ibm.com](https://quantum.cloud.ibm.com/learning/en/courses/general-formulation-of-quantum-information/density-matrices/convex-combinations#:~:text=The%20numbers%20%CE%BB%200%2C%E2%80%A6%2C%CE%BB%20n%E2%88%921,useful%20property%20of%20the%20trace).
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Properties of Density Matrices}
+  Given $\rho = \sum_i p_i \ket{\psi_i}\bra{\psi_i}$:
+  \begin{itemize}
+    \item \textbf{Positivity:} $\rho \ge 0$. For any vector $\ket{\phi}$, $\bra{\phi}\rho\ket{\phi} = \sum_i p_i |\braket{\phi|\psi_i}|^2 \ge 0$ %[oai_citation:18‡ocw.mit.edu](https://ocw.mit.edu/courses/8-06-quantum-physics-iii-spring-2016/fc8347d83390a876ee665fbbfd9b2d7f_MIT8_06S16_chap3.pdf#:~:text=d%20Proof%20of%20Theorem%202,%E2%88%9A%20i%3D1%20d%20only%20%E2%88%9A) [oai_citation:19‡ocw.mit.edu](https://ocw.mit.edu/courses/8-06-quantum-physics-iii-spring-2016/fc8347d83390a876ee665fbbfd9b2d7f_MIT8_06S16_chap3.pdf#:~:text=,By%20Theorem%202%2C%20%CF%81).
+    All eigenvalues of $\rho$ are $\ge 0$.
+    \item \textbf{Trace~1:} $\mathrm{Tr}(\rho) = \sum_i p_i \braket{\psi_i|\psi_i} = \sum_i p_i = 1$ %[oai_citation:20‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=Tr%20X%20i%20pi,%3D%20X%20i).
+    The trace equals the total probability.
+    \item \textbf{Hermitian:} $\rho^\dagger = \sum_i p_i \ket{\psi_i}\bra{\psi_i} = \rho$. Observables and density operators are Hermitian, ensuring real expectation values.
+    \item \textbf{Purity:} For a pure state $\rho = \ket{\psi}\bra{\psi}$, $\rho^2 = \rho$ and $\mathrm{Tr}(\rho^2) = 1$. For a mixed state (non-pure), $\mathrm{Tr}(\rho^2) < 1$. In fact, $\mathrm{Tr}(\rho^2)$ serves as a measure of purity.
+    \item \textbf{Convexity:} If $\rho_1, \rho_2$ are density matrices, then any probabilistic mixture $\,\rho = p\,\rho_1 + (1-p)\,\rho_2$ (for $0\le p \le 1$) is also a density matrix, since positivity and trace 1 are preserved. The set of density matrices is convex, with extreme points being pure states.
+  \end{itemize}
+  \vspace{1ex}
+  \textit{Note:} The eigen-decomposition $\rho = \sum_i \lambda_i \ket{e_i}\bra{e_i}$ (with $\lambda_i \ge 0$, $\sum_i\lambda_i=1$) is a special ensemble where the states $\ket{e_i}$ are orthonormal. This is the canonical representation given by the spectral theorem
+  %[oai_citation:21‡quantum.cloud.ibm.com](https://quantum.cloud.ibm.com/learning/en/courses/general-formulation-of-quantum-information/density-matrices/convex-combinations#:~:text=Theorem) [oai_citation:22‡quantum.cloud.ibm.com](https://quantum.cloud.ibm.com/learning/en/courses/general-formulation-of-quantum-information/density-matrices/convex-combinations#:~:text=We%20can%20apply%20the%20spectral,This%20allows%20us%20to%20write).
+\end{frame}
+
+\begin{frame}{Bloch Sphere (Single-Qubit States)}
+ The state space of a single qubit can be visualized on the \textbf{Bloch sphere}. Any $2\times2$ density matrix can be parametrized as 
+\[
+  \rho = \frac{1}{2}\Big(I + \mathbf{r}\cdot \boldsymbol{\sigma}\Big),
+\] 
+where $\boldsymbol{\sigma}=(\sigma_x,\sigma_y,\sigma_z)$ are the Pauli matrices and $\mathbf{r}\in\mathbb{R}^3$ is called the \emph{Bloch vector} [oai_citation:23‡ocw.mit.edu](https://ocw.mit.edu/courses/8-06-quantum-physics-iii-spring-2016/fc8347d83390a876ee665fbbfd9b2d7f_MIT8_06S16_chap3.pdf#:~:text=a0I%20%2B%20a1%CF%831%20%2B%20a2%CF%832,%E2%89%A4%201). The condition $\rho \ge 0$ with $\mathrm{Tr}(\rho)=1$ implies $|\mathbf{r}| \le 1$ [oai_citation:24‡ocw.mit.edu](https://ocw.mit.edu/courses/8-06-quantum-physics-iii-spring-2016/fc8347d83390a876ee665fbbfd9b2d7f_MIT8_06S16_chap3.pdf#:~:text=a0I%20%2B%20a1%CF%831%20%2B%20a2%CF%832,%E2%89%A4%201).
+  \begin{itemize}
+    \item $\mathbf{r} = (r_x, r_y, r_z)$ corresponds to a point inside or on the unit sphere (the Bloch ball).
+    \item Pure states $\Leftrightarrow |\mathbf{r}| = 1$ (points on the surface of the sphere) [oai_citation:25‡en.wikipedia.org](https://en.wikipedia.org/wiki/Bloch_sphere#:~:text=states%20of%20an%20electron,the%20visualization%20is%20less%20useful). E.g., $\ket{0}$ corresponds to $(0,0,1)$ (north pole), $\ket{1}$ to $(0,0,-1)$ (south pole), $\ket{+}$ to $(1,0,0)$ (a point on the equator), etc.
+    \item Mixed states $\Leftrightarrow |\mathbf{r}| < 1$ (points strictly inside the sphere) [oai_citation:26‡en.wikipedia.org](https://en.wikipedia.org/wiki/Bloch_sphere#:~:text=states%20of%20an%20electron,the%20visualization%20is%20less%20useful). The maximally mixed state is the center of the sphere ($\mathbf{r}=\mathbf{0}$).
+  \end{itemize}
+  This geometric picture provides intuition: mixing states pulls the Bloch vector toward the origin (reducing its length). Quantum operations correspond to rotations or contractions in this space.
+\end{frame}
+
+\section{Measurements and Operations in Density Matrix Formalism}
+
+\begin{frame}{Measurement in Density Operator Formalism}
+  In the density matrix formalism, the measurement postulates can be succinctly expressed:
+  \begin{itemize}
+    \item A projective measurement is described by a set of orthogonal projectors $\{M_i\}$ satisfying $M_i^2 = M_i$, $M_i = M_i^\dagger$, and $\sum_i M_i = I$. $M_i = \ket{m_i}\bra{m_i}$ projects onto eigenstate $\ket{m_i}$.
+    \item If the system is in state $\rho$, the probability of outcome $i$ is 
+      \[
+         p(i) = \mathrm{Tr}(M_i\, \rho)\,,
+      \] 
+      which reproduces the Born rule. For a pure state $\rho=\ket{\psi}\bra{\psi}$, $\mathrm{Tr}(M_i\rho) = \mathrm{Tr}(M_i \ket{\psi}\bra{\psi}) = \bra{\psi}M_i\ket{\psi} = |\braket{m_i|\psi}|^2$ [oai_citation:27‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=the%20projective%20measurement%20M,2) [oai_citation:28‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=probability%20Tr%28Mi%CF%81%29,just%20working%20with%20pure%20states), as expected.
+    \item If outcome $i$ is observed, the post-measurement (collapsed) state is 
+      \[
+         \rho_i' = \frac{M_i \, \rho\, M_i}{p(i)}\,,
+      \] 
+      which for a pure initial state yields $\rho_i' = \ket{m_i}\bra{m_i}$. If the measurement result is unknown (or we average over outcomes), the state transforms as $\rho \to \sum_i M_i \, \rho\, M_i$ (a non-unitary, irreversible evolution).
+  \end{itemize}
+  This formalism handles both pure and mixed initial states seamlessly. It also generalizes to non-projective measurements (POVMs) with $M_i \ge 0$, $\sum_i M_i=I$, where $p(i)=\mathrm{Tr}(M_i\rho)$ and state updates via appropriate operators.
+\end{frame}
+
+\begin{frame}{Unitary Evolution of Mixed States}
+  A deterministic evolution (with no measurement) of the state is given by a unitary $U$ on the Hilbert space. In the density operator picture:
+  \[
+     \rho \;\mapsto\; \rho' = U\,\rho\,U^\dagger\,.
+  \]
+  This is the equivalent of $\ket{\psi} \mapsto U\ket{\psi}$ for pure states [oai_citation:29‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=3,1%20outer), but it applies to any state (pure or mixed). Key points:
+  \begin{itemize}
+    \item $\rho'$ is automatically a valid density matrix: Hermiticity and trace are preserved, and eigenvalues remain the same (just basis changes). $\mathrm{Tr}(\rho') = \mathrm{Tr}(U \rho U^\dagger) = \mathrm{Tr}(\rho U^\dagger U) = \mathrm{Tr}(\rho) = 1$.
+    \item Unitary evolution is reversible. If $\rho = \sum_i p_i \ket{\psi_i}\bra{\psi_i}$ (an ensemble), then $U\rho U^\dagger = \sum_i p_i (U\ket{\psi_i})(\bra{\psi_i}U^\dagger)$, which corresponds to the ensemble of states $U\ket{\psi_i}$ with probabilities $p_i$.
+    \item Observables evolve in the Heisenberg picture as $M \mapsto U^\dagger M U$, while states evolve as above (Schrödinger picture). The expectation value $\mathrm{Tr}(M \rho)$ remains invariant under $M \to U^\dagger M U$, $\rho \to U\rho U^\dagger$.
+  \end{itemize}
+  \textit{In summary:} $U\rho U^\dagger$ is the density matrix of the state after applying gate $U$ to the state $\rho$ [oai_citation:30‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=3,1%20outer). This includes the special case of pure states (where it reduces to $|\psi\>\mapsto U|\psi\>$).
+\end{frame}
+
+\begin{frame}{General Quantum Operations (Completely Positive Maps)}
+  The density matrix formalism allows us to describe not only unitary evolutions, but also general noisy processes and open-system dynamics. A general \textbf{quantum operation} (quantum channel) $\Phi$ is a map taking density matrices to density matrices (linear, completely positive, trace-preserving). \\
+  \medskip
+
+  \textbf{Kraus operator-sum representation:} Any such operation can be expressed as [oai_citation:31‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_operation#:~:text=Image%3A%20,is%20the%20identity%20operator) 
+  \[
+     \Phi(\rho) \;=\; \sum_k E_k\, \rho\, E_k^\dagger\,,
+  \] 
+  with operators $E_k$ satisfying the completeness relation $\sum_k E_k^\dagger E_k = I$ (which guarantees trace-preservation) [oai_citation:32‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_operation#:~:text=Image%3A%20,is%20the%20identity%20operator). Each $E_k$ is often called a Kraus operator.
+  \begin{itemize}
+    \item If there is only one term ($E_1 = U$ unitary), this reduces to the unitary case $\rho \to U \rho U^\dagger$.
+    \item Measurement (without recording outcome) can be viewed as a channel: e.g., for a projective measurement $\{M_i\}$, $\Phi(\rho) = \sum_i M_i \rho M_i$, which is of the above form (with $E_i = M_i$).
+    \item Noise processes can be described similarly. Example: a \emph{dephasing channel} (phase noise) on a qubit can be given by $E_0=\sqrt{1-p}\,I$, $E_1=\sqrt{p}\,Z$, leading to $\rho \to (1-p)\rho + p\,Z\rho Z$ which damps off-diagonal terms (coherences) while leaving diagonal terms unchanged (a model of decoherence).
+  \end{itemize}
+  Any physical process that could occur to a quantum state (including interactions with an environment and subsequent tracing out) can be described by a suitable set $\{E_k\}$ [oai_citation:33‡en.wikipedia.org](https://en.wikipedia.org/wiki/Quantum_operation#:~:text=In%20the%20infinite,between%20two%20minimal%20Stinespring%20representations). This formalism is essential in quantum computing for error channels and general quantum algorithms.
+\end{frame}
+
+\section{Composite Systems and Entanglement}
+
+\begin{frame}{Composite Systems and Tensor Products}
+  \begin{itemize}
+    \item For two subsystems $A$ and $B$ with state spaces $\mathcal{H}_A$ and $\mathcal{H}_B$, the joint system lives in $\mathcal{H}_{AB} = \mathcal{H}_A \otimes \mathcal{H}_B$. If $\dim(\mathcal{H}_A)=d_A$ and $\dim(\mathcal{H}_B)=d_B$, then $\dim(\mathcal{H}_{AB}) = d_A d_B$.
+    \item A basis of $\mathcal{H}_{AB}$ is given by $\{\ket{i}_A \otimes \ket{j}_B\}$ for $\ket{i}_A$ a basis of $A$ and $\ket{j}_B$ a basis of $B$. We often write $\ket{i}_A\ket{j}_B$ or $\ket{i,j}_{AB}$ for short.
+    \item \textbf{Product states:} If system $A$ is in state $\ket{\psi}_A$ and $B$ in $\ket{\phi}_B$, the joint pure state is $\ket{\psi}_A \otimes \ket{\phi}_B$. These are unentangled (separable) pure states.
+    \item \textbf{Entangled states:} A pure state in $AB$ that cannot be written as a single product is entangled. For example, the two-qubit \emph{Bell state} 
+      \[
+         \ket{\Phi^+}_{AB} = \frac{1}{\sqrt{2}}\big(\ket{0}_A\ket{0}_B + \ket{1}_A\ket{1}_B\big)
+      \] 
+      is entangled. Neither qubit has an independent pure state of its own.
+  \end{itemize}
+  If $\rho_A$ and $\rho_B$ are density matrices for $A$ and $B$, then the joint state for independent systems is $\rho_{A}\otimes \rho_{B}$.
+\end{frame}
+
+\begin{frame}{Partial Trace and Reduced States}
+  When we have a joint state $\rho_{AB}$ but are interested only in subsystem $A$, we use the \textbf{partial trace} to obtain the \emph{reduced density matrix} $\rho_A = \Tr_B(\rho_{AB})$. This operation traces out (sums over) the degrees of freedom of subsystem $B$:
+  \begin{itemize}
+    \item In a basis $\{\ket{a_i}\}$ for $A$ and $\{\ket{b_j}\}$ for $B$, the partial trace over $B$ is defined by the linear extension of 
+      \[
+        \Tr_B\Big(\ket{a_i, b_j}\bra{a_{i'}, b_{j'}}\Big) = \braket{b_{j'}|b_j}\;\ket{a_i}\bra{a_{i'}}\,.
+      \] 
+      That is, $\Tr_B(\ket{a_i}\bra{a_{i'}} \otimes \ket{b_j}\bra{b_{j'}}) = \braket{b_{j'}|b_j}\,\ket{a_i}\bra{a_{i'}}$ [oai_citation:34‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=Formally%2C%20we%20define%20the%20partial,of%20any%20density%20matrix%20%CF%81AB).
+    \item Operationally: $\rho_A = \sum_{j} (\mathbb{I}_A \otimes \bra{b_j})\,\rho_{AB}\,(\mathbb{I}_A \otimes \ket{b_j})$. The sum over $j$ traces out $B$.
+    \item $\rho_A$ is a $d_A \times d_A$ matrix (state on $A$). Similarly, $\rho_B = \Tr_A(\rho_{AB})$ for the state of subsystem $B$.
+  \end{itemize}
+  \textbf{Properties:} If $\rho_{AB}$ is a valid density matrix on $AB$, the reduced state $\rho_A = \Tr_B(\rho_{AB})$ is a valid density matrix on $A$ (positive, Hermitian, trace 1). Tracing out cannot increase purity: typically $\rho_A$ is more mixed than $\rho_{AB}$ unless the subsystems were independent.
+\end{frame}
+
+\begin{frame}{Entanglement and Mixed Subsystems}
+  For a pure entangled state of $AB$, each subsystem alone is described by a mixed state. 
+  \begin{example}[Bell State Reduced State]
+    Let $\ket{\Phi^+}_{AB} = \frac{1}{\sqrt{2}}(\ket{00} + \ket{11})$. The joint density is $\rho_{AB} = \ket{\Phi^+}\bra{\Phi^+}$. If we trace out subsystem $B$, the state of $A$ is
+    \[
+      \rho_{A} = \Tr_B(\rho_{AB}) = \frac{1}{2}\big(\ket{0}_A\bra{0} + \ket{1}_A\bra{1}\big) = \frac{I_2}{2}\,,
+    \] 
+    the maximally mixed state on $A$. Similarly $\rho_B = I_2/2$. Each qubit individually has no information (completely random state), even though the joint state is pure and has perfect correlations [oai_citation:35‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=want%20to%20describe%20a%20probabilistic,consider%20a%20quantum%20system%20affected) [oai_citation:36‡henryyuen.net](https://www.henryyuen.net/classes/spring2022/lec2-mixed-states.pdf#:~:text=randomness,2%20Probabilistic%20Mixtures).
+  \end{example}
+  \begin{definition}[Entanglement]
+    A pure state $\ket{\Psi}_{AB}$ is \emph{entangled} if it cannot be factored as $\ket{\psi}_A \otimes \ket{\phi}_B$. Equivalently, the reduced states $\rho_A = \Tr_B(\ket{\Psi}\bra{\Psi})$ (and $\rho_B$) are \textit{mixed} rather than pure. A mixed state $\rho_{AB}$ is called \emph{entangled} if it cannot be expressed as a convex combination of product states $\sum_k p_k\, \rho_A^{(k)} \otimes \rho_B^{(k)}$; otherwise it is \emph{separable}.
+  \end{definition}
+  Almost any interesting pure state of two or more qubits is entangled. Entanglement is a resource in quantum information, enabling phenomena like non-local correlations and quantum teleportation.
+\end{frame}
+
+\begin{frame}{Decoherence: Entanglement with Environment}
+  \begin{example}[Decoherence via Environment Interaction]
+    Consider a qubit system $S$ initially in a superposition $\ket{+}_S = \frac{1}{\sqrt{2}}(\ket{0}_S + \ket{1}_S)$. Let $E$ be an environment (initially in state $\ket{E_0}$) that interacts with the qubit such that it becomes entangled, e.g.:
+    \[
+      \ket{+}_S \otimes \ket{E_0}_E \;\longrightarrow\; \frac{1}{\sqrt{2}}\big(\ket{0}_S\ket{E_0}_E + \ket{1}_S\ket{E_1}_E\big) =: \ket{\Psi}_{SE}\,,
+    \] 
+    where $\ket{E_1}_E$ is an orthogonal environment state correlated with $\ket{1}_S$. The system+environment is now in a pure entangled state $\ket{\Psi}_{SE}$.
+    \begin{itemize}
+      \item The reduced state of the system $S$ is $\rho_S = \Tr_E(\ket{\Psi}\bra{\Psi})$. Expanding $\ket{\Psi}_{SE}$: 
+        \[
+           \rho_S = \frac{1}{2}\Big(\ket{0}\bra{0} + \ket{1}\bra{1} + \braket{E_1|E_0}\ket{1}\bra{0} + \braket{E_0|E_1}\ket{0}\bra{1}\Big)\,. 
+        \] 
+      \item If $\bra{E_0}E_1\rangle = 0$ (environment states fully distinguish), the off-diagonal terms vanish and $\rho_S = \frac{1}{2}(|0\>\!\<0| + |1\>\!\<1|) = I/2$, a completely mixed state. The coherence in the $|0\>\leftrightarrow|1\>$ superposition is lost.
+      \item This process is \textbf{decoherence}: the system’s phase information has leaked into the environment. The off-diagonal elements of $\rho_S$ (in the $\{|0\>,|1\>\}$ basis) have decayed to 0 [oai_citation:37‡physics.stackexchange.com](https://physics.stackexchange.com/questions/317126/off-diagonal-elements-of-density-matrix-measurement-of-coherence#:~:text=coherence%3F%20physics,matrix%20are%20responsible%20for%20coherency) [oai_citation:38‡web.ma.utexas.edu](https://web.ma.utexas.edu/mp_arc/c/06/06-229.pdf#:~:text=%5BPDF%5D%20Decoherence%20and%20Thermalization%20,The%20latter%20is%20determined), leaving a classical mixture of $|0\>$ and $|1\>$.
+      \item If $\ket{E_0}$ and $\ket{E_1}$ are not perfectly orthogonal (partial which-path information), the off-diagonals would be reduced but not completely zero — indicating partial decoherence.
+    \end{itemize}
+  \end{example}
+  \textit{Lesson:} Entanglement with an environment can turn an initial pure state of the system into a mixed state (when the environment is unobserved). The density matrix formalism is crucial for describing such open-system evolution.
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{itemize}
+    \item We introduced the density matrix formalism to describe both pure and mixed states in quantum mechanics. A density matrix $\rho$ encapsulates our knowledge of the state, whether that state is a definite state vector or an ensemble of possibilities.
+    \item Key properties of density matrices were derived: positivity, unit trace, convex combination structure, and the relationship between pure states and extremal density matrices.
+    \item We reformulated measurement postulates and quantum evolutions in the language of density matrices. The formalism naturally handles classical probabilities and quantum superpositions in one framework.
+    \item We explored the concept of partial trace, showing how to obtain the state of a subsystem and how entanglement leads to mixed reduced states. Entanglement was defined and illustrated (Bell states).
+    \item Examples like decoherence demonstrated the power of the density operator approach in describing loss of coherence and general quantum processes, which can be modeled by operator-sum (Kraus) representations of quantum channels.
+  \end{itemize}
+  \vspace{2ex}
+\end{frame}
+
+\end{document}
