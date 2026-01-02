@@ -1,0 +1,161 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{bm}
+\usepackage{physics}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Quantum Computing for Nuclear Physics\\large Time Evolution via Trotter Decompositions}
+\author{Ryan LaRose}
+\date{June 2025 \ Trento, Italy}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+  These notes present a detailed introduction to time evolution in
+  quantum mechanics using Trotter and Lie--Suzuki--Trotter
+  decompositions, with an emphasis on applications in quantum
+  computing for nuclear and many-body physics. We discuss the
+  mathematical foundations of Trotterization, provide a proof of the
+  first-order Trotter formula, show how Trotterized evolution can be
+  implemented as quantum circuits, and illustrate the method through a
+  concrete coding exercise based on the transverse-field Ising model.
+
+\end{abstract}
+
+\tableofcontents
+
+\section{Time Evolution via Trotter}
+
+\subsection{Problem Definition}
+
+One of the most fundamental tasks in quantum mechanics and quantum information processing is computing the time evolution of a quantum state under a Hamiltonian $\mathcal{H}$. Given an initial state $\ket{\psi(0)}$, Schr"odinger's equation
+\begin{equation}
+i\frac{d}{dt}\ket{\psi(t)} = \mathcal{H}\ket{\psi(t)}
+\end{equation}
+
+implies that, for a time-independent Hamiltonian, the solution is
+\begin{equation}
+\ket{\psi(t)} = e^{-i\mathcal{H}t}\ket{\psi(0)}.
+\end{equation}
+
+In quantum computing, Hamiltonians are typically expressed in the Pauli basis,
+\begin{equation}
+\mathcal{H} = \sum_{i=1}^N c_i P_i,
+\end{equation}
+where each $P_i$ is a tensor product of single-qubit Pauli operators ${I,X,Y,Z}$ acting on $n$ qubits, and the coefficients $c_i$ are real.
+
+If all Pauli terms commute, the time evolution operator factorizes exactly into a product of exponentials. In general, however, the Pauli terms do not commute, and approximate methods are required.
+
+\subsection{Trotter Formulae}
+
+
+\subsubsection{First-Order Trotter Formula}
+
+\textbf{Theorem (Trotter Formula).} Let $A$ and $B$ be operators with $|A| \le 1$ and $|B| \le 1$. Then
+\begin{equation}
+  \norm{e^{A+B} - e^A e^B} = \mathcal{O}(\norm{[A,B]}).
+\end{equation}
+
+More generally, for $r \in \mathbb{N}$,
+\begin{equation}
+  \norm{e^{A+B} - (e^{A/r}e^{B/r})^r} = \mathcal{O}!\left(\frac{\norm{[A,B]}}{r}\right).
+\end{equation}
+
+Reintroducing time via $A \mapsto At$ and $B \mapsto Bt$, the error of the first-order Trotter approximation scales as $\mathcal{O}(t^2/r)$.
+
+\subsubsection{Remarks and Higher-Order Formulae}
+
+For Hamiltonians with many terms, the error depends on sums of commutator norms. Higher-order Lie–Suzuki–Trotter formulae reduce the scaling of the error in $t$ at the cost of deeper quantum circuits. For example, the second-order formula
+\begin{equation}
+  e^{At/2} e^{Bt} e^{At/2}
+\end{equation}
+
+has an error scaling as $\mathcal{O}(t^3)$. Higher-order constructions can be built recursively and are particularly relevant for fault-tolerant quantum computation.
+
+\subsection{Proof of the First-Order Formula}
+
+The proof proceeds by Taylor expanding both $e^{A+B}$ and $e^A e^B$, comparing the resulting series term by term, and carefully accounting for the non-commutativity of $A$ and $B$. Each reordering of operators introduces commutators, and bounding their contribution leads to the stated error scaling.
+
+\section{Quantum Circuits for Trotter Evolution}
+
+\subsection{General Idea}
+
+To implement Trotterized time evolution on a quantum computer, one must realize exponentials of Pauli strings as quantum circuits. Since Pauli operators are Hermitian, their exponentials are unitary and can be decomposed into elementary gates such as CNOTs and single-qubit rotations.
+
+For any normal operator $M$ with diagonalization $M = V \Lambda V^\dagger$, we have
+\begin{equation}
+  e^M = V e^{\Lambda} V^\dagger.
+\end{equation}
+
+This observation allows us to exponentiate general Pauli strings by diagonalizing them into products of $Z$ operators.
+
+\subsection{Pauli Operators and Rotations}
+
+The single-qubit Pauli operators are
+\begin{equation}
+  X = \begin{pmatrix} 0 & 1 \ 1 & 0 \end{pmatrix}, \quad
+  Y = \begin{pmatrix} 0 & -i \ i & 0 \end{pmatrix}, \quad
+  Z = \begin{pmatrix} 1 & 0 \ 0 & -1 \end{pmatrix}.
+\end{equation}
+
+Pauli rotations are defined as
+\begin{equation}
+  R_j(\theta) = e^{-i\sigma_j \theta/2}, \quad j \in {X,Y,Z}.
+\end{equation}
+
+\subsection{Exponentials of Pauli Strings}
+
+Exponentials of products of $Z$ operators can be implemented using CNOT ladders and single-qubit $R_Z$ rotations. Exponentials of general Pauli strings follow by conjugating with appropriate single-qubit basis-change gates such as the Hadamard and phase gates.
+
+\section{Coding Exercise: Transverse-Field Ising Model}
+
+\subsection{Model Hamiltonian}
+
+We consider the one-dimensional transverse-field Ising model (TFIM) with periodic boundary conditions,
+\begin{equation}
+  H = J \sum_{i=1}^n Z_i Z_{i+1} - \Gamma \sum_{i=1}^n X_i.
+\end{equation}
+
+This model serves as a standard benchmark for quantum simulation algorithms.
+
+\subsection{Exact Time Evolution}
+
+For small system sizes, exact time evolution can be computed using matrix exponentiation. Observables such as site-resolved magnetization
+\begin{equation}
+  \langle Z_j \rangle(t) = \bra{\psi(t)} Z_j \ket{\psi(t)}
+\end{equation}
+
+provide insight into the system’s dynamics.
+
+\subsection{Trotterized Time Evolution}
+
+Splitting the Hamiltonian into commuting parts $H_Z$ and $H_X$, the first-order Trotter approximation yields
+\begin{equation}
+  e^{-iHt} \approx \left(e^{-iH_Z t/r} e^{-iH_X t/r}\right)^r.
+\end{equation}
+
+Increasing the number of Trotter steps $r$ systematically improves the accuracy at the cost of deeper circuits.
+
+\section{Further Reading and Exercises}
+
+\begin{itemize}
+\item Apply Trotterization to other Hamiltonians, such as the Lipkin model.
+\item Compute additional observables, including the energy expectation value.
+\item Study higher-order Trotter formulae and their error bounds.
+\item Explore imaginary-time evolution and adiabatic quantum simulation.
+\end{itemize}
+
+\begin{thebibliography}{9}
+\bibitem{CST21}
+  A.~M.~Childs \emph{et al.}, ``Theory of Trotter error with commutator scaling,’’ \emph{Phys. Rev. X} \textbf{11}, 011020 (2021).
+
+\bibitem{FICS24}
+  R.~C.~Farrell \emph{et al.}, ``Quantum simulations of hadron dynamics in the Schwinger model using 112 qubits,’’ arXiv:2401.08044.
+\end{thebibliography}
+
+\end{document}~
