@@ -1,0 +1,352 @@
+Yes — I can. Below I provide a working, well-commented Python implementation that follows the **Quantum DDPG (QDDPG)** workflow from the paper (Algorithm 1, quantum state-generation examples). I simulate small quantum systems (1– and 2-qubit) on a classical computer and implement the DDPG training loop (replay buffer, target networks, soft updates, Adam optimizer, action application and reward calculation).
+
+**Important (transparency):** the original paper constructs the *policy* and *value* using *quantum neural networks (QNNs / VQCs)* and measures expectation values to obtain continuous actions. For a practical, runnable demonstration here I **replace the QNNs with classical neural networks** that take a real representation of the quantum state (statevector amplitudes or derived features) and output continuous action parameters. This hybrid classical-controller + quantum state evolution approach preserves the algorithmic structure (experience replay, target networks, soft updates, action unitary construction, rewards from overlaps) and demonstrates the method numerically for 1–2 qubits. If you want a version that uses VQCs (Qiskit / PennyLane) as the policy / value approximators, I can provide that afterwards. The paper / algorithm we follow is Algorithm 1 and the state generation setup in the uploaded PDF. 
+
+---
+
+### What the code does
+
+* Simulates an `n`-qubit quantum environment as statevectors (numpy complex arrays).
+* Builds parameterized action unitaries `Ua(θ)` with single-qubit rotations and nearest-neighbour CNOT entangling (matching the paper's VQC motif).
+* Uses PyTorch to implement:
+
+  * a **policy network** π_η(|s⟩) → continuous action vector θ,
+  * a **Q network** Q_ω(|s⟩, θ) → scalar value,
+  * and their target copies with soft updates.
+* Implements replay buffer, batch updates, loss functions and soft updates (τ).
+* Trains on the state-generation task: drive arbitrary |s0⟩ → chosen target |sd⟩ using reward `r = 10 * |⟨sd|s⟩|^2`.
+* Includes one- and two-qubit example parameter settings close to those reported in the paper.
+
+---
+
+### Requirements
+
+```bash
+pip install numpy scipy torch
+```
+
+(If you want a VQC implementation later, we can use PennyLane or Qiskit.)
+
+---
+
+### Code (copy to a file, e.g. `quantum_ddpg_sim.py`)
+
+```python
+"""
+quantum_ddpg_sim.py
+
+Hybrid classical-DDPG controller + quantum state simulator for
+the Quantum DDPG / state-generation problem (1- and 2-qubit demos).
+
+Based on: "Quantum reinforcement learning in continuous action space"
+(see uploaded PDF for Algorithm 1 and state-generation). :contentReference[oaicite:1]{index=1}
+"""
+import numpy as np
+import math
+import random
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from collections import deque
+
+# ---------------------------
+# Quantum utilities (statevector)
+# ---------------------------
+
+def kron_n(*mats):
+    """Kronecker product of many matrices"""
+    out = mats[0]
+    for m in mats[1:]:
+        out = np.kron(out, m)
+    return out
+
+# single-qubit rotation matrices
+def Rx(theta):
+    return np.array([[np.cos(theta/2), -1j*np.sin(theta/2)],
+                     [-1j*np.sin(theta/2), np.cos(theta/2)]], dtype=complex)
+
+def Rz(theta):
+    return np.array([[np.exp(-1j*theta/2), 0],
+                     [0, np.exp(1j*theta/2)]], dtype=complex)
+
+# CNOT on qubit k -> k+1 for n qubits (chain)
+def chain_cnot(n_qubits):
+    # build as product of CNOT(k,k+1) for k=0..n-2
+    # Construct basic 4x4 CNOT and embed
+    CNOT_2 = np.array([[1,0,0,0],
+                       [0,1,0,0],
+                       [0,0,0,1],
+                       [0,0,1,0]], dtype=complex)
+    # embed each CNOT at positions
+    total = np.eye(1, dtype=complex)
+    # we'll multiply sequentially by full-size matrices
+    tot = np.eye(2**n_qubits, dtype=complex)
+    for k in range(n_qubits-1):
+        # build operator with CNOT at positions k,k+1
+        left_dim = 2**k
+        right_dim = 2**(n_qubits - k - 2)
+        op = np.kron(np.kron(np.eye(left_dim), CNOT_2), np.eye(right_dim))
+        tot = op @ tot
+    return tot
+
+def build_Ua(theta, n_qubits):
+    """
+    Build Ua(θ) = U_ENT * V(θ) as in the paper.
+    V(θ) applies single-qubit layers Rx-Rz-Rx with parameters parsed from theta.
+    theta length expected >= 3*n_qubits (we use 3 params per qubit).
+    """
+    # V(θ)
+    gates = []
+    for q in range(n_qubits):
+        a = theta[3*q + 0]
+        b = theta[3*q + 1]
+        c = theta[3*q + 2]
+        # single qubit op
+        single = Rx(a) @ Rz(b) @ Rx(c)
+        gates.append(single)
+    V = gates[0]
+    for g in gates[1:]:
+        V = np.kron(V, g)
+    # UENT = chain of CNOTs
+    if n_qubits == 1:
+        Uent = np.eye(2, dtype=complex)
+    else:
+        Uent = chain_cnot(n_qubits)
+    Ua = Uent @ V
+    return Ua
+
+def normalize_state(s):
+    s = np.asarray(s, dtype=complex)
+    norm = np.linalg.norm(s)
+    if norm == 0:
+        return s
+    return s / norm
+
+# overlap probability |<sd|s>|^2
+def overlap_prob(s, sd):
+    s = normalize_state(s)
+    sd = normalize_state(sd)
+    ov = np.abs(np.vdot(sd, s))**2
+    return float(np.real(ov))
+
+# apply unitary to statevector
+def apply_unitary(state, U):
+    return U @ state
+
+# standard computational basis states
+def basis_state(index, n_qubits):
+    N = 2**n_qubits
+    v = np.zeros(N, dtype=complex)
+    v[index] = 1.0
+    return v
+
+# ---------------------------
+# DDPG components (PyTorch)
+# ---------------------------
+
+device = torch.device("cpu")
+
+class PolicyNet(nn.Module):
+    """Policy network: maps real features of quantum state to continuous action vector theta"""
+    def __init__(self, state_dim, action_dim, hidden=128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, action_dim),
+            nn.Tanh()  # actions in [-1,1], will rescale later
+        )
+    def forward(self, x):
+        return self.net(x)
+
+class QNet(nn.Module):
+    """Q network: maps (state_features, action) -> scalar Q"""
+    def __init__(self, state_dim, action_dim, hidden=128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(state_dim + action_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, 1)
+        )
+    def forward(self, s, a):
+        x = torch.cat([s, a], dim=-1)
+        return self.net(x).squeeze(-1)
+
+class ReplayBuffer:
+    def __init__(self, capacity=10000):
+        self.buf = deque(maxlen=capacity)
+    def push(self, s, a, r, s_next):
+        self.buf.append((s, a, r, s_next))
+    def sample(self, batch_size):
+        batch = random.sample(self.buf, batch_size)
+        s,a,r,sn = zip(*batch)
+        return np.stack(s), np.stack(a), np.array(r), np.stack(sn)
+    def __len__(self):
+        return len(self.buf)
+
+# ---------------------------
+# Helper: convert quantum state to real features for NN
+# We'll use concatenated real and imaginary parts of the statevector.
+# ---------------------------
+def state_to_features(state):
+    # state : complex vector of length N
+    real = np.real(state)
+    imag = np.imag(state)
+    return np.concatenate([real, imag]).astype(np.float32)
+
+# ---------------------------
+# Main training loop (Quantum DDPG simulation)
+# ---------------------------
+def train_qddpg(n_qubits=1, episodes=300, T=50,
+                replay_capacity=2000, batch_size=32,
+                gamma=0.9, tau=0.001, lr=1e-3,
+                target_state=None, random_seed=42):
+    """
+    Train a hybrid DDPG agent to drive arbitrary |s0> -> |sd> on n_qubits.
+    Returns trained policy network and diagnostics.
+    """
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    # dims
+    N = 2**n_qubits
+    state_dim = 2 * N  # real+imag parts
+    action_dim = 3 * n_qubits  # 3 params per qubit
+
+    # create networks
+    policy = PolicyNet(state_dim, action_dim).to(device)
+    qnet = QNet(state_dim, action_dim).to(device)
+    policy_targ = PolicyNet(state_dim, action_dim).to(device)
+    qnet_targ = QNet(state_dim, action_dim).to(device)
+    policy_targ.load_state_dict(policy.state_dict())
+    qnet_targ.load_state_dict(qnet.state_dict())
+
+    opt_policy = optim.Adam(policy.parameters(), lr=lr)
+    opt_q = optim.Adam(qnet.parameters(), lr=lr)
+
+    buffer = ReplayBuffer(replay_capacity)
+
+    # target state |sd>
+    if target_state is None:
+        # choose easy-to-prepare |sd> = |0...0> by default
+        sd = basis_state(0, n_qubits)
+    else:
+        sd = normalize_state(target_state)
+
+    diagnostics = {'episode_rewards': [], 'final_overlap': []}
+
+    for ep in range(episodes):
+        # sample random initial state |s0> (uniform on sphere)
+        s0 = np.random.normal(size=(N,)) + 1j*np.random.normal(size=(N,))
+        s0 = normalize_state(s0)
+        state = s0.copy()
+        episode_reward = 0.0
+
+        for t in range(T):
+            # get state features
+            feat = state_to_features(state)
+            s_t = torch.from_numpy(feat).float().to(device).unsqueeze(0)
+            # policy outputs in [-1,1] -> rescale to angles in [-pi, pi]
+            with torch.no_grad():
+                a_t = policy(s_t).cpu().numpy().squeeze(0)
+            theta = np.clip(a_t, -1, 1) * np.pi  # scale to [-pi, pi]
+            # apply action unitary
+            Ua = build_Ua(theta, n_qubits)
+            next_state = apply_unitary(state, Ua)
+            # reward from overlap with sd
+            p = overlap_prob(next_state, sd)
+            r = 10.0 * p
+            episode_reward += r
+            # store (s, theta, r, s_next)
+            buffer.push(state_to_features(state), theta.astype(np.float32), r, state_to_features(next_state))
+            state = next_state
+
+            # learning step if buffer large enough
+            if len(buffer) >= batch_size:
+                s_b, a_b, r_b, sn_b = buffer.sample(batch_size)
+                s_b_t = torch.from_numpy(s_b).float().to(device)
+                a_b_t = torch.from_numpy(a_b).float().to(device)
+                r_b_t = torch.from_numpy(r_b).float().to(device)
+                sn_b_t = torch.from_numpy(sn_b).float().to(device)
+
+                # compute target y_i = r + gamma * Q'(s', pi'(s'))
+                with torch.no_grad():
+                    a_next = policy_targ(sn_b_t)
+                    q_next = qnet_targ(sn_b_t, a_next)
+                    y = r_b_t + gamma * q_next
+
+                # update Q network: MSE
+                q_pred = qnet(s_b_t, a_b_t)
+                loss_q = nn.MSELoss()(q_pred, y)
+                opt_q.zero_grad()
+                loss_q.backward()
+                opt_q.step()
+
+                # update policy network: gradient ascent on expected Q
+                # maximize J -> minimize -Q(s, pi(s))
+                a_pred = policy(s_b_t)
+                # policy loss = -mean Q(s, a_pred)
+                loss_policy = -qnet(s_b_t, a_pred).mean()
+                opt_policy.zero_grad()
+                loss_policy.backward()
+                opt_policy.step()
+
+                # soft update targets
+                for p, tp in zip(policy.parameters(), policy_targ.parameters()):
+                    tp.data.copy_(tau * p.data + (1 - tau) * tp.data)
+                for p, tp in zip(qnet.parameters(), qnet_targ.parameters()):
+                    tp.data.copy_(tau * p.data + (1 - tau) * tp.data)
+
+        diagnostics['episode_rewards'].append(episode_reward)
+        final_p = overlap_prob(state, sd)
+        diagnostics['final_overlap'].append(final_p)
+        if (ep+1) % max(1, episodes//10) == 0:
+            print(f"Ep {ep+1}/{episodes}: reward={episode_reward:.3f}, final overlap={final_p:.4f}")
+
+    return policy, qnet, diagnostics, sd
+
+# ---------------------------
+# Quick run examples
+# ---------------------------
+if __name__ == "__main__":
+    # 1-qubit example demo (fast)
+    print("Training 1-qubit QDDPG (hybrid simulation)...")
+    policy1, q1, diag1, sd1 = train_qddpg(n_qubits=1, episodes=200, T=50,
+                                         replay_capacity=1000, batch_size=16,
+                                         gamma=0.9, tau=0.001, lr=1e-3,
+                                         target_state=basis_state(1,1))
+    print("1-qubit training done. Example final overlap mean:", np.mean(diag1['final_overlap'][-20:]))
+
+    # 2-qubit example (slower) - reduce episodes to keep runtime reasonable
+    print("\nTraining 2-qubit QDDPG (hybrid simulation)...")
+    policy2, q2, diag2, sd2 = train_qddpg(n_qubits=2, episodes=300, T=50,
+                                         replay_capacity=5000, batch_size=64,
+                                         gamma=0.9, tau=0.005, lr=1e-3,
+                                         target_state=(basis_state(0,2)+basis_state(3,2))/np.sqrt(2))
+    print("2-qubit training done. Example final overlap mean:", np.mean(diag2['final_overlap'][-20:]))
+```
+
+---
+
+### Notes, caveats and next steps
+
+* The code implements the **algorithmic structure** (Algorithm 1) and the **state-generation task** reward exactly as in the paper; the major simplification is replacing **policy-QNN and Q-QNN by classical NNs**. This makes the experiments directly runnable on ordinary machines and preserves the learning dynamics for demonstration and development.
+* If you want a faithful *quantum* QNN implementation (policy and Q approximated by VQCs), I can:
+
+  * provide a version using **PennyLane** (or **Qiskit + Torch interface**) where VQCs are differentiable and trained end-to-end, or
+  * implement finite-difference gradient updates for parameterized circuits measured on a statevector simulator.
+* If you want me to replicate the paper's exact hyperparameters and results (reproduce their figures), I can adapt the hyperparameters (replay buffer sizes, QNN depths, universal QNN architecture in Ref.[62]) and run longer trainings — say using GPU and/or PennyLane for VQC policy — and produce plots and CSV logs.
+* I used action scaling `Tanh()->[-pi,pi]` and 3 angles per qubit to match the Rx-Rz-Rx pattern described in the paper. The entangling `UENT` is a chain of CNOTs (also as in the paper's Fig.3).
+
+---
+
+Would you like me to:
+
+* (A) convert the policy/Q networks into **variational quantum circuits** using PennyLane (so the learned models are true QNNs), or
+* (B) run the above simulation on your behalf for the 1- and 2-qubit cases and return logs/figures (I can run here but must produce results now — say which case and budget), or
+* (C) adapt the code to target a specific quantum framework (Qiskit / Cirq / PennyLane) or to output saved models / plots?
+
+Pick one and I’ll produce the corresponding code/output right away.

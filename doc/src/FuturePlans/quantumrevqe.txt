@@ -1,0 +1,173 @@
+"""
+quantum_ddpg_vqc.py
+
+Hybrid quantum-DDPG: Policy and Q approximators implemented as VQCs
+(using PennyLane + PyTorch). This follows the structure of the classical
+DDPG script but replaces networks by TorchLayer-wrapped VQCs.
+
+Notes:
+- State is represented as the complex statevector of the n-qubit system.
+  We feed real & imag parts (or a compact encoding) into data-encoding rotations.
+- Policy VQC outputs expectation values which are scaled to actions (angles).
+- Q VQC encodes state+action and returns a scalar expectation as Q-value.
+
+Author: ChatGPT (adapted for your uploaded paper's algorithm)
+"""
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import pennylane as qml
+from pennylane import numpy as pnp
+from pennylane.qnn import TorchLayer
+import random
+from collections import deque
+
+# ---------------------------
+# Quantum utilities (same as before, statevector simulation helpers)
+# ---------------------------
+def normalize_state(s):
+    s = np.asarray(s, dtype=complex)
+    nrm = np.linalg.norm(s)
+    if nrm == 0:
+        return s
+    return s / nrm
+
+def basis_state(index, n_qubits):
+    N = 2**n_qubits
+    v = np.zeros(N, dtype=complex)
+    v[index] = 1.0
+    return v
+
+def state_to_features(state, max_features=None):
+    """
+    Convert complex statevector to real-valued features.
+    Default: concat(real, imag). Optionally truncate/pca externally.
+    """
+    real = np.real(state)
+    imag = np.imag(state)
+    feat = np.concatenate([real, imag]).astype(np.float32)
+    if max_features is not None:
+        return feat[:max_features]
+    return feat
+
+# ---------------------------
+# Replay buffer
+# ---------------------------
+class ReplayBuffer:
+    def __init__(self, capacity=10000):
+        self.buf = deque(maxlen=capacity)
+    def push(self, s, a, r, s_next):
+        self.buf.append((s, a, r, s_next))
+    def sample(self, batch_size):
+        batch = random.sample(self.buf, batch_size)
+        s,a,r,sn = zip(*batch)
+        return np.stack(s), np.stack(a), np.array(r), np.stack(sn)
+    def __len__(self):
+        return len(self.buf)
+
+# ---------------------------
+# VQC model helpers (PennyLane)
+# ---------------------------
+def make_policy_vqc(n_qubits, n_layers, input_dim, action_dim, dev_name="default.qubit"):
+    """
+    Policy VQC:
+      - wires = n_qubits
+      - data-encoding: rotate each wire by a linear map from inputs
+      - variational layers: Rx, Rz per wire + entangling CNOT chain
+      - output: expectation values (we measure PauliZ on each wire and map to action_dim)
+    Returns a TorchLayer that maps input Tensor (batch, input_dim) -> action_dim outputs in [-pi,pi]
+    """
+    dev = qml.device(dev_name, wires=n_qubits)
+
+    # weight shapes: we choose param shapes for variational layers
+    # For each layer we have two parameters per qubit (Rx and Rz)
+    weight_shapes = {"w": (n_layers, n_qubits, 2)}  # (layers, wires, params_per_wire)
+
+    @qml.qnode(dev, interface="torch", diff_method="backprop")
+    def circuit(inputs, w):
+        # inputs: vector length = input_dim
+        # We encode input features by sequentially mapping them to rotations across wires.
+        # For simplicity, chunk input into n_qubits groups and perform RY encodings.
+        # If input_dim < n_qubits, wrap / pad with zeros.
+        inp = inputs
+        L = len(inp)
+        # simple mapping: for wire i, sum a slice of inputs to an angle
+        for i in range(n_qubits):
+            # choose slice indices
+            start = int(i * L / n_qubits)
+            end = int((i+1) * L / n_qubits)
+            angle = pnp.sum(inp[start:end]) if end > start else 0.0
+            qml.RY(angle, wires=i)
+
+        # variational layers
+        for layer in range(n_layers):
+            for q in range(n_qubits):
+                qml.RX(w[layer, q, 0], wires=q)
+                qml.RZ(w[layer, q, 1], wires=q)
+            # entangling chain
+            for q in range(n_qubits - 1):
+                qml.CNOT(wires=[q, q+1])
+
+        # measurement: return PauliZ expectation per wire
+        return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
+
+    # TorchLayer wraps circuit; it expects a mapping of weight_shapes -> trainable params
+    qlayer = TorchLayer(circuit, weight_shapes)
+    # To map outputs (n_qubits) to action_dim (3*n_qubits) we add a small classical head
+    class PolicyModule(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.qlayer = qlayer
+            self.head = nn.Sequential(
+                nn.Linear(n_qubits, 64),
+                nn.ReLU(),
+                nn.Linear(64, action_dim),
+                nn.Tanh()  # in [-1,1], will scale to [-pi,pi]
+            )
+        def forward(self, x):
+            # x: (batch, input_dim)
+            q_out = self.qlayer(x)
+            return self.head(q_out)
+    return PolicyModule()
+
+def make_qvalue_vqc(n_qubits, n_layers, input_dim_state, action_dim, dev_name="default.qubit"):
+    """
+    Q VQC:
+      - encode state features and action inputs together into the circuit
+      - return a scalar expval (e.g., sum of Zs or a Hamiltonian expectation)
+    Returns TorchLayer wrapped inside a PyTorch Module mapping (state_features + action) -> scalar
+    """
+    dev = qml.device(dev_name, wires=n_qubits)
+
+    # choose weight shape for variational layers
+    weight_shapes = {"w": (n_layers, n_qubits, 2)}
+
+    @qml.qnode(dev, interface="torch", diff_method="backprop")
+    def q_circ(inputs, w):
+        # inputs: concatenated (state_features + action) vector
+        L = len(inputs)
+        for i in range(n_qubits):
+            start = int(i * L / n_qubits)
+            end = int((i+1) * L / n_qubits)
+            angle = pnp.sum(inputs[start:end]) if end > start else 0.0
+            qml.RY(angle, wires=i)
+
+        # variational layers
+        for layer in range(n_layers):
+            for q in range(n_qubits):
+                qml.RX(w[layer, q, 0], wires=q)
+                qml.RZ(w[layer, q, 1], wires=q)
+            for q in range(n_qubits - 1):
+                qml.CNOT(wires=[q, q+1])
+
+        # measure a Hamiltonian-like expectation: sum Z_i
+        return qml.expval(qml.Hamiltonian([1.0]*n_qubits, [qml.PauliZ(i) for i in range(n_qubits)]))
+
+    qlayer = TorchLayer(q_circ, weight_shapes)
+
+    class QModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.qlayer = qlayer
+            # small classical head to rescale to an unco
