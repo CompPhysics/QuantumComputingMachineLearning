@@ -60,153 +60,6 @@
 
 
 
-\begin{tikzpicture}[>=latex, line cap=round, line join=round, scale=1.0]
-
-  % ---- Axes (optional) ----
-  %\draw[->] (-7,0) -- (7,0) node[right] {$x$};
-  %\draw[->] (0,0) -- (0,6) node[above] {$E$};
-
-  % Parameters
-  \def\xL{-3.5}      % left well center
-  \def\xR{ 3.5}      % right well center
-  \def\a{1.2}        % horizontal scale of each parabola
-  \def\Emax{4.5}     % top energy level drawn
-  \def\yBridge{5.2}  % height of smooth connecting curve on top
-  \def\R{0.13}       % particle radius
-
-  % ---- Left harmonic well: V_L(x) = 0.5 * ((x-xL)/a)^2 ----
-  \draw[thick, domain=\xL-3:\xL+3, samples=120]
-    plot (\x, {0.5*((\x-\xL)/\a)^2});
-
-  % ---- Right harmonic well: V_R(x) = 0.5 * ((x-xR)/a)^2 ----
-  \draw[thick, domain=\xR-3:\xR+3, samples=120]
-    plot (\x, {0.5*((\x-\xR)/\a)^2});
-
-  % ---- Smooth curve joining the two wells on top ----
-  % A smooth arch/bridge drawn as a Bézier curve:
-  \draw[thick]
-    (\xL+2.6, {0.5*((2.6)/\a)^2})
-      .. controls (-1.5, \yBridge) and (1.5, \yBridge) ..
-    (\xR-2.6, {0.5*((-2.6)/\a)^2});
-
-  % ---- Energy levels in each well ----
-  % (units where ħω=1): E_n = n + 1/2 for n=0..4
-  \foreach \n/\E in {0/0.5,1/1.5,2/2.5,3/3.5,4/4.5}{
-    % Left levels (short segments inside left well)
-    \draw[dashed] (\xL-2.2,\E) -- (\xL+2.2,\E);
-    % Right levels (short segments inside right well)
-    \draw[dashed] (\xR-2.2,\E) -- (\xR+2.2,\E);
-  }
-
-  % Optionally emphasize the n=0 lines
-  \draw[very thick] (\xL-2.2,0.5) -- (\xL+2.2,0.5);
-  \draw[very thick] (\xR-2.2,0.5) -- (\xR+2.2,0.5);
-
-  % ---- One particle (circle) in lowest level in each well ----
-  \filldraw[fill=white, thick] (\xL,0.5) circle (\R);
-  \filldraw[fill=white, thick] (\xR,0.5) circle (\R);
-
-  % Optional labels
-  %\node[anchor=south] at (\xL,0.5) { };
-  %\node[anchor=south] at (\xR,0.5) { };
-
-\end{tikzpicture}
-
-
-
-\begin{tikzpicture}[scale=1.0, line cap=round, line join=round]
-
-% Axes (optional)
-%\draw[->] (-6,0) -- (6,0) node[right] {$x$};
-%\draw[->] (0,0) -- (0,5.5) node[above] {$E$};
-
-% Parameters
-\def\a{0.15}    % curvature
-\def\b{2.5}     % well separation
-\def\Emax{4.5}
-\def\R{0.13}
-
-% --- Smooth double-well potential ---
-% V(x) = a (x^2 - b^2)^2
-\draw[thick, domain=-4.2:4.2, samples=300]
-  plot (\x, {\a*(\x*\x-\b*\b)^2});
-
-% --- Energy levels (drawn locally in each well) ---
-\foreach \n/\E in {0/0.5,1/1.5,2/2.5,3/3.5}{
-  % Left well levels
-  \draw[dashed] (-4.0,\E) -- (-1.2,\E);
-  % Right well levels
-  \draw[dashed] ( 1.2,\E) -- ( 4.0,\E);
-}
-
-% Emphasize ground states
-\draw[very thick] (-4.0,0.5) -- (-1.2,0.5);
-\draw[very thick] ( 1.2,0.5) -- ( 4.0,0.5);
-
-% --- Particles in the ground states ---
-\filldraw[white, thick] (-2.5,0.5) circle (\R);
-\filldraw[white, thick] ( 2.5,0.5) circle (\R);
-
-% Optional labels
-\node[below] at (-2.5,0.3) {$n=0$};
-\node[below] at ( 2.5,0.3) {$n=0$};
-
-\end{tikzpicture}
-
-
-\clearpage
-
-
-\begin{tikzpicture}[scale=1.0, line cap=round, line join=round]
-
-% -----------------------
-% Parameters
-% -----------------------
-\def\a{0.15}     % curvature of the double well
-\def\b{2.5}      % separation of wells
-\def\R{0.13}     % particle radius
-
-% -----------------------
-% Smooth double-well potential
-% V(x) = a (x^2 - b^2)^2
-% -----------------------
-\draw[thick, domain=-4.2:4.2, samples=300]
-  plot (\x, {\a*(\x*\x-\b*\b)^2});
-
-% -----------------------
-% Energy levels En = n + 1/2 (ħω = 1 units)
-% -----------------------
-\foreach \n/\E in {0/0.5,1/1.5,2/2.5,3/3.5}{
-  % Left well levels
-  \draw[dashed] (-4.0,\E) -- (-1.2,\E);
-  % Right well levels
-  \draw[dashed] ( 1.2,\E) -- ( 4.0,\E);
-}
-
-% Emphasize ground states (n=0)
-\draw[very thick] (-4.0,0.5) -- (-1.2,0.5);
-\draw[very thick] ( 1.2,0.5) -- ( 4.0,0.5);
-
-% -----------------------
-% Particles in ground states
-% -----------------------
-% Left particle (spin up)
-\filldraw[white, thick] (-2.5,0.5) circle (\R);
-\draw[->, thick] (-2.5,0.55) -- (-2.5,0.95);
-\node[above] at (-2.5,0.95) {$\uparrow$};
-
-% Right particle (spin down)
-\filldraw[white, thick] ( 2.5,0.5) circle (\R);
-\draw[->, thick] ( 2.5,0.95) -- ( 2.5,0.55);
-\node[below] at ( 2.5,0.50) {$\downarrow$};
-
-% -----------------------
-% Optional labels
-% -----------------------
-\node[below] at (-2.5,0.30) {$n=0$};
-\node[below] at ( 2.5,0.30) {$n=0$};
-
-\end{tikzpicture}
 
 
 \begin{tikzpicture}[scale=1.0, line cap=round, line join=round]
@@ -222,7 +75,7 @@
 % Smooth double-well potential with softened outer edges
 % V(x) = a (x^2 - b^2)^2 * exp(-0.03 x^2)
 % -----------------------
-\draw[thick, domain=-4.2:4.2, samples=400]
+\draw[thick, domain=-3.8:3.8, samples=400]
   plot (\x, {\a*(\x*\x-\b*\b)^2 * exp(-0.03*\x*\x)});
 
 % -----------------------
@@ -245,19 +98,17 @@
 
 % Left particle (spin up)
 \filldraw[black, thick] (-2.5,0.5) circle (\R);
-\draw[->, very thick] (-2.5,0.55) -- (-2.5,1.45);
-%\node[above] at (-2.5,1.45) {$\uparrow$};
+\draw[->, very thick] (-2.5,0.1) -- (-2.5,0.9);
 
 % Right particle (spin down)
 \filldraw[black, thick] ( 2.5,0.5) circle (\R);
-\draw[->, very thick] ( 2.5,1.45) -- ( 2.5,0.55);
-%\node[below] at ( 2.5,0.45) {$\downarrow$};
+\draw[->, very thick] ( 2.5,0.9) -- ( 2.5,0.1);
 
 % -----------------------
 % Optional labels
 % -----------------------
-\node[below] at (-3.5,0.0) {$n=0$};
-\node[below] at ( 3.5,0.0) {$n=0$};
+\node[below] at (-3.7,0.5) {$n_A=0$};
+\node[below] at ( 3.7,0.5) {$n_B=0$};
 
 \end{tikzpicture}
 
