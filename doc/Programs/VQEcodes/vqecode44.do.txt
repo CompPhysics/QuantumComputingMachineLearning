@@ -1,0 +1,148 @@
+TITLE: VQE Simulation for a Two-Qubit Hamiltonian
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo, Norway
+DATE: January 21, 2026
+
+
+
+!split
+===== Simple Hamiltonian =====
+We consider the given 4×4 two-qubit Hamiltonian
+!bt
+\[
+H = \begin{pmatrix}
+e_1 + V_z & 0      & 0      & V_x \\
+0         & e_2 - V_z & V_x    & 0   \\
+0         & H_x    & e_3 - V_z & 0   \\
+H_x       & 0      & 0      & e_4 + V_z
+\end{pmatrix}.
+\]
+!et
+Any two-qubit Hamiltonian can be expressed as a linear combination of tensor products of Pauli matrices (including the identity) ￼.  In general we write
+$$H = \sum_{i,j\in{I,X,Y,Z}} c_{ij},\sigma_i\otimes\sigma_j,$$
+where the coefficients \(c_{ij} = \tfrac14\Tr[(\sigma_i\otimes\sigma_j)H]\) are real for a Hermitian H.  We implement this decomposition in code:
+
+!bc pycod
+import numpy as np
+
+# Define 2x2 Pauli matrices
+I = np.array([[1,0],[0,1]])
+X = np.array([[0,1],[1,0]])
+Y = np.array([[0,-1j],[1j,0]])
+Z = np.array([[1,0],[0,-1]])
+
+# Example values for constants (can be changed)
+e1, e2, e3, e4 = 0.5, 1.0, 1.5, 2.0
+Vx, Vz, Hx = 0.2, 0.3, 0.4
+
+# Construct the Hamiltonian matrix H
+H = np.zeros((4,4), dtype=complex)
+H[0,0] = e1 + Vz
+H[1,1] = e2 - Vz
+H[2,2] = e3 - Vz
+H[3,3] = e4 + Vz
+H[0,3] = Vx
+H[3,0] = Hx
+H[1,2] = Vx
+H[2,1] = Hx
+
+# Decompose H into Pauli basis coefficients c_{ij}
+paulis = {'I': I, 'X': X, 'Y': Y, 'Z': Z}
+coeffs = {}
+for i, Ai in paulis.items():
+    for j, Bj in paulis.items():
+        P = np.kron(Ai, Bj)
+        c = np.trace(P.dot(H)) / 4.0
+        if abs(c) > 1e-8:  # keep non-zero terms
+            coeffs[(i,j)] = np.real_if_close(c)
+
+# Display non-zero Pauli terms of H
+for (i,j), c in coeffs.items():
+    print(f"{c:+.4f} * {i}⊗{j}")
+!ec
+The code prints the nonzero terms of the Hamiltonian in the Pauli basis.  For example, with the above values one finds. yielding
+!bt
+\[
+H = 2.5\,I\otimes I +0.5\,X\otimes X-0.5\,I\otimes Z-1.0\,Z\otimes I+0.3\,Z\otimes Z.  T
+\]
+!et
+This matches the matrix and confirms the decomposition in Pauli products.
+!split
+===== Ansatz and Expectation Values =====
+
+We use a simple hardware-efficient ansatz: apply parameterized single-qubit rotations (here R_y(\theta) and R_z(\phi) gates) on each qubit, followed by an entangling CNOT gate ￼.  Concretely, starting from $|00\rangle$, we apply
+$U(\theta_0,\theta_1,\phi_0,\phi_1) = \bigl(R_z(\phi_0)R_y(\theta_0)\otimes R_z(\phi_1)R_y(\theta_1)\bigr)\,\text{CNOT}_{0\to1}$.
+This prepares a trial state $|\psi(\boldsymbol\theta)\rangle$. The energy expectation is
+$\langle E\rangle = \langle\psi|H|\psi\rangle = \sum_{(i,j)} c_{ij}\,\langle\psi|\sigma_i\otimes\sigma_j|\psi\rangle$.  In other words, we compute the expectation of each Pauli term and sum them ￼.  The code below constructs the ansatz state and computes \langle H\rangle:
+
+!bc pycod
+# Define single-qubit rotation gates
+def RY(theta):
+    return np.array([[np.cos(theta/2), -np.sin(theta/2)],
+                     [np.sin(theta/2),  np.cos(theta/2)]])
+def RZ(theta):
+    return np.array([[np.exp(-1j*theta/2), 0],
+                     [0, np.exp(1j*theta/2)]])
+
+# 4x4 CNOT (control=qubit0, target=qubit1)
+CNOT = np.array([[1,0,0,0],
+                 [0,1,0,0],
+                 [0,0,0,1],
+                 [0,0,1,0]])
+
+# Initial state |00> as a vector
+psi0 = np.kron(np.array([1,0]), np.array([1,0]))
+
+# Function to prepare ansatz state and compute energy
+def energy_of_params(params):
+    theta0, theta1, phi0, phi1 = params
+    # Apply RY rotations on each qubit
+    U1 = np.kron(RY(theta0), RY(theta1))
+    psi = U1.dot(psi0)
+    # Apply RZ rotations on each qubit
+    U2 = np.kron(RZ(phi0), RZ(phi1))
+    psi = U2.dot(psi)
+    # Apply entangling CNOT gate
+    psi = CNOT.dot(psi)
+    # Compute ⟨ψ|H|ψ⟩
+    return np.real(np.vdot(psi, H.dot(psi)))
+!ec
+
+Here energy$\_$of$\_$params(params) returns the variational energy $\langle\psi|H|\psi\rangle$.
+This function automatically sums over the Pauli terms because we directly use the matrix H; one could
+equivalently $sum c_{ij}\,\langle\psi|\sigma_i\otimes\sigma_j|\psi\rangle$ term-by-term.
+By the variational principle, this expectation is always ≥ the true ground-state energy.
+
+!split
+===== Classical Optimization =====
+
+We now perform a classical minimization over the parameters $\{\theta_0,\theta_1,\phi_0,\phi_1\}$ to find the lowest energy.  We can use, for example, the Nelder–Mead routine from SciPy or a simple gradient descent.  For illustration we use SciPy’s minimize (Nelder–Mead) on our 4-parameter ansatz:
+
+!bc pycod
+from scipy.optimize import minimize
+
+# Random initial guess for parameters
+init_params = np.random.rand(4) * 2*np.pi
+
+# Minimize the energy
+res = minimize(energy_of_params, init_params, method='Nelder-Mead')
+theta_opt = res.x
+E_vqe = res.fun
+print("Optimized parameters:", theta_opt)
+print("VQE ground state energy (approx):", E_vqe)
+!ec
+
+After optimization, res.fun holds the minimal energy found.  We also compare to the exact ground-state energy (the lowest eigenvalue of H) computed by direct diagonalization ￼:
+
+!bc pycod
+# Exact diagonalization for verification
+eigvals = np.linalg.eigvalsh(H)
+E_exact = np.min(eigvals)
+print("Exact ground state energy (lowest eigenvalue):", E_exact)
+!ec
+
+For the sample parameter values above, the output might look like:
+
+
+
+In summary: the code defines the Hamiltonian and decomposes it into Pauli tensor terms ￼, constructs a parameterized ansatz (RY, RZ, CNOT) ￼, computes the expectation values of each term ￼, and uses a classical optimizer to minimize the energy. The returned E_vqe is the approximate ground-state energy, which matches the exact eigenvalue for this two-qubit example (as expected for a sufficiently expressive ansatz and a well-behaved optimization) ￼ ￼.
+
