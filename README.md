@@ -11,6 +11,7 @@ themes can be covered:
 ### Possible  textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
+- Hidary, Quantum Computing: An Applied Approach, see https://link.springer.com/book/10.1007/978-3-030-23922-0
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
 - Claudio Conti, Quantum Machine Learning (Springer), https://link.springer.com/book/10.1007/978-3-031-44226-1
 - Robert Loredo, Learn Quantum Computing with Python and IBM Quantum Experience, see https://github.com/PacktPublishing/Learn-Quantum-Computing-with-Python-and-IBM-Quantum-Experience
@@ -36,7 +37,7 @@ themes can be covered:
   - States in Hilbert Space, pure and mixed states
   - Video of lecture to be added  https://youtu.be/
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
-  - _Reading recommendation_: Scherer chapter 2 
+  - _Reading recommendation_: Scherer chapter 2 and/or Hidary chapter 12
 
 ## January 26 - January 30, 2026. Composite Systems and Tensor Products
   - Spectral decomposition and measurements
