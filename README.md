@@ -14,16 +14,15 @@ themes can be covered:
 - Robert Hundt, Quantum Computing for Programmers, https://www.cambridge.org/core/books/quantum-computing-for-programmers/BA1C887BE4AC0D0D5653E71FFBEF61C6
 - Claudio Conti, Quantum Machine Learning (Springer), https://link.springer.com/book/10.1007/978-3-031-44226-1
 - Robert Loredo, Learn Quantum Computing with Python and IBM Quantum Experience, see https://github.com/PacktPublishing/Learn-Quantum-Computing-with-Python-and-IBM-Quantum-Experience
-
+- Stefano Olivares, A Student’s Guide to Quantum Computing, see https://link.springer.com/book/10.1007/978-3-031-83361-8
 
 ### Interesting online courses and software:
 - IBM's Quantum Computer Programming: Hands-On Workshop at https://quantgates.com/learn-quantum
-- QuTip at https://github.com/qutip
+- QuTip at https://github.com/qutip and https://qutip.org/
 - QisKit at https://www.ibm.com/quantum/qiskit
 - PySCF for traditional quantum mechanical methods at https://pyscf.org/user/install.html#how-to-install-pyscf. This library can be integrated with QisKit for quantum computing simulations.
 - Qbraid at https://www.qbraid.com
-- QuTip at https://qutip.org/
-- PennyLane at https://pennylane.ai/
+- PennyLane at https://pennylane.ai/ (tailored to machine learning)
 
 ### Time: Each Wednesday at 1015am-12pm CET and exercise sessions 815-10am (The lecture sessions will be recorded)
 -Permanent Zoom link for the whole semester is https://uio.zoom.us/my/mortenhj
