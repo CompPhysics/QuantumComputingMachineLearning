@@ -133,6 +133,8 @@ Quantum mechanics, Formulated in the early 20th century, and its specializations
 !eblock
 
 
+
+
 !split
 ===== The exponentiality of QM =====
 !bblock
@@ -236,6 +238,31 @@ o There is a fast classical algorithm for factoring.
 o Quantum computers are more powerful than classical computers.
 !eblock
 At least one of these must be true!
+
+!split
+===== Naive yet popular statement  =====
+
+A naive, yet popular, statement says that quantum computers can
+provide an exponential speedup over classical computers because their
+internal states live in an exponentially large space of dimension
+$2^N$ for an $N$-qubit quantum computer. The number of dimensions
+grows so fast with $N$ that classical supercomputers cannot even hold
+this state in memory as soon as $N>50$; hence, classical computing is
+supposedly doomed to address these states.
+
+!split
+===== More to the picture than meets the eye =====
+
+Yet, despite this supposed impossibility, a rather large number of
+such exponentially large states have been calculated, sometimes with
+machine precision, using classical algorithms.
+
+_The solution of this small paradox is the
+same as in other successes of physics: apparently very complex
+phenomena have internal mathematical structures that, when revealed,
+allow one to make precise predictions._
+
+
 
 !split
 ===== Present day =====
@@ -461,6 +488,230 @@ o  Electrons on helium/neon and other
 
 
 
+
+!split
+===== Quantum computing in a nutshell =====
+
+A quantum computer is a well-controlled out-of-equilibrium quantum
+many-body system that one intends to use to perform a
+calculation. Such a system can be described at several levels: from
+the actual underlying physics (usually described in terms of its
+Hamiltonian, that is with time and energies) up to an abstract
+representation used to describe quantum algorithms, the so-called _gate-based
+quantum computer_.
+
+
+!split
+===== An exponentially large internal state =====
+
+The abstract _gate-based_ quantum computer is defined as follows. We
+have a set of $N$ two-level systems, called quantum bits or qubits
+(for instance, the spin of an electron), that can be in the states
+$\vert 0\rangle$ and $\vert 1 \rangle$. The most general state of the quantum
+computer has the form
+!bt
+\[
+\vert\Psi\rangle = \sum_{i_1i_2\cdots i_N} \Psi_{i_1i_2\cdots i_N} \vert i_1i_2\cdots i_N\rangle.
+\]
+!et
+
+
+!split
+===== Sums =====
+
+Here  the sum runs over all qubit values $i_a \in \{0,1\}$, and
+$\vert i_1i_2\cdots i_N\rangle$ is a shorthand for the tensor product
+$\vert i_1i_2\cdots i_N\rangle = \vert i_1\rangle\otimes
+\vert i_2\rangle\otimes\cdots\otimes\vert i_N\rangle$.  The tensor
+$\Psi_{i_1i_2\cdots i_N}$ can be thought of as a large vector
+containing $2^N$ complex values. The potential capabilities of quantum
+computers stem from the fact that this vector is exponentially large
+and, once $N\gtrsim 50$, cannot be stored in a classical computer.
+
+
+!split
+===== Quantum circuits =====
+
+When one operates a quantum computer, one initializes it with an
+initial state $\vert \Psi\rangle^{(0)}$ (usually $\vert \Psi\rangle^{(0)} =
+\vert 000\cdots{}0\rangle$), and the state of the system evolves according to
+the Schrödinger equation, which transforms $\vert \Psi\rangle^{(n)}$ into
+$\vert \Psi\rangle^{(n+1)} = \hat U^{(n)} \vert \Psi\rangle^{(n)}$, with the
+evolution operator $\hat U^{(n)}$ given by
+!bt
+\[
+\hat U^{(n)} = T e^{-i\int_{t_n}^{t_{n+1}} dt \hat H(t)}.
+\]
+!et
+
+Here
+where $T$ is the time-ordering operator and $\hat H(t)$ is the
+Hamiltonian of the system.
+
+
+!split
+===== Unitary evolution operator in quantum computing =====
+
+In physics, the system is described by
+$\hat H(t)$. In quantum computing, one actually starts with the
+evolution operators $\hat U^{(n)}$, assuming that someone else has
+worked out how to engineer appropriate Hamiltonians. The different
+evolution operators that one will use are called _gates_ and fall
+into two categories, depending on whether they act on a single qubit
+or on two qubits.
+
+!split
+===== Single-qubit gate =====
+A single-qubit gate is defined on one qubit as $\hat
+U\vert i\rangle = \sum_j U_{ji}\vert j\rangle$, where the $2\times 2$ matrix
+$U_{ij}$ is unitary. In terms of the wavefunction $\Psi^{(n)}$, such a
+single-qubit gate on qubit $a$ translates into a matrix that acts as
+
+!bt
+\[
+\Psi_{i_1i_2\cdots{}i_N}^{(n+1)} = \sum_{i'_a} U^{(n)}_{i_ai'_a}
+\Psi_{i_1\cdots{}i_{a-1}i'_a i_{a+1}\cdots{}i_N}^{(n)}.
+\]
+!et
+
+
+!split
+===== Two-qubit gate =====
+
+Likewise, a two-qubit gate acting on qubits $a$ and $b$ is described
+by a $4\times 4$ matrix and transforms the wavefunction into
+!bt
+\[
+\Psi_{i_1i_2\cdots{}i_N}^{(n+1)} = \sum_{i'_a,i'_b} U^{(n)}_{i_ai_b,i'_ai'_b}
+\Psi_{i_1\cdots{}i_{a-1}i'_a i_{a+1}\cdots{}i_{b-1}i'_b i_{b+1}\cdots{}i_N}^{(n)}.
+\]
+!et
+Depending on the quantum hardware, some gates are easier to implement
+than others.
+
+
+!split
+===== The Pauli gates =====
+Typical examples include the one-qubit gates (the first
+three are the Pauli matrices)
+
+!bt
+\begin{eqnarray}
+X &=& \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \\
+Y &=& \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}, \\
+Z &=& \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}, \\
+H &=& \frac{1}{\sqrt{2}} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}, \\
+T &=& \begin{pmatrix} e^{i\pi/8} & 0 \\ 0 & e^{-i\pi/8} \end{pmatrix}.
+\end{eqnarray}
+!et
+
+
+
+!split
+===== And the controlled NOT (or CNOT) two-qubit gate =====
+
+!bt
+\[
+C_X = \begin{pmatrix} 1 & 0 & 0 & 0 \\
+                      0 & 1 & 0 & 0 \\
+                      0 & 0 & 0 & 1 \\
+                      0 & 0 & 1 & 0 \end{pmatrix}.
+\]
+!et
+These gates are transformed into so-called quantum circuits (see whiteboard notes) and 
+they are read a little like music, with one line per qubit.
+
+
+!split
+===== Measurement =====
+The last ingredient of the quantum computer gate model is measurement. When a qubit $a$ is
+measured, it returns the value $\alpha$ ($\alpha = 0$ or 1) with probability
+
+!bt
+\[
+P_\alpha = \sum_{i_1\cdots{}i_{a-1} i_{a+1}\cdots{}i_N} \left|
+\Psi_{i_1\cdots{}i_{a-1} \alpha i_{a+1}\cdots{}i_N}^{(n)} \right|^2.
+\]
+!et
+
+!split
+===== After measurement =====
+
+The new wavefunction becomes
+
+!bt
+\[
+\Psi_{i_1\cdots{}i_N}^{(n)}\rightarrow
+\delta_{i_a,\alpha} \frac{1}{\sqrt{P_\alpha}}
+\Psi_{i_1\cdots{}i_{a-1} \alpha i_{a+1}\cdots{}i_N}^{(n)}.
+\]
+!et
+
+And that's essentially it. The above set of equations entirely
+describes what a quantum computer is supposed to do. The entire field
+of quantum algorithms consists of using
+these rules to perform useful computations.
+
+!split
+===== Quantum computing in a nutshell =====
+
+In a nutshell, a quantum computer allows one to perform a subset
+of linear algebra, namely matrix-vector multiplications, with very
+special matrices (the _gates_ that act only on certain indices and
+belong to a fixed set of unitary matrices) on exponentially large
+vectors (the wavefunction $\Psi_{i_1\cdots{}i_N}^{(n)}$). The appeal
+of quantum computers clearly comes from the exponentially large size
+of those wavefunctions.
+
+!split
+===== Downside =====
+
+However, a very strong downside is that at the
+end of the calculation one does not hold the corresponding
+exponentially large vector of $2^N$ values, but only a much smaller
+set: $N$ bits of (probabilistic) information. We get a single sample
+of the distribution $|\Psi_{i_1\cdots{}i_N}^{(n)}|^2$. This is one of
+the two Achilles' heels of quantum computing, which we dub the I/O
+bottleneck (well, more the O bottleneck for this aspect).
+
+
+!split
+===== Inaccesible parts of the space =====
+
+It is very important to realize that the largest part of the Hilbert
+space of dimension $2^N$ will remain forever inaccessible to quantum
+computers (and classical methods). This can be understood using a
+simple counting argument. Suppose that the quantum circuit consists of
+$D$ layers of gates ($D$ being the depth of the circuit). We also
+suppose that each layer is packed with as many gates as possible
+(meaning that all the qubits are acted upon). Lastly, each gate is
+parametrized by a few angles. Then the total dimension of the subspace
+that can be spanned by these circuits is $O(D N)$, which is obviously
+much smaller than $2^N$.
+
+!split
+===== Some numbers =====
+
+Now let us put some realistic numbers. Suppose that we work with
+$N=100$ qubits. The total dimension of the Hilbert space is $2^{100}
+\approx 10^{30}$. Typical depths that can be considered with existing
+hardware are of the order of $D\approx 100$, but let us  suppose that
+this number is scaled up to $D=10^6$. The explorable subspace would
+still have 20 orders of magnitude fewer degrees of freedom than the
+full Hilbert space. So the question really is: does this subspace
+belong to the _relevant_ part of the Hilbert space?
+
+!split
+===== Degrees of freedom  =====
+
+And, conversely,
+is the _relevant_ part of the Hilbert space amenable to classical
+simulations? The word relevant is defined very loosely here, but there
+are several scientific articles that start to give it a more precise
+meaning. For instance, the problem of the _barren plateaus_ in the
+variational quantum eigensolver (VQE) algorithm has been traced back
+to the fact that most of the states in the $O(N D)$-dimensional
+subspace manifold are essentially chaotic, hence irrelevant.
 
 
 
@@ -1744,251 +1995,5 @@ Write a code which applies these matrices to the same one-qubit basis.
 
 
 
-A naive, yet popular, statement says that quantum computers can
-provide an exponential speedup over classical computers because their
-internal states live in an exponentially large space of dimension
-$2^N$ for an $N$-qubit quantum computer. The number of dimensions
-grows so fast with $N$ that classical supercomputers cannot even hold
-this state in memory as soon as $N>50$; hence, classical computing is
-supposedly doomed to address these states.
 
-Yet, despite this supposed impossibility, a rather large number of
-such exponentially large states have been calculated, sometimes with
-machine precision, using classical algorithms
-\cite{white1992,pan2019}.  The solution of this small paradox is the
-same as in other successes of physics: apparently very complex
-phenomena have internal mathematical structures that, when revealed,
-allow one to make precise predictions.
-
-
-A quantum computer is a well-controlled out-of-equilibrium quantum
-many-body system that one intends to use to perform a
-calculation. Such a system can be described at several levels: from
-the actual underlying physics (usually described in terms of its
-Hamiltonian, i.e.\ with time and energies) up to an abstract
-representation used to describe quantum algorithms (the gate-based
-quantum computer). In this section, we briefly present this latter
-model, which will serve as a reference point \cite{nielsen2000}. We
-will not discuss the quantum algorithms themselves; rather, we will
-look at what a quantum computer is supposed to do at a very general
-level and ask what prevents us (or not) from doing the same thing on a
-classical computer.
-
-\subsection{An exponentially large internal state}
-
-The abstract ``gate-based'' quantum computer is defined as follows. We
-have a set of $N$ two-level systems, called quantum bits or qubits
-(for instance, the spin of an electron), that can be in the states
-$\ket{0}$ and $\ket{1}$. The most general state of the quantum
-computer has the form
-
-
-\begin{equation}
-\ket{\Psi} = \sum_{i_1i_2\cdots i_N} \Psi_{i_1i_2\cdots i_N} \ket{i_1i_2\cdots i_N},
-\end{equation}
-
-where the sum runs over all qubit values $i_a \in \{0,1\}$, and
-$\ket{i_1i_2\cdots i_N}$ is a shorthand for the tensor product
-$\ket{i_1i_2\cdots i_N} = \ket{i_1}\otimes
-\ket{i_2}\otimes\cdots\otimes\ket{i_N}$.  The tensor
-$\Psi_{i_1i_2\cdots i_N}$ can be thought of as a large vector
-containing $2^N$ complex values. The potential capabilities of quantum
-computers stem from the fact that this vector is exponentially large
-and, once $N\gtrsim 50$, cannot be stored in a classical computer.
-
-\subsection{Quantum circuits}
-
-When one operates a quantum computer, one initializes it with an
-initial state $\ket{\Psi}^{(0)}$ (usually $\ket{\Psi}^{(0)} =
-\ket{000\cdots{}0}$), and the state of the system evolves according to
-the Schrödinger equation, which transforms $\ket{\Psi}^{(n)}$ into
-$\ket{\Psi}^{(n+1)} = \hat U^{(n)} \ket{\Psi}^{(n)}$, with the
-evolution operator $\hat U^{(n)}$ given by
-
-\begin{equation}
-\hat U^{(n)} = T e^{-i\int_{t_n}^{t_{n+1}} dt \hat H(t)}.
-\end{equation}
-
-where $T$ is the time-ordering operator and $\hat H(t)$ is the
-Hamiltonian of the system.  In physics, the system is described by
-$\hat H(t)$. In quantum computing, one actually starts with the
-evolution operators $\hat U^{(n)}$, assuming that someone else has
-worked out how to engineer appropriate Hamiltonians. The different
-evolution operators that one will use are called ``gates'' and fall
-into two categories, depending on whether they act on a single qubit
-or on two qubits. A single-qubit gate is defined on one qubit as $\hat
-U\ket{i} = \sum_j U_{ji}\ket{j}$, where the $2\times 2$ matrix
-$U_{ij}$ is unitary. In terms of the wavefunction $\Psi^{(n)}$, such a
-single-qubit gate on qubit $a$ translates into a matrix that acts as
-
-\begin{equation}
-\label{eq:1qubit_gate}
-\Psi_{i_1i_2\cdots{}i_N}^{(n+1)} = \sum_{i'_a} U^{(n)}_{i_ai'_a}
-\Psi_{i_1\cdots{}i_{a-1}i'_a i_{a+1}\cdots{}i_N}^{(n)}.
-\end{equation}
-
-Likewise, a two-qubit gate acting on qubits $a$ and $b$ is described
-by a $4\times 4$ matrix and transforms the wavefunction into
-
-\begin{equation}
-\label{eq:2qubit_gate}
-\Psi_{i_1i_2\cdots{}i_N}^{(n+1)} = \sum_{i'_a,i'_b} U^{(n)}_{i_ai_b,i'_ai'_b}
-\Psi_{i_1\cdots{}i_{a-1}i'_a i_{a+1}\cdots{}i_{b-1}i'_b i_{b+1}\cdots{}i_N}^{(n)}.
-\end{equation}
-
-Depending on the quantum hardware, some gates are easier to implement
-than others. Typical examples include the one-qubit gates (the first
-three are the Pauli matrices)
-
-\begin{eqnarray}
-X &=& \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \\
-Y &=& \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}, \\
-Z &=& \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}, \\
-H &=& \frac{1}{\sqrt{2}} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}, \\
-T &=& \begin{pmatrix} e^{i\pi/8} & 0 \\ 0 & e^{-i\pi/8} \end{pmatrix},
-\end{eqnarray}
-
-and the controlled NOT (or C-NOT) two-qubit gate
-
-\begin{equation}
-\label{eq:control_not}
-C_X = \begin{pmatrix} 1 & 0 & 0 & 0 \\
-                      0 & 1 & 0 & 0 \\
-                      0 & 0 & 0 & 1 \\
-                      0 & 0 & 1 & 0 \end{pmatrix}.
-\end{equation}
-
-In the above gate, the two qubits are not equivalent: there is the
-control bit (c) and the target bit (t). The matrix supposes the
-following ordering of the two-qubit states:
-
-$\ket{0}_\text{c}\ket{0}_\text{t}$,
-$\ket{0}_\text{c}\ket{1}_\text{t}$,
-$\ket{1}_\text{c}\ket{0}_\text{t}$ and
-$\ket{1}_\text{c}\ket{1}_\text{t}$.
-
-Three-qubit gates are often more complicated to implement
-(nature only provides two-body interactions), but can be constructed from combinations
-of one- and two-qubit gates. 
-
-\begin{center}
-\includegraphics[scale=0.5]{76_quantum_circuit.pdf}
-\end{center}
-
-They are read a little like music, with one line per qubit.
-
-The last ingredient of the quantum computer gate model is measurement. When a qubit $a$ is
-measured, it returns the value $\alpha$ ($\alpha = 0$ or 1) with probability
-
-\begin{equation}
-P_\alpha = \sum_{i_1\cdots{}i_{a-1} i_{a+1}\cdots{}i_N} \left|
-\Psi_{i_1\cdots{}i_{a-1} \alpha i_{a+1}\cdots{}i_N}^{(n)} \right|^2.
-\end{equation}
-
-After measurement, the new wavefunction becomes
-
-\begin{equation}
-\Psi_{i_1\cdots{}i_N}^{(n)}\rightarrow
-\delta_{i_a,\alpha} \frac{1}{\sqrt{P_\alpha}}
-\Psi_{i_1\cdots{}i_{a-1} \alpha i_{a+1}\cdots{}i_N}^{(n)}.
-\end{equation}
-
-And that's essentially it: the above set of equations entirely
-describes what a quantum computer is supposed to do. The entire field
-of quantum algorithms (which we will not discuss) consists of using
-these rules to perform useful computations.
-
-
-\subsection{Summary}
-
-So, in a nutshell, a quantum computer allows one to perform a subset
-of linear algebra, namely matrix-vector multiplications, with very
-special matrices (the ``gates'' that act only on certain indices and
-belong to a fixed set of unitary matrices) on exponentially large
-vectors (the wavefunction $\Psi_{i_1\cdots{}i_N}^{(n)}$). The appeal
-of quantum computers clearly comes from the exponentially large size
-of those wavefunctions. However, a very strong downside is that at the
-end of the calculation one does not hold the corresponding
-exponentially large vector of $2^N$ values, but only a much smaller
-set: $N$ bits of (probabilistic) information. We get a single sample
-of the distribution $|\Psi_{i_1\cdots{}i_N}^{(n)}|^2$. This is one of
-the two Achilles' heels of quantum computing, which we dub the I/O
-bottleneck (well, more the O bottleneck for this aspect).
-
-It is very important to realize that the largest part of the Hilbert
-space of dimension $2^N$ will remain forever inaccessible to quantum
-computers (and classical methods). This can be understood using a
-simple counting argument. Suppose that the quantum circuit consists of
-$D$ layers of gates ($D$ being the depth of the circuit). We also
-suppose that each layer is packed with as many gates as possible
-(meaning that all the qubits are acted upon). Lastly, each gate is
-parametrized by a few angles. Then the total dimension of the subspace
-that can be spanned by these circuits is $O(D N)$, which is obviously
-much smaller than $2^N$.
-
-Now let us put some realistic numbers. Suppose that we work with
-$N=100$ qubits. The total dimension of the Hilbert space is $2^{100}
-\approx 10^{30}$. Typical depths that can be considered with existing
-hardware are of the order of $D\approx 100$, but let’s suppose that
-this number is scaled up to $D=10^6$. The explorable subspace would
-still have 20 orders of magnitude fewer degrees of freedom than the
-full Hilbert space. So the question really is: does this subspace
-belong to the ``relevant'' part of the Hilbert space? And, conversely,
-is the ``relevant'' part of the Hilbert space amenable to classical
-simulations? The word relevant is defined very loosely here, but there
-are several scientific articles that start to give it a more precise
-meaning. For instance, the problem of the ``barren plateaus'' in the
-variational quantum eigensolver (VQE) algorithm has been traced back
-to the fact that most of the states in the $O(N D)$-dimensional
-subspace manifold are essentially chaotic, hence irrelevant
-\cite{larocca2025}.
-
-
-\subsection{Digression on decoherence and fidelity}
-
-We simply cannot leave the subject of quantum computing without
-discussing, however shortly, the phenomenon of decoherence, the other
-Achilles' heel of quantum computing.  Indeed, quantum entanglement is
-both a resource (when it is obtained in a precise way with degrees of
-freedom that are fully under control) and the main obstacle to
-building a quantum computer (when it occurs between qubits and other
-degrees of freedom such as a phonon or a two-level system).  In
-practice, the fidelity of the state $F(n) = \bra{\Psi^{(n)}}
-\rho^{(n)} \ket{\Psi^{(n)}}$ between the targeted state
-$\ket{\Psi^{(n)}}$ and the density matrix $\rho^{(n)}$ actually
-obtained decreases exponentially as
-
-\begin{equation}
-F(n)\sim e^{-\epsilon n},
-\end{equation}
-
-with an average error rate per gate $\epsilon$.  Actually, the error
-rate $\epsilon$ includes decoherence but not only: other more mundane
-phenomena also affect the precision of the calculation.  For instance,
-the energy difference of the two-qubit states may vary a little or a
-microwave pulse may be a little too long or slightly less intense than
-expected.  The bottom line is that an analog machine executes every
-operation with finite accuracy.  For the best current quantum
-hardware, $\epsilon$ lies somewhere around $10^{-3}$ (often less when
-used as a system for real quantum circuits as opposed to benchmarks on
-single qubits or pairs of qubits).  This phenomenon strongly limits
-the depth of the circuit that can be used in practice.  It is the main
-obstacle towards building a useful working quantum computer, as we
-explain in \cite{waintal2024}.  The hope of quantum computing is to
-use quantum error correction to address this problem
-\cite{nielsen2000}.  In a nutshell, quantum error correction uses
-several physical qubits to build one ``logical'' qubit of better
-quality than the physical ones.  For instance, one could use
-$\ket{000000}$ as logical $\ket{0}_\text{L}$ and $\ket{111111}$ as
-logical $\ket{1}_\text{L}$, while constantly measuring the parity of
-pairs of physical qubits to verify that they remain the same (i.e.\ as
-$00$ or $11$ but not $10$ or $01$, which correspond to errors) and
-prevent the other ``non-computational states'' (such as
-$\ket{101101}$) from acquiring a significant amplitude.  The exact
-theoretical construction is only slightly more sophisticated than
-that.  The practical construction, on the other hand, adds many layers
-of complexity to the hardware, so that it is unclear how far one will
-be able to go in practice.  We will not go further in that direction;
-the reader interested in a critical discussion can have a look at
-\cite{waintal2019}.
 
