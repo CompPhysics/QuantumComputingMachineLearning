@@ -35,7 +35,8 @@ themes can be covered:
   - Mathematical notation, Hilbert spaces and operators
   - Description of Quantum Systems and one-qubit systems 
   - States in Hilbert Space, pure and mixed states
-  - Video of lecture to be added  https://youtu.be/
+  - Video of lecture at https://youtu.be/J5lK-fTcTYY
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/HandWrittenNotes/2026/Lectureweek1.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
   - _Reading recommendation_: Scherer chapter 2 and/or Hidary chapter 12
 
