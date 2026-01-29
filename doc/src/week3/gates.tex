@@ -1,0 +1,220 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\usefonttheme{professionalfonts}
+
+\usepackage{amsmath,amssymb,bm}
+\usepackage{braket}
+\usepackage{tikz}
+\usetikzlibrary{quantikz}
+
+\title{Preparing Bell States from $\ket{00}$ with Quantum Circuits}
+\author{}
+\institute{}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Goal: Create Bell states starting from $\ket{00}$}
+We start with the two-qubit computational basis state
+\[
+\ket{\psi_0}=\ket{00}.
+\]
+
+\medskip
+Using a small set of gates we can prepare the four Bell states:
+\[
+\ket{\Phi^\pm}=\frac{\ket{00}\pm \ket{11}}{\sqrt{2}},
+\qquad
+\ket{\Psi^\pm}=\frac{\ket{01}\pm \ket{10}}{\sqrt{2}}.
+\]
+
+\medskip
+Core idea:
+\begin{itemize}
+  \item Use a Hadamard on qubit 0 to create a superposition.
+  \item Use an entangling gate (CNOT) to correlate qubit 1 with qubit 0.
+  \item Apply simple single-qubit gates ($X$, $Z$) to obtain the other Bell states.
+\end{itemize}
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Building blocks: single- and two-qubit gates}
+\textbf{Hadamard gate} on one qubit:
+\[
+H\ket{0}=\frac{\ket{0}+\ket{1}}{\sqrt{2}},
+\qquad
+H\ket{1}=\frac{\ket{0}-\ket{1}}{\sqrt{2}}.
+\]
+
+\medskip
+\textbf{CNOT} with control qubit 0 and target qubit 1:
+\[
+\mathrm{CNOT}\ket{c,t}=\ket{c,\,t\oplus c}.
+\]
+Thus, if $c=0$ nothing happens; if $c=1$, the target bit flips.
+
+\medskip
+We also use Pauli gates:
+\[
+X\ket{0}=\ket{1},\; X\ket{1}=\ket{0}, 
+\qquad
+Z\ket{0}=\ket{0},\; Z\ket{1}=-\ket{1}.
+\]
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Circuit for $\ket{\Phi^+}$ from $\ket{00}$}
+Start with $\ket{00}$.
+
+\medskip
+Step 1: Apply $H$ on qubit 0:
+\[
+(H\otimes I)\ket{00}=\frac{1}{\sqrt{2}}\left(\ket{00}+\ket{10}\right).
+\]
+
+\medskip
+Step 2: Apply $\mathrm{CNOT}_{0\to 1}$:
+\[
+\mathrm{CNOT}\,\frac{\ket{00}+\ket{10}}{\sqrt{2}}
+=\frac{1}{\sqrt{2}}\left(\ket{00}+\ket{11}\right)=\ket{\Phi^+}.
+\]
+
+\medskip
+\begin{center}
+\begin{quantikz}
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \qw \\
+\lstick{$\ket{0}$} & \qw      & \targ{}  & \qw
+\end{quantikz}
+\end{center}
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Circuit for $\ket{\Phi^-}$ from $\ket{00}$}
+Use the same entangling circuit as for $\ket{\Phi^+}$, then add a $Z$ phase flip.
+
+\medskip
+Since
+\[
+(I\otimes Z)\ket{\Phi^+}=\frac{1}{\sqrt{2}}\left(\ket{00}-\ket{11}\right)=\ket{\Phi^-},
+\]
+we can implement $\ket{\Phi^-}$ by applying $Z$ to either qubit (global phase conventions aside).
+
+\begin{center}
+\begin{quantikz}
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \gate{Z} & \qw \\
+\lstick{$\ket{0}$} & \qw      & \targ{}  & \qw      & \qw
+\end{quantikz}
+\end{center}
+
+\medskip
+Equivalent variant (apply $Z$ on the second qubit):
+\[
+(I\otimes Z)\ket{\Phi^+}=\ket{\Phi^-}.
+\]
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Circuit for $\ket{\Psi^+}$ from $\ket{00}$}
+One convenient route:
+\[
+\ket{\Psi^+} = (I\otimes X)\ket{\Phi^+}.
+\]
+
+\medskip
+Thus: build $\ket{\Phi^+}$ and then flip the second qubit with $X$:
+\[
+(I\otimes X)\frac{\ket{00}+\ket{11}}{\sqrt{2}}
+=\frac{\ket{01}+\ket{10}}{\sqrt{2}}=\ket{\Psi^+}.
+\]
+
+\begin{center}
+\begin{quantikz}
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \qw      & \qw \\
+\lstick{$\ket{0}$} & \qw      & \targ{}  & \gate{X} & \qw
+\end{quantikz}
+\end{center}
+
+\medskip
+(You can also apply $X$ before the CNOT on the target qubit; the above is the clearest construction.)
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Circuit for $\ket{\Psi^-}$ from $\ket{00}$}
+A simple construction uses
+\[
+\ket{\Psi^-}=(I\otimes X)\ket{\Phi^-}
+\quad\text{or}\quad
+\ket{\Psi^-}=(I\otimes Z)(I\otimes X)\ket{\Phi^+}.
+\]
+
+\medskip
+Starting from $\ket{\Phi^+}$:
+\[
+\ket{\Phi^+}\xrightarrow{\,X\text{ on qubit 1}\,}\ket{\Psi^+}
+\xrightarrow{\,Z\text{ on qubit 0 (or 1)}\,}\ket{\Psi^-}.
+\]
+
+\begin{center}
+\begin{quantikz}
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \gate{Z} & \qw \\
+\lstick{$\ket{0}$} & \qw      & \targ{}  & \gate{X} & \qw
+\end{quantikz}
+\end{center}
+
+\medskip
+Up to a global phase, applying $Z$ on either qubit produces the relative minus sign between $\ket{01}$ and $\ket{10}$.
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Summary: One entangling core circuit + local Pauli gates}
+Core entangling circuit prepares $\ket{\Phi^+}$:
+\[
+\ket{00}\;\xrightarrow{H\otimes I}\;\frac{\ket{00}+\ket{10}}{\sqrt{2}}
+\;\xrightarrow{\mathrm{CNOT}_{0\to 1}}\;\ket{\Phi^+}.
+\]
+
+\medskip
+Then obtain the other Bell states by local operations:
+\[
+\ket{\Phi^-}=(Z\otimes I)\ket{\Phi^+},
+\qquad
+\ket{\Psi^+}=(I\otimes X)\ket{\Phi^+},
+\qquad
+\ket{\Psi^-}=(Z\otimes I)(I\otimes X)\ket{\Phi^+}.
+\]
+
+\medskip
+\begin{center}
+\begin{quantikz}
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \qw \\
+\lstick{$\ket{0}$} & \qw      & \targ{}  & \qw
+\end{quantikz}
+\end{center}
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Optional: Verify with state evolution (conceptual)}
+If we denote the circuit unitary by $U$, then
+\[
+U\ket{00}=\ket{\Phi^+}.
+\]
+Local Pauli operations generate the full Bell basis:
+\[
+\left\{\ket{\Phi^+},\; (Z\otimes I)\ket{\Phi^+},\; (I\otimes X)\ket{\Phi^+},\; (Z\otimes I)(I\otimes X)\ket{\Phi^+}\right\}.
+\]
+
+\medskip
+In quantum information, this is summarized as:
+\[
+\text{Bell basis}=\{(I\otimes \sigma)\ket{\Phi^+}\;:\;\sigma\in\{I,X,Z,XZ\}\}.
+\]
+\end{frame}
+
+\end{document}
