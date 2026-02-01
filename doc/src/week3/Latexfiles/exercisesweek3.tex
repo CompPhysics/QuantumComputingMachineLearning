@@ -1,0 +1,202 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\usefonttheme{professionalfonts}
+
+\usepackage{amsmath,amssymb,bm}
+\usepackage{braket}
+\usepackage{listings}
+\usepackage{hyperref}
+
+% ---------------------------
+% Listings
+% ---------------------------
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  breaklines=true,
+  frame=single,
+  showstringspaces=false
+}
+
+\title{Exercises week 4}
+\subtitle{Exercises with tentative solutions}
+\author{Try to do the exercises first without looking at the solutions}
+\institute{}
+\date{}
+
+\begin{document}
+
+% ==========================================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}{Exercise 1: Partially entangled two-qubit state}
+Consider
+\[
+\ket{\psi(\theta)}=\cos\theta\,\ket{00}+\sin\theta\,\ket{11},\qquad \theta\in[0,\pi/2].
+\]
+\textbf{Tasks:}
+\begin{enumerate}
+\item Compute $\rho_{AB}=\ket{\psi(\theta)}\bra{\psi(\theta)}$.
+\item Compute $\rho_A=\Tr_B(\rho_{AB})$.
+\item Find eigenvalues of $\rho_A$ and compute
+\[
+S(\rho_A),\quad S_2(\rho_A),\quad S_\alpha(\rho_A).
+\]
+\item Identify $\theta$ for which entanglement is maximal.
+\end{enumerate}
+
+\medskip
+\textbf{Hint:} $\rho_A$ will be diagonal in $\{\ket{0},\ket{1}\}$.
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Solution 1 (full derivation)}
+Start with
+\[
+\rho_{AB}=\ket{\psi}\bra{\psi}=
+\cos^2\theta\,\ket{00}\bra{00}
++\cos\theta\sin\theta\,\ket{00}\bra{11}
++\cos\theta\sin\theta\,\ket{11}\bra{00}
++\sin^2\theta\,\ket{11}\bra{11}.
+\]
+
+Use $\Tr_B(\ket{ab}\bra{cd})=\braket{d}{b}\ket{a}\bra{c}$:
+\begin{align}
+\Tr_B(\ket{00}\bra{00})&=\ket{0}\bra{0},\\
+\Tr_B(\ket{00}\bra{11})&=\braket{1}{0}\ket{0}\bra{1}=0,\\
+\Tr_B(\ket{11}\bra{00})&=\braket{0}{1}\ket{1}\bra{0}=0,\\
+\Tr_B(\ket{11}\bra{11})&=\ket{1}\bra{1}.
+\end{align}
+
+Therefore,
+\[
+\rho_A=\cos^2\theta\,\ket{0}\bra{0}+\sin^2\theta\,\ket{1}\bra{1}
+=\begin{pmatrix}
+\cos^2\theta & 0\\
+0 & \sin^2\theta
+\end{pmatrix}.
+\]
+
+Eigenvalues: $\lambda_1=\cos^2\theta$, $\lambda_2=\sin^2\theta$.
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Solution 1: Entropies}
+Von Neumann entropy:
+\[
+S(\rho_A)=-\cos^2\theta\,\log_2(\cos^2\theta)-\sin^2\theta\,\log_2(\sin^2\theta).
+\]
+
+Second Rényi entropy:
+\[
+S_2(\rho_A)=-\log_2\Tr(\rho_A^2)
+=-\log_2\left(\cos^4\theta+\sin^4\theta\right).
+\]
+
+General Rényi:
+\[
+S_\alpha(\rho_A)=\frac{1}{1-\alpha}\log_2\left((\cos^2\theta)^\alpha+(\sin^2\theta)^\alpha\right).
+\]
+
+\medskip
+\textbf{Max entanglement:} at $\theta=\pi/4$,
+$\lambda_1=\lambda_2=1/2$ so $S(\rho_A)=1$ bit.
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Exercise 2: Measurement entropy vs state entropy}
+Let the single-qubit state be
+\[
+\rho = p\ket{0}\bra{0}+(1-p)\ket{1}\bra{1},\qquad p\in[0,1].
+\]
+
+\textbf{Tasks:}
+\begin{enumerate}
+\item Compute $S(\rho)$.
+\item Compute measurement entropy $H_{\text{meas}}$ for measuring in the $Z$ basis.
+\item Compute $H_{\text{meas}}$ for measuring in the $X$ basis.
+\end{enumerate}
+
+\medskip
+\textbf{Key point:} $S(\rho)$ is basis-independent, while $H_{\text{meas}}$ depends on the measurement.
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Solution 2: $Z$ and $X$ measurements}
+Since $\rho$ is diagonal with eigenvalues $(p,1-p)$:
+\[
+S(\rho)=-p\log_2 p-(1-p)\log_2(1-p).
+\]
+
+\medskip
+\textbf{$Z$ basis measurement:}
+\[
+p(0)=p,\quad p(1)=1-p
+\Rightarrow
+H_Z=-p\log_2 p-(1-p)\log_2(1-p)=S(\rho).
+\]
+
+\medskip
+\textbf{$X$ basis measurement:}
+$\ket{\pm}=(\ket{0}\pm\ket{1})/\sqrt{2}$, with projectors $\Pi_\pm=\ket{\pm}\bra{\pm}$.
+Then
+\[
+p(\pm)=\Tr(\rho\,\Pi_\pm)=\frac{1}{2},
+\]
+so
+\[
+H_X=1,
+\]
+independent of $p$.
+
+\medskip
+Thus generally $H_{\text{meas}}\ge S(\rho)$, with equality in eigenbasis of $\rho$.
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Exercise 3: Mutual information for a classical mixture}
+Consider a two-qubit mixed state
+\[
+\rho_{AB}= \frac{1}{2}\ket{00}\bra{00}+\frac{1}{2}\ket{11}\bra{11}.
+\]
+
+\textbf{Tasks:}
+\begin{enumerate}
+\item Compute $\rho_A,\rho_B$.
+\item Compute $S(\rho_{AB})$, $S(\rho_A)$, $S(\rho_B)$.
+\item Compute $I(A\!:\!B)=S(\rho_A)+S(\rho_B)-S(\rho_{AB})$.
+\item Compare to a Bell state, where $I(A\!:\!B)=2$.
+\end{enumerate}
+\end{frame}
+
+% ==========================================================
+\begin{frame}{Solution 3: Classical vs quantum correlations}
+Compute reduced states:
+\[
+\rho_A=\rho_B=\frac{I_2}{2}\quad\Rightarrow\quad S(\rho_A)=S(\rho_B)=1.
+\]
+
+The global state has eigenvalues $\{1/2,1/2,0,0\}$, hence
+\[
+S(\rho_{AB})=1.
+\]
+
+Therefore
+\[
+I(A\!:\!B)=1+1-1=1.
+\]
+
+\medskip
+\textbf{Interpretation:}
+\begin{itemize}
+\item This state has correlations, but they are purely classical.
+\item Bell states have maximal mutual information $I=2$, reflecting strong quantum correlations.
+\end{itemize}
+\end{frame}
+
+\end{document}
