@@ -1,0 +1,32 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{math}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{measure\PYGZus{}qubit\PYGZus{}A\PYGZus{}statevector}\PYG{p}{(}\PYG{n}{psi}\PYG{p}{,} \PYG{n}{outcome}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Measure qubit A in computational basis on a 2\PYGZhy{}qubit statevector psi (len=4).}
+\PYG{l+s+sd}{    outcome = 0 or 1.}
+\PYG{l+s+sd}{    Returns (p, psi\PYGZus{}post) where psi\PYGZus{}post is normalized statevector.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{c+c1}{\PYGZsh{} Projector keeps basis states with A=outcome:}
+    \PYG{c+c1}{\PYGZsh{} indices 2*outcome + b for b in \PYGZob{}0,1\PYGZcb{}}
+    \PYG{n}{keep} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{outcome} \PYG{o}{+} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{outcome} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{p} \PYG{o}{=} \PYG{n+nb}{sum}\PYG{p}{(}\PYG{p}{(}\PYG{n}{psi}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{conjugate}\PYG{p}{(}\PYG{p}{)} \PYG{o}{*} \PYG{n}{psi}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{p}{)}\PYG{o}{.}\PYG{n}{real} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n}{keep}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{p} \PYG{o}{\PYGZlt{}}\PYG{o}{=} \PYG{l+m+mf}{0.0}\PYG{p}{:}
+        \PYG{k}{return} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{]}
+    \PYG{n}{norm} \PYG{o}{=} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{n}{p}\PYG{p}{)}
+    \PYG{n}{psi\PYGZus{}post} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n}{keep}\PYG{p}{:}
+        \PYG{n}{psi\PYGZus{}post}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{psi}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{*} \PYG{n}{norm}
+    \PYG{k}{return} \PYG{n}{p}\PYG{p}{,} \PYG{n}{psi\PYGZus{}post}
+
+\PYG{c+c1}{\PYGZsh{} Example: |Phi+\PYGZgt{}}
+\PYG{n}{inv\PYGZus{}sqrt2} \PYG{o}{=} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{)}
+\PYG{n}{psi} \PYG{o}{=} \PYG{p}{[}\PYG{n}{inv\PYGZus{}sqrt2}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,} \PYG{n}{inv\PYGZus{}sqrt2}\PYG{p}{]}
+
+\PYG{n}{p0}\PYG{p}{,} \PYG{n}{psi0} \PYG{o}{=} \PYG{n}{measure\PYGZus{}qubit\PYGZus{}A\PYGZus{}statevector}\PYG{p}{(}\PYG{n}{psi}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+\PYG{n}{p1}\PYG{p}{,} \PYG{n}{psi1} \PYG{o}{=} \PYG{n}{measure\PYGZus{}qubit\PYGZus{}A\PYGZus{}statevector}\PYG{p}{(}\PYG{n}{psi}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{p(0) =}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{p0}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{post state =}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{psi0}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{p(1) =}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{p1}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{post state =}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{psi1}\PYG{p}{)}
+
+\end{MintedVerbatim}

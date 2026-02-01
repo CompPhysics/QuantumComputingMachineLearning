@@ -1,0 +1,34 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{qiskit}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{QuantumCircuit}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{qiskit}\PYG{n+nn}{.}\PYG{n+nn}{transpiler}\PYG{n+nn}{.}\PYG{n+nn}{preset\PYGZus{}passmanagers}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{generate\PYGZus{}preset\PYGZus{}pass\PYGZus{}manager}
+
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{qiskit\PYGZus{}ibm\PYGZus{}runtime}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{QiskitRuntimeService}\PYG{p}{,} \PYG{n}{SamplerV2} \PYG{k}{as} \PYG{n}{Sampler}
+
+\PYG{c+c1}{\PYGZsh{} 1) Authenticate (set your token once, e.g. via environment variable)}
+\PYG{c+c1}{\PYGZsh{} service = QiskitRuntimeService(channel=\PYGZdq{}ibm\PYGZus{}quantum\PYGZdq{}, token=\PYGZdq{}YOUR\PYGZus{}TOKEN\PYGZdq{})}
+\PYG{n}{service} \PYG{o}{=} \PYG{n}{QiskitRuntimeService}\PYG{p}{(}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} uses saved account configuration}
+
+\PYG{c+c1}{\PYGZsh{} 2) Choose a backend (you can also specify a particular device name)}
+\PYG{n}{backend} \PYG{o}{=} \PYG{n}{service}\PYG{o}{.}\PYG{n}{least\PYGZus{}busy}\PYG{p}{(}\PYG{n}{operational}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,} \PYG{n}{simulator}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} 3) Build circuit: create Bell state |Phi+\PYGZgt{} and measure qubit 0 only}
+\PYG{n}{qc} \PYG{o}{=} \PYG{n}{QuantumCircuit}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{qc}\PYG{o}{.}\PYG{n}{h}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+\PYG{n}{qc}\PYG{o}{.}\PYG{n}{cx}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{qc}\PYG{o}{.}\PYG{n}{measure}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} 4) Transpile to the backend ISA}
+\PYG{n}{pm} \PYG{o}{=} \PYG{n}{generate\PYGZus{}preset\PYGZus{}pass\PYGZus{}manager}\PYG{p}{(}\PYG{n}{backend}\PYG{o}{=}\PYG{n}{backend}\PYG{p}{,} \PYG{n}{optimization\PYGZus{}level}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{isa\PYGZus{}circuit} \PYG{o}{=} \PYG{n}{pm}\PYG{o}{.}\PYG{n}{run}\PYG{p}{(}\PYG{n}{qc}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} 5) Run with SamplerV2}
+\PYG{n}{sampler} \PYG{o}{=} \PYG{n}{Sampler}\PYG{p}{(}\PYG{n}{mode}\PYG{o}{=}\PYG{n}{backend}\PYG{p}{)}
+\PYG{n}{job} \PYG{o}{=} \PYG{n}{sampler}\PYG{o}{.}\PYG{n}{run}\PYG{p}{(}\PYG{p}{[}\PYG{n}{isa\PYGZus{}circuit}\PYG{p}{]}\PYG{p}{,} \PYG{n}{shots}\PYG{o}{=}\PYG{l+m+mi}{4096}\PYG{p}{)}
+\PYG{n}{result} \PYG{o}{=} \PYG{n}{job}\PYG{o}{.}\PYG{n}{result}\PYG{p}{(}\PYG{p}{)}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+
+\PYG{c+c1}{\PYGZsh{} Counts live under the classical register name; here it\PYGZsq{}s \PYGZdq{}c\PYGZdq{}}
+\PYG{n}{counts} \PYG{o}{=} \PYG{n}{result}\PYG{o}{.}\PYG{n}{data}\PYG{o}{.}\PYG{n}{c}\PYG{o}{.}\PYG{n}{get\PYGZus{}counts}\PYG{p}{(}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Backend:}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{backend}\PYG{o}{.}\PYG{n}{name}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Counts (measuring qubit 0):}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{counts}\PYG{p}{)}
+
+\end{MintedVerbatim}

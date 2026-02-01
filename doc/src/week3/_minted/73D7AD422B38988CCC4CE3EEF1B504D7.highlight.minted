@@ -1,0 +1,64 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{math}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{cmath}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{outer}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Outer product |v\PYGZgt{}\PYGZlt{}v| for a statevector v (length 4).\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{n} \PYG{o}{=} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}
+    \PYG{k}{return} \PYG{p}{[}\PYG{p}{[}\PYG{n}{v}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{*} \PYG{n}{v}\PYG{p}{[}\PYG{n}{j}\PYG{p}{]}\PYG{o}{.}\PYG{n}{conjugate}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{j} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{p}{]} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{p}{]}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{partial\PYGZus{}trace\PYGZus{}B}\PYG{p}{(}\PYG{n}{rho}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Partial trace over qubit B for a 2\PYGZhy{}qubit density matrix rho (4x4).}
+\PYG{l+s+sd}{    Basis ordering: |00\PYGZgt{},|01\PYGZgt{},|10\PYGZgt{},|11\PYGZgt{}.}
+\PYG{l+s+sd}{    Returns rho\PYGZus{}A (2x2).}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{rhoA} \PYG{o}{=} \PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{]}\PYG{p}{,}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{]}\PYG{p}{]}
+    \PYG{c+c1}{\PYGZsh{} Indices: |a b\PYGZgt{} mapped to idx = 2*a + b}
+    \PYG{k}{for} \PYG{n}{a} \PYG{o+ow}{in} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{:}
+        \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{:}
+            \PYG{n}{s} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{n}{j}
+            \PYG{k}{for} \PYG{n}{b} \PYG{o+ow}{in} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{:}
+                \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{a} \PYG{o}{+} \PYG{n}{b}
+                \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{c} \PYG{o}{+} \PYG{n}{b}
+                \PYG{n}{s} \PYG{o}{+}\PYG{o}{=} \PYG{n}{rho}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{p}{[}\PYG{n}{j}\PYG{p}{]}
+            \PYG{n}{rhoA}\PYG{p}{[}\PYG{n}{a}\PYG{p}{]}\PYG{p}{[}\PYG{n}{c}\PYG{p}{]} \PYG{o}{=} \PYG{n}{s}
+    \PYG{k}{return} \PYG{n}{rhoA}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{eigvals\PYGZus{}2x2}\PYG{p}{(}\PYG{n}{M}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Eigenvalues of a 2x2 matrix [[a,b],[c,d]] via quadratic formula.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{a}\PYG{p}{,} \PYG{n}{b} \PYG{o}{=} \PYG{n}{M}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+    \PYG{n}{c}\PYG{p}{,} \PYG{n}{d} \PYG{o}{=} \PYG{n}{M}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+    \PYG{n}{tr} \PYG{o}{=} \PYG{n}{a} \PYG{o}{+} \PYG{n}{d}
+    \PYG{n}{det} \PYG{o}{=} \PYG{n}{a}\PYG{o}{*}\PYG{n}{d} \PYG{o}{\PYGZhy{}} \PYG{n}{b}\PYG{o}{*}\PYG{n}{c}
+    \PYG{n}{disc} \PYG{o}{=} \PYG{n}{tr}\PYG{o}{*}\PYG{n}{tr} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{4}\PYG{o}{*}\PYG{n}{det}
+    \PYG{n}{root} \PYG{o}{=} \PYG{n}{cmath}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{n}{disc}\PYG{p}{)}
+    \PYG{n}{lam1} \PYG{o}{=} \PYG{l+m+mf}{0.5}\PYG{o}{*}\PYG{p}{(}\PYG{n}{tr} \PYG{o}{+} \PYG{n}{root}\PYG{p}{)}
+    \PYG{n}{lam2} \PYG{o}{=} \PYG{l+m+mf}{0.5}\PYG{o}{*}\PYG{p}{(}\PYG{n}{tr} \PYG{o}{\PYGZhy{}} \PYG{n}{root}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} For density matrices these should be real (up to tiny imag parts)}
+    \PYG{k}{return} \PYG{p}{[}\PYG{n}{lam1}\PYG{o}{.}\PYG{n}{real}\PYG{p}{,} \PYG{n}{lam2}\PYG{o}{.}\PYG{n}{real}\PYG{p}{]}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{von\PYGZus{}neumann\PYGZus{}entropy}\PYG{p}{(}\PYG{n}{rhoA}\PYG{p}{,} \PYG{n}{eps}\PYG{o}{=}\PYG{l+m+mf}{1e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}S(rhoA) = \PYGZhy{}Tr(rhoA log2 rhoA).\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{lams} \PYG{o}{=} \PYG{n}{eigvals\PYGZus{}2x2}\PYG{p}{(}\PYG{n}{rhoA}\PYG{p}{)}
+    \PYG{n}{S} \PYG{o}{=} \PYG{l+m+mf}{0.0}
+    \PYG{k}{for} \PYG{n}{lam} \PYG{o+ow}{in} \PYG{n}{lams}\PYG{p}{:}
+        \PYG{n}{lam} \PYG{o}{=} \PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{lam}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} clip small negatives from numerical error}
+        \PYG{k}{if} \PYG{n}{lam} \PYG{o}{\PYGZgt{}} \PYG{n}{eps}\PYG{p}{:}
+            \PYG{n}{S} \PYG{o}{\PYGZhy{}}\PYG{o}{=} \PYG{n}{lam} \PYG{o}{*} \PYG{p}{(}\PYG{n}{math}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{n}{lam}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{S}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Example: Bell state |Phi+\PYGZgt{} = (|00\PYGZgt{} + |11\PYGZgt{})/sqrt(2)}
+\PYG{n}{inv\PYGZus{}sqrt2} \PYG{o}{=} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{)}
+\PYG{n}{phi\PYGZus{}plus} \PYG{o}{=} \PYG{p}{[}\PYG{n}{inv\PYGZus{}sqrt2}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{n}{j}\PYG{p}{,} \PYG{n}{inv\PYGZus{}sqrt2}\PYG{p}{]}
+
+\PYG{n}{rho} \PYG{o}{=} \PYG{n}{outer}\PYG{p}{(}\PYG{n}{phi\PYGZus{}plus}\PYG{p}{)}
+\PYG{n}{rhoA} \PYG{o}{=} \PYG{n}{partial\PYGZus{}trace\PYGZus{}B}\PYG{p}{(}\PYG{n}{rho}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{rhoA =}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{for} \PYG{n}{row} \PYG{o+ow}{in} \PYG{n}{rhoA}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{row}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Von Neumann entropy S(rhoA) =}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{von\PYGZus{}neumann\PYGZus{}entropy}\PYG{p}{(}\PYG{n}{rhoA}\PYG{p}{)}\PYG{p}{)}
+
+\end{MintedVerbatim}
