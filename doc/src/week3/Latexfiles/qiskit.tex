@@ -1,0 +1,342 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% ---------------------------
+% Listings (Python)
+% ---------------------------
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{purple},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+
+\title{Running Qiskit on IBM Quantum Hardware}
+\author{Instructions for FYS5419/9419}
+\date{}
+
+\begin{document}
+
+%-------------------------------------------------
+\begin{frame}
+\titlepage
+\end{frame}
+
+%-------------------------------------------------
+\begin{frame}{What you will do}
+\begin{enumerate}
+  \item Create an IBM Quantum Platform / IBM Cloud account and select an access plan
+  \item Initialize Qiskit Runtime credentials locally
+  \item Discover available backends (QPUs and simulators)
+  \item Run circuits using Qiskit Runtime primitives (Sampler / Estimator)
+  \item Monitor jobs and retrieve results
+\end{enumerate}
+
+\vspace{0.4em}
+\scriptsize
+References: IBM Quantum Platform Quickstart and guides on account setup, credentials, and execution primitives. \\
+(\href{https://quantum.cloud.ibm.com/docs/guides/quick-start}{Quickstart},
+\href{https://quantum.cloud.ibm.com/docs/guides/save-credentials}{Save credentials},
+\href{https://quantum.cloud.ibm.com/docs/guides/execute-on-hardware}{Execute on hardware},
+\href{https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives}{Get started with primitives}).%
+\end{frame}
+
+%=================================================
+\section{Accounts and access}
+
+\begin{frame}{Step 1: Create an account and choose a plan}
+\begin{itemize}
+  \item Create an account on the \textbf{IBM Quantum Platform} / \textbf{IBM Cloud}.
+  \item IBM Quantum Platform offers an \textbf{Open (free)} access path and paid plans (depending on region/org).%
+  \item For QPU jobs through \textbf{Qiskit Runtime}, you typically need access to a Runtime instance (linked to an IBM Cloud account).
+\end{itemize}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs: account setup and plan overview.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/cloud-setup}{Set up IBM Cloud account},
+\href{https://quantum.cloud.ibm.com/docs/guides/plans-overview}{Plans overview},
+\href{https://quantum.cloud.ibm.com/registration}{Platform registration}.%
+\end{frame}
+
+\begin{frame}{Step 2: Create / select a Qiskit Runtime service instance}
+\begin{itemize}
+  \item Log in to IBM Quantum Platform and ensure the correct \textbf{account} and \textbf{region} are selected.
+  \item Verify you have a \textbf{Qiskit Runtime service instance}; if not, create one.
+  \item You will later connect to this instance from Python.
+\end{itemize}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs: initializing the Runtime service account / instance.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/initialize-account}{Initialize your Qiskit Runtime service account}.%
+\end{frame}
+
+%=================================================
+\section{Local environment setup}
+
+\begin{frame}[fragile]{Step 3: Install Qiskit and IBM Runtime packages}
+\begin{itemize}
+  \item Use a virtual environment (recommended) and install Qiskit + IBM Runtime tooling.
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install --upgrade pip
+pip install qiskit qiskit-ibm-runtime qiskit-ibm-provider
+\end{lstlisting}
+
+\vspace{0.4em}
+\scriptsize
+IBM quickstart emphasizes using a virtual environment.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/quick-start}{Quickstart}.%
+\end{frame}
+
+\begin{frame}[fragile]{Step 4: Save credentials locally (token / API key)}
+\begin{itemize}
+  \item In IBM Quantum Platform, obtain your API credentials (token/API key).
+  \item Save them in your local environment so you do not hard-code secrets in scripts.
+\end{itemize}
+
+\begin{lstlisting}
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+# Option A (common): save for later use (interactive)
+QiskitRuntimeService.save_account(
+    channel="ibm_quantum_platform",
+    token="YOUR_TOKEN_HERE",
+    # instance may be required depending on your plan/org:
+    # instance="ibm-q/open/main"   # example format; use your actual instance
+    overwrite=True
+)
+
+# Later in scripts/notebooks:
+service = QiskitRuntimeService(channel="ibm_quantum_platform")
+\end{lstlisting}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs: saving credentials and initializing the service.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/save-credentials}{Save your login credentials},
+\href{https://quantum.cloud.ibm.com/docs/guides/quick-start}{Quickstart}.%
+\end{frame}
+
+%=================================================
+\section{Discovering hardware backends}
+
+\begin{frame}[fragile]{Step 5: List available backends (QPUs and simulators)}
+\begin{lstlisting}
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+service = QiskitRuntimeService(channel="ibm_quantum_platform")
+
+# List backends you can access
+backends = service.backends()
+print("Number of backends:", len(backends))
+for b in backends[:10]:
+    print(b.name)
+\end{lstlisting}
+
+\begin{itemize}
+  \item Choose a backend based on availability, qubit count, and queue length.
+  \item IBM provides documentation on viewing backend information via the service API.
+\end{itemize}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs: listing backends and QPU information.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/get-qpu-information}{Get backend information with Qiskit}.%
+\end{frame}
+
+%=================================================
+\section{Running jobs with primitives}
+
+\begin{frame}{Why primitives (Sampler / Estimator)?}
+\begin{itemize}
+  \item IBM recommends running circuits via \textbf{Qiskit Runtime primitives}:
+    \begin{itemize}
+      \item \textbf{Sampler}: returns samples / counts from circuit measurements.
+      \item \textbf{Estimator}: returns expectation values of observables.
+    \end{itemize}
+  \item Primitives can include runtime features such as optimized execution and (optionally) error mitigation.
+\end{itemize}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs: primitives and executing on hardware.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/execute-on-hardware}{Execute on target hardware},
+\href{https://quantum.cloud.ibm.com/docs/guides/primitives-examples}{Primitives examples},
+\href{https://qiskit.qotlabs.org/docs/guides/primitives}{Introduction to primitives}.%
+\end{frame}
+
+\begin{frame}[fragile]{Example A (Sampler): run a Bell circuit on hardware}
+\begin{lstlisting}
+from qiskit import QuantumCircuit, transpile
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+
+service = QiskitRuntimeService(channel="ibm_quantum_platform")
+
+# Pick a backend (replace with one you have access to)
+backend = service.backend("ibm_brisbane")  # example name
+
+# Build circuit
+qc = QuantumCircuit(2, 2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure([0, 1], [0, 1])
+
+# Transpile to the backend's ISA
+isa_circuit = transpile(qc, backend=backend, optimization_level=1)
+
+# Run with the Sampler primitive
+sampler = Sampler(backend=backend)
+job = sampler.run([isa_circuit], shots=4000)
+
+print("Job ID:", job.job_id())
+result = job.result()
+print(result)
+\end{lstlisting}
+
+\vspace{0.2em}
+\scriptsize
+IBM docs: execution on hardware uses Sampler/Estimator primitives.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/execute-on-hardware}{Execute on hardware},
+\href{https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives}{Get started with primitives}.%
+\end{frame}
+
+\begin{frame}[fragile]{Example B (Estimator): expectation value of an observable}
+\begin{itemize}
+  \item Estimator returns $\langle O\rangle$ for an observable $O$ on the circuit output state.
+  \item Typical use: VQE, QML, metrology objectives, etc.
+\end{itemize}
+
+\begin{lstlisting}
+from qiskit import QuantumCircuit, transpile
+from qiskit.quantum_info import SparsePauliOp
+from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
+
+service = QiskitRuntimeService(channel="ibm_quantum_platform")
+backend = service.backend("ibm_brisbane")  # example
+
+# Prepare |Phi+> and estimate <ZZ>
+qc = QuantumCircuit(2)
+qc.h(0); qc.cx(0, 1)
+
+obs = SparsePauliOp.from_list([("ZZ", 1.0)])
+
+isa_circuit = transpile(qc, backend=backend, optimization_level=1)
+
+estimator = Estimator(backend=backend)
+job = estimator.run([(isa_circuit, obs)])
+print("Job ID:", job.job_id())
+res = job.result()
+print(res)
+\end{lstlisting}
+
+\vspace{0.2em}
+\scriptsize
+IBM docs: Estimator and examples.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/primitives-examples}{Primitives examples},
+\href{https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives}{Get started with primitives}.%
+\end{frame}
+
+%=================================================
+\section{Sessions, monitoring, and practical advice}
+
+\begin{frame}[fragile]{Sessions (recommended for multiple runs)}
+\begin{itemize}
+  \item If you execute \emph{many} primitive calls, using a session can reduce overhead.
+  \item A session keeps context on the backend for a window of time (useful for iterative workflows).
+\end{itemize}
+
+\begin{lstlisting}
+from qiskit_ibm_runtime import QiskitRuntimeService, Session
+from qiskit_ibm_runtime import SamplerV2 as Sampler
+
+service = QiskitRuntimeService(channel="ibm_quantum_platform")
+backend = service.backend("ibm_brisbane")  # example
+
+with Session(service=service, backend=backend) as session:
+    sampler = Sampler(session=session)
+    job = sampler.run([isa_circuit], shots=2000)
+    print(job.result())
+\end{lstlisting}
+
+\vspace{0.2em}
+\scriptsize
+IBM docs: primitives + execution flow; sessions are part of Runtime usage patterns.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/execute-on-hardware}{Execute on hardware}.%
+\end{frame}
+
+\begin{frame}[fragile]{Monitoring jobs and handling queues}
+\begin{lstlisting}
+# For any job returned by Sampler/Estimator:
+print("Status:", job.status())
+
+# Blocking wait (simple):
+result = job.result()
+
+# Some jobs expose logs/metadata depending on runtime configuration:
+# print(job.metrics())  # if available in your environment
+\end{lstlisting}
+
+\begin{itemize}
+  \item Hardware runs are queued; queue times vary by backend load and access plan.
+  \item Start with simulators, then validate on hardware.
+  \item Keep shot counts modest during development; increase shots for final statistics.
+\end{itemize}
+
+\vspace{0.2em}
+\scriptsize
+IBM docs: backend info and execution guidance.\\
+\href{https://quantum.cloud.ibm.com/docs/guides/get-qpu-information}{Get QPU information},
+\href{https://quantum.cloud.ibm.com/docs/guides/execute-on-hardware}{Execute on hardware}.%
+\end{frame}
+
+\begin{frame}{Practical tips for running on IBM QPUs}
+\begin{itemize}
+  \item \textbf{Transpile matters:} always transpile to the backend target/ISA.
+  \item \textbf{Noise:} expect deviations from ideal counts/expectations; compare with a simulator baseline.
+  \item \textbf{Measurement error mitigation:} primitives may support resilience options depending on plan.
+  \item \textbf{Reproducibility:} record backend name, calibration date/time, transpiler settings, and shots.
+  \item \textbf{Iteration:} develop locally (simulator), then run a small calibration set on hardware.
+\end{itemize}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs: primitives can provide sophisticated implementations including mitigation.\\
+\href{https://qiskit.qotlabs.org/docs/guides/primitives}{Introduction to primitives}.%
+\end{frame}
+
+%=================================================
+\section{Minimal ``Hello World'' checklist}
+
+\begin{frame}{Checklist (quick workflow)}
+\begin{enumerate}
+  \item Create IBM Quantum Platform / IBM Cloud account and select an access plan.
+  \item Create/select a Qiskit Runtime instance for your account/region.
+  \item Install packages: \texttt{qiskit}, \texttt{qiskit-ibm-runtime}, \texttt{qiskit-ibm-provider}.
+  \item Save credentials with \texttt{QiskitRuntimeService.save\_account(...)}.
+  \item List backends: \texttt{service.backends()}.
+  \item Build circuit, transpile to backend, run via \texttt{Sampler} or \texttt{Estimator}.
+  \item Retrieve results and document settings.
+\end{enumerate}
+
+\vspace{0.4em}
+\scriptsize
+IBM docs hub: \href{https://quantum.cloud.ibm.com/docs/guides/quick-start}{Quickstart}.%
+\end{frame}
+
+\end{document}

@@ -1,0 +1,326 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+\usepackage{amsmath,amssymb}
+\usepackage{physics}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% ---------------------------
+% Listings (Python)
+% ---------------------------
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{purple},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+
+\title{Entropy, Von Neumann Entropy, and Entanglement}
+\author{Lecture Notes + Worked Numerical Examples}
+\date{}
+
+\begin{document}
+
+%-------------------------------------------------
+\begin{frame}
+\titlepage
+\end{frame}
+
+%-------------------------------------------------
+\begin{frame}{Outline}
+\begin{enumerate}
+    \item Shannon entropy (classical) and basic properties
+    \item Density matrices and von Neumann entropy (quantum)
+    \item Bell states and entanglement entropy
+    \item Worked numerical examples (Python)
+    \item Code slides: entropy computation and partial trace
+\end{enumerate}
+\end{frame}
+
+%=================================================
+\section{Classical entropy}
+
+\begin{frame}{Entropy: Basic Idea}
+\begin{itemize}
+    \item Entropy quantifies \textbf{uncertainty} or \textbf{information content}.
+    \item For a single event of probability $p$, the information content is
+    \[
+    I(p) = -\log_2 p.
+    \]
+    \item Rare events ($p\to 0$) carry large information; certain events ($p=1$) carry zero information.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Shannon entropy}
+For a discrete random variable $X$ with outcomes $x$:
+\[
+H(X) = -\sum_x p(x)\log_2 p(x).
+\]
+
+Binary entropy (outcomes with probabilities $p$ and $1-p$):
+\[
+H_2(p) = -p\log_2 p - (1-p)\log_2(1-p).
+\]
+
+\begin{itemize}
+    \item $H_2(0)=H_2(1)=0$
+    \item $H_2(1/2)=1$ bit (maximum uncertainty)
+\end{itemize}
+\end{frame}
+
+%=================================================
+\section{Quantum entropy}
+
+\begin{frame}{Density matrices}
+A quantum state can be:
+\begin{itemize}
+    \item \textbf{Pure:} $\rho = \ket{\psi}\bra{\psi}$, with $\rho^2=\rho$
+    \item \textbf{Mixed:} $\rho=\sum_j p_j\ket{\psi_j}\bra{\psi_j}$, with $\rho^2\neq \rho$
+\end{itemize}
+
+Properties:
+\[
+\rho^\dagger=\rho,\quad \rho\succeq 0,\quad \Tr(\rho)=1.
+\]
+\end{frame}
+
+\begin{frame}{Von Neumann entropy}
+Quantum analogue of Shannon entropy:
+\[
+S(\rho) = -\Tr\!\left(\rho \log_2 \rho\right).
+\]
+
+If $\rho$ has eigenvalues $\{\lambda_i\}$:
+\[
+S(\rho)= -\sum_i \lambda_i \log_2 \lambda_i.
+\]
+
+\begin{itemize}
+    \item Pure state $\Rightarrow \{\lambda\}=\{1,0,\dots\} \Rightarrow S(\rho)=0$
+    \item Maximally mixed in $d$ dimensions: $\rho=\frac{I_d}{d} \Rightarrow S(\rho)=\log_2 d$
+\end{itemize}
+\end{frame}
+
+%=================================================
+\section{Bell states and entanglement entropy}
+
+\begin{frame}{Bell states (two qubits)}
+The four Bell states:
+\begin{align*}
+\ket{\Phi^+} &= \frac{1}{\sqrt{2}}(\ket{00}+\ket{11}), &
+\ket{\Phi^-} &= \frac{1}{\sqrt{2}}(\ket{00}-\ket{11}),\\
+\ket{\Psi^+} &= \frac{1}{\sqrt{2}}(\ket{01}+\ket{10}), &
+\ket{\Psi^-} &= \frac{1}{\sqrt{2}}(\ket{01}-\ket{10}).
+\end{align*}
+
+They form an orthonormal basis of $\mathbb{C}^2\otimes \mathbb{C}^2$.
+\end{frame}
+
+\begin{frame}{Entanglement entropy for pure bipartite states}
+For a pure state $\ket{\psi}_{AB}$ with $\rho_{AB}=\ket{\psi}\bra{\psi}$, define reduced states:
+\[
+\rho_A = \Tr_B(\rho_{AB}),\qquad \rho_B=\Tr_A(\rho_{AB}).
+\]
+
+\textbf{Entanglement entropy}:
+\[
+S_A := S(\rho_A),\qquad S_B := S(\rho_B).
+\]
+
+For pure bipartite states:
+\[
+S(\rho_A)=S(\rho_B).
+\]
+Moreover, $S(\rho_A)=0$ iff $\ket{\psi}$ is separable.
+\end{frame}
+
+\begin{frame}{Worked derivation: Bell state reduced density matrix}
+Take $\ket{\Phi^+}=\frac{1}{\sqrt{2}}(\ket{00}+\ket{11})$.
+Then
+\[
+\rho_{AB}=\ket{\Phi^+}\bra{\Phi^+}
+=\frac{1}{2}\Big(\ket{00}\bra{00}+\ket{00}\bra{11}+\ket{11}\bra{00}+\ket{11}\bra{11}\Big).
+\]
+
+Partial trace over $B$ using $\Tr_B(\ket{ab}\bra{cd})=\braket{d}{b}\ket{a}\bra{c}$:
+\[
+\rho_A=\Tr_B(\rho_{AB})=\frac{1}{2}\Big(\ket{0}\bra{0}+\ket{1}\bra{1}\Big)=\frac{I_2}{2}.
+\]
+
+Eigenvalues of $\rho_A$ are $\{1/2,1/2\}$, so
+\[
+S(\rho_A)= -2\cdot\frac{1}{2}\log_2\left(\frac{1}{2}\right)=1~\text{bit}.
+\]
+Thus Bell states are \textbf{maximally entangled}.
+\end{frame}
+
+%=================================================
+\section{Worked numerical examples (Python)}
+
+\begin{frame}[fragile]{Numerical example 1: binary Shannon entropy curve}
+Compute $H_2(p)$ for representative $p$ values.
+\begin{lstlisting}
+import math
+
+def H2(p):
+    eps = 1e-15
+    p = min(max(p, eps), 1.0-eps)
+    return -p*math.log(p, 2) - (1-p)*math.log(1-p, 2)
+
+for p in [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]:
+    # clamp for endpoints
+    pp = min(max(p, 1e-15), 1-1e-15)
+    print(p, H2(pp))
+\end{lstlisting}
+
+\textbf{Check:} maximum near $p=0.5$, and near-zero for $p\approx 0$ or $1$.
+\end{frame}
+
+\begin{frame}[fragile]{Numerical example 2: von Neumann entropy from eigenvalues (2x2)}
+For a $2\times 2$ density matrix, eigenvalues can be computed analytically.
+\begin{lstlisting}
+import math, cmath
+
+def eigvals_2x2(rho):
+    a, b = rho[0]
+    c, d = rho[1]
+    tr = a + d
+    det = a*d - b*c
+    disc = tr*tr - 4*det
+    root = cmath.sqrt(disc)
+    lam1 = 0.5*(tr + root)
+    lam2 = 0.5*(tr - root)
+    # return real parts (should be real for Hermitian rho)
+    return [lam1.real, lam2.real]
+
+def S_vn_from_eigs(lams):
+    S = 0.0
+    for lam in lams:
+        lam = max(lam, 0.0)
+        if lam > 1e-15:
+            S -= lam*math.log(lam, 2)
+    return S
+
+rhoA = [[0.5, 0.0],
+        [0.0, 0.5]]
+print("eigvals:", eigvals_2x2(rhoA))
+print("S(rhoA):", S_vn_from_eigs(eigvals_2x2(rhoA)))
+\end{lstlisting}
+
+For Bell-state reductions, you should get $S(\rho_A)=1$.
+\end{frame}
+
+\begin{frame}[fragile]{Code slide: build Bell states and compute entanglement entropy}
+We compute $\rho_A=\Tr_B(\rho_{AB})$ for Bell states and evaluate $S(\rho_A)$.
+\begin{lstlisting}
+import math
+
+def outer(v):
+    n = len(v)
+    return [[v[i]*v[j].conjugate() for j in range(n)] for i in range(n)]
+
+def partial_trace_B(rho):
+    # 2 qubits, basis: |00>,|01>,|10>,|11>
+    rhoA = [[0j, 0j],[0j, 0j]]
+    for a in (0,1):
+        for c in (0,1):
+            s = 0j
+            for b in (0,1):
+                i = 2*a + b
+                j = 2*c + b
+                s += rho[i][j]
+            rhoA[a][c] = s
+    return rhoA
+
+# Bell states as length-4 vectors
+inv = 1/math.sqrt(2)
+Phi_plus  = [inv, 0j, 0j, inv]
+Phi_minus = [inv, 0j, 0j, -inv]
+Psi_plus  = [0j, inv, inv, 0j]
+Psi_minus = [0j, inv, -inv, 0j]
+
+for name, psi in [("Phi+", Phi_plus), ("Phi-", Phi_minus),
+                  ("Psi+", Psi_plus), ("Psi-", Psi_minus)]:
+    rhoAB = outer(psi)
+    rhoA  = partial_trace_B(rhoAB)
+    # convert to plain real for the eig solver
+    rhoA_real = [[rhoA[0][0].real, rhoA[0][1].real],
+                 [rhoA[1][0].real, rhoA[1][1].real]]
+    lams = eigvals_2x2(rhoA_real)
+    print(name, "rhoA eigenvalues:", lams, "S(rhoA)=", S_vn_from_eigs(lams))
+\end{lstlisting}
+Expected output: eigenvalues $(1/2,1/2)$ and entropy $1$ for all Bell states.
+\end{frame}
+
+\begin{frame}[fragile]{Numerical example 3: partially entangled state $\cos\theta|00\rangle+\sin\theta|11\rangle$}
+This illustrates how entanglement entropy varies continuously from 0 to 1.
+\begin{lstlisting}
+import math
+
+def psi_theta(theta):
+    return [math.cos(theta), 0j, 0j, math.sin(theta)]
+
+print("theta   S(rhoA)")
+for k in range(11):
+    theta = (math.pi/2) * k/10
+    psi = psi_theta(theta)
+    rhoAB = outer(psi)
+    rhoA = partial_trace_B(rhoAB)
+    rhoA_real = [[rhoA[0][0].real, rhoA[0][1].real],
+                 [rhoA[1][0].real, rhoA[1][1].real]]
+    S = S_vn_from_eigs(eigvals_2x2(rhoA_real))
+    print(f"{theta:6.3f}  {S:8.6f}")
+\end{lstlisting}
+Check: $S=0$ at $\theta=0$ and $\theta=\pi/2$, and $S=1$ at $\theta=\pi/4$.
+\end{frame}
+
+%=================================================
+\section{Optional: with NumPy (compact + scalable)}
+
+\begin{frame}[fragile]{Optional compact implementation using NumPy}
+If NumPy is allowed, computation becomes very compact:
+\begin{lstlisting}
+import numpy as np
+
+def vn_entropy(rho):
+    # eigenvalues of Hermitian matrix
+    w = np.linalg.eigvalsh(rho)
+    w = np.maximum(w, 0.0)
+    w = w[w > 1e-15]
+    return -np.sum(w*np.log2(w))
+
+# Bell state |Phi+>
+psi = np.array([1,0,0,1], dtype=complex)/np.sqrt(2)
+rhoAB = np.outer(psi, psi.conj())
+
+# partial trace over B
+rhoA = np.zeros((2,2), dtype=complex)
+for a in [0,1]:
+    for c in [0,1]:
+        for b in [0,1]:
+            rhoA[a,c] += rhoAB[2*a+b, 2*c+b]
+
+print(vn_entropy(rhoA))  # should print 1.0
+\end{lstlisting}
+\end{frame}
+
+%=================================================
+\section{Summary}
+
+\begin{frame}{Summary}
+\begin{itemize}
+    \item Shannon entropy $H(X)$ measures classical uncertainty.
+    \item Von Neumann entropy $S(\rho)$ measures quantum mixedness.
+    \item For a pure bipartite state, $S(\rho_A)$ quantifies \textbf{entanglement}.
+    \item Bell states have reduced density matrix $\rho_A=I/2$ and entanglement entropy $S=1$ bit.
+    \item Python examples confirm theory and give templates for larger simulations.
+\end{itemize}
+\end{frame}
+
+\end{document}
