@@ -4,13 +4,946 @@ DATE: February 4, 2026
 
 
 !split
-===== Plans for the week of February 3-7, 2025 =====
+===== Plans for the week of February 2-6, 2026 =====
 !bblock
 o Density matrices, Entanglement, Bell states and entropy
+o Getting started with gates and more
 o For exercises, see end of these slides
 #o "Video of lecture":"https://youtu.be/9XrDKgTQL6I"
 #o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2024/NotesFebruary14.pdf"
 !eblock
+
+
+
+!split
+===== Motivation =====
+
+In order to study entanglement and why it is so important for quantum
+computing, we need to introduce some basic measures and useful
+quantities.  For these endeavors, we  will use our two-qubit system from
+the second lecture in order to introduce and repeat, through examples, density
+matrices and entropy. In particular we will focus on the so-called Bell states discussed in the previous lecture.
+
+These two quantities, together with
+technicalities like the Schmidt decomposition define important quantities in analyzing quantum computing examples.
+
+The Schmidt decomposition is again a
+linear decomposition which allows us to express a vector in terms of
+tensor product of two inner product spaces. In quantum information
+theory and quantum computing it is widely used as away to define and
+describe entanglement.
+
+
+
+!split
+===== Reminder on density matrices and traces =====
+
+We have the spectral decomposition of a given operator $\bm{A}$ given by
+
+!bt
+\[
+\bm{A}=\sum_i\lambda_i\vert i \rangle\langle i\vert,
+\]
+!et
+with the ONB $\vert i\rangle$ being eigenvectors of $\bm{A}$ and $\lambda_i$ being the eigenvalues. Similarly, a operator which is a function of $\bm{A}$ is given by
+!bt
+\[
+f(\bm{A})=\sum_if(\bm{A})\vert i \rangle\langle i\vert.
+\]
+!et
+The trace of a product of matrices is cyclic, that is
+!bt
+\[
+\mathrm{tr}[\bm{ABC}])=\mathrm{tr}[\bm{BCA}])=\mathrm{tr}[\bm{CBA}]),
+\]
+!et
+and we have also 
+!bt
+\[
+\mathrm{tr}[\bm{A}\vert \psi\rangle\langle\psi\vert])=\langle\psi\vert\bm{A}\vert\psi\rangle.
+\]
+!et
+
+!split
+===== Definition of density matrix =====
+
+Using the spectral decomposition we defined also the density matrix as
+!bt
+\[
+\rho = \sum_i p_i\vert i \rangle\langle i\vert,
+\]
+!et
+where the probability $p_i$ are the eigenvalues of the density linked with the ONB $\vert i \rangle$.
+
+The trace of the density matrix is $\mathrm{tr}\rho=1$ and it is invariant under unitary transformations
+$\vert \psi_i'\rangle = \bm{U}\vert \psi_i\rangle$.
+The unitary transformation of the density matrix gives, with
+$\bm{U}^{\dagger}\bm{U}=\bm{U}^{T}\bm{U}=\bm{I}$,
+!bt
+\[
+\bm{U}\rho\bm{U}^{\dagger}=\sum_ipi_i\bm{U}\vert \psi_i\rangle\langle\psi_i\vert\bm{U}^{\dagger},
+\]
+!et
+and with the unitary transformation it is easy to show that thet trace of the transformaed density matrix is equal to one,
+!bt
+\[
+\mathrm{tr}\left[ \bm{U}\rho\bm{U}^{\dagger}\right]=\mathrm{tr}\left[ \bm{U}\bm{U}^{\dagger}\rho\right]=1.
+\]
+!et
+
+
+
+!split
+===== Revisiting our Bell states and our  entanglement encounter, two qubit system =====
+
+We define a system that can be thought of as composed of two subsystems
+$A$ and $B$. Each subsystem has computational basis states
+
+!bt
+\[
+\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
+\]
+!et
+The subsystems could represent single particles or composite many-particle systems of a given symmetry.
+
+
+!split
+===== Computational basis =====
+This leads to the many-body computational basis states
+
+!bt
+\[
+\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
+\]
+!et
+and finally
+!bt
+\[
+\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+\]
+!et
+
+
+!split
+===== Bell states =====
+
+The above computational basis states, which define an ONB, can in turn
+be used to define another ONB. As an example, consider the so-called
+Bell states
+
+!bt
+\[
+\vert \Phi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 00\rangle +\vert 11\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 0 \\ 0 \\ 1\end{bmatrix},
+\]
+!et
+
+!bt
+\[
+\vert \Phi^-\rangle = \frac{1}{\sqrt{2}}\left[\vert 00\rangle -\vert 11\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 0 \\ 0 \\ -1\end{bmatrix},
+\]
+!et
+
+!split
+===== The next two  =====
+!bt
+\[
+\vert \Psi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 10\rangle +\vert 01\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 0 \\ 1 \\ 1 \\ 0\end{bmatrix},
+\]
+!et
+
+and
+
+!bt
+\[
+\vert \Psi^-\rangle = \frac{1}{\sqrt{2}}\left[\vert 10\rangle -\vert 01\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 0 \\ 1 \\ -1 \\ 0\end{bmatrix}.
+\]
+!et
+It is easy to convince oneself that these states also form an orthonormal basis. 
+
+
+!split
+===== Measurement =====
+Measuring one of the qubits of one of the above Bell states,
+automatically determines, as we will see below, the state of the
+second qubit. To convince ourselves about this, let us assume we perform a measurement on the qubit in system $A$ by introducing the projections with outcomes $0$ or $1$ as
+
+!bt
+\[
+\bm{P}_0=\vert 0\rangle\langle 0\vert_A\otimes \bm{I}_B=\begin{bmatrix} 1 & 0\\ 0 & 0\end{bmatrix}\otimes\begin{bmatrix} 1& 0 \\ 0 & 1\end{bmatrix}=\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0\end{bmatrix},
+\]
+!et
+for the projection of the $\vert 0 \rangle$ state in system $A$ and similarly
+!bt
+\[
+\bm{P}_1=\vert 1\rangle\langle 1\vert_A\otimes \bm{I}_B=\begin{bmatrix} 0 & 0\\ 0 & 1\end{bmatrix}\otimes\begin{bmatrix} 1& 0 \\ 0 & 1\end{bmatrix}=\begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix},
+\]
+!et
+for the projection of the $\vert 1 \rangle$ state in system $A$.
+
+
+!split
+===== Probability of  outcome =====
+
+We can then calculate the probability for the various outcomes by
+computing for example the probability for measuring qubit $0$ 
+
+!bt
+\[
+\langle \Phi^+\vert \bm{P}_0\vert \Phi^+\rangle = \frac{1}{2} \left[\langle 00\vert +\langle 11\vert\right]\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0\end{bmatrix}\left[\vert 00\rangle +\vert 11\rangle\right]=\frac{1}{2}.
+\]
+!et
+Similarly, we obtain
+!bt
+\[
+\langle \Phi^+\vert \bm{P}_1\vert \Phi^+\rangle = \frac{1}{2}\left[\langle 00\vert +\langle 11\vert\right]\begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\left[\vert 00\rangle +\vert 11\rangle\right]=\frac{1}{2}.
+\]
+!et
+
+
+!split
+===== States after measurement =====
+After the above measurements the system is in the states
+
+!bt
+\[
+\vert \Phi'_0 \rangle = \sqrt{2}\left[\vert 0\rangle\langle 0\vert_A\otimes \bm{I}_B\right]\vert\Phi^+\rangle=\vert 00\rangle,
+\]
+!et
+and 
+!bt
+\[
+\vert \Phi'_1 \rangle = \sqrt{2}\left[\vert 1\rangle\langle 1\vert_A\otimes \bm{I}_B\right]\vert\Phi^+\rangle=\vert 11\rangle.
+\]
+!et
+
+We see from the last two equations that the state of the second qubit
+is determined even though the measurement has only taken place locally
+on system $A$.
+
+
+!split
+===== Other states =====
+
+If we on the other hand consider a state like
+
+!bt
+\[
+\vert 00 \rangle = \vert 0\rangle_A\otimes \vert 0\rangle_B,
+\]
+!et
+this is a pure _product_ state of the single-qubit, or single-particle
+states, of two qubits (particles) in system $A$ and system $B$,
+respectively. We call such a state for a _pure product state_.  Quantum states
+that cannot be written as a mixture of other states are called pure
+quantum states or just product states, while all other states are called mixed quantum states.
+
+!split
+===== More on Bell states =====
+A state like one of the Bell states (where we introduce the subscript $AB$ to indicate that the state is composed of single states from two subsystem)
+!bt
+\[
+\vert \Phi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 00\rangle_{AB} +\vert 11\rangle_{AB}\right],
+\]
+!et
+is on the other hand a mixed state and we cannot determine whether system $A$ is in a state $0$ or $1$. The above state is a superposition of the states $\vert 00\rangle_{AB}$ and $\vert 11\rangle_{AB}$ and it is not possible to determine individual states of systems $A$ and $B$, respectively.
+
+
+!split
+===== Entanglement =====
+
+We say that the state is entangled. This yields the following
+definition of entangled states: a pure bipartite state $\vert
+\psi\rangle_{AB}$ is entangled if it cannot be written as a product
+state $\vert\psi\rangle_{A}\otimes\vert\phi\rangle_B$ for any choice
+of the states $\vert\psi\rangle_{A}$ and $\vert\phi\rangle_B$. Otherwise we say the state is separable.
+
+
+
+!split
+===== Maximally entangled =====
+
+A so-called maximally entangled state for a bipartite system has equal  probability amplitudes
+!bt
+\[
+\vert \Psi \rangle = \frac{1}{\sqrt{d}}\sum_{i=0}^{d-1}\vert ii\rangle.
+\]
+!et
+
+We call a bipartite state composed of systems $A$ and $B$ (these
+systems can be single-particle systems, or single-qubit systems
+representing low-lying states of complicated many-body systems) for
+separable if its density matrix $\rho_{AB}$ can be written out as the
+tensor product of the individual density matrices $\rho_A$ and
+$\rho_B$, that is we have for a given probability distribution $p_i$
+
+!bt
+\[
+\rho_{AB}=\sum_ip_i\rho_A(i)\otimes \rho_B(i).
+\]
+!et
+
+
+!split
+===== Summarizing the four Bell states (two qubits) =====
+
+Let $\{\vert 0\rangle,\vert \1}$ be the computational basis for a single qubit.
+For two qubits, the computational basis is
+$\{\vert 00\rangle,\vert 01\rangle,\vert 10\rangle,\vert 11\rangle\}$.
+
+\medskip
+The \textbf{Bell states} are the four maximally entangled two-qubit states
+!bt
+\begin{align}
+\vert \Phi^{+}\rangle &= \frac{1}{\sqrt{2}}\left(\vert 00\rangle+\vert 11\rangle\right), &
+\vert \Phi^{-}\rangle &= \frac{1}{\sqrt{2}}\left(\vert 00\rangle-\vert 11\rangle\right),\\
+\vert \Psi^{+}\rangle &= \frac{1}{\sqrt{2}}\left(\vert 01\rangle+\vert 10\rangle\right), &
+\vert \Psi^{-}\rangle &= \frac{1}{\sqrt{2}}\left(\vert 01\rangle-\vert 10\rangle\right).
+\end{align}
+!et
+
+They form an orthonormal basis of $\mathbb{C}^2\otimes\mathbb{C}^2$ and are
+eigenstates of correlated observables (parity and certain two-qubit Pauli products).
+
+!split
+===== Density matrix for all four Bell states =====
+
+For a _pure_ state $\vert \psi\rangle$, the density operator is
+!bt
+\[
+\rho=\vert \psi\rangle\langle \psi\vert.
+\]
+!et
+
+Example:
+!bt
+\[
+\rho_{\Phi^{+}}=\frac{1}{2}\big(\vert 00\rangle\langle 00\vert+\vert 00\rangle\langle 11\vert+\vert 11\rangle\langle 00\vert+\vert 11\rangle\langle 11\vert\big).
+\]
+!et
+
+!split
+===== Similarly, expanding each Bell projector =====
+
+!bt
+\begin{align}
+\rho_{\Phi^{-}} &= \frac{1}{2}\big(\vert 00\rangle\langle 00\vert-\vert 00\rangle\langle 11\vert-\vert 11\rangle\langle 00\vert+\vert 11\rangle\langle 11\vert\big),\\
+\rho_{\Psi^{+}} &= \frac{1}{2}\big(\vert 01\rangle\langle 01\vert+\vert 01\rangle\langle 10\vert+\vert 10\rangle\langle 01\vert+\vert 10\rangle\langle 10\vert\big),\\
+\rho_{\Psi^{-}} &= \frac{1}{2}\big(\vert 01\rangle\langle 01\vert-\vert 01\rangle\langle 10\vert-\vert 10\rangle\langle 01\vert+\vert 10\rangle\langle 10\vert\big).
+\end{align}
+!et
+
+!split
+===== Matrix forms in the computational basis =====
+
+Use ordering $\{\vert 00\rangle,\vert 01\rangle,\vert 10\rangle,\vert 11\rangle\}$. Then
+!bt
+\[
+\rho_{\Phi^{+}}=
+\frac{1}{2}\begin{pmatrix}
+1&0&0&1\\
+0&0&0&0\\
+0&0&0&0\\
+1&0&0&1
+\end{pmatrix},
+\qquad
+\rho_{\Phi^{-}}=
+\frac{1}{2}\begin{pmatrix}
+1&0&0&-1\\
+0&0&0&0\\
+0&0&0&0\\
+-1&0&0&1
+\end{pmatrix}
+\]
+!et
+!split
+===== More density matrices =====
+!bt
+\[
+\rho_{\Psi^{+}}=
+\frac{1}{2}\begin{pmatrix}
+0&0&0&0\\
+0&1&1&0\\
+0&1&1&0\\
+0&0&0&0
+\end{pmatrix},
+\qquad
+\rho_{\Psi^{-}}=
+\frac{1}{2}\begin{pmatrix}
+0&0&0&0\\
+0&1&-1&0\\
+0&-1&1&0\\
+0&0&0&0
+\end{pmatrix}.
+\]
+!et
+
+!split
+===== Proof that the Bell states form an orthonormal basis =====
+To show they form an orthonormal basis it suffices to prove first
+_Normalization:_ $\langle\Phi^{\pm}\vert\Phi^{\pm}\rangle=1$ and $\langle\Psi^{\pm}\vert\Psi^{\pm}\rangle=1$.
+For example,
+!bt
+\[
+\langle\Phi^{+}\vert\Phi^{+}\rangle
+=\frac{1}{2}\big(\langle 00\vert 00\rangle+\langle 00\vert 11\rangle+\langle 11\vert 00\rangle+\langle 11\vert 11\rangle\big)
+=\frac{1}{2}(1+0+0+1)=1.
+\]
+!et
+
+!split
+===== Orthogonality:=====
+Inner products between distinct Bell states vanish.
+Example:
+!bt
+\[
+\langle \Phi^{+}\vert\Phi^{-}\rangle
+=\frac{1}{2}\big(\langle 00\vert 00\rangle-\langle 00\vert 11\rangle+\langle 11\vert 00\rangle-\langle 11\vert 11\rangle\big)
+=\frac{1}{2}(1-0+0-1)=0.
+\]
+!et
+We leave the other states as exercise. Completeness: Since there are four orthonormal vectors in a four-dimensional
+space $\Rightarrow$ they form a basis.
+
+
+!split
+===== Pure and mixed states (definitions) =====
+\textbf{Density operator:} a quantum state can be represented by a positive semidefinite operator $\rho$
+with $\mathrm{Tr}(\rho)=1$.
+
+_Pure state:_
+!bt
+\[
+\rho \text{ is pure } \iff \rho=\vert \psi\langle \psi\vert \iff \rho^2=\rho \iff \mathrm{Tr}(\rho^2)=1.
+\]
+!et
+
+_Mixed state:_ a probabilistic ensemble of pure states $\{\,(p_i,\vert \psi_i\rangle)}$,
+!bt
+\[
+\rho=\sum_i p_i \vert \psi_i\rangle\langle \psi_i\vert,\qquad p_i\ge 0,\quad \sum_i p_i=1.
+\]
+!et
+Then typically $\rho^2\neq\rho$ and
+!bt
+\[
+\Tr(\rho^2)<1.
+\]
+!et
+Example: maximally mixed single-qubit state $\rho=\frac{I_2}{2}$ has $\Tr(\rho^2)=\frac{1}{2}$.
+
+
+!split
+===== Reduced density matrix via partial trace (full details) =====
+
+Let $\rho_{AB}$ be a two-qubit density matrix on $\mathcal{H}_A\otimes\mathcal{H}_B$.
+The reduced state of qubit $A$ is
+!bt
+\[
+\rho_A=\Tr_B(\rho_{AB})=\sum_{b\in\{0,1\}} \left(I_A\otimes \langle b\vert \right)\rho_{AB}\left(I_A\otimes \vert b}\right).
+\]
+!et
+\textbf{Worked example for $\vert \Phi^+}$:}
+!bt
+\[
+\rho_{\Phi^+}=\frac{1}{2}\Big(\vert 00}\langle 00}+\vert 00}\langle 11}+\vert 11}\langle 00}+\vert 11}\langle 11}\Big).
+\]
+!et
+Take $\Tr_B$ term-by-term, using $\Tr_B\big(\vert a b}\langle c d}\big)=\langle {d}{b}\,\vert a}\langle c}$:
+!bt
+\begin{align}
+\Tr_B(\vert 00}\langle 00}) &= \langle {0}{0}\vert 0}\langle 0}=\vert 0}\langle 0},\\
+\Tr_B(\vert 00}\langle 11}) &= \langle {1}{0}\vert 0}\langle 1}=0,\\
+\Tr_B(\vert 11}\langle 00}) &= \langle {0}{1}\vert 1}\langle 0}=0,\\
+\Tr_B(\vert 11}\langle 11}) &= \langle {1}{1}\vert 1}\langle 1}=\vert 1}\langle 1}.
+\end{align}
+!et
+Therefore,
+!bt
+\[
+\rho_A=\Tr_B(\rho_{\Phi^+})
+=\frac{1}{2}\left(\vert 0}\langle 0}+\vert 1}\langle 1}\right)=\frac{I_2}{2}.
+\]
+!et
+\textbf{Same result holds for all four Bell states:} each reduced state is maximally mixed.
+
+!split
+===== Measurement on one qubit (projective measurement) =====
+Consider measuring qubit $A$ in the computational basis $\{\vert 0},\vert 1}\}$.
+
+Projectors on the two-qubit space:
+!bt
+\[
+P_0=(\vert 0}\langle 0})\otimes I,\qquad
+P_1=(\vert 1}\langle 1})\otimes I.
+\]
+!et
+For a pre-measurement state $\rho_{AB}$,
+!bt
+\[
+p(0)=\Tr(P_0\rho_{AB}),\qquad p(1)=\Tr(P_1\rho_{AB}), \qquad p(0)+p(1)=1.
+\]
+!et
+Post-measurement (collapsed) state conditioned on outcome $k\in\{0,1\}$:
+!bt
+\[
+\rho_{AB}^{(k)}=\frac{P_k \rho_{AB} P_k}{p(k)}.
+\]
+!et
+
+!split
+===== Example =====
+!bblock Example: for $\vert \Phi^+}=(\vert 00}+\vert 11})/\sqrt{2}$, one finds
+!bt
+\[
+p(0)=\frac{1}{2},\quad p(1)=\frac{1}{2},
+\]
+!et
+and
+!bt
+\[
+\rho^{(0)}_{AB}=\vert 00}\langle 00},\qquad
+\rho^{(1)}_{AB}=\vert 11}\langle 11}.
+\]
+!et
+Thus measuring qubit $A$ collapses qubit $B$ to the same outcome (perfect correlations).
+
+
+!split
+===== Entropies and density matrices =====
+
+We discuss first the classical information entropy.
+Thereafter we define the quantum-mechanical quantity, commonly known as the Von-Neumann entropy.
+
+!split
+===== Shannon information entropy =====
+
+We start our discussions with the classical information entropy, or
+just Shannon entropy, before we move over to a quantum mechanical way
+to define the entropy based on the density matrices discussed earlier.
+
+We define a set of random variables $X=\{x_0,x_1,\dots,x_{n-1}\}$ with probability for an outcome $x\in X$ given by $p_X(x)$, the
+classical information entropy is defined as
+!bt
+\[
+S=-\sum_{x\in X}p_X(x)\log_2{p_X(x)}.
+\]
+!et
+Why this expression? What does it mean?
+
+!split
+===== Mathematics of entropy =====
+
+What is the basic idea of the entropy as it is used in information
+theory (we leave out the standard description from statistical physics
+here)?
+
+We want to have a measure of unlikelihood. Consider a simple binary
+system, with two outcomes, true and false with true given by a
+probability $p$ and false given by $1-p$. Since $p$ represents a
+probability, and assuming the probabilities are properly normalized,
+we have $p\in [0,1]$.
+
+Suppose know that we know precisely $p$, for example we could set
+$p=1$. This means that there is only one outcome, namely the true one
+and false is equal to zero. We know thus (exactly) which state the
+system is in.  If we set $p=0$, then we know that the outcome is
+false, without doubt.  Can we find a way to, through a specific
+function to say with a given certainty that the system is in a
+specific state? Let us call this function for $S$.
+
+!split
+===== More on the mathematics of entropy =====
+
+We could for example use
+!bt
+\[
+S(x)= -\log_2{p(x)},
+\]
+!et
+as potential
+function. Note that if we change the log-base, we only change the results by a scaling constant.
+
+When $p(x)=1$, then $S(x)=0$ and we could say that the
+probability of being in one specific state is uniquely defined since
+$S$ is then zero.  This function is also continuous, it is additive
+(which is very useful of we have independent and identically
+distributed stochastic variables), it is also high for unlikely events
+since when $p$ goes to zero (unlikely event) it becomes very
+large. It is also a non-negative function.
+
+!split
+===== Changing the expression =====
+
+We note however that if we go back to our binary model and would like to
+describe the entropy in terms of the variable $p$, we end up with $p$ being zero for the false outcome.
+The latter has probability one ($p=0)$.
+Using that
+!bt
+\[
+\lim_{x\to -\infty} -x \log_2{x}=0,
+\]
+!et
+we can define the classical information entropy as
+!bt
+\[
+S(x) = -p(x) \log_2{p(x)}.
+\]
+!et
+
+If we now consider a series of stochastic variables
+$X=\{x_0,x_1,\dots,x_{n-1}\}$ with probability for an outcome $x\in X$
+given by $p_X(x)$, the entropy becomes
+
+!bt
+\[
+S_X = -\sum_{x\in X}p_X(x_i) \log_2{p_X(x_i)}.
+\]
+!et
+
+!split
+===== Binary example =====
+
+If we now use the above binary example, we have (using that $p_1=p$ and $p_2=1-p$)
+!bt
+\[
+S = -\sum_{i=1}^{2}p_i \log_2{p_i}=-p\log_2{p}-(1-p)\log_2{(1-p)}.
+\]
+!et
+For $p=0$ we have $S=0$ and for $p=1$ we get $S=0$. Thus, for the two
+uniquely defined states we have entropy zero and a precise knowledge of the state. The maximum value is at
+$p=0.5$ and this is a situation where our level of knowledge is no
+better than us tossing a coin. This simple example demonstrates how we
+can use the above mathematical expression as a way to say whether we
+have a well-defined outcome or not. Our lack of knowledge is expressed
+by the largest entropy value.
+
+
+!split
+===== Von Neumann entropy =====
+
+Using the density matrix $\rho$, we define the quantum mechanical equivalent of the classical entropy as 
+!bt
+\[
+S=-\mathrm{Tr}[\rho\log_2{\rho}].
+\]
+!et
+This is the so-called Von Neumann entropy. How did we arrive at this expression? 
+
+And why can't we use the classical definition for a quantum mechanical system as well?
+
+!split
+===== The density matrix again =====
+
+Let us assume we are studying specific system $A$. The density matrix,
+using an ONB basis $\psi_j$, is defined as
+!bt
+\[
+\bm{\rho}_A=\sum_j\lambda_j\vert \psi_j\rangle\langle \psi_j\vert=\sum_j p_j\vert \psi_j\rangle\langle \psi_j\vert,
+\]
+!et
+and the eigenvalues $\lambda_j$ are the probabilities (or overlap coefficients) of being in a
+specific state $\psi_j$. 
+
+Note that the density matrix/operator is a semi-positive definite matrix.
+
+!split
+===== Linking with a new expression for the entropy =====
+
+Using a unitary transformation $\bm{U}$ we can transform the density
+matrix into a diagonal matrix $\bm{D}_a$ where the eigenvalues are the
+above mentioned probabilities (overlap coefficients squared). We can then define
+!bt
+\[
+\bm{D}_A=\bm{U}^{\dagger}\bm{\rho}_A\bm{U}=\begin{bmatrix} p_0 & 0 & 0 & \dots & 0\\
+ 0 & p_1 & 0 & \dots & 0\\
+ 0 & 0 & p_2 & \dots & 0\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+0 & 0 & \dots & 0 & p_{n-1}\end{bmatrix}.
+\]
+!et
+
+!split
+===== Von Neumann entropy =====
+
+If we now construct the following object
+!bt
+\[
+\bm{\rho}_A\log_2{\bm{\rho}_A},
+\]
+!et
+and perform a unitary transformation, recalling that $\bm{U}\bm{U}^{\dagger}=\bm{U}^{\dagger}\bm{U}=\bm{I}$,
+!bt
+\[
+\bm{U}^{\dagger}\bm{\rho}_A\log_2{\bm{\rho}_A}\bm{U}=\bm{U}^{\dagger}\bm{\rho}_A\bm{I}\log_2{\bm{\rho}_A}\bm{U}=\bm{D}_A\bm{U}^{\dagger}\log_2{\bm{\rho}_A}\bm{U},
+\]
+!et
+and defining
+!bt
+\[
+\bm{U}^{\dagger}\log_2{\bm{\rho}_A}\bm{U}=\log_2{\bm{D}_A},
+\]
+!et
+we have that 
+!bt
+\[
+\bm{U}^{\dagger}\bm{\rho}_A\log_2{\bm{\rho}_A}\bm{U}=\bm{D}_A \log_2{\bm{D}_A}.
+\]
+!et
+
+!split
+===== $\log_2{\bm{D}_A}$ =====
+
+We have that
+!bt
+\[
+\log_2{\bm{D}_A}=\begin{bmatrix} \log_2{p_0} & 0 & 0 & \dots & 0\\
+ 0 & \log_2{p_1} & 0 & \dots & 0\\
+ 0 & 0 & \log_2{p_2} & \dots & 0\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+0 & 0 & \dots & 0 & \log_2{p_{n-1}}\end{bmatrix}.
+\]
+!et
+
+!split
+===== Entropy and traces =====
+
+If we take the trace of 
+!bt
+\[
+\mathrm{Tr}[\bm{U}^{\dagger}\bm{\rho}_A\log_2{\bm{\rho}_A}\bm{U}]=\mathrm{Tr}[\bm{D}_A \log_2{\bm{D}_A}],
+\]
+!et
+
+which is nothing but
+!bt
+\[
+\mathrm{Tr}[\bm{D}_A \log_2{\bm{D}_A}]=\sum_i p_i\log_2{p_i},
+\]
+!et
+which allows us to define the general Von-Neumann entropy as
+!bt
+\[
+S_A=-\mathrm{Tr}[\bm{\rho}_A\log_2{\bm{\rho}_A}].
+\]
+!et
+Performing a unitary transformation gives the expression we know from classical information theory.
+
+
+
+
+
+!split
+===== Pure-Python code: partial trace + von Neumann entropy =====
+Goal: compute $\rho_A=\Tr_B(\rho_{AB})$ and
+!bt
+\[
+S(\rho_A)=-\Tr(\rho_A\log_2\rho_A)
+= -\sum_{i=1}^{2}\lambda_i\log_2\lambda_i,
+\]
+!et
+where $\{\lambda_i\}$ are eigenvalues of the $2\times2$ matrix $\rho_A$.
+!bc pycod
+import math
+import cmath
+
+def outer(v):
+    """Outer product |v><v| for a statevector v (length 4)."""
+    n = len(v)
+    return [[v[i] * v[j].conjugate() for j in range(n)] for i in range(n)]
+
+def partial_trace_B(rho):
+    """
+    Partial trace over qubit B for a 2-qubit density matrix rho (4x4).
+    Basis ordering: |00>,|01>,|10>,|11>.
+    Returns rho_A (2x2).
+    """
+    rhoA = [[0j, 0j],[0j, 0j]]
+    # Indices: |a b> mapped to idx = 2*a + b
+    for a in (0,1):
+        for c in (0,1):
+            s = 0j
+            for b in (0,1):
+                i = 2*a + b
+                j = 2*c + b
+                s += rho[i][j]
+            rhoA[a][c] = s
+    return rhoA
+
+def eigvals_2x2(M):
+    """Eigenvalues of a 2x2 matrix [[a,b],[c,d]] via quadratic formula."""
+    a, b = M[0]
+    c, d = M[1]
+    tr = a + d
+    det = a*d - b*c
+    disc = tr*tr - 4*det
+    root = cmath.sqrt(disc)
+    lam1 = 0.5*(tr + root)
+    lam2 = 0.5*(tr - root)
+    # For density matrices these should be real (up to tiny imag parts)
+    return [lam1.real, lam2.real]
+
+def von_neumann_entropy(rhoA, eps=1e-15):
+    """S(rhoA) = -Tr(rhoA log2 rhoA)."""
+    lams = eigvals_2x2(rhoA)
+    S = 0.0
+    for lam in lams:
+        lam = max(lam, 0.0)  # clip small negatives from numerical error
+        if lam > eps:
+            S -= lam * (math.log(lam, 2))
+    return S
+
+# --- Example: Bell state |Phi+> = (|00> + |11>)/sqrt(2)
+inv_sqrt2 = 1.0 / math.sqrt(2.0)
+phi_plus = [inv_sqrt2, 0j, 0j, inv_sqrt2]
+
+rho = outer(phi_plus)
+rhoA = partial_trace_B(rho)
+
+print("rhoA =")
+for row in rhoA:
+    print(row)
+
+print("Von Neumann entropy S(rhoA) =", von_neumann_entropy(rhoA))
+!ec
+
+!split
+===== Pure-Python code: measurement on one qubit =====
+
+We implement projective measurement of qubit $A$ in $\{\vert 0},\vert 1}\}$.
+
+
+For a pure statevector $\vert \psi}$, outcome probabilities are
+!bt
+\[
+p(k)=\langle \psi}P_k\vert \psi},\quad P_k=(\vert k\rangle\langle k\vert)\otimes I,
+\]
+!et
+and the post-measurement state is
+!bt
+\[
+\vert \psi_k}=\frac{P_k\vert \psi}}{\sqrt{p(k)}}.
+\]
+!et
+Below: compute $p(0),p(1)$ and the conditional post-measurement statevectors.
+
+!split
+===== Code (standard Python libraries only) =====
+!bc pycod
+import math
+
+def measure_qubit_A_statevector(psi, outcome):
+    """
+    Measure qubit A in computational basis on a 2-qubit statevector psi (len=4).
+    outcome = 0 or 1.
+    Returns (p, psi_post) where psi_post is normalized statevector.
+    """
+    # Projector keeps basis states with A=outcome:
+    # indices 2*outcome + b for b in {0,1}
+    keep = [2*outcome + 0, 2*outcome + 1]
+    p = sum((psi[i].conjugate() * psi[i]).real for i in keep)
+    if p <= 0.0:
+        return 0.0, [0j,0j,0j,0j]
+    norm = 1.0 / math.sqrt(p)
+    psi_post = [0j,0j,0j,0j]
+    for i in keep:
+        psi_post[i] = psi[i] * norm
+    return p, psi_post
+
+# Example: |Phi+>
+inv_sqrt2 = 1.0 / math.sqrt(2.0)
+psi = [inv_sqrt2, 0j, 0j, inv_sqrt2]
+
+p0, psi0 = measure_qubit_A_statevector(psi, 0)
+p1, psi1 = measure_qubit_A_statevector(psi, 1)
+
+print("p(0) =", p0, "post state =", psi0)
+print("p(1) =", p1, "post state =", psi1)
+!ec
+
+!split
+===== Qiskit code: Bell state + measurement on IBM hardware =====
+
+We create a Bell state, measure one qubit, and run on IBM Quantum using
+Qiskit Runtime \texttt{SamplerV2}. The same circuit also works on simulators.
+
+Notes:
+* The circuit prepares $\vert \Phi^+}$: apply $H$ on qubit 0, then $\mathrm{CNOT}(0\to1)$.
+* Measure only qubit 0 (the ``one-qubit measurement'' request).
+* On real hardware, you need an IBM Quantum API token. This will be discussed next week.
+
+!split
+===== Qiskit code =====
+!split
+from qiskit import QuantumCircuit
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+
+# 1) Authenticate (set your token once, e.g. via environment variable)
+# service = QiskitRuntimeService(channel="ibm_quantum", token="YOUR_TOKEN")
+service = QiskitRuntimeService()  # uses saved account configuration
+
+# 2) Choose a backend (you can also specify a particular device name)
+backend = service.least_busy(operational=True, simulator=False)
+
+# 3) Build circuit: create Bell state |Phi+> and measure qubit 0 only
+qc = QuantumCircuit(2, 1)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure(0, 0)
+
+# 4) Transpile to the backend ISA
+pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+isa_circuit = pm.run(qc)
+
+# 5) Run with SamplerV2
+sampler = Sampler(mode=backend)
+job = sampler.run([isa_circuit], shots=4096)
+result = job.result()[0]
+
+# Counts live under the classical register name; here it's "c"
+counts = result.data.c.get_counts()
+print("Backend:", backend.name)
+print("Counts (measuring qubit 0):", counts)
+!ec
+
+!split
+===== Quick checks / expected results =====
+For $\vert \Phi^+\rangle$ and measurement of qubit $A$ in the computational basis:
+!bblock
+* $p(0)=p(1)=1/2$.
+* Conditional post-measurement state is $\vert 00\rangle$ or $\vert 11\rangle$.
+* Reduced state $\rho_A=I_2/2$ for any Bell state $\Rightarrow$
+!bt
+\[
+S(\rho_A)=1 \text{ bit}.
+\]
+!et
+!eblock
+
+
+
+
+
+
+
+
 
 
 
