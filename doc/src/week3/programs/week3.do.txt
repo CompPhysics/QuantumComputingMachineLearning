@@ -532,55 +532,6 @@ We discuss first the classical information entropy.
 Thereafter we define the quantum-mechanical quantity, commonly known as the Von-Neumann entropy.
 
 !split
-===== Classical entropy =====
-!bblock Entropy and basic ddea
-Entropy quantifies _uncertainty_ or _information content_.
-!bt
-For a single event of probability $p$, the information content is
-\[
-I(p) = -\log_2 p.
-\]
-!et
-Rare events ($p\to 0$) carry large information; certain events ($p=1$) carry zero information.
-!eblock
-
-!split
-===== Shannon entropy =====
-For a discrete random variable $X$ with outcomes $x$:
-!bt
-\[
-H(X) = -\sum_x p(x)\log_2 p(x).
-\]
-!et
-Binary entropy (outcomes with probabilities $p$ and $1-p$):
-!bt
-\[
-H_2(p) = -p\log_2 p - (1-p)\log_2(1-p).
-\]
-!et
-This leads to $H_2(0)=H_2(1)=0$ (max certainty) and $H_2(1/2)=1$ (maximum uncertainty).
-
-!split
-===== Binary Shannon entropy curve =====
-
-Compute $H_2(p)$ for representative $p$ values.
-!bc pycod
-import math
-
-def H2(p):
-    eps = 1e-15
-    p = min(max(p, eps), 1.0-eps)
-    return -p*math.log(p, 2) - (1-p)*math.log(1-p, 2)
-
-for p in [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]:
-    # clamp for endpoints
-    pp = min(max(p, 1e-15), 1-1e-15)
-    print(p, H2(pp))
-!ec
-
-
-
-!split
 ===== Shannon information entropy =====
 
 We start our discussions with the classical information entropy, or
@@ -682,38 +633,6 @@ better than us tossing a coin. This simple example demonstrates how we
 can use the above mathematical expression as a way to say whether we
 have a well-defined outcome or not. Our lack of knowledge is expressed
 by the largest entropy value.
-
-!split
-===== Quantum entropy =====
-A quantum state can be:
-* _Pure:_ $\rho = \vert\psi\rangle\langle\psi\vert$, with $\rho^2=\rho$
-* _Mixed:_ $\rho=\sum_j p_j\vert\psi_j\rangle\langle\psi_j\vert$, with $\rho^2\neq \rho$
-
-Properties:
-!bt
-\[
-\rho^\dagger=\rho,\quad \rho\succeq 0,\quad \mathrm{Tr}(\rho)=1.
-\]
-!et
-
-!split
-===== Von Neumann entropy =====
-Quantum analogue of Shannon entropy:
-!bt
-\[
-S(\rho) = -\mathrm{Tr}\!\left(\rho \log_2 \rho\right).
-\]
-!et
-If $\rho$ has eigenvalues $\{\lambda_i\}$:
-!bt
-\[
-S(\rho)= -\sum_i \lambda_i \log_2 \lambda_i.
-\]
-!et
-* Pure state $\Rightarrow \{\lambda\}=\{1,0,\dots\} \Rightarrow S(\rho)=0$
-* Maximally mixed in $d$ dimensions: $\rho=\frac{I_d}{d} \Rightarrow S(\rho)=\log_2 d$
-
-
 
 
 !split
@@ -962,138 +881,61 @@ print("p(0) =", p0, "post state =", psi0)
 print("p(1) =", p1, "post state =", psi1)
 !ec
 
+!split
+===== Qiskit code: Bell state + measurement on IBM hardware =====
+
+We create a Bell state, measure one qubit, and run on IBM Quantum using
+Qiskit Runtime \texttt{SamplerV2}. The same circuit also works on simulators.
+
+Notes:
+* The circuit prepares $\vert \Phi^+\rangle$: apply $H$ on qubit 0, then $\mathrm{CNOT}(0\to1)$.
+* Measure only qubit 0 (the ``one-qubit measurement'' request).
+* On real hardware, you need an IBM Quantum API token. This will be discussed next week.
 
 !split
-===== von Neumann entropy from eigenvalues (2x2) =====
-For a $2\times 2$ density matrix, eigenvalues can be computed analytically.
+===== Qiskit code =====
+
 !bc pycod
-import math, cmath
+from qiskit import QuantumCircuit
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-def eigvals_2x2(rho):
-    a, b = rho[0]
-    c, d = rho[1]
-    tr = a + d
-    det = a*d - b*c
-    disc = tr*tr - 4*det
-    root = cmath.sqrt(disc)
-    lam1 = 0.5*(tr + root)
-    lam2 = 0.5*(tr - root)
-    # return real parts (should be real for Hermitian rho)
-    return [lam1.real, lam2.real]
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
-def S_vn_from_eigs(lams):
-    S = 0.0
-    for lam in lams:
-        lam = max(lam, 0.0)
-        if lam > 1e-15:
-            S -= lam*math.log(lam, 2)
-    return S
+# 1) Authenticate (set your token once, e.g. via environment variable)
+# service = QiskitRuntimeService(channel="ibm_quantum", token="YOUR_TOKEN")
+service = QiskitRuntimeService()  # uses saved account configuration
 
-rhoA = [[0.5, 0.0],
-        [0.0, 0.5]]
-print("eigvals:", eigvals_2x2(rhoA))
-print("S(rhoA):", S_vn_from_eigs(eigvals_2x2(rhoA)))
+# 2) Choose a backend (you can also specify a particular device name)
+backend = service.least_busy(operational=True, simulator=False)
+
+# 3) Build circuit: create Bell state |Phi+> and measure qubit 0 only
+qc = QuantumCircuit(2, 1)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure(0, 0)
+
+# 4) Transpile to the backend ISA
+pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+isa_circuit = pm.run(qc)
+
+# 5) Run with SamplerV2
+sampler = Sampler(mode=backend)
+job = sampler.run([isa_circuit], shots=4096)
+result = job.result()[0]
+
+# Counts live under the classical register name; here it's "c"
+counts = result.data.c.get_counts()
+print("Backend:", backend.name)
+print("Counts (measuring qubit 0):", counts)
 !ec
 
-For Bell-state reductions, you should get $S(\rho_A)=1$.
 
-!split
-===== Build Bell states and compute entanglement entropy =====
 
-We compute $\rho_A=\mathrm{Tr}_B(\rho_{AB})$ for Bell states and evaluate $S(\rho_A)$.
-!bc pycod
-import math
 
-def outer(v):
-    n = len(v)
-    return [[v[i]*v[j].conjugate() for j in range(n)] for i in range(n)]
 
-def partial_trace_B(rho):
-    # 2 qubits, basis: |00>,|01>,|10>,|11>
-    rhoA = [[0j, 0j],[0j, 0j]]
-    for a in (0,1):
-        for c in (0,1):
-            s = 0j
-            for b in (0,1):
-                i = 2*a + b
-                j = 2*c + b
-                s += rho[i][j]
-            rhoA[a][c] = s
-    return rhoA
 
-# Bell states as length-4 vectors
-inv = 1/math.sqrt(2)
-Phi_plus  = [inv, 0j, 0j, inv]
-Phi_minus = [inv, 0j, 0j, -inv]
-Psi_plus  = [0j, inv, inv, 0j]
-Psi_minus = [0j, inv, -inv, 0j]
 
-for name, psi in [("Phi+", Phi_plus), ("Phi-", Phi_minus),
-                  ("Psi+", Psi_plus), ("Psi-", Psi_minus)]:
-    rhoAB = outer(psi)
-    rhoA  = partial_trace_B(rhoAB)
-    # convert to plain real for the eig solver
-    rhoA_real = [[rhoA[0][0].real, rhoA[0][1].real],
-                 [rhoA[1][0].real, rhoA[1][1].real]]
-    lams = eigvals_2x2(rhoA_real)
-    print(name, "rhoA eigenvalues:", lams, "S(rhoA)=", S_vn_from_eigs(lams))
-!ec
-Expected output: eigenvalues $(1/2,1/2)$ and entropy $1$ for all Bell states.
 
-!split
-===== Partially entangled state $\cos\theta|00\rangle+\sin\theta|11\rangle$ =====
-This illustrates how entanglement entropy varies continuously from 0 to 1.
-!bc pycod
-import math
 
-def psi_theta(theta):
-    return [math.cos(theta), 0j, 0j, math.sin(theta)]
 
-print("theta   S(rhoA)")
-for k in range(11):
-    theta = (math.pi/2) * k/10
-    psi = psi_theta(theta)
-    rhoAB = outer(psi)
-    rhoA = partial_trace_B(rhoAB)
-    rhoA_real = [[rhoA[0][0].real, rhoA[0][1].real],
-                 [rhoA[1][0].real, rhoA[1][1].real]]
-    S = S_vn_from_eigs(eigvals_2x2(rhoA_real))
-    print(f"{theta:6.3f}  {S:8.6f}")
-!ec
-Check: $S=0$ at $\theta=0$ and $\theta=\pi/2$, and $S=1$ at $\theta=\pi/4$.
-
-!split
-===== Using NumPy =====
-!bc pycod
-import numpy as np
-
-def vn_entropy(rho):
-    # eigenvalues of Hermitian matrix
-    w = np.linalg.eigvalsh(rho)
-    w = np.maximum(w, 0.0)
-    w = w[w > 1e-15]
-    return -np.sum(w*np.log2(w))
-
-# Bell state |Phi+>
-psi = np.array([1,0,0,1], dtype=complex)/np.sqrt(2)
-rhoAB = np.outer(psi, psi.conj())
-
-# partial trace over B
-rhoA = np.zeros((2,2), dtype=complex)
-for a in [0,1]:
-    for c in [0,1]:
-        for b in [0,1]:
-            rhoA[a,c] += rhoAB[2*a+b, 2*c+b]
-
-print(vn_entropy(rhoA))  # should print 1.0
-!ec
-
-!split
-===== Summary =====
-!bblock
-* Shannon entropy $H(X)$ measures classical uncertainty.
-* Von Neumann entropy $S(\rho)$ measures quantum mixedness.
-* For a pure bipartite state, $S(\rho_A)$ quantifies _entanglement_.
-* Bell states have reduced density matrix $\rho_A=I/2$ and entanglement entropy $S=1$ bit.
-!eblock
 

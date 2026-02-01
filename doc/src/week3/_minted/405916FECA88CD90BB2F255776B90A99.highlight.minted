@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{vn\PYGZus{}entropy}\PYG{p}{(}\PYG{n}{rho}\PYG{p}{)}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} eigenvalues of Hermitian matrix}
+    \PYG{n}{w} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{eigvalsh}\PYG{p}{(}\PYG{n}{rho}\PYG{p}{)}
+    \PYG{n}{w} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{maximum}\PYG{p}{(}\PYG{n}{w}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)}
+    \PYG{n}{w} \PYG{o}{=} \PYG{n}{w}\PYG{p}{[}\PYG{n}{w} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{1e\PYGZhy{}15}\PYG{p}{]}
+    \PYG{k}{return} \PYG{o}{\PYGZhy{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}\PYG{n}{w}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{log2}\PYG{p}{(}\PYG{n}{w}\PYG{p}{)}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Bell state |Phi+\PYGZgt{}}
+\PYG{n}{psi} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}\PYG{o}{/}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
+\PYG{n}{rhoAB} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{outer}\PYG{p}{(}\PYG{n}{psi}\PYG{p}{,} \PYG{n}{psi}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} partial trace over B}
+\PYG{n}{rhoA} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+\PYG{k}{for} \PYG{n}{a} \PYG{o+ow}{in} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{:}
+    \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{:}
+        \PYG{k}{for} \PYG{n}{b} \PYG{o+ow}{in} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{:}
+            \PYG{n}{rhoA}\PYG{p}{[}\PYG{n}{a}\PYG{p}{,}\PYG{n}{c}\PYG{p}{]} \PYG{o}{+}\PYG{o}{=} \PYG{n}{rhoAB}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{a}\PYG{o}{+}\PYG{n}{b}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{c}\PYG{o}{+}\PYG{n}{b}\PYG{p}{]}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{vn\PYGZus{}entropy}\PYG{p}{(}\PYG{n}{rhoA}\PYG{p}{)}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} should print 1.0}
+
+\end{MintedVerbatim}
