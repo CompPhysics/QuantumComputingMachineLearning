@@ -1,0 +1,1076 @@
+TITLE: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo, Norway
+DATE: February 18, 2026
+
+
+!split
+===== Plans for the week of February 16-20, 2026 =====
+!bblock
+The first part of the lecture will focus
+o Review from last week, one-qubit gates and one-qubit Hamiltonian (using slides from last week)
+o Reminder and review of  density matrices and measurements from week 2
+o Schmidt decomposition and entanglement
+o Discussion of entropies, classical information entropy (Shannon entropy) and von Neumann entropy
+The second part focuses on 
+o Two-qubit Hamiltonians and how to encode them
+o Discussion of project 1 during exercise session
+o "Video of lecture ":"https://youtu.be/caR8AQM6Rwo"
+o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesFebruary19.pdf"
+!eblock
+
+
+
+!split
+===== Motivation =====
+
+In order to study entanglement and why it is so important for quantum
+computing, we need to introduce some basic measures and useful
+quantities.  For these endeavors, we  will use our two-qubit system from
+the second lecture in order to introduce and repeat, through examples, density
+matrices and entropy. These two quantities, together with
+technicalities like the Schmidt decomposition define important quantities in analyzing quantum computing examples.
+
+The Schmidt decomposition is again a
+linear decomposition which allows us to express a vector in terms of
+tensor product of two inner product spaces. In quantum information
+theory and quantum computing it is widely used as away to define and
+describe entanglement.
+
+
+
+!split
+===== Reminder on density matrices and traces =====
+
+We have the spectral decomposition of a given operator $\bm{A}$ given by
+
+!bt
+\[
+\bm{A}=\sum_i\lambda_i\vert i \rangle\langle i\vert,
+\]
+!et
+with the ONB $\vert i\rangle$ being eigenvectors of $\bm{A}$ and $\lambda_i$ being the eigenvalues. Similarly, a operator which is a function of $\bm{A}$ is given by
+!bt
+\[
+f(\bm{A})=\sum_if(\bm{A})\vert i \rangle\langle i\vert.
+\]
+!et
+The trace of a product of matrices is cyclic, that is
+!bt
+\[
+\mathrm{tr}[\bm{ABC}])=\mathrm{tr}[\bm{BCA}])=\mathrm{tr}[\bm{CBA}]),
+\]
+!et
+and we have also 
+!bt
+\[
+\mathrm{tr}[\bm{A}\vert \psi\rangle\langle\psi\vert])=\langle\psi\vert\bm{A}\vert\psi\rangle.
+\]
+!et
+
+!split
+===== Definition of density matrix =====
+
+Using the spectral decomposition we defined also the density matrix as
+!bt
+\[
+\rho = \sum_i p_i\vert i \rangle\langle i\vert,
+\]
+!et
+where the probability $p_i$ are the eigenvalues of the density linked with the ONB $\vert i \rangle$.
+
+The trace of the density matrix is $\mathrm{tr}\rho=1$ and it is invariant under unitary transformations
+$\vert \psi_i'\rangle = \bm{U}\vert \psi_i\rangle$.
+The unitary transformation of the density matrix gives, with
+$\bm{U}^{\dagger}\bm{U}=\bm{U}^{T}\bm{U}=\bm{I}$,
+!bt
+\[
+\bm{U}\rho\bm{U}^{\dagger}=\sum_ipi_i\bm{U}\vert \psi_i\rangle\langle\psi_i\vert\bm{U}^{\dagger},
+\]
+!et
+and with the unitary transformation it is easy to show that thet trace of the transformaed density matrix is equal to one,
+!bt
+\[
+\mathrm{tr}\left[ \bm{U}\rho\bm{U}^{\dagger}\right]=\mathrm{tr}\left[ \bm{U}\bm{U}^{\dagger}\rho\right]=1.
+\]
+!et
+
+
+
+!split
+===== Revisiting our Bell states and ur  entanglement encounter, two qubit system =====
+
+We define a system that can be thought of as composed of two subsystems
+$A$ and $B$. Each subsystem has computational basis states
+
+!bt
+\[
+\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
+\]
+!et
+The subsystems could represent single particles or composite many-particle systems of a given symmetry.
+
+
+!split
+===== Computational basis =====
+This leads to the many-body computational basis states
+
+!bt
+\[
+\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
+\]
+!et
+and finally
+!bt
+\[
+\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+\]
+!et
+
+
+!split
+===== Bell states =====
+
+The above computational basis states, which define an ONB, can in turn
+be used to define another ONB. As an example, consider the so-called
+Bell states
+
+!bt
+\[
+\vert \Phi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 00\rangle +\vert 11\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 0 \\ 0 \\ 1\end{bmatrix},
+\]
+!et
+
+!bt
+\[
+\vert \Phi^-\rangle = \frac{1}{\sqrt{2}}\left[\vert 00\rangle -\vert 11\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 0 \\ 0 \\ -1\end{bmatrix},
+\]
+!et
+
+!split
+===== The next two  =====
+!bt
+\[
+\vert \Psi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 10\rangle +\vert 01\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 0 \\ 1 \\ 1 \\ 0\end{bmatrix},
+\]
+!et
+
+and
+
+!bt
+\[
+\vert \Psi^-\rangle = \frac{1}{\sqrt{2}}\left[\vert 10\rangle -\vert 01\rangle\right]=\frac{1}{\sqrt{2}}\begin{bmatrix} 0 \\ 1 \\ -1 \\ 0\end{bmatrix}.
+\]
+!et
+It is easy to convince oneself that these states also form an orthonormal basis. 
+
+
+!split
+===== Measurement =====
+Measuring one of the qubits of one of the above Bell states,
+automatically determines, as we will see below, the state of the
+second qubit. To convince ourselves about this, let us assume we perform a measurement on the qubit in system $A$ by introducing the projections with outcomes $0$ or $1$ as
+
+!bt
+\[
+\bm{P}_0=\vert 0\rangle\langle 0\vert_A\otimes \bm{I}_B=\begin{bmatrix} 1 & 0\\ 0 & 0\end{bmatrix}\otimes\begin{bmatrix} 1& 0 \\ 0 & 1\end{bmatrix}=\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0\end{bmatrix},
+\]
+!et
+for the projection of the $\vert 0 \rangle$ state in system $A$ and similarly
+!bt
+\[
+\bm{P}_1=\vert 1\rangle\langle 1\vert_A\otimes \bm{I}_B=\begin{bmatrix} 0 & 0\\ 0 & 1\end{bmatrix}\otimes\begin{bmatrix} 1& 0 \\ 0 & 1\end{bmatrix}=\begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix},
+\]
+!et
+for the projection of the $\vert 1 \rangle$ state in system $A$.
+
+
+!split
+===== Probability of  outcome =====
+
+We can then calculate the probability for the various outcomes by
+computing for example the probability for measuring qubit $0$ 
+
+!bt
+\[
+\langle \Phi^+\vert \bm{P}_0\vert \Phi^+\rangle = \frac{1}{2} \left[\langle 00\vert +\langle 11\vert\right]\begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0\end{bmatrix}\left[\vert 00\rangle +\vert 11\rangle\right]=\frac{1}{2}.
+\]
+!et
+Similarly, we obtain
+!bt
+\[
+\langle \Phi^+\vert \bm{P}_1\vert \Phi^+\rangle = \frac{1}{2}\left[\langle 00\vert +\langle 11\vert\right]\begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\left[\vert 00\rangle +\vert 11\rangle\right]=\frac{1}{2}.
+\]
+!et
+
+
+!split
+===== States after measurement =====
+After the above measurements the system is in the states
+
+!bt
+\[
+\vert \Phi'_0 \rangle = \sqrt{2}\left[\vert 0\rangle\langle 0\vert_A\otimes \bm{I}_B\right]\vert\Phi^+\rangle=\vert 00\rangle,
+\]
+!et
+and 
+!bt
+\[
+\vert \Phi'_1 \rangle = \sqrt{2}\left[\vert 1\rangle\langle 1\vert_A\otimes \bm{I}_B\right]\vert\Phi^+\rangle=\vert 11\rangle.
+\]
+!et
+
+We see from the last two equations that the state of the second qubit
+is determined even though the measurement has only taken place locally
+on system $A$.
+
+
+!split
+===== Other states =====
+
+If we on the other hand consider a state like
+
+!bt
+\[
+\vert 00 \rangle = \vert 0\rangle_A\otimes \vert 0\rangle_B,
+\]
+!et
+this is a pure _product_ state of the single-qubit, or single-particle
+states, of two qubits (particles) in system $A$ and system $B$,
+respectively. We call such a state for a _pure product state_.  Quantum states
+that cannot be written as a mixture of other states are called pure
+quantum states or just product states, while all other states are called mixed quantum states.
+
+!split
+===== More on Bell states =====
+A state like one of the Bell states (where we introduce the subscript $AB$ to indicate that the state is composed of single states from two subsystem)
+!bt
+\[
+\vert \Phi^+\rangle = \frac{1}{\sqrt{2}}\left[\vert 00\rangle_{AB} +\vert 11\rangle_{AB}\right],
+\]
+!et
+is on the other hand a mixed state and we cannot determine whether system $A$ is in a state $0$ or $1$. The above state is a superposition of the states $\vert 00\rangle_{AB}$ and $\vert 11\rangle_{AB}$ and it is not possible to determine individual states of systems $A$ and $B$, respectively.
+
+
+!split
+===== Entanglement =====
+
+We say that the state is entangled. This yields the following
+definition of entangled states: a pure bipartite state $\vert
+\psi\rangle_{AB}$ is entangled if it cannot be written as a product
+state $\vert\psi\rangle_{A}\otimes\vert\phi\rangle_B$ for any choice
+of the states $\vert\psi\rangle_{A}$ and $\vert\phi\rangle_B$. Otherwise we say the state is separable.
+
+
+
+!split
+===== Maximally entangled =====
+
+A so-called maximally entangled state for a bipartite system has equal  probability amplitudes
+!bt
+\[
+\vert \Psi \rangle = \frac{1}{\sqrt{d}}\sum_{i=0}^{d-1}\vert ii\rangle.
+\]
+!et
+
+We call a bipartite state composed of systems $A$ and $B$ (these
+systems can be single-particle systems, or single-qubit systems
+representing low-lying states of complicated many-body systems) for
+separable if its density matrix $\rho_{AB}$ can be written out as the
+tensor product of the individual density matrices $\rho_A$ and
+$\rho_B$, that is we have for a given probability distribution $p_i$
+
+!bt
+\[
+\rho_{AB}=\sum_ip_i\rho_A(i)\otimes \rho_B(i).
+\]
+!et
+
+!split
+===== Entropies and density matrices =====
+
+We discuss first the classical information entropy.
+Thereafter we define the quantum-mechanical quantity, commonly known as the Von-Neumann entropy.
+
+!split
+===== Shannon information entropy =====
+
+We start our discussions with the classical information entropy, or
+just Shannon entropy, before we move over to a quantum mechanical way
+to define the entropy based on the density matrices discussed earlier.
+
+We define a set of random variables $X=\{x_0,x_1,\dots,x_{n-1}\}$ with probability for an outcome $x\in X$ given by $p_X(x)$, the
+classical information entropy is defined as
+!bt
+\[
+S=-\sum_{x\in X}p_X(x)\log_2{p_X(x)}.
+\]
+!et
+Why this expression? What does it mean?
+
+!split
+===== Mathematics of entropy =====
+
+What is the basic idea of the entropy as it is used in information
+theory (we leave out the standard description from statistical physics
+here)?
+
+We want to have a measure of unlikelihood. Consider a simple binary
+system, with two outcomes, true and false with true given by a
+probability $p$ and false given by $1-p$. Since $p$ represents a
+probability, and assuming the probabilities are properly normalized,
+we have $p\in [0,1]$.
+
+Suppose know that we know precisely $p$, for example we could set
+$p=1$. This means that there is only one outcome, namely the true one
+and false is equal to zero. We know thus (exactly) which state the
+system is in.  If we set $p=0$, then we know that the outcome is
+false, without doubt.  Can we find a way to, through a specific
+function to say with a given certainty that the system is in a
+specific state? Let us call this function for $S$.
+
+!split
+===== More on the mathematics of entropy =====
+
+We could for example use
+!bt
+\[
+S(x)= -\log_2{p(x)},
+\]
+!et
+as potential
+function. Note that if we change the log-base, we only change the results by a scaling constant.
+
+When $p(x)=1$, then $S(x)=0$ and we could say that the
+probability of being in one specific state is uniquely defined since
+$S$ is then zero.  This function is also continuous, it is additive
+(which is very useful of we have independent and identically
+distributed stochastic variables), it is also high for unlikely events
+since when $p$ goes to zero (unlikely event) it becomes very
+large. It is also a non-negative function.
+
+!split
+===== Changing the expression =====
+
+We note however that if we go back to our binary model and would like to
+describe the entropy in terms of the variable $p$, we end up with $p$ being zero for the false outcome.
+The latter has probability one ($p=0)$.
+Using that
+!bt
+\[
+\lim_{x\to -\infty} -x \log_2{x}=0,
+\]
+!et
+we can define the classical information entropy as
+!bt
+\[
+S(x) = -p(x) \log_2{p(x)}.
+\]
+!et
+
+If we now consider a series of stochastic variables
+$X=\{x_0,x_1,\dots,x_{n-1}\}$ with probability for an outcome $x\in X$
+given by $p_X(x)$, the entropy becomes
+
+!bt
+\[
+S_X = -\sum_{x\in X}p_X(x_i) \log_2{p_X(x_i)}.
+\]
+!et
+
+!split
+===== Binary example =====
+
+If we now use the above binary example, we have (using that $p_1=p$ and $p_2=1-p$)
+!bt
+\[
+S = -\sum_{i=1}^{2}p_i \log_2{p_i}=-p\log_2{p}-(1-p)\log_2{(1-p)}.
+\]
+!et
+For $p=0$ we have $S=0$ and for $p=1$ we get $S=0$. Thus, for the two
+uniquely defined states we have entropy zero and a precise knowledge of the state. The maximum value is at
+$p=0.5$ and this is a situation where our level of knowledge is no
+better than us tossing a coin. This simple example demonstrates how we
+can use the above mathematical expression as a way to say whether we
+have a well-defined outcome or not. Our lack of knowledge is expressed
+by the largest entropy value.
+
+
+!split
+===== Von Neumann entropy =====
+
+Using the density matrix $\rho$, we define the quantum mechanical equivalent of the classical entropy as 
+!bt
+\[
+S=-\mathrm{Tr}[\rho\log_2{\rho}].
+\]
+!et
+This is the so-called Von Neumann entropy. How did we arrive at this expression? 
+
+And why can't we use the classical definition for a quantum mechanical system as well?
+
+!split
+===== The density matrix again =====
+
+Let us assume we are studying specific system $A$. The density matrix,
+using an ONB basis $\psi_j$, is defined as
+!bt
+\[
+\bm{\rho}_A=\sum_j\lambda_j\vert \psi_j\rangle\langle \psi_j\vert=\sum_j p_j\vert \psi_j\rangle\langle \psi_j\vert,
+\]
+!et
+and the eigenvalues $\lambda_j$ are the probabilities (or overlap coefficients) of being in a
+specific state $\psi_j$. 
+
+Note that the density matrix/operator is a semi-positive definite matrix.
+
+!split
+===== Linking with a new expression for the entropy =====
+
+Using a unitary transformation $\bm{U}$ we can transform the density
+matrix into a diagonal matrix $\bm{D}_a$ where the eigenvalues are the
+above mentioned probabilities (overlap coefficients squared). We can then define
+!bt
+\[
+\bm{D}_A=\bm{U}^{\dagger}\bm{\rho}_A\bm{U}=\begin{bmatrix} p_0 & 0 & 0 & \dots & 0\\
+ 0 & p_1 & 0 & \dots & 0\\
+ 0 & 0 & p_2 & \dots & 0\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+0 & 0 & \dots & 0 & p_{n-1}\end{bmatrix}.
+\]
+!et
+
+!split
+===== Von Neumann entropy =====
+
+If we now construct the following object
+!bt
+\[
+\bm{\rho}_A\log_2{\bm{\rho}_A},
+\]
+!et
+and perform a unitary transformation, recalling that $\bm{U}\bm{U}^{\dagger}=\bm{U}^{\dagger}\bm{U}=\bm{I}$,
+!bt
+\[
+\bm{U}^{\dagger}\bm{\rho}_A\log_2{\bm{\rho}_A}\bm{U}=\bm{U}^{\dagger}\bm{\rho}_A\bm{I}\log_2{\bm{\rho}_A}\bm{U}=\bm{D}_A\bm{U}^{\dagger}\log_2{\bm{\rho}_A}\bm{U},
+\]
+!et
+and defining
+!bt
+\[
+\bm{U}^{\dagger}\log_2{\bm{\rho}_A}\bm{U}=\log_2{\bm{D}_A},
+\]
+!et
+we have that 
+!bt
+\[
+\bm{U}^{\dagger}\bm{\rho}_A\log_2{\bm{\rho}_A}\bm{U}=\bm{D}_A \log_2{\bm{D}_A}.
+\]
+!et
+
+!split
+===== $\log_2{\bm{D}_A}$ =====
+
+We have that
+!bt
+\[
+\log_2{\bm{D}_A}=\begin{bmatrix} \log_2{p_0} & 0 & 0 & \dots & 0\\
+ 0 & \log_2{p_1} & 0 & \dots & 0\\
+ 0 & 0 & \log_2{p_2} & \dots & 0\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+\dots & \dots & \dots & \dots & \dots\\
+0 & 0 & \dots & 0 & \log_2{p_{n-1}}\end{bmatrix}.
+\]
+!et
+
+!split
+===== Entropy and traces =====
+
+If we take the trace of 
+!bt
+\[
+\mathrm{Tr}[\bm{U}^{\dagger}\bm{\rho}_A\log_2{\bm{\rho}_A}\bm{U}]=\mathrm{Tr}[\bm{D}_A \log_2{\bm{D}_A}],
+\]
+!et
+
+which is nothing but
+!bt
+\[
+\mathrm{Tr}[\bm{D}_A \log_2{\bm{D}_A}]=\sum_i p_i\log_2{p_i},
+\]
+!et
+which allows us to define the general Von-Neumann entropy as
+!bt
+\[
+S_A=-\mathrm{Tr}[\bm{\rho}_A\log_2{\bm{\rho}_A}].
+\]
+!et
+Performing a unitary transformation gives the expression we know from classical information theory.
+
+
+!split
+===== What next? =====
+
+Before we proceed we are now going to study the entropy of a system
+relevant for project 1.  We will compute the entropy of the ground
+state and the entropy of a subsystem by tracing out (as done
+previosly) the density matrix of ground state.
+
+The system is a two-qubit and we will use this later to rewrite the
+Hamiltonian matrix in terms of various Pauli-matrices.
+
+!split
+===== Two-qubit system and calculation of density matrices and project 1 =====
+
+_This part is best seen using the jupyter-notebook_.
+
+
+This system can be thought of as composed of two subsystems
+$A$ and $B$. Each subsystem has computational basis states
+
+!bt
+\[
+\vert 0\rangle_{\mathrm{A,B}}=\begin{bmatrix} 1 & 0\end{bmatrix}^T \hspace{1cm} \vert 1\rangle_{\mathrm{A,B}}=\begin{bmatrix} 0 & 1\end{bmatrix}^T.
+\]
+!et
+The subsystems could represent single particles or composite many-particle systems of a given symmetry.
+This leads to the many-body computational basis states
+
+!bt
+\[
+\vert 00\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 1 & 0 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 01\rangle = \vert 0\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 1 & 0 &0\end{bmatrix}^T,
+\]
+!et
+and
+!bt
+\[
+\vert 10\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 0\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 1 &0\end{bmatrix}^T,
+\]
+!et
+and finally
+!bt
+\[
+\vert 11\rangle = \vert 1\rangle_{\mathrm{A}}\otimes \vert 1\rangle_{\mathrm{B}}=\begin{bmatrix} 0 & 0 & 0 &1\end{bmatrix}^T.
+\]
+!et
+
+These computational basis states define the eigenstates of the non-interacting  Hamiltonian
+!bt
+\[
+H_0\vert 00 \rangle = \epsilon_{00}\vert 00 \rangle,
+\]
+!et
+!bt
+\[
+H_0\vert 10 \rangle = \epsilon_{10}\vert 10 \rangle,
+\]
+!et
+!bt
+\[
+H_0\vert 01 \rangle = \epsilon_{01}\vert 01 \rangle,
+\]
+!et
+and
+!bt
+\[
+H_0\vert 11 \rangle = \epsilon_{11}\vert 11 \rangle.
+\]
+!et
+The interacting part of the Hamiltonian $H_{\mathrm{I}}$ is given by the tensor product of two $\sigma_x$ and $\sigma_z$  matrices, respectively, that is
+!bt
+\[
+H_{\mathrm{I}}=H_x\sigma_x\otimes\sigma_x+H_z\sigma_z\otimes\sigma_z,
+\]
+!et
+where $H_x$ and $H_z$ are interaction strength parameters. Our final Hamiltonian matrix is given by
+!bt
+\[
+\bm{H}=\begin{bmatrix} \epsilon_{00}+H_z & 0 & 0 & H_x \\
+                       0  & \epsilon_{10}-H_z & H_x & 0 \\
+		       0 & H_x & \epsilon_{01}-H_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{11} +H_z \end{bmatrix}.
+\] 
+!et
+
+The four eigenstates of the above Hamiltonian matrix can in turn be used to
+define density matrices. As an example, the density matrix of the
+first eigenstate (lowest energy $E_0$) $\Psi_0$ is given by the outerproduct
+
+!bt
+\[
+\rho_0=\left(\alpha_{00}\vert 00 \rangle+\alpha_{10}\vert 10 \rangle+\alpha_{01}\vert 01 \rangle+\alpha_{11}\vert 11 \rangle\right)\left(\alpha_{00}^*\langle 00\vert+\alpha_{10}^*\langle 10\vert+\alpha_{01}^*\langle 01\vert+\alpha_{11}^*\langle 11\vert\right),
+\]
+!et
+
+where the coefficients $\alpha_{ij}$ are the eigenvector coefficients
+resulting from the solution of the above eigenvalue problem. 
+
+
+We can
+then in turn define the density matrix for the subsets $A$ or $B$ as
+
+!bt
+\[
+\rho_A=\mathrm{Tr}_B(\rho_{0})=\langle 0 \vert \rho_{0} \vert 0\rangle_{B}+\langle 1 \vert \rho_{0} \vert 1\rangle_{B},
+\]
+!et
+
+or
+
+!bt
+\[
+\rho_B=\mathrm{Tr}_A(\rho_0)=\langle 0 \vert \rho_{0} \vert 0\rangle_{A}+\langle 1 \vert \rho_{0} \vert 1\rangle_{A}.
+\]
+!et
+
+The density matrices for these subsets can be used to compute the
+so-called von Neumann entropy, which is one of the possible measures
+of entanglement. A pure state has entropy equal zero while entangled
+state have an entropy larger than zero. The von-Neumann entropy is
+defined as
+
+!bt
+\[
+S(A,B)=-\mathrm{Tr}\left(\rho_{A,B}\log_2 (\rho_{A,B})\right).
+\]
+!et
+
+The example here shows the above von Neumann entropy based on the
+density matrix for the lowest many-body state. We see clearly a jump
+in the entropy around the point where we have a level crossing. At
+interaction strenght $\lambda=0$ we have many-body states purely
+defined by their computational basis states. As we switch on the
+interaction strength, we obtain an increased degree of mixing and the
+entropy increases till we reach the level crossing point where we see
+an additional and sudden increase in entropy. Similar behaviors are
+observed for the other states. The most important result from this
+example is that entanglement is driven by the Hamiltonian itself and
+the strength of the interaction matrix elements and the
+non-interacting energies.
+
+!bc pycod
+%matplotlib inline
+from  matplotlib import pyplot as plt
+import numpy as np
+from scipy.linalg import logm, expm
+def log2M(a): # base 2 matrix logarithm
+    return logm(a)/np.log(2.0)
+
+dim = 4
+Hamiltonian = np.zeros((dim,dim))
+#number of lambda values
+n = 40
+lmbd = np.linspace(0.0,1.0,n)
+Hx = 2.0
+Hz = 3.0
+# Non-diagonal part as sigma_x tensor product with sigma_x
+sx = np.matrix([[0,1],[1,0]])
+sx2 = Hx*np.kron(sx, sx)
+# Diagonal part as sigma_z tensor product with sigma_z
+sz = np.matrix([[1,0],[0,-1]])
+sz2 = Hz*np.kron(sz, sz)
+noninteracting = [0.0, 2.5, 6.5, 7.0]
+D = np.diag(noninteracting)
+Eigenvalue = np.zeros((dim,n))
+Entropy = np.zeros(n)
+
+for i in range(n): 
+    Hamiltonian = lmbd[i]*(sx2+sz2)+D
+    # diagonalize and obtain eigenvalues, not necessarily sorted
+    EigValues, EigVectors = np.linalg.eig(Hamiltonian)
+    # sort eigenvectors and eigenvalues
+    permute = EigValues.argsort()
+    EigValues = EigValues[permute]
+    EigVectors = EigVectors[:,permute]
+    # Compute density matrix for selected system state, here ground state
+    DensityMatrix = np.zeros((dim,dim))
+    DensityMatrix = np.outer(EigVectors[:,0],EigVectors[:,0])
+    # Project down on substates and find density matrix for subsystem
+    d = np.matrix([[1,0],[0,1]])
+    v1 = [1.0,0.0]
+    proj1 = np.kron(v1,d)
+    x1 = proj1 @ DensityMatrix @ proj1.T
+    v2 = [0.0,1.0]
+    proj2 = np.kron(v2,d)
+    x2 = proj2 @ DensityMatrix @ proj2.T
+    # Total density matrix for subsystem
+    total = x1+x2
+    # von Neumann Entropy for subsystem 
+    Entropy[i] = -np.matrix.trace(total @ log2M(total))
+    # Plotting eigenvalues and entropy as functions of interaction strengths
+    Eigenvalue[0,i] = EigValues[0]
+    Eigenvalue[1,i] = EigValues[1]
+    Eigenvalue[2,i] = EigValues[2]
+    Eigenvalue[3,i] = EigValues[3]
+plt.plot(lmbd, Eigenvalue[0,:] ,'b-',lmbd, Eigenvalue[1,:],'g-',)
+plt.plot(lmbd, Eigenvalue[2,:] ,'r-',lmbd, Eigenvalue[3,:],'y-',)
+plt.xlabel('$\lambda$')
+plt.ylabel('Eigenvalues')
+plt.show()
+plt.plot(lmbd, Entropy)
+plt.xlabel('$\lambda$')
+plt.ylabel('Entropy')          
+plt.show
+!ec
+
+
+
+
+!split
+===== Schmidt decomposition =====
+
+A way to study entanglement is through the so-called Schmidt decomposition,
+which is essentially an application of the
+singular-value decomposition.
+
+
+!split
+===== Pure states and Schmidt decomposition =====
+
+The Schmidt decomposition allows us to define a pure state in a
+bipartite Hilbert space composed of systems $A$ and $B$ as
+
+!bt
+\[
+\vert\psi\rangle=\sum_{i=0}^{d-1}\sigma_i\vert i\rangle_A\vert i\rangle_B,
+\]
+!et
+where the amplitudes $\sigma_i$ are real and positive and their
+squared values sum up to one, $\sum_i\sigma_i^2=1$. The states $\vert
+i\rangle_A$ and $\vert i\rangle_B$ form orthornormal bases for systems
+$A$ and $B$ respectively, the amplitudes $\lambda_i$ are the so-called
+Schmidt coefficients and the Schmidt rank $d$ is equal to the number
+of Schmidt coefficients and is smaller or equal to the minimum
+dimensionality of system $A$ and system $B$, that is $d\leq
+\mathrm{min}(\mathrm{dim}(A), \mathrm{dim}(B))$.
+
+
+!split
+===== Proof of Schmidt decomposition =====
+
+The proof for the above decomposition is based on the singular-value
+decomposition. To see this, assume that we have two orthonormal bases
+sets for systems $A$ and $B$, respectively. That is we have two ONBs
+$\vert i\rangle_A$ and $\vert j\rangle_B$. We can always construct a
+product state (a pure state) as
+
+!bt
+\[ \vert\psi \rangle = \sum_{ij} c_{ij}\vert i\rangle_A\vert
+j\rangle_B,
+\]
+!et
+where the coefficients $c_{ij}$ are the overlap coefficients which
+belong to a matrix $\bm{C}$.
+
+
+
+!split
+===== Further parts of proof =====
+
+If we now assume that the
+dimensionalities of the two subsystems $A$ and $B$ are the same $d$,
+we can always rewrite the matrix $\bm{C}$ in terms of a singular-value
+decomposition with unitary/orthogonal matrices $\bm{U}$ and $\bm{V}$
+of dimension $d\times d$ and a matrix $\bm{\Sigma}$ which contains the
+(diagonal) singular values $0\leq \sigma_0\leq \sigma_1 \leq \dots \sigma_{d-1}$ as
+
+!bt
+\[
+\bm{C}=\bm{U}\bm{\Sigma}\bm{V}^{\dagger}.
+\]
+!et
+
+Note that the singular values can organized either as a descending series or as an ascending series.
+!split
+===== SVD parts in proof =====
+
+This means we can rewrite the coefficients $c_{ij}$ in terms of the singular-value decomposition
+!bt
+\[
+c_{ij}=\sum_k u_{ik}\sigma_kv_{kj},
+\]
+!et
+and inserting this in the definition of the pure state $\vert \psi\rangle$ we have
+
+!bt
+\[
+\vert\psi \rangle = \sum_{ij} \left(\sum_k u_{ik}\sigma_kv_{kj} \right)\vert i\rangle_A\vert j\rangle_B.
+\]
+!et
+
+!split
+===== Slight rewrite =====
+We rewrite the last equation as
+
+!bt
+\[
+\vert\psi \rangle = \sum_{k}\sigma_k \left(\sum_i u_{ik}\vert i\rangle_A\right)\otimes\left(\sum_jv_{kj}\vert j\rangle_B\right),
+\]
+!et
+which we identify simply as, since the matrices $\bm{U}$ and $\bm{V}$ represent unitary transformations,
+!bt
+\[
+\vert\psi \rangle = \sum_{k}\sigma_k \vert k\rangle_A\vert k\rangle_B.
+\]
+!et
+
+
+!split
+===== Different dimensionalities =====
+
+It is straight forward to prove this relation in case systems $A$ and
+$B$ have different dimensionalities.  Once we know the Schmidt
+decomposition of a state, we can immmediately say whether it is
+entangled or not. If a state $\psi$ is entangled, then its Schmidt
+decomposition has more than one term. Stated differently, the state is
+entangled if the so-called Schmidt rank is greater than one.
+
+There
+is another important property of the Schmidt decomposition which is
+related to the properties of the density matrices and their trace
+operations and the entropies. These concepts can be studied for example
+by studying the two-qubit Hamiltonian described above.
+
+
+
+
+
+
+
+!split
+===== Rewriting the above Hamiltonian as a set of Pauli-gates =====
+
+Last week we discussed how to rewrite a one-qubit Hamiltonian in terms
+of various one-qubit gates.  This forms our first Hamiltonian of
+project 1. We will move on to a two-qubit system.  But first a short
+reminder about specific two-qubit gates.
+
+
+
+!split
+===== Two-Qubit Gates =====
+
+A two-qubit gate is a physical action that is applied to two
+qubits. It can be represented by a matrix $U$ from the group
+SU(4). One important type of two-qubit gates are controlled gates,
+which work as follows: Suppose $U$ is a single-qubit gate. A
+controlled-$U$ gate ($CU$) acts on two qubits: a control qubit
+$\vert x \rangle $ and a target qubit $\vert y \rangle $. The controlled-$U$ gate
+applies the identity $I$ or the single-qubit gate $U$ to the target
+qubit if the control gate is in the zero state $\vert 0\rangle$ or the one
+state $\vert 1\rangle$, respectively.
+
+
+!split
+===== Control qubit =====
+The control qubit is not acted
+upon. This can be represented as follows if
+!bt
+\[CU\vert xy\rangle=
+\vert xy\rangle \hspace{0.1cm} \mathrm{if} \hspace{0.1cm}  \vert x \rangle =\vert 0\rangle.
+\]
+!et
+
+
+!split
+===== In matrix form =====
+
+It is easier to see in a matrix form.
+It can be written in matrix form by writing it as a superposition of
+the two possible cases, each written as a simple tensor product
+
+!bt
+\[
+CU = \vert 0\rangle\langle 0\vert\otimes I + \vert 1\rangle\langle 1 \vert \otimes U=\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & u_{00} & u_{01} \\
+0 & 0 & u_{10} & u_{11}
+\end{bmatrix}.
+\]
+!et
+
+
+!split
+===== CNOT gate =====
+
+One of the most fundamental controlled gates is the CNOT gate. It is
+defined as the controlled-$X$ gate $CX$. It can be written in matrix form as follows:
+
+!bt
+\[
+\mathrm{CNOT}=\mathrm{CX}=\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0
+\end{bmatrix}.
+\]
+!et
+
+!split
+===== $\mathrm{CX}$ gate =====
+
+It changes, when operating on a two-qubit state where the first qubit is the control qubit and the second qubit is the target qubit, the states (check this)
+!bt
+\[
+\mathrm{CX}\vert 00\rangle=\vert 00\rangle,
+\]
+!et
+!bt
+\[
+\mathrm{CX}\vert 10\rangle= \vert 11\rangle,
+\]
+!et
+!bt
+\[
+\mathrm{CX}\vert 01\rangle= \vert 01\rangle,
+\]
+!et
+!bt
+\[
+\mathrm{CX}\vert 11\rangle= \vert 10\rangle,
+\]
+!et
+which you can easily see by simply multiplying the above matrix with any of the above states.
+
+
+
+
+!split
+===== Swap gate =====
+
+A widely used two-qubit gate that goes beyond the simple controlled function is the SWAP gate. It swaps the states of the two qubits it acts upon
+
+!bt
+\[
+\mathrm{SWAP}\vert xy\rangle=\vert yx\rangle.
+\]
+!et
+and has the following matrix form
+
+!bt
+\[
+\mathrm{SWAP}
+=\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix}.
+\]
+!et
+
+
+!split
+===== Reminder from last week =====
+
+We rewrote the one-qubit Hamiltonian
+!bt
+\[
+\bm{H}=\begin{bmatrix} \epsilon_{1}+V_{11} & V_{12}\\
+                       V_{21}  & \epsilon_{2}-V_{22} \end{bmatrix},
+\] 
+!et
+as (defining $V_{12}=V_{21}=V_x$) 
+!bt
+\[
+\bm{H}=\frac{\epsilon_{1}+\epsilon_{2}}{2}\bm{I}+\frac{\epsilon_{1}-\epsilon_{2}}{2}\bm{Z}+\frac{V_{11}+V_{22}}{2}\bm{I}+\frac{V_{11}-V_{22}}{2}\bm{Z}+V_x\bm{X}.
+\] 
+!et
+We will now rewrite our first two-qubit Hamiltonian along the same lines.
+
+!split
+===== Two-qubit Hamiltonian =====
+
+We start again with 
+!bt
+\[
+\bm{H}=\begin{bmatrix} \epsilon_{1}+V_z & 0 & 0 & V_x \\
+                       0  & \epsilon_{2}-V_z & V_x & 0 \\
+		       0 & H_x & \epsilon_{3}-V_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{4} +V_z \end{bmatrix}.
+\] 
+!et
+
+This Hamiltonian, as discussed in the first exercise can be rewritten in terms of various one-qubit matrices.
+
+!split
+===== Definitions =====
+
+We define
+!bt
+\[
+\epsilon_{II}=\frac{\epsilon_{1}+\epsilon_{2}+\epsilon_{3}+\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZI}=\frac{\epsilon_{1}+\epsilon_{2}-\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{IZ}=\frac{\epsilon_{1}-\epsilon_{2}+\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZZ}=\frac{\epsilon_{1}-\epsilon_{2}-\epsilon_{3}+\epsilon_{4}}{4}.
+\]
+!et
+
+
+
+
+!split
+===== Ex1: Two-qubit Hamiltonian =====
+
+This exercise is also part of the first project.
+Rewrite the Hamiltonian in term of various Pauli matrices and show that you can rwrite the Hamiltonian as
+!bt
+\[
+\bm{H}=\bm{H}_0+\bm{H}_I,
+\]
+!et
+with 
+!bt
+\[
+\bm{H}_0=\epsilon_{II}\bm{I}\otimes\bm{I}+\epsilon_{ZI}\bm{Z}\otimes\bm{I}+\epsilon_{IZ}\bm{I}\otimes\bm{Z}+\epsilon_{ZZ}\bm{Z}\otimes\bm{Z}
+\]
+!et
+and 
+!bt
+\[
+\bm{H}_I=V_x\bm{X}\otimes\bm{X}+V_z\bm{Z}\otimes\bm{Z}
+\]
+!et
+
+!split
+===== Ex2: Two-qubit Hamiltonian and entropy =====
+
+Use the Hamiltonian for the two-qubit example to find the eigenpairs
+as functions of the interaction strength $\lambda$ and study the final
+eigenvectors as functions of the admixture of the original basis
+states.  Discuss the results as functions of the parameter $\lambda$ and compute the von Neumann
+entropy and discuss the results. You will need to calculate the entropy of the subsystems $A$ or $B$.
