@@ -50,9 +50,9 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek2.pdf
 
 ## February 2-6, 2026. Density matrices and Measurements
-  - Discussion of gates and project 1
-  - Quantum gates and circuits
-  - Developing our own codes for Bell states and comparing with qiskit
+  - Density matrices, entanglement and entropies
+  - Video of lecture at https://youtu.be/xkbXx6XIlvU
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek3.pdf 
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
 
 
