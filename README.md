@@ -55,6 +55,10 @@ themes can be covered:
   - Developing our own codes for Bell states and comparing with qiskit
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
 
+
+##  Note that the topics for the coming weeks may be changed! 
+
+
 ## February 9-13, 2026. Entanglement and entropies
   - Reminder from last week on gates and circuits
   - One-qubit and two-qubit gates, background and realizations
