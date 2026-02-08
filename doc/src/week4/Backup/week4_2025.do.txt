@@ -917,6 +917,427 @@ and has the following matrix form
 
 
 !split
+===== Simple code =====
+
+!bc pycod
+#!/usr/bin/env python
+# coding: utf-8
+import numpy as np
+import qiskit as qk
+from scipy.optimize import minimize
+
+
+# # Initialize registers and circuit
+
+n_qubits = 1 #Number of qubits
+n_cbits = 1 #Number of classical bits (the number of qubits you want to measure at the end of the circuit)
+qreg = qk.QuantumRegister(n_qubits) #Create a quantum register
+creg = qk.ClassicalRegister(n_cbits) #Create a classical register
+circuit = qk.QuantumCircuit(qreg,creg) #Create your quantum circuit
+
+
+circuit.draw() #Draw circuit. It is empty
+!ec
+
+Thereafter we perform operations on qubit
+
+!bc pycod 
+circuit.x(qreg[0]) #Applies a Pauli X gate to the first qubit in the quantum register
+circuit.draw()
+!ec
+
+and select  a qubit to measure and encode the results to a classical bit
+
+
+!bc pycod 
+#Measure the first qubit in the quantum register
+#and encode the results to the first qubit in the classical register
+circuit.measure(qreg[0],creg[0])
+circuit.draw()
+!ec
+
+Thereafter we execute the circuit
+
+
+!bc pycod 
+backend = qk.Aer.get_backend('qasm_simulator') 
+#This is the device you want to use. It is an ideal simulation of a quantum device
+
+
+job = backend.run(circuit,shots=1000) #Run the circuit 1000 times
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+circuit.draw()
+
+
+circuit.h(qreg[0]) #Apply a Hadamard gate to the first qubit of the quantum register
+circuit.measure(qreg,creg)
+print(circuit.draw())
+
+
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+Now we create a two-qubit circuit and set up a Bell state
+
+
+!bc pycod 
+n_qubits = 2
+n_cbits = 2
+qreg = qk.QuantumRegister(n_qubits)
+creg = qk.ClassicalRegister(n_cbits)
+circuit = qk.QuantumCircuit(qreg,creg)
+circuit.draw()
+
+
+
+circuit.h(qreg[0])
+circuit.cx(qreg[0],qreg[1]) 
+#This is a controlled operation. Apply a Pauli X gate to the second qubit (qreg[1]) if the first qubit (qreg[0])
+#is in the |1> state. Else do nothing
+
+circuit.draw()
+
+circuit.measure(qreg,creg)
+circuit.draw()
+!ec
+
+
+
+!bc pycod 
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+print(counts)
+circuit.clear()
+!ec
+
+We apply a rotation to a qubit
+
+!bc pycod 
+theta = np.pi/3
+circuit.rx(theta, qreg[0]) #R_x(theta) rotation on the first qubit (qreg[0])
+circuit.measure(qreg,creg)
+print(circuit.draw())
+job = backend.run(circuit,shots=1000)
+result = job.result()
+counts = result.get_counts()
+circuit.clear()
+print(counts)
+!ec
+
+
+!split
+===== Exercises on Bell states =====
+
+!bc pycod
+import qiskit as qk
+from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from qiskit.visualization import plot_histogram
+from qiskit_aer import AerSimulator
+import matplotlib.pyplot as plt
+!ec
+
+Setting up a circuit
+
+!bc pycod
+qreg_q = QuantumRegister(2) # 2 qubits
+creg_c = ClassicalRegister(2) # 2 classical bits
+
+qc = QuantumCircuit(qreg_q, creg_c) # alternatively, circuit = QuantumCircuit(2, 2)
+
+qc.h(qreg_q[0]) # apply the hadamard gate to the first qubit (to the right)
+
+# apply the CNOT gate with the first qubit being the control qubit and the second qubit being the target qubit
+qc.cx(qreg_q[0], qreg_q[1]) 
+
+
+# measure the qubits, specify which qubit you want to measure
+qc.measure(qreg_q[0], creg_c[0])
+qc.measure(qreg_q[1], creg_c[1])
+!ec
+
+Next we will use an ideal(noiseless) simulator (AerSimulator) to run
+our circuit. We will use the qasm$\_$simulator backend. This simulator
+returns a result object which contains the counts, or number of times
+each qubit was measured in the zero state and the one state. We can
+then use the plot$\_$histogram function to see the result of our circuit.
+
+!bc pycod
+# Initialize a simulator
+simulator = AerSimulator()
+
+job = qk.execute(qc, simulator, shots=1000) # shots are the number of times the circuit is executed
+results = job.result().get_counts(qc) # Done! check out the results!
+print(results)
+!ec
+Is this what you expected? Visualise it!
+!bc pycod
+plot_histogram(results)
+!ec
+
+Now it's your turn to make create the other three bell states, which are
+
+$$ \vert \Phi_+\rangle = \frac{|00\rangle + |11\rangle}{\sqrt{2}} $$
+$$ \vert \Phi_-\rangle = \frac{|00\rangle - |11\rangle}{\sqrt{2}} $$
+$$ \vert \Psi_+\rangle = \frac{|01\rangle + |10\rangle}{\sqrt{2}} $$
+$$ \vert \Psi_-\rangle = \frac{|01\rangle - |10\rangle}{\sqrt{2}} $$
+
+
+!bc pycod
+# SOLUTIONS
+
+phi_plus = QuantumCircuit(2,2)
+phi_plus.h(0)
+phi_plus.cx(0,1)
+phi_plus.measure([0,1],[0,1])
+
+
+phi_minus = QuantumCircuit(2,2)
+phi_minus.h(0)
+phi_minus.cx(0,1)
+phi_minus.z(0) # you can flip 1 in this case too, but not both obviously
+phi_minus.measure([0,1],[0,1])
+
+
+psi_plus = QuantumCircuit(2,2)
+psi_plus.h(0)
+psi_plus.cx(0,1)
+psi_plus.x(0) 
+psi_plus.measure([0,1],[0,1])
+
+
+psi_minus = QuantumCircuit(2,2)
+psi_minus.h(0)
+psi_minus.cx(0,1)
+psi_minus.x(0)
+psi_minus.z(0)
+psi_minus.measure([0,1],[0,1])
+
+
+bell_states = [phi_plus, phi_minus, psi_plus, psi_minus]
+!ec
+Have a look at them side by side
+!bc pycod
+all_results = []
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+for i,state in enumerate(bell_states):
+    print(results)
+    job = qk.execute(state, simulator, shots=1000)
+    all_results.append(job.result().get_counts(state))
+    plot_histogram(all_results[-1], ax=axes[int(i/2),i%2])
+!ec
+
+How can you distinguish $|\Phi_+\rangle$ and $|\Phi_-\rangle$? (and
+similarly $|\Psi_+\rangle$ and $|\Psi_-\rangle$)
+
+You can play around with the gates at URL:"https://quantum.ibm.com/composer".
+We'll look at the example with $|\Phi_+\rangle$ and $|\Phi_-\rangle$.
+
+!bc pycod
+# Solution: change basis
+
+phi_plus = QuantumCircuit(2,2)
+phi_plus.h(0)
+phi_plus.cx(0,1)
+phi_plus.h(0)
+phi_plus.h(1)
+phi_plus.measure([0,1],[0,1])
+
+
+phi_minus = QuantumCircuit(2,2)
+phi_minus.h(0)
+phi_minus.cx(0,1)
+phi_minus.z(0) # you can flip 1 in this case too, but not both obviously
+phi_minus.h(0)
+phi_minus.h(1)
+phi_minus.measure([0,1],[0,1])
+
+for state in [phi_plus, phi_minus]:
+    job = qk.execute(state, simulator, shots=1000)
+    print(job.result().get_counts(state))
+    plot_histogram(job.result().get_counts(state))
+!ec
+
+
+
+!split
+===== Testing the Bell states =====
+!bc pycod
+from qiskit import QuantumCircuit, transpile, assemble, IBMQ
+from qiskit.visualization import circuit_drawer
+import qiskit_aer
+import matplotlib.pyplot as plt
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+
+# Apply Hadamard gate to the first qubit
+bell_circuit.h(0)
+
+# Apply a CNOT gate with the first qubit as the control and the second qubit as the target
+bell_circuit.cx(0, 1)
+
+# Add measurements to the circuit
+bell_circuit.measure([0, 1], [0, 1])
+
+# Visualize the circuit
+print("Quantum Circuit:")
+print(bell_circuit)
+!ec
+
+!split
+===== Running the calculations =====
+!bc pycod
+# Number of shots
+num_shots = 10000
+
+# Simulate the circuit using the Aer simulator
+simulator = qiskit_aer.Aer.get_backend('qasm_simulator')
+
+# Transpile the circuit for the simulator
+transpiled_circuit = transpile(bell_circuit, simulator)
+
+# Execute the transpiled circuit on the simulator with the specified number of shots
+result = simulator.run(transpiled_circuit, shots=num_shots).result()
+
+# Get measurement counts
+counts = result.get_counts(bell_circuit)
+
+# Get and print the measurement results
+counts = result.get_counts(bell_circuit)
+print("\nMeasurement Results:")
+print(counts)
+!ec
+
+!split
+===== Then plotting the histogram over counts =====
+!bc pycod
+# Plot the histogram using Matplotlib
+plt.bar(counts.keys(), counts.values())
+plt.title('Bell State Measurement Results')
+plt.ylabel('Counts')
+plt.show()
+!ec
+
+!split
+===== Getting serious, Quantum Simulator with Hardware noise model =====
+!bc pycod
+from qiskit import QuantumCircuit, transpile, assemble, Aer, IBMQ
+from qiskit.visualization import plot_histogram
+from qiskit.providers.aer.noise import NoiseModel
+
+# you will not be able to run unless you provide your token here
+api_token = 'your_api_token'
+# Load your IBM Quantum account
+IBMQ.save_account(api_token, overwrite=True)  # This stores your credentials locally
+IBMQ.load_account()
+# Get the least busy backend
+provider = IBMQ.get_provider(hub='ibm-q', group ='open', project='main')
+#backend = provider.get_backend('your_preferred_backend')
+backend = provider.get_backend('ibm_osaka')
+
+# Get the noise model for the selected backend
+noise_model = NoiseModel.from_backend(backend)
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+
+# Apply Hadamard gate to the first qubit
+bell_circuit.h(0)
+
+# Apply a CNOT gate with the first qubit as the control and the second qubit as the target
+bell_circuit.cx(0, 1)
+
+# Add measurements to the circuit
+bell_circuit.measure([0, 1], [0, 1])
+
+# Visualize the circuit
+print("Quantum Circuit:")
+print(bell_circuit)
+!ec
+
+
+!split
+===== Then run and visualize it =====
+!bc pycod
+# Number of shots
+num_shots = 10000
+
+# Simulate the circuit using the Aer simulator with the noise model
+simulator = Aer.get_backend('qasm_simulator')
+noisy_transpiled_circuit = transpile(bell_circuit, simulator, optimization_level=0)
+noisy_circuit = assemble(noisy_transpiled_circuit, shots=num_shots, noise_model=noise_model)
+
+# Execute the noisy circuit on the simulator
+result = simulator.run(noisy_circuit).result()
+
+# Get and print the measurement results
+counts = result.get_counts(bell_circuit)
+print("\nMeasurement Results:")
+print(counts)
+# Plot the histogram using Matplotlib
+plot_histogram(counts, title='Bell State Measurement Results')
+!ec
+
+!split
+===== And without the noise model =====
+
+!bc pycod
+# Provide your IBM Quantum Experience API token here
+api_token = 'your_api_token'
+# Load your IBM Quantum account
+IBMQ.save_account(api_token, overwrite=True)  # This stores your credentials locally
+IBMQ.load_account()
+
+# Get the least busy backend
+#provider = IBMQ.get_provider(hub='your_hub', group='your_group', project='your_project')
+provider = IBMQ.get_provider(hub='ibm-q', group ='open', project='main')
+#backend = provider.get_backend('your_preferred_backend')
+backend = provider.get_backend('ibm_osaka')
+
+# Create a quantum circuit with two qubits
+bell_circuit = QuantumCircuit(2, 2)
+
+# Apply Hadamard gate to the first qubit
+bell_circuit.h(0)
+
+# Apply a CNOT gate with the first qubit as the control and the second qubit as the target
+bell_circuit.cx(0, 1)
+
+# Add measurements to the circuit
+bell_circuit.measure([0, 1], [0, 1])
+
+# Transpile the circuit for the chosen backend
+transpiled_circuit = transpile(bell_circuit, backend)
+
+# Execute the transpiled circuit on the IBM Quantum computer
+qobj = assemble(transpiled_circuit, shots=1024)  # You can adjust the number of shots
+result = backend.run(qobj).result()
+
+# Get measurement counts
+counts = result.get_counts(bell_circuit)
+print("\nMeasurement Results:")
+print(counts)
+
+# Plot the histogram using Matplotlib
+plt.bar(counts.keys(), counts.values())
+plt.title('Bell State Measurement Results')
+plt.ylabel('Counts')
+plt.show()
+!ec
+
+
+
+
+!split
 ===== Hamiltonians, one qubit system =====
 
 We start with a simple $2\times 2$ Hamiltonian matrix expressed in
@@ -1162,7 +1583,7 @@ o If we get time, we start our discussion of the VQE algorithm
 
 
 !split
-===== Exercises: Hamiltonians and project 1 =====
+===== Exercises this week: Hamiltonians and project 1 =====
 
 As an initial test, we consider a simple $2\times 2$ real
 Hamiltonian consisting of a diagonal part $H_0$ and off-diagonal part
