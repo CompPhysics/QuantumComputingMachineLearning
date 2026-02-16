@@ -1,0 +1,49 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib}\PYG{n+nn}{.}\PYG{n+nn}{pyplot}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{plt}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{seaborn}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{sns}\PYG{p}{;} \PYG{n}{sns}\PYG{o}{.}\PYG{n}{set\PYGZus{}theme}\PYG{p}{(}\PYG{n}{font\PYGZus{}scale}\PYG{o}{=}\PYG{l+m+mf}{1.5}\PYG{p}{)}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{tqdm}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{tqdm}
+
+\PYG{n}{sigma\PYGZus{}x} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{sigma\PYGZus{}y} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{n}{j}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{n}{j}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{sigma\PYGZus{}z} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{I} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{Hamiltonian}\PYG{p}{(}\PYG{n}{lmb}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{E1} \PYG{o}{=} \PYG{l+m+mi}{0}
+    \PYG{n}{E2} \PYG{o}{=} \PYG{l+m+mi}{4}
+    \PYG{n}{V11} \PYG{o}{=} \PYG{l+m+mi}{3}
+    \PYG{n}{V22} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{3}
+    \PYG{n}{V12} \PYG{o}{=} \PYG{l+m+mf}{0.2}
+    \PYG{n}{V21} \PYG{o}{=} \PYG{l+m+mf}{0.2}
+
+    \PYG{n}{eps} \PYG{o}{=} \PYG{p}{(}\PYG{n}{E1} \PYG{o}{+} \PYG{n}{E2}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+    \PYG{n}{omega} \PYG{o}{=} \PYG{p}{(}\PYG{n}{E1} \PYG{o}{\PYGZhy{}} \PYG{n}{E2}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+    \PYG{n}{c} \PYG{o}{=} \PYG{p}{(}\PYG{n}{V11} \PYG{o}{+} \PYG{n}{V22}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+    \PYG{n}{omega\PYGZus{}z} \PYG{o}{=} \PYG{p}{(}\PYG{n}{V11} \PYG{o}{\PYGZhy{}} \PYG{n}{V22}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+    \PYG{n}{omega\PYGZus{}x} \PYG{o}{=} \PYG{n}{V12}
+
+    \PYG{n}{H0} \PYG{o}{=} \PYG{n}{eps} \PYG{o}{*} \PYG{n}{I} \PYG{o}{+} \PYG{n}{omega} \PYG{o}{*} \PYG{n}{sigma\PYGZus{}z}
+    \PYG{n}{H1} \PYG{o}{=} \PYG{n}{c} \PYG{o}{*} \PYG{n}{I} \PYG{o}{+} \PYG{n}{omega\PYGZus{}z} \PYG{o}{*} \PYG{n}{sigma\PYGZus{}z} \PYG{o}{+} \PYG{n}{omega\PYGZus{}x} \PYG{o}{*} \PYG{n}{sigma\PYGZus{}x}
+    \PYG{k}{return} \PYG{n}{H0} \PYG{o}{+} \PYG{n}{lmb} \PYG{o}{*} \PYG{n}{H1}
+
+\PYG{n}{lmbvalues\PYGZus{}ana} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{arange}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mf}{0.01}\PYG{p}{)}
+\PYG{n}{eigvals\PYGZus{}ana} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{lmbvalues\PYGZus{}ana}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{)}
+\PYG{k}{for} \PYG{n}{index}\PYG{p}{,} \PYG{n}{lmb} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{lmbvalues\PYGZus{}ana}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{H} \PYG{o}{=} \PYG{n}{Hamiltonian}\PYG{p}{(}\PYG{n}{lmb}\PYG{p}{)}
+    \PYG{n}{eigen}\PYG{p}{,} \PYG{n}{eigvecs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{eig}\PYG{p}{(}\PYG{n}{H}\PYG{p}{)}
+    \PYG{n}{permute} \PYG{o}{=} \PYG{n}{eigen}\PYG{o}{.}\PYG{n}{argsort}\PYG{p}{(}\PYG{p}{)}
+    \PYG{n}{eigvals\PYGZus{}ana}\PYG{p}{[}\PYG{n}{index}\PYG{p}{]} \PYG{o}{=} \PYG{n}{eigen}\PYG{p}{[}\PYG{n}{permute}\PYG{p}{]}
+    \PYG{n}{eigvecs} \PYG{o}{=} \PYG{n}{eigvecs}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,}\PYG{n}{permute}\PYG{p}{]}
+
+
+\PYG{n}{fig}\PYG{p}{,} \PYG{n}{axs} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{subplots}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)}\PYG{p}{)}
+\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{axs}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{lmbvalues\PYGZus{}ana}\PYG{p}{,} \PYG{n}{eigvals\PYGZus{}ana}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,}\PYG{n}{i}\PYG{p}{]}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZdl{}E\PYGZus{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZdl{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{axs}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+sa}{r}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZdl{}}\PYG{l+s+s1}{\PYGZbs{}}\PYG{l+s+s1}{lambda\PYGZdl{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{axs}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{Energy}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{axs}\PYG{o}{.}\PYG{n}{legend}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}
+
+
+\end{MintedVerbatim}

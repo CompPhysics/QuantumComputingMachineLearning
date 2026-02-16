@@ -1,0 +1,73 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{from}\PYG{+w}{  }\PYG{n+nn}{matplotlib}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{pyplot} \PYG{k}{as} \PYG{n}{plt}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{scipy}\PYG{n+nn}{.}\PYG{n+nn}{optimize}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{minimize}
+\PYG{n}{dim} \PYG{o}{=} \PYG{l+m+mi}{2}
+\PYG{n}{Hamiltonian} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{,}\PYG{n}{dim}\PYG{p}{)}\PYG{p}{)}
+\PYG{n}{e0} \PYG{o}{=} \PYG{l+m+mf}{0.0}
+\PYG{n}{e1} \PYG{o}{=} \PYG{l+m+mf}{4.0}
+\PYG{n}{Xnondiag} \PYG{o}{=} \PYG{l+m+mf}{0.20}
+\PYG{n}{Xdiag} \PYG{o}{=} \PYG{l+m+mf}{3.0}
+\PYG{n}{Eigenvalue} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} setting up the Hamiltonian}
+\PYG{n}{Hamiltonian}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{Xdiag}\PYG{o}{+}\PYG{n}{e0}
+\PYG{n}{Hamiltonian}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{Xnondiag}
+\PYG{n}{Hamiltonian}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{Hamiltonian}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{Hamiltonian}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{e1}\PYG{o}{\PYGZhy{}}\PYG{n}{Xdiag}
+\PYG{c+c1}{\PYGZsh{} diagonalize and obtain eigenvalues, not necessarily sorted}
+\PYG{n}{EigValues}\PYG{p}{,} \PYG{n}{EigVectors} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{eig}\PYG{p}{(}\PYG{n}{Hamiltonian}\PYG{p}{)}
+\PYG{n}{permute} \PYG{o}{=} \PYG{n}{EigValues}\PYG{o}{.}\PYG{n}{argsort}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{EigValues} \PYG{o}{=} \PYG{n}{EigValues}\PYG{p}{[}\PYG{n}{permute}\PYG{p}{]}
+\PYG{c+c1}{\PYGZsh{} print only the lowest eigenvalue}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{EigValues}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Now rewrite it in terms of the identity matrix and the Pauli matrix X and Z}
+\PYG{n}{X} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{Y} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{n}{j}\PYG{p}{]}\PYG{p}{,}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{n}{j}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{Z} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} identity matrix}
+\PYG{n}{I} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{n}{epsilon} \PYG{o}{=} \PYG{p}{(}\PYG{n}{e0}\PYG{o}{+}\PYG{n}{e1}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mf}{0.5}\PYG{p}{;} \PYG{n}{omega} \PYG{o}{=} \PYG{p}{(}\PYG{n}{e0}\PYG{o}{\PYGZhy{}}\PYG{n}{e1}\PYG{p}{)}\PYG{o}{*}\PYG{l+m+mf}{0.5}
+\PYG{n}{c} \PYG{o}{=} \PYG{l+m+mf}{0.0}\PYG{p}{;} \PYG{n}{omega\PYGZus{}z}\PYG{o}{=}\PYG{n}{Xdiag}\PYG{p}{;} \PYG{n}{omega\PYGZus{}x} \PYG{o}{=} \PYG{n}{Xnondiag}
+\PYG{n}{Hamiltonian} \PYG{o}{=} \PYG{p}{(}\PYG{n}{epsilon}\PYG{o}{+}\PYG{n}{c}\PYG{p}{)}\PYG{o}{*}\PYG{n}{I}\PYG{o}{+}\PYG{p}{(}\PYG{n}{omega\PYGZus{}z}\PYG{o}{+}\PYG{n}{omega}\PYG{p}{)}\PYG{o}{*}\PYG{n}{Z}\PYG{o}{+}\PYG{n}{omega\PYGZus{}x}\PYG{o}{*}\PYG{n}{X}
+\PYG{n}{EigValues}\PYG{p}{,} \PYG{n}{EigVectors} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{eig}\PYG{p}{(}\PYG{n}{Hamiltonian}\PYG{p}{)}
+\PYG{n}{permute} \PYG{o}{=} \PYG{n}{EigValues}\PYG{o}{.}\PYG{n}{argsort}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{EigValues} \PYG{o}{=} \PYG{n}{EigValues}\PYG{p}{[}\PYG{n}{permute}\PYG{p}{]}
+\PYG{c+c1}{\PYGZsh{} print only the lowest eigenvalue}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{EigValues}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} define the rotation matrices}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{Rx}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{theta}\PYG{o}{*}\PYG{l+m+mf}{0.5}\PYG{p}{)}\PYG{o}{*}\PYG{n}{I}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{n}{j}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{theta}\PYG{o}{*}\PYG{l+m+mf}{0.5}\PYG{p}{)}\PYG{o}{*}\PYG{n}{X}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{Ry}\PYG{p}{(}\PYG{n}{phi}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{phi}\PYG{o}{*}\PYG{l+m+mf}{0.5}\PYG{p}{)}\PYG{o}{*}\PYG{n}{I}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{n}{j}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{phi}\PYG{o}{*}\PYG{l+m+mf}{0.5}\PYG{p}{)}\PYG{o}{*}\PYG{n}{Y}
+
+\PYG{c+c1}{\PYGZsh{}define basis states}
+\PYG{n}{basis0} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{basis1} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Computing the expectation value of the energy}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{Energy}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{,}\PYG{n}{phi}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{Basis} \PYG{o}{=} \PYG{n}{Ry}\PYG{p}{(}\PYG{n}{phi}\PYG{p}{)} \PYG{o}{@} \PYG{n}{Rx}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{)} \PYG{o}{@} \PYG{n}{basis0}
+    \PYG{n}{energy} \PYG{o}{=} \PYG{n}{Basis}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T} \PYG{o}{@} \PYG{n}{Hamiltonian} \PYG{o}{@} \PYG{n}{Basis}
+    \PYG{k}{return} \PYG{n}{energy}
+
+
+\PYG{c+c1}{\PYGZsh{} Set up iteration using gradient descent method}
+\PYG{n}{eta} \PYG{o}{=} \PYG{l+m+mf}{0.1}
+\PYG{n}{Niterations} \PYG{o}{=} \PYG{l+m+mi}{100}
+\PYG{c+c1}{\PYGZsh{} Random angles using uniform distribution}
+\PYG{n}{theta} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{rand}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{phi} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{rand}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{pi2} \PYG{o}{=} \PYG{l+m+mf}{0.5}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+\PYG{k}{for} \PYG{n+nb}{iter} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{Niterations}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{thetagradient} \PYG{o}{=} \PYG{l+m+mf}{0.5}\PYG{o}{*}\PYG{p}{(}\PYG{n}{Energy}\PYG{p}{(}\PYG{n}{theta}\PYG{o}{+}\PYG{n}{pi2}\PYG{p}{,}\PYG{n}{phi}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{n}{Energy}\PYG{p}{(}\PYG{n}{theta}\PYG{o}{\PYGZhy{}}\PYG{n}{pi2}\PYG{p}{,}\PYG{n}{phi}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n}{phigradient} \PYG{o}{=} \PYG{l+m+mf}{0.5}\PYG{o}{*}\PYG{p}{(}\PYG{n}{Energy}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{,}\PYG{n}{phi}\PYG{o}{+}\PYG{n}{pi2}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{n}{Energy}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{,}\PYG{n}{phi}\PYG{o}{\PYGZhy{}}\PYG{n}{pi2}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n}{theta} \PYG{o}{\PYGZhy{}}\PYG{o}{=} \PYG{n}{eta}\PYG{o}{*}\PYG{n}{thetagradient}
+    \PYG{n}{phi} \PYG{o}{\PYGZhy{}}\PYG{o}{=} \PYG{n}{eta}\PYG{o}{*}\PYG{n}{phigradient}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{Energy}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{,}\PYG{n}{phi}\PYG{p}{)}\PYG{p}{)}
+
+
+\end{MintedVerbatim}
