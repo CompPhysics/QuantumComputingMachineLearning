@@ -57,8 +57,6 @@ themes can be covered:
 
 
 
-
-
 ## February 9-13, 2026. Entanglement and entropies
   - Reminder from last week on entanglement, density matrices and entropies
   - One-qubit and two-qubit gates, background and realizations
@@ -72,6 +70,8 @@ themes can be covered:
   - Quantum gates and operations and simple quantum algorithms
   - Discussion of the VQE algorithm and discussions of project 1
   - Simple one-qubit and two-qubit Hamiltonians
+  - Video of lecture at https://youtu.be/f9AfWyGWbCI
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lecturesweek5.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5. See in particular the additional jupyter-notebooks for the one- and two-qubit cases. For those of you who wish to test IBM's quantum computers with Qiskit, there are similar notebooks.
   - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11, 3.1-3.4 and 6.11.1-.6.11.3 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
 - Video of lecture to be added  https://youtu.be/
@@ -82,7 +82,7 @@ themes can be covered:
   - VQE and adaptive VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one- and two-qubit Hamiltonians
   - Start discussions of Lipkin model
-  - Video of lecture to be added  https://youtu.be/
+- Video of lecture to be added  https://youtu.be/
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek6.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
