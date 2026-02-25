@@ -66,7 +66,7 @@ themes can be covered:
   - Video of lecture at https://youtu.be/4Ew5UNHnsdM
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek4.pdf
   
-## February 16-20, 2026.
+## February 16-20, 2026. Getting started with the VQE algorithm
   - Quantum gates and operations and simple quantum algorithms
   - Discussion of the VQE algorithm and discussions of project 1
   - Simple one-qubit and two-qubit Hamiltonians
@@ -78,12 +78,12 @@ themes can be covered:
 - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek5.pdf
 
 
-## February 23-27, 2026. 
+## February 23-27, 2026. Implementing the VQE with measurements and evaluation of gradients
   - VQE and adaptive VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one- and two-qubit Hamiltonians
   - Start discussions of Lipkin model
 - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek6.pdf
+  - Whiteboard notes to be added at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek6.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  Note that the topics for the coming weeks may be changed! 
