@@ -82,8 +82,8 @@ themes can be covered:
   - VQE and adaptive VQE, Variational Quantum Eigensolver and discussion of codes
   - Simulations of  of Hamiltonians, focus on the one- and two-qubit Hamiltonians
   - Start discussions of Lipkin model
-- Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes to be added at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek6.pdf
+  - Video of lecture at https://youtu.be/MVLbBcTPwqg
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Notesweek6.pdf
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  Note that the topics for the coming weeks may be changed! 
