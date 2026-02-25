@@ -1,0 +1,215 @@
+% !TEX program = pdflatex
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,bm,mathtools}
+\usepackage{physics}
+\usepackage{booktabs}
+\usepackage{tikz}
+
+\title[Parameter-shift for VQE]{For which Hamiltonians can we use the parameter-shift rule in VQE?}
+\author{Morten Hjorth-jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Core message}
+\begin{block}{Key point}
+The \textbf{parameter-shift rule depends on the generators of the parametrized gates in the ansatz}, \emph{not} directly on the Hamiltonian.
+\end{block}
+
+\begin{itemize}
+\item VQE objective:
+\[
+E(\bm{\theta})=\bra{\psi(\bm{\theta})}H\ket{\psi(\bm{\theta})},\qquad \ket{\psi(\bm{\theta})}=U(\bm{\theta})\ket{0}.
+\]
+\item The Hamiltonian matters insofar as we must be able to \textbf{measure} $E(\bm{\theta})$ (typically via a Pauli decomposition).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Typical measurement form for $H$}
+In most applications (quantum chemistry, spin models, lattice gauge models),
+\[
+H=\sum_{k} c_k P_k,
+\]
+where each $P_k$ is a tensor product of Pauli matrices (a ``Pauli string''):
+\[
+P_k \in \{I,X,Y,Z\}^{\otimes n}.
+\]
+Then
+\[
+E(\bm{\theta})=\sum_k c_k \expval{P_k}{\psi(\bm{\theta})},
+\]
+and each $\expval{P_k}$ can be obtained from measurement statistics (after local basis changes if needed).
+\end{frame}
+
+\begin{frame}{Ansatz structure and generators}
+Assume the ansatz is a product of parametrized unitaries,
+\[
+U(\bm{\theta}) = U_L(\theta_L)\cdots U_2(\theta_2)U_1(\theta_1),
+\]
+and each parameter enters through
+\[
+U_j(\theta_j)=e^{-i\theta_j G_j},
+\]
+with $G_j$ Hermitian (the generator).
+\medskip
+
+\begin{block}{When does (simple) parameter-shift work?}
+When $G_j$ has \textbf{only two distinct eigenvalues}.
+\end{block}
+\end{frame}
+
+\begin{frame}{Most common case in VQE}
+A very common choice is
+\[
+G_j = \frac{1}{2}P,\qquad P\in\{I,X,Y,Z\}^{\otimes n}.
+\]
+Then the eigenvalues of $G_j$ are $\pm \frac{1}{2}$, and the standard two-term shift rule holds:
+\[
+\frac{\partial E}{\partial \theta_j}
+=\frac{1}{2}\left[E(\theta_j+\tfrac{\pi}{2})-E(\theta_j-\tfrac{\pi}{2})\right],
+\]
+where $E(\theta_j\pm \tfrac{\pi}{2})$ means evaluating the VQE energy with all other parameters fixed and shifting only $\theta_j$.
+\end{frame}
+
+\begin{frame}{Formal theorem (two-eigenvalue generators)}
+\begin{theorem}[Two-point parameter-shift rule]
+Let
+\[
+E(\theta)=\bra{\psi}U(\theta)^\dagger H U(\theta)\ket{\psi},\qquad
+U(\theta)=e^{-i\theta G},
+\]
+where $H$ and $G$ are Hermitian and $G$ has exactly two eigenvalues $\pm r$ (with $r>0$).
+Then
+\[
+\boxed{
+\frac{dE}{d\theta}
+=
+r\left[E\!\left(\theta+\frac{\pi}{4r}\right)-E\!\left(\theta-\frac{\pi}{4r}\right)\right].
+}
+\]
+Equivalently,
+\[
+\frac{dE}{d\theta}
+=
+\frac{1}{2s}\left[E(\theta+s)-E(\theta-s)\right],
+\quad s=\frac{\pi}{4r}.
+\]
+\end{theorem}
+\end{frame}
+
+\begin{frame}{Proof (spectral two-eigenvalue structure)}
+\begin{proof}
+Since $G$ has eigenvalues $\pm r$, define the projectors onto the eigenspaces,
+\[
+\Pi_\pm=\frac{1}{2}\left(I\pm \frac{G}{r}\right),
+\qquad
+G=r(\Pi_+-\Pi_-),\quad \Pi_\pm^2=\Pi_\pm,\quad \Pi_+\Pi_-=0.
+\]
+Then
+\[
+U(\theta)=e^{-i\theta G}
+= e^{-i\theta r}\Pi_+ + e^{+i\theta r}\Pi_-.
+\]
+Hence $E(\theta)$ is a trigonometric polynomial with frequency $2r$:
+\[
+E(\theta)=A + B\cos(2r\theta) + C\sin(2r\theta),
+\]
+for real constants $A,B,C$ determined by $H,\ket{\psi},\Pi_\pm$.
+Differentiate:
+\[
+E'(\theta)= -2rB\sin(2r\theta) + 2rC\cos(2r\theta).
+\]
+Now evaluate $E(\theta\pm s)$ with $s=\frac{\pi}{4r}$, so $2rs=\frac{\pi}{2}$:
+\[
+E(\theta+s)-E(\theta-s)
+=
+2\left[-B\sin(2r\theta)+C\cos(2r\theta)\right].
+\]
+Multiplying by $r$ gives exactly $E'(\theta)$:
+\[
+r\left[E(\theta+s)-E(\theta-s)\right]
+=
+-2rB\sin(2r\theta)+2rC\cos(2r\theta)=E'(\theta).
+\]
+\end{proof}
+\end{frame}
+
+\begin{frame}{Interpretation and what depends on $H$}
+\begin{itemize}
+\item The theorem does \textbf{not} require any special form of $H$ beyond Hermiticity.
+\item What is required in practice is the ability to \textbf{estimate} $E(\theta)$ on hardware:
+\[
+H=\sum_k c_k P_k \quad\Rightarrow\quad
+E(\theta)=\sum_k c_k \expval{P_k}{\psi(\theta)}.
+\]
+\item Therefore: \textbf{parameter-shift works for essentially any Hamiltonian used in VQE}, as long as you can measure its terms, \emph{and} your ansatz gates have two-eigenvalue generators.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Examples of Hamiltonians used in VQE}
+\begin{block}{Quantum chemistry (after mapping)}
+Fermionic Hamiltonians (second quantization) mapped via Jordan--Wigner / Bravyi--Kitaev become Pauli sums:
+\[
+H=\sum_k c_k P_k.
+\]
+\end{block}
+
+\begin{block}{Spin models}
+Ising:
+\[
+H=\sum_i h_i Z_i + \sum_{ij} J_{ij} Z_iZ_j.
+\]
+Heisenberg:
+\[
+H=\sum_{ij} J_{ij}\left(X_iX_j+Y_iY_j+Z_iZ_j\right).
+\]
+\end{block}
+All of these are directly Pauli decompositions $\Rightarrow$ measurable energy.
+\end{frame}
+
+\begin{frame}{When the simple two-point rule fails}
+The simple two-evaluation shift rule can fail if the \emph{generator} has more than two eigenvalues.
+\begin{itemize}
+\item Example (schematic): $U(\theta)=e^{-i\theta(X+Z)}$.
+\item Here $G=X+Z$ has a richer spectrum (more than two distinct eigenvalues for multi-qubit generalizations).
+\end{itemize}
+
+\begin{block}{What then?}
+You may need:
+\begin{itemize}
+\item generalized multi-shift rules (more evaluations),
+\item linear-combination-of-unitaries constructions,
+\item or alternative gradient estimators (finite differences, SPSA, adjoint on simulators).
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Practical takeaway}
+\begin{block}{Answer to ``for which Hamiltonians?''}
+\textbf{For (almost) any Hamiltonian used in VQE}, provided it can be measured (typically via a Pauli decomposition),
+\emph{and} the ansatz gates are generated by operators with two distinct eigenvalues (e.g.\ Pauli strings).
+\end{block}
+
+\begin{itemize}
+\item Hamiltonian requirement (measurement): $H=\sum_k c_k P_k$ (or can be reduced to this).
+\item Ansatz requirement (parameter-shift): each $U_j(\theta_j)=e^{-i\theta_j G_j}$ with $\mathrm{spec}(G_j)=\{\pm r_j\}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{One-slide summary}
+\begin{itemize}
+\item Parameter-shift is controlled by the \textbf{gate generators} in the ansatz, not $H$.
+\item If each generator has two eigenvalues $\pm r$, then a \textbf{two-point shift rule} gives exact gradients.
+\item In practice VQE uses Hamiltonians decomposable into Pauli strings, so energies and shifted energies are measurable.
+\end{itemize}
+\end{frame}
+
+\end{document}
