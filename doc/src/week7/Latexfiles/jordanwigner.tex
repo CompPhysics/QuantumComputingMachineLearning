@@ -1,0 +1,496 @@
+% !TEX program = pdflatex
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{physics}
+\usepackage{bm}
+
+\title{Jordan--Wigner Transformation}
+\subtitle{From Second Quantization to Qubit Hamiltonians}
+\author{Graduate Lecture Notes}
+\date{}
+
+\begin{document}
+
+%========================================================
+\begin{frame}
+\titlepage
+\end{frame}
+
+%========================================================
+\begin{frame}{Motivation}
+\begin{itemize}
+\item Quantum computers operate with qubits (Pauli matrices)
+\item Many-body physics is naturally expressed in fermionic operators
+\item Need mapping:
+\[
+c^\dagger_p, c_p \;\longrightarrow\; \text{Pauli operators}
+\]
+\end{itemize}
+
+\begin{block}{Goal}
+Map a general second-quantized Hamiltonian to a sum of Pauli strings.
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Fermionic Hamiltonian}
+General two-body Hamiltonian:
+\[
+H = \sum_{pq} h_{pq} c^\dagger_p c_q 
++ \frac{1}{2} \sum_{pqrs} V_{pqrs} c^\dagger_p c^\dagger_q c_s c_r
+\]
+
+\begin{itemize}
+\item One-body term: hopping / kinetic energy
+\item Two-body term: interaction
+\end{itemize}
+\end{frame}
+
+%========================================================
+\begin{frame}{Fermionic algebra}
+\[
+\{c_p, c_q^\dagger\} = \delta_{pq}, \quad
+\{c_p, c_q\} = 0
+\]
+
+\begin{block}{Challenge}
+Qubit operators commute on different sites:
+\[
+[\sigma_i, \sigma_j] = 0 \quad (i \neq j)
+\]
+
+Fermions anticommute!
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Jordan--Wigner transformation}
+Define mapping:
+\[
+c_j = \left(\prod_{k<j} Z_k \right) \frac{X_j + i Y_j}{2}
+\]
+
+\[
+c_j^\dagger = \left(\prod_{k<j} Z_k \right) \frac{X_j - i Y_j}{2}
+\]
+
+\begin{block}{Key feature}
+Non-local string ensures correct fermionic anticommutation  [oai_citation:0‡Wikipedia](https://en.wikipedia.org/wiki/Jordan%E2%80%93Wigner_transformation?utm_source=chatgpt.com)
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Number operator}
+\[
+n_j = c_j^\dagger c_j = \frac{1}{2}(1 - Z_j)
+\]
+
+\begin{itemize}
+\item Local operator
+\item No Jordan--Wigner string
+\end{itemize}
+\end{frame}
+
+%========================================================
+\begin{frame}{One-body term}
+Consider:
+\[
+c_p^\dagger c_q
+\]
+
+Mapping gives:
+\[
+c_p^\dagger c_q =
+\frac{1}{4}
+\left(\prod_{k=p}^{q-1} Z_k\right)
+(X_p X_q + Y_p Y_q + i X_p Y_q - i Y_p X_q)
+\]
+
+\begin{block}{Result}
+Becomes sum of Pauli strings with non-local $Z$ string.
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Two-body term}
+\[
+c_p^\dagger c_q^\dagger c_s c_r
+\]
+
+\begin{itemize}
+\item Each operator contributes:
+\begin{itemize}
+\item Pauli matrices $(X,Y)$
+\item Jordan--Wigner strings
+\end{itemize}
+\end{itemize}
+
+\medskip
+
+\begin{block}{Result}
+Transforms into a sum of Pauli strings of length $\mathcal{O}(N)$.
+\end{block}
+
+\medskip
+
+Total number of terms:
+\[
+\mathcal{O}(N^4)
+\]
+ [oai_citation:1‡arXiv](https://arxiv.org/pdf/2505.08206?utm_source=chatgpt.com)
+\end{frame}
+
+%========================================================
+\begin{frame}{Structure after mapping}
+General form:
+\[
+H = \sum_i c_i P_i
+\]
+
+where:
+\[
+P_i = \sigma^{\alpha_1}_1 \otimes \sigma^{\alpha_2}_2 \cdots
+\]
+
+\begin{itemize}
+\item Pauli strings
+\item Non-local due to $Z$ chains
+\end{itemize}
+\end{frame}
+
+%========================================================
+\begin{frame}{Example: Nuclear pairing Hamiltonian}
+\[
+H = \sum_p \epsilon_p n_p 
+- g \sum_{pq} c^\dagger_p c^\dagger_{\bar p} c_{\bar q} c_q
+\]
+
+\begin{itemize}
+\item Pair creation:
+\[
+P_p^\dagger = c^\dagger_p c^\dagger_{\bar p}
+\]
+\end{itemize}
+\end{frame}
+
+%========================================================
+\begin{frame}{Mapping pairing operators}
+Using Jordan--Wigner:
+
+\[
+c^\dagger_p c^\dagger_{\bar p}
+\;\rightarrow\;
+\text{Pauli strings with } X,Y,Z
+\]
+
+\medskip
+
+\begin{block}{Important simplification}
+Time-reversed pairs often cancel parts of the JW string.
+\end{block}
+
+\medskip
+
+Result:
+\[
+H = \sum_p \epsilon_p \frac{1-Z_p}{2}
+- g \sum_{pq} (X_p X_q + Y_p Y_q + \dots)
+\]
+\end{frame}
+
+%========================================================
+\begin{frame}{General two-body interaction}
+\[
+c^\dagger_p c^\dagger_q c_s c_r
+\]
+
+\begin{itemize}
+\item Produces:
+\begin{itemize}
+\item $X X X X$
+\item $Y Y X X$
+\item mixed terms
+\end{itemize}
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key observation}
+Interaction terms generate entangling Pauli strings.
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Scaling and complexity}
+\begin{itemize}
+\item Number of Pauli terms:
+\[
+\mathcal{O}(N^4)
+\]
+\item String length:
+\[
+\mathcal{O}(N)
+\]
+\end{itemize}
+
+\medskip
+
+\begin{block}{Implication}
+Jordan--Wigner is simple but produces non-local operators.
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Physical interpretation}
+\begin{itemize}
+\item $Z$-strings encode fermionic parity
+\item $X,Y$ encode creation/annihilation
+\end{itemize}
+
+\medskip
+
+\[
+\prod_{k<j} Z_k = (-1)^{\text{# fermions to the left}}
+\]
+
+\medskip
+
+\begin{block}{Meaning}
+This enforces the Pauli exclusion principle.
+\end{block}
+\end{frame}
+
+%========================================================
+\begin{frame}{Advantages and limitations}
+\textbf{Advantages}
+\begin{itemize}
+\item Simple
+\item Exact
+\end{itemize}
+
+\textbf{Limitations}
+\begin{itemize}
+\item Non-local strings
+\item Long circuits
+\end{itemize}
+\end{frame}
+
+%========================================================
+\begin{frame}{Summary}
+\begin{itemize}
+\item Jordan--Wigner maps fermions to qubits
+\item General Hamiltonians become sums of Pauli strings
+\item Pairing Hamiltonians simplify due to symmetry
+\item Two-body interactions produce entangling terms
+\end{itemize}
+
+\medskip
+
+\begin{block}{Final insight}
+Fermionic statistics $\rightarrow$ non-local qubit operators
+\end{block}
+\end{frame}
+
+%========================================================
+\end{document}
+
+
+%------------------------------------------------
+\section{Explicit Jordan--Wigner Derivation}
+
+\begin{frame}{Goal}
+We derive explicitly:
+\[
+c_p^\dagger c_q^\dagger c_s c_r
+\]
+in terms of Pauli matrices using the Jordan--Wigner transformation.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 1: JW mapping}
+\[
+c_j = \left(\prod_{k<j} Z_k \right)\frac{X_j + iY_j}{2}, 
+\quad
+c_j^\dagger = \left(\prod_{k<j} Z_k \right)\frac{X_j - iY_j}{2}
+\]
+
+\medskip
+
+Define:
+\[
+\sigma_j^+ = \frac{X_j - iY_j}{2}, \quad
+\sigma_j^- = \frac{X_j + iY_j}{2}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 2: Write full operator}
+\[
+c_p^\dagger c_q^\dagger c_s c_r
+=
+\left(\prod_{k<p} Z_k\right)\sigma_p^+
+\left(\prod_{k<q} Z_k\right)\sigma_q^+
+\left(\prod_{k<s} Z_k\right)\sigma_s^-
+\left(\prod_{k<r} Z_k\right)\sigma_r^-
+\]
+
+\medskip
+
+\begin{block}{Key point}
+We must carefully combine all $Z$-strings.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 3: Collect parity strings}
+Assume ordering:
+\[
+p < q < r < s
+\]
+
+Then:
+\[
+c_p^\dagger c_q^\dagger c_s c_r
+=
+\left(\prod_{k<p} Z_k\right)
+\left(\prod_{k<q} Z_k\right)
+\left(\prod_{k<s} Z_k\right)
+\left(\prod_{k<r} Z_k\right)
+\cdot
+\sigma_p^+ \sigma_q^+ \sigma_s^- \sigma_r^-
+\]
+
+\medskip
+
+Combine overlapping strings:
+\[
+\Rightarrow \prod Z = \prod_{k=p}^{q-1} Z_k \cdot \prod_{k=r}^{s-1} Z_k
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 4: Expand ladder operators}
+Each operator:
+\[
+\sigma^\pm = \frac{1}{2}(X \mp iY)
+\]
+
+Thus:
+\[
+\sigma_p^+ \sigma_q^+ \sigma_s^- \sigma_r^-
+\]
+
+expands into:
+\[
+\frac{1}{16} \sum_{\alpha \in \{X,Y\}} (\pm i)^k \;
+\sigma_p^\alpha \sigma_q^\beta \sigma_r^\gamma \sigma_s^\delta
+\]
+
+\medskip
+
+\begin{block}{Result}
+We obtain a sum of $16$ Pauli strings.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final expression}
+\[
+c_p^\dagger c_q^\dagger c_s c_r
+=
+\frac{1}{16}
+\sum_{\alpha,\beta,\gamma,\delta \in \{X,Y\}}
+C_{\alpha\beta\gamma\delta}
+\left(\prod Z\right)
+\sigma_p^\alpha \sigma_q^\beta \sigma_r^\gamma \sigma_s^\delta
+\]
+
+\medskip
+
+\begin{itemize}
+\item Each term is a Pauli string
+\item Coefficients $C_{\alpha\beta\gamma\delta} \in \{\pm 1, \pm i\}$
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key result}
+Two-body fermionic operators $\Rightarrow$ sum of Pauli strings of length $\mathcal{O}(N)$
+\end{block}
+\end{frame}
+
+
+%------------------------------------------------
+\section{Bravyi--Kitaev Mapping}
+
+\begin{frame}{Motivation}
+Jordan--Wigner:
+\begin{itemize}
+\item Simple
+\item But strings of length $\mathcal{O}(N)$
+\end{itemize}
+
+\medskip
+
+Bravyi--Kitaev improves:
+\begin{itemize}
+\item Locality
+\item Scaling
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Bravyi--Kitaev idea}
+Instead of storing:
+\begin{itemize}
+\item occupation locally
+\end{itemize}
+
+we store:
+\begin{itemize}
+\item parity + occupation in a binary tree structure
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key result}
+Operator locality:
+\[
+\mathcal{O}(\log N)
+\]
+instead of $\mathcal{O}(N)$
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Comparison}
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Method & String length & Complexity \\
+\midrule
+Jordan--Wigner & $\mathcal{O}(N)$ & simple \\
+Bravyi--Kitaev & $\mathcal{O}(\log N)$ & more complex \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+
+\begin{block}{Tradeoff}
+\begin{itemize}
+\item JW: easier to implement
+\item BK: better scaling
+\end{itemize}
+\end{block}
+\end{frame}
