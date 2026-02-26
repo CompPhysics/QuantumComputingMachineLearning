@@ -1,0 +1,815 @@
+% !TEX program = pdflatex
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{physics}
+
+\title{Measurement Strategies in Quantum Computing}
+\subtitle{Why Measuring All Qubits is Optimal in Modern Algorithms}
+\author{Graduate-level notes}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Motivation}
+\begin{block}{Central question}
+Why is it preferable to measure all qubits rather than mapping observables onto a single qubit?
+\end{block}
+
+\begin{itemize}
+\item Traditional textbooks emphasize single-qubit readout.
+\item Modern quantum algorithms (VQE, QML) rely on full-register measurement.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Quantum measurement structure}
+An $n$-qubit state is
+\[
+|\psi\rangle = \sum_{x \in \{0,1\}^n} c_x |x\rangle.
+\]
+
+Measurement in the computational basis yields:
+\[
+p(x) = |c_x|^2.
+\]
+
+\medskip
+
+\begin{block}{Key observation}
+The outcome is a \textbf{joint probability distribution} over all qubits.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem: Information loss in partial measurement}
+\begin{theorem}
+Let $\rho$ be an $n$-qubit state. Measuring only a subset of qubits yields marginal distributions which do not uniquely determine $\rho$ or its multi-qubit correlations.
+\end{theorem}
+
+\begin{proof}
+Let $\rho$ be entangled:
+\[
+\rho \neq \rho_1 \otimes \rho_2.
+\]
+
+Then in general:
+\[
+\langle Z_i Z_j \rangle \neq \langle Z_i \rangle \langle Z_j \rangle.
+\]
+
+Measuring only qubit $i$ gives access to $\langle Z_i \rangle$, but not to joint correlators.
+
+Hence the reduced statistics are insufficient to reconstruct expectation values of multi-qubit observables.
+\end{proof}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Corollary: Necessity of full measurement}
+\begin{block}{Corollary}
+To estimate expectation values of general observables,
+\[
+H = \sum_k c_k P_k,
+\]
+with $P_k$ multi-qubit operators, one must measure all qubits involved.
+\end{block}
+
+\[
+\langle P_k \rangle = \langle Z_{i_1} Z_{i_2} \cdots X_{j_1} \rangle
+\]
+
+\medskip
+
+\begin{itemize}
+\item Requires joint measurement outcomes
+\item Cannot be reconstructed from single-qubit marginals
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem: Circuit-depth optimality}
+\begin{theorem}
+Let $O$ be a multi-qubit observable. Any protocol that maps $O$ onto a single qubit prior to measurement requires a unitary transformation whose circuit depth is at least proportional to the support size of $O$.
+\end{theorem}
+
+\begin{proof}[Sketch]
+Mapping $O$ to a single qubit requires a unitary $U$ such that
+\[
+U^\dagger Z_1 U = O.
+\]
+
+If $O$ acts on $k$ qubits, then $U$ must entangle these qubits with qubit $1$.
+
+Thus:
+\begin{itemize}
+\item Requires at least $\mathcal{O}(k)$ entangling gates
+\item Increases circuit depth and noise
+\end{itemize}
+
+Direct measurement avoids this overhead.
+\end{proof}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Hardware argument}
+\begin{block}{Asymmetry in cost}
+\begin{itemize}
+\item Quantum gates: noisy and expensive
+\item Measurements: comparatively cheap and parallelizable
+\end{itemize}
+\end{block}
+
+\medskip
+
+Thus:
+\[
+\text{Adding gates (basis rotations, mappings)} \gg \text{measuring more qubits}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Deferred measurement principle}
+\begin{block}{Principle}
+Measurements can be deferred until the end of a quantum circuit without changing outcome probabilities.
+\end{block}
+
+\[
+\Rightarrow \text{One can measure all qubits at the end}
+\]
+
+\medskip
+
+This supports the modern paradigm of full-register measurement.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Modern paradigm (NISQ era)}
+\begin{block}{Variational algorithms}
+In hybrid algorithms:
+\[
+\text{prepare state} \rightarrow \text{measure all qubits} \rightarrow \text{classical post-processing}
+\]
+\end{block}
+
+\medskip
+
+\begin{itemize}
+\item Introduced with VQE (2014)
+\item Core workflow: sampling full bitstrings
+\end{itemize}
+
+\medskip
+
+\textbf{Preskill (NISQ paradigm):}
+\[
+\text{prepare an } n\text{-qubit state and measure all qubits}  [oai_citation:0‡arXiv](https://arxiv.org/pdf/1801.00862?utm_source=chatgpt.com)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Why textbooks differ}
+\begin{itemize}
+\item Early algorithms (Deutsch–Jozsa, phase estimation)
+\begin{itemize}
+\item Encode answer in a single qubit/register
+\end{itemize}
+
+\item Analytical simplifications:
+\begin{itemize}
+\item Easier to track one observable
+\end{itemize}
+
+\item Phase kickback techniques:
+\begin{itemize}
+\item Transfer information to one qubit
+\end{itemize}
+\end{itemize}
+
+\medskip
+
+\begin{block}{Conclusion}
+These are \textbf{pedagogical or theoretical constructions}, not optimal experimental strategies.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final theorem: Optimal measurement strategy}
+\begin{theorem}
+For variational and sampling-based quantum algorithms, measuring all qubits in the computational basis minimizes circuit depth while preserving full information about the quantum state.
+\end{theorem}
+
+\begin{proof}[Argument]
+\begin{itemize}
+\item Full measurement yields complete probability distribution $p(x)$
+\item Multi-qubit observables are computed from bitstrings
+\item Avoids additional unitary transformations
+\item Reduces noise accumulation
+\end{itemize}
+
+Thus, full-register measurement is optimal under realistic hardware constraints.
+\end{proof}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item Quantum information is inherently \textbf{non-local}
+\item Single-qubit measurement loses correlations
+\item Mapping observables increases circuit depth
+\item Modern hardware supports parallel measurement
+\item NISQ algorithms rely on full bitstring sampling
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key insight}
+Quantum computing is fundamentally about sampling high-dimensional distributions, not extracting single bits.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\end{document}
+
+
+% !TEX program = pdflatex
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{physics}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+language=Python,
+basicstyle=\ttfamily\small,
+keywordstyle=\color{blue},
+commentstyle=\color{gray},
+stringstyle=\color{red},
+showstringspaces=false,
+breaklines=true
+}
+
+\title{Measurement Strategies in VQE}
+\subtitle{Failure of Single-Qubit Measurement and Numerical Evidence}
+\author{}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Key question}
+\begin{block}{Problem}
+Can we reconstruct expectation values of a Hamiltonian using only single-qubit measurements?
+\end{block}
+
+\medskip
+
+We show:
+\begin{itemize}
+\item This fails in general
+\item It fails even for simple two-qubit systems
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem: Failure of marginal reconstruction}
+\begin{theorem}
+There exist quantum states $\rho$ and observables $H$ such that the expectation value $\langle H \rangle$ cannot be reconstructed from all single-qubit measurement statistics.
+\end{theorem}
+
+\begin{proof}
+Consider a two-qubit system and the observable
+\[
+H = Z_1 Z_2.
+\]
+
+Take two states:
+
+\[
+|\Phi^+\rangle = \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle),
+\quad
+\rho_{\text{mix}} = \frac{1}{2}(|00\rangle\langle00| + |11\rangle\langle11|).
+\]
+
+Both have identical single-qubit marginals:
+\[
+\langle Z_1 \rangle = \langle Z_2 \rangle = 0.
+\]
+
+However:
+\[
+\langle Z_1 Z_2 \rangle_{\Phi^+} = 1,
+\quad
+\langle Z_1 Z_2 \rangle_{\text{mix}} = 1.
+\]
+
+Now compare with:
+\[
+\rho' = \frac{1}{2}(|01\rangle\langle01| + |10\rangle\langle10|),
+\]
+
+which also has identical marginals but:
+\[
+\langle Z_1 Z_2 \rangle_{\rho'} = -1.
+\]
+
+Thus, marginals do not determine $\langle H \rangle$.
+\end{proof}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Explicit VQE counterexample}
+Consider Hamiltonian:
+\[
+H = Z_1 Z_2.
+\]
+
+\medskip
+
+Ansatz:
+\[
+|\psi(\theta)\rangle = \cos\theta |00\rangle + \sin\theta |11\rangle.
+\]
+
+\medskip
+
+Exact energy:
+\[
+E(\theta) = \langle Z_1 Z_2 \rangle = 1.
+\]
+
+\medskip
+
+Single-qubit estimate:
+\[
+\langle Z_1 \rangle = \cos^2\theta - \sin^2\theta,
+\quad
+\langle Z_2 \rangle = \cos^2\theta - \sin^2\theta.
+\]
+
+Naive reconstruction:
+\[
+\langle Z_1 Z_2 \rangle \approx \langle Z_1 \rangle \langle Z_2 \rangle
+= (\cos^2\theta - \sin^2\theta)^2.
+\]
+
+\begin{block}{Failure}
+This is \textbf{incorrect} except at special points.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Error in VQE energy landscape}
+True energy:
+\[
+E_{\text{true}}(\theta) = 1.
+\]
+
+Naive single-qubit estimate:
+\[
+E_{\text{naive}}(\theta) = (\cos 2\theta)^2.
+\]
+
+\medskip
+
+\begin{itemize}
+\item True landscape: flat
+\item Naive landscape: oscillatory
+\end{itemize}
+
+\medskip
+
+\begin{block}{Consequence}
+Optimization will converge to \textbf{wrong minima}.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem: VQE failure under marginal approximation}
+\begin{theorem}
+Replacing multi-qubit correlators with products of single-qubit expectations leads to incorrect energy landscapes and can produce false minima in VQE.
+\end{theorem}
+
+\begin{proof}
+Let $H = Z_1 Z_2$.
+
+True:
+\[
+E(\theta) = \langle Z_1 Z_2 \rangle.
+\]
+
+Approximation:
+\[
+E'(\theta) = \langle Z_1 \rangle \langle Z_2 \rangle.
+\]
+
+Since correlations are neglected:
+\[
+E'(\theta) \neq E(\theta),
+\]
+
+and the optimization problem changes.
+
+Thus the minimizer of $E'$ is not the minimizer of $E$.
+\end{proof}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Numerical experiment}
+\begin{block}{Goal}
+Demonstrate failure of marginal reconstruction numerically.
+\end{block}
+
+\medskip
+
+We compare:
+\begin{itemize}
+\item Exact expectation value
+\item Approximation using marginals
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Python code}
+\begin{lstlisting}
+import numpy as np
+
+def state(theta):
+    return np.array([np.cos(theta), 0, 0, np.sin(theta)])
+
+Z = np.array([[1,0],[0,-1]])
+Z1Z2 = np.kron(Z, Z)
+
+def expectation(state, operator):
+    return np.real(state.conj().T @ operator @ state)
+
+def single_qubit_expectations(state):
+    rho = np.outer(state, state.conj())
+    Z1 = np.kron(Z, np.eye(2))
+    Z2 = np.kron(np.eye(2), Z)
+    return (np.trace(rho @ Z1), np.trace(rho @ Z2))
+
+thetas = np.linspace(0, np.pi/2, 50)
+
+true_vals = []
+approx_vals = []
+
+for theta in thetas:
+    psi = state(theta)
+    
+    # exact
+    true_vals.append(expectation(psi, Z1Z2))
+    
+    # marginals
+    z1, z2 = single_qubit_expectations(psi)
+    approx_vals.append(z1 * z2)
+
+print("True:", true_vals[:5])
+print("Approx:", approx_vals[:5])
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Result of numerical experiment}
+\begin{itemize}
+\item Exact value:
+\[
+\langle Z_1 Z_2 \rangle = 1
+\]
+\item Approximation:
+\[
+(\cos 2\theta)^2
+\]
+\end{itemize}
+
+\medskip
+
+\begin{block}{Conclusion}
+Marginals fail to reproduce correlations.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to VQE measurement problem}
+Modern VQE requires:
+\[
+H = \sum_k c_k P_k
+\]
+
+\medskip
+
+Each term:
+\[
+\langle P_k \rangle
+\]
+is estimated from \textbf{joint measurement outcomes}.
+
+\medskip
+
+\begin{block}{Important fact}
+Grouping and simultaneous measurement reduce cost but still rely on multi-qubit outcomes  [oai_citation:0‡arXiv](https://arxiv.org/abs/1907.03358?utm_source=chatgpt.com)
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final conclusion}
+\begin{itemize}
+\item Single-qubit measurements give only marginals
+\item Correlations are essential for quantum advantage
+\item VQE fails if correlations are ignored
+\item Full-register measurement is fundamentally necessary
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key insight}
+Quantum algorithms operate on \textbf{correlations}, not individual qubits.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\end{document}
+
+
+%------------------------------------------------
+
+\begin{frame}{Full VQE optimization experiment}
+\begin{block}{Goal}
+Compare optimization using:
+\begin{itemize}
+\item True energy: $\langle Z_1 Z_2 \rangle$
+\item Marginal approximation: $\langle Z_1 \rangle \langle Z_2 \rangle$
+\end{itemize}
+\end{block}
+
+\medskip
+
+\textbf{Hamiltonian:}
+\[
+H = Z_1 Z_2
+\]
+
+\textbf{Ansatz:}
+\[
+|\psi(\theta)\rangle = \cos\theta |00\rangle + \sin\theta |11\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+
+\begin{frame}[fragile]{Python: Full VQE loop}
+\begin{lstlisting}
+import numpy as np
+
+# Pauli matrices
+Z = np.array([[1,0],[0,-1]])
+Z1Z2 = np.kron(Z, Z)
+
+def state(theta):
+    return np.array([np.cos(theta), 0, 0, np.sin(theta)])
+
+def expectation(psi, H):
+    return np.real(psi.conj().T @ H @ psi)
+
+def single_qubit_expectations(psi):
+    rho = np.outer(psi, psi.conj())
+    Z1 = np.kron(Z, np.eye(2))
+    Z2 = np.kron(np.eye(2), Z)
+    z1 = np.trace(rho @ Z1)
+    z2 = np.trace(rho @ Z2)
+    return np.real(z1), np.real(z2)
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Gradient descent optimizer}
+\begin{lstlisting}
+def optimize(cost_fn, theta0, lr=0.1, steps=50):
+    theta = theta0
+    trajectory = []
+
+    for _ in range(steps):
+        # finite difference gradient
+        eps = 1e-6
+        grad = (cost_fn(theta + eps) - cost_fn(theta - eps)) / (2*eps)
+
+        theta = theta - lr * grad
+        trajectory.append((theta, cost_fn(theta)))
+
+    return theta, trajectory
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Define cost functions}
+\begin{lstlisting}
+# True VQE energy
+def true_energy(theta):
+    psi = state(theta)
+    return expectation(psi, Z1Z2)
+
+# WRONG: marginal approximation
+def approx_energy(theta):
+    psi = state(theta)
+    z1, z2 = single_qubit_expectations(psi)
+    return z1 * z2
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Run optimization}
+\begin{lstlisting}
+theta0 = 0.3
+
+theta_true, traj_true = optimize(true_energy, theta0)
+theta_approx, traj_approx = optimize(approx_energy, theta0)
+
+print("True optimum theta:", theta_true)
+print("Approx optimum theta:", theta_approx)
+
+print("True energy:", true_energy(theta_true))
+print("Approx energy:", approx_energy(theta_approx))
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Expected outcome}
+\begin{itemize}
+\item True energy:
+\[
+E(\theta) = 1 \quad \Rightarrow \text{flat landscape}
+\]
+
+\item Approximate energy:
+\[
+E_{\text{approx}}(\theta) = (\cos 2\theta)^2
+\]
+
+\item Minimization gives:
+\[
+\theta = \frac{\pi}{4}
+\]
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key result}
+Optimizer converges to a \textbf{spurious minimum}.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Theorem: Wrong convergence in VQE}
+\begin{theorem}
+If multi-qubit correlations are approximated by products of marginals, the resulting VQE optimization converges to incorrect parameters and energies.
+\end{theorem}
+
+\begin{proof}
+The approximate energy defines a different cost function:
+\[
+E'(\theta) \neq E(\theta)
+\]
+
+Thus:
+\[
+\arg\min_\theta E'(\theta) \neq \arg\min_\theta E(\theta)
+\]
+
+Since optimization follows $E'$, it converges to the wrong solution.
+\end{proof}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation}
+\begin{itemize}
+\item VQE is a \textbf{variational optimization loop}  [oai_citation:0‡grove-docs.readthedocs.io](https://grove-docs.readthedocs.io/en/latest/vqe.html?utm_source=chatgpt.com)
+\item The optimizer only sees the measured energy
+\item If measurement is wrong $\Rightarrow$ optimization is wrong
+\end{itemize}
+
+\medskip
+
+\begin{block}{Deep insight}
+Measurement is not a post-processing step — it defines the \textbf{objective function}.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final conclusion}
+\begin{itemize}
+\item Single-qubit measurement destroys correlations
+\item Correlations determine energy in VQE
+\item Wrong measurement $\Rightarrow$ wrong landscape
+\item Wrong landscape $\Rightarrow$ wrong convergence
+\end{itemize}
+
+\medskip
+
+\begin{block}{Final statement}
+\[
+\textbf{Full-register measurement is necessary for correct VQE optimization.}
+\]
+\end{block}
+\end{frame}
+
+
+
+%------------------------------------------------
+
+\begin{frame}{Final result: optimizer failure}
+\begin{itemize}
+\item Correct VQE:
+\begin{itemize}
+\item Converges to ground state
+\item Uses full correlations
+\end{itemize}
+
+\item Marginal-based VQE:
+\begin{itemize}
+\item Converges to wrong state
+\item Ignores entanglement
+\end{itemize}
+\end{itemize}
+
+\medskip
+
+\begin{block}{Fundamental conclusion}
+\[
+\textbf{Incorrect measurement $\Rightarrow$ incorrect gradient $\Rightarrow$ incorrect physics}
+\]
+\end{block}
+\end{frame}
+
+
+
+%------------------------------------------------
+
+\begin{frame}{Final result: optimizer failure}
+\begin{itemize}
+\item Correct VQE:
+\begin{itemize}
+\item Converges to ground state
+\item Uses full correlations
+\end{itemize}
+
+\item Marginal-based VQE:
+\begin{itemize}
+\item Converges to wrong state
+\item Ignores entanglement
+\end{itemize}
+\end{itemize}
+
+\medskip
+
+\begin{block}{Fundamental conclusion}
+\[
+\textbf{Incorrect measurement $\Rightarrow$ incorrect gradient $\Rightarrow$ incorrect physics}
+\]
+\end{block}
+\end{frame}
