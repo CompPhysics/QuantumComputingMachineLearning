@@ -19,13 +19,391 @@ o Work on project 1
 
 !split
 ===== Readings =====
-
+!bblock
 o For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 and 3.1-3.4 of Hundt's book _Quantum Computing for Programmers_, contain most of the relevant information.
-o The VQE algorithm is discussed in Hundt's section 6.11, note that the solution of the two-qubit system is outdated
+o The VQE algorithm is discussed in Hundt's section 6.11, note that the solution of the two-qubit system is outdated, measuring on one qubit only is not the present standard
 o "See also the VQE review article by Tilly et al.":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
+* Jupyter-notebook on VQE and single-qubit problem at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week6/ipynb/single_qubit_vqe_modified.ipynb"
+* Jupyter-notebook on VQE and two-qubit problem at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week6/ipynb/two_qubit_vqe_modified.ipynb"
+!eblock
+
+
+!split
+===== Two-qubit Hamiltonian =====
+
+Here we discuss  how to rewrite the two-qubit Hamiltonian defined by the following Hamiltonian matrix (project 1)
+!bt
+\[
+\mathcal{H}=\begin{bmatrix} \epsilon_{1}+V_z & 0 & 0 & V_x \\
+                       0  & \epsilon_{2}-V_z & V_x & 0 \\
+		       0 & H_x & \epsilon_{3}-V_z & 0 \\
+		       H_x & 0 & 0 & \epsilon_{4} +V_z \end{bmatrix}.
+\] 
+!et
+
+This Hamiltonian can be rewritten in terms of various one-qubit matrices.
+
+!split
+===== Definitions =====
+
+We define
+!bt
+\[
+\epsilon_{II}=\frac{\epsilon_{1}+\epsilon_{2}+\epsilon_{3}+\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZI}=\frac{\epsilon_{1}+\epsilon_{2}-\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{IZ}=\frac{\epsilon_{1}-\epsilon_{2}+\epsilon_{3}-\epsilon_{4}}{4},
+\]
+!et
+!bt
+\[
+\epsilon_{ZZ}=\frac{\epsilon_{1}-\epsilon_{2}-\epsilon_{3}+\epsilon_{4}}{4}.
+\]
+!et
+
+
+!split
+===== The Hamiltonian in terms of Pauli-$\bm{X}$ and Pauli-$\bm{Z}$ matrices =====
+
+With these definitions we can rewrite our two-qubit Hamiltonian as
+!bt
+\[
+\mathcal{H}=\mathcal{H}_0+\mathcal{H}_I
+\]
+!et
+with
+!bt
+\[
+\mathcal{H}_0=\epsilon_{II}\bm{I}\otimes\bm{I}+\epsilon_{ZI}\bm{Z}\otimes\bm{I}+\epsilon_{IZ}\bm{I}\otimes\bm{Z}+\epsilon_{ZZ}\bm{Z}\otimes\bm{Z},
+\]
+!et
+and
+!bt
+\[
+\mathcal{H}_I=V_z\bm{Z}\otimes\bm{Z}+V_x\bm{X}\otimes\bm{X}.
+\]
+!et
+
+
+!split
+===== Lipkin model =====
+
+We will study a schematic model (the Lipkin model, see Nuclear
+Physics _62_ (1965) 188), for the interaction among  $2$ and more 
+fermions that can occupy two different energy levels.
+
+
+In project 1 we consider a two-fermion case and a four-fermion case.
+
+For four fermions, the case we consider in the examples  here, each levels has
+degeneration $d=4$, leading to different total spin values.  The two
+levels have quantum numbers $\sigma=\pm 1$, with the upper level
+having $2\sigma=+1$ and energy $\varepsilon_{1}= \varepsilon/2$. The
+lower level has $2\sigma=-1$ and energy
+$\varepsilon_{2}=-\varepsilon/2$. That is, the lowest single-particle
+level has negative spin projection (or spin down), while the upper
+level has spin up.  In addition, the substates of each level are
+characterized by the quantum numbers $p=1,2,3,4$.
+
+
+!split
+===== Four fermion case =====
+
+We define the single-particle states (for the four fermion case which we will work on here)
+!bt
+\[
+\vert u_{\sigma =-1,p}\rangle=a_{-p}^{\dagger}\vert 0\rangle
+\hspace{1cm}
+\vert u_{\sigma =1,p}\rangle=a_{+p}^{\dagger}\vert 0\rangle.
+\]
+!et
+The single-particle states span an orthonormal basis.
+
+!split
+===== Hamiltonian =====
+
+The Hamiltonian of the system is given by
+
+!bt
+\[
+\begin{array}{ll}
+\hat{H}=&\hat{H}_{0}+\hat{H}_{1}+\hat{H}_{2}\\
+&\\
+\hat{H}_{0}=&\frac{1}{2}\varepsilon\sum_{\sigma ,p}\sigma
+a_{\sigma,p}^{\dagger}a_{\sigma ,p}\\
+&\\
+\hat{H}_{1}=&\frac{1}{2}V\sum_{\sigma ,p,p'}
+a_{\sigma,p}^{\dagger}a_{\sigma ,p'}^{\dagger}
+a_{-\sigma ,p'}a_{-\sigma ,p}\\
+&\\
+\hat{H}_{2}=&\frac{1}{2}W\sum_{\sigma ,p,p'}
+a_{\sigma,p}^{\dagger}a_{-\sigma ,p'}^{\dagger}
+a_{\sigma ,p'}a_{-\sigma ,p}\\
+&\\
+\end{array}
+\]
+!et
+where $V$ and $W$ are constants. The operator 
+$H_{1}$ can move pairs of fermions
+while $H_{2}$ is a spin-exchange term. The latter
+moves a pair of fermions from a state $(p\sigma ,p' -\sigma)$ to a state
+$(p-\sigma ,p'\sigma)$.
+
+!split
+===== Quasispin operators =====
+
+We are going to rewrite the above Hamiltonian in terms of so-called  quasispin operators
+!bt
+\[
+\begin{array}{ll}
+\hat{J}_{+}=&\sum_{p}
+a_{p+}^{\dagger}a_{p-}\\
+&\\
+\hat{J}_{-}=&\sum_{p}
+a_{p-}^{\dagger}a_{p+}\\
+&\\
+\hat{J}_{z}=&\frac{1}{2}\sum_{p\sigma}\sigma
+a_{p\sigma}^{\dagger}a_{p\sigma}\\
+&\\
+\hat{J}^{2}=&J_{+}J_{-}+J_{z}^{2}-J_{z}\\
+&\\
+\end{array}
+\]
+!et
+These operators obey the commutation relations for angular momentum.
+
+
+!split
+===== Including the number operator =====
+
+We can in turn express $\hat{H}$ in terms of the above quasispin operators and the number operator
+!bt
+\[
+\hat{N}=\sum_{p\sigma}
+a_{p\sigma}^{\dagger}a_{p\sigma}.
+\]
+!et
+
+
+!split
+===== Final  Hamiltonian =====
+Using the quasispin operators we can rewrite the Hamiltonian as
+!bt
+\begin{equation}
+H = \varepsilon J_z+\frac{1}{2} V \left( J_+^2 + J_-^2 \right)+\frac{1}{2} W \left( -N + J_+ J_- + J_- J_+ \right).
+\end{equation}
+!et
+
+!split
+===== Original Lipkin Hamiltonian =====
+The Lipkin model Hamiltonian in terms of quasispin operators reads
+!bt
+\[
+H = \varepsilon J_z 
++ \frac{1}{2} V \left(J_+^2 + J_-^2\right) 
++ \frac{1}{2} W \left(-N + J_+ J_- + J_- J_+\right).
+\]
+!et
+We use the standard commutation relations
+!bt
+\[
+[J_+,J_-] = 2J_z,
+\]
+!et
+and the Casimir operator
+!bt
+\[
+J^2 = J_z^2 + \frac{1}{2}(J_+J_- + J_-J_+).
+\]
+!et
+
+
+!split
+===== More compact expression =====
+
+From this we obtain
+!bt
+\[
+J_+J_- = J^2 - J_z(J_z - 1),
+\qquad
+J_-J_+ = J^2 - J_z(J_z + 1).
+\]
+!et
+
+Adding the two expressions:
+!bt
+\[
+J_+J_- + J_-J_+ = 2(J^2 - J_z^2).
+\]
+!et
+
+!split
+===== Simplified Hamiltonian  =====
+Using
+!bt
+\[
+J_+J_- + J_-J_+ = 2(J^2 - J_z^2)
+
+\]
+!et
+and insert into the Hamiltonian:
+!bt
+\[
+H = \varepsilon J_z 
++ \frac{1}{2} V (J_+^2 + J_-^2)
++ \frac{1}{2} W \left(-N + 2(J^2 - J_z^2)\right).
+\]
+!et
+This gives
+!bt
+\[
+\boxed{
+H = \varepsilon J_z 
++ \frac{V}{2}(J_+^2 + J_-^2)
++ W(J^2 - J_z^2)
+- \frac{WN}{2}.
+}
+\]
+!et
+
+!split
+===== Physical interpretation =====
+* The Hamiltonian is now expressed in terms of:
+  * Linear term: $\varepsilon J_z$
+  * Pairing term: $J_+^2 + J_-^2$
+  * Quadratic term: $J_z^2$
+  *Casimir term: $J^2$
+* The constant $-\frac{WN}{2}$ only shifts the spectrum.
+
+!split
+===== Fixed quasispin sector ($j=N/2$) =====
+In the Lipkin model we typically work in a fixed irreducible representation:
+!bt
+\[
+J^2 = j(j+1), \qquad j=\frac{N}{2}.
+\]
+!et
+
+Thus
+!bt
+\[
+H = \varepsilon J_z 
++ \frac{V}{2}(J_+^2 + J_-^2)
+- W J_z^2
++ W j(j+1)
+- \frac{WN}{2}.
+\]
+!et
+
+!split
+===== Final simplified form =====
+Using $N = 2j$, the constant simplifies:
+!bt
+\[
+W j(j+1) - \frac{WN}{2} = W j^2.
+\]
+!et
+!bblock Final result
+!bt
+\[
+\boxed{
+H = \varepsilon J_z 
++ \frac{V}{2}(J_+^2 + J_-^2)
+- W J_z^2 
++ W j^2.
+}
+\]
+!et
+!eblock
+The term $W j^2$ is a constant shift and can often be omitted.
+
+
+
+!split
+===== Final Hamiltonian matrix =====
+These five states can in turn be used as computational basis states in
+order to define the Hamiltonian matrix to be diagonalized.
+The matrix elements are given by $\langle J,J_z \vert H \vert J',J_z' \rangle$.
+The
+Hamiltonian is hermitian and we obtain after all this labor of ours
+
+!bt
+\begin{equation}
+H_{J = 2} =
+\begin{bmatrix}
+-2\varepsilon & 0 & \sqrt{6}V & 0 & 0 \\
+0 & -\varepsilon + 3W & 0 & 3V & 0 \\
+\sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
+0 & 3V & 0 & \varepsilon + 3W & 0 \\
+0 & 0 & \sqrt{6}V & 0 & 2\varepsilon
+\end{bmatrix}
+label{eq:HJ=2}
+\end{equation}
+!et
+
+
+
+!split
+===== Quantum computing and solving  the eigenvalue problem for the Lipkin model =====
+
+
+We turn now to a simpler variant of the Lipkin model without the $W$-term and a total spin of $J=1$ only as maximum value of the spin.
+This corresponds to a system with $N=2$ particles (fermions in our case).
+Our Hamiltonian is given by the quasispin operators (see below) 
+!bt
+\[
+     \hat{H} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
+\]
+!et
+
+As discussed earlier
+the quasispin operators act like lowering and raising angular momentum
+operators.
+
+With these properties we can calculate the Hamiltonian
+matrix for the Lipkin model by computing the various matrix elements
+!bt
+\begin{equation}
+\langle JJ_z|H|JJ_z'\rangle,
+\end{equation}
+!et
+where the non-zero elements are given by
+!bt
+\[
+\begin{split}
+\langle JJ_z|H|JJ_z'\rangle & = \epsilon J_z\\
+\langle JJ_z|H|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H|JJ_z'\rangle \\ &= -\frac{1}{2}VC,
+\end{split}
+\]
+!et
+where $C$ is the Clebsch-Gordan coefficients (from the raising and lowering operators) one gets when
+$J_{\pm}^2$ operates on the state $|JJ_z\rangle$.  Using the above
+definitions we can calculate the exact solution to the Lipkin model.
+ 
+With the $V$-interaction terms, we obtain the following Hamiltonian matrix
+!bt
+\begin{equation}
+\begin{pmatrix}-\epsilon & 0 & -V\\
+ 0&0&0\\
+ -V&0&\epsilon
+\end{pmatrix}
+\end{equation}
+!et
+
+
 !split
 ===== Plans for next week =====
-o TBA
+o We will focus mainly on setting up the quantum circuit for the Lipkin model with $J=1$ and $J=2$, rewriting the Lipkin model in terms of Pauli matrices 
+o Thereafter, if we get time we start with quantum Fourier transforms and discussions of Quantum Phase estimation algorithm
+
+
 
 
 
