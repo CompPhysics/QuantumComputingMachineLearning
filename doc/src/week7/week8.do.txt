@@ -1,0 +1,478 @@
+!split
+===== Reading recommendation =====
+
+Hundt's chapter 3 and 4 contain many useful
+hints for computing properties of Pauli matrices. Similarly, section
+6.11 has many details of relevance for project 1.
+
+!split
+===== More background material =====
+
+
+For the Lipkin model, we recommend strongly the work of LaRose and collaborators, see
+URL:"https://journals.aps.org/prc/abstract/10.1103/PhysRevC.106.024319", the article is also available at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/articles/PhysRevC.106.024319.pdf". See in particular section 3.
+
+
+
+
+
+===== Quantum Circuit, rewriting the Lipkin model in terms of Pauli matrices =====
+
+To solve the Lipkin model on a quantum computer we have to solve
+Schrodinger's equation. To achieve this, we will use the Variational
+Quantum Eigensolver (VQE) discussed earlier.
+
+Before we proceed however, we need to rewrite the quasispin operators in terms of Pauli spin matrices/operators.
+
+
+We take the liberty here of reminding you of some of the derivations done previously.
+
+We defined the number operator as
+!bt
+\[
+N=\sum_{n\sigma}a^\dagger_{n\sigma}a_{n\sigma},
+\]
+!et
+
+which commutes with the Lipkin Hamiltonian. This can be seen by
+examining the Lipkin model Hamiltonian and noticing that the one-body
+part simply counts particles while the two-body term moves particles
+in pairs. Thus, the Hamiltonian conserves particle number. To find
+more symmetries we rewrote the Lipkin Hamiltonian in terms of $SU(2)$ quasispin
+operators
+!bt
+\begin{align}
+H = \epsilon J_z + \frac{1}{2}V(J^2_++J^2_-),
+\end{align}
+!et
+via the mappings
+!bt
+\[
+J_z=\sum_{n}j_z^{(n)},
+\]
+!et
+and
+!bt
+\[
+J_\pm=\sum_nj^{(n)}_{\pm},
+\]
+!et
+where we have the onebody operators
+!bt
+\[
+j_z^{(n)}=\frac{1}{2}\sum_{\sigma}\sigma a^\dagger_{n\sigma}a_{n\sigma},
+\]
+!et
+and
+!bt
+\[
+j^{(n)}_{\pm}=a^\dagger_{n\pm}a_{n\mp}.
+\]
+!et
+
+These operators obey the $SU(2)$ commutation relations
+
+!bt
+\[
+[J_+,J_-]=2J_z,
+\]
+!et
+and
+!bt
+\[
+[J_z,J_\pm]=\pm J_\pm.
+\]
+!et
+Here the ladder operators are defined as $J_{\pm}= J_x\pm iJ_y$. With this rewriting, we can see that the total spin operator $J^2$, which is defined as 
+!bt
+\[
+J^2= J^2_x+J^2_y+J^2_z =
+\frac{1}{2}\{J_+,J_-\}+J_z^2,
+\]
+!et
+commutes with the Hamiltonian since the Hamiltonian.
+We note also that the rotation operator
+!bt
+\[
+R=e^{i\phi J_z},
+\]
+!et
+commutes with the Hamiltonian, which can be explained as follows. Writing $J_z$ as
+!bt
+\[
+J_z=\frac{1}{2}(N_+-N_-),
+\]
+!et
+where $N_\pm=\sum_{n\pm}a^\dagger_{n\pm}a_{n\pm}$, allows us to see that it measures half the difference between the number of particles in the upper and lower levels. Thus, the possible eigenvalues $r$ of the signature operator are
+!bt
+\begin{align}
+r=+1, & j_z=2n \\
+r=+i, & j_z=2n+\frac{1}{2} \\
+r=-1, & j_z=2n+1 \\
+r=-i, & j_z=2n+\frac{3}{2} \\
+\end{align}
+!et
+
+for $n\in\mathbb{Z}$. Note that $r$ is real or imaginary if the number
+of particles $N$ is even or odd, respectively. Since, as discussed
+above, the Lipkin Hamiltonian conserves $N$, $r$ cannot jump between
+being real and imaginary. Additionally, because particles must be
+moved in pairs, and $J_z$ measures half the difference between
+particles in the upper and lower levels, $j_z$ can only change by as
+
+!bt
+\[
+j_z\rightarrow \frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
+\]
+!et
+or $j_z\rightarrow J_z\pm2n$.
+
+To solve the Lipkin model with a quantum computer, the first step is
+to map the system to a set of qubits. We will restrict ourselves here
+to the half-filled case where the number of particles $N$ equals the
+degeneracy of the states $\Omega$. One could assign each possible
+state $(n,\sigma)$ a qubit such that the qubit being in the state
+$\vert 1\rangle$ or $\vert 0\rangle$ would imply that the state
+$(n,\sigma)$ is occupied or unoccupied, respectively. This mapping
+scheme (which we will call occupation mapping) requires 2$\Omega$
+qubits.
+
+
+However, because there are only two energy levels in the Lipkin model,
+any other natural mapping is possible. In this mapping scheme (which
+we will call level mapping) each doublet ($(n,+1)$, $(n,-1)$) would be
+assigned a qubit such that the qubit being in the state $\vert 0\rangle$ or
+$\vert 1\rangle$ would imply that the particle is in the $(n,+1)$ or $(n,-1)$
+state, respectively. Note that these are the only two possible
+configurations of the doublet as we are restricting ourselves to the
+half-filled case and the Lipkin Hamiltonian only moves particles
+between energy levels, not degenerate states. Thus the level mapping
+only requires $\Omega$ qubits which is half that of the occupation
+mapping.
+
+The Hamiltonian takes the form
+
+!bt
+\begin{align}
+H=\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
+\end{align}
+!et
+
+Plugging the mapping from the total $J$ operators to the individual one-body $j$ operators yields
+
+!bt
+\begin{align}
+H &= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\left[\left(\sum_nj^{(n)}_{+}\right)^2+\left(\sum_nj^{(n)}_{-}\right)^2\right]
+\\
+&= \epsilon\sum_{n}j_z^{(n)} + \frac{1}{2}V\sum_{n,m}\left(j^{(n)}_+j^{(m)}_++j^{(n)}_-j^{(m)}_-\right)
+\\
+&= \epsilon\sum_{n}j_z^{(n)} + 2V\sum_{n<m}\left(j^{(n)}_xj^{(m)}_x-j^{(n)}_yj^{(m)}_y\right),
+\end{align}
+!et
+where we have used the definitions
+!bt
+\[
+j_{\pm}^{(n)}=j_x^{(n)}\pm ij_y^{(n)}.
+\]
+!et
+To convert to Pauli matrices, we make the transformations
+!bt
+\[
+j_x^{(n)} \rightarrow X_n/2,
+\]
+!et
+and
+!bt
+\[
+j_y^{(n)} \rightarrow Y_n/2,
+\]
+!et
+and finally
+!bt
+\[
+j_z^{(n)} \rightarrow Z_n/2,
+\]
+!et
+which preserve the above $SU(2)$  commutation relations.
+The factor of $1/2$
+is due to the eigenvalues of the Pauli matrices being $\pm 1$
+while we are dealing with spin $1/2$ particles.
+
+This transforms our Hamiltonian into
+!bt
+\[
+H=\frac{1}{2}\epsilon\sum_{k=1}^nZ_k+\frac{1}{2}V\sum_{n\neq j=1}^N(X_kX_j-Y_kY_j).
+\]
+!et
+
+With this form, we can clearly see that the first (one-body) term in
+the Hamiltonian returns the energy $-\epsilon/2$ or $+\epsilon/2$ if
+the qubit representing the particle of a doublet is in the ground
+($\vert 1\rangle$) or excited ($\vert 0\rangle$) state,
+respectively. The action of the second (two-body) term in the
+Hamiltonian can be determined by noting that
+!bt
+\begin{align}
+\frac{1}{2}(XX-YY)\vert 00\rangle &= \vert 11\rangle,
+\\
+\frac{1}{2}(XX-YY)\vert 01\rangle &= 0,
+\\
+\frac{1}{2}(XX-YY)\vert 10\rangle &= 0,
+\\
+\frac{1}{2}(XX-YY)\vert 11\rangle &= \vert 00\rangle.
+\end{align}
+!et
+
+That is, the two-body term moves a pair of particles between the
+ground states $\vert 00\rangle$ and the excited states $\vert
+11\rangle$ of their respective doublets.
+
+
+
+!split
+===== Summarizing the Lipkin model =====
+
+The Lipkin model is  rewritten in terms of the quasipin operators as
+!bt
+\begin{align*}
+    \begin{split}
+        H_0 &= \epsilon J_z, \\
+        H_1 &= \frac{1}{2}V (J_+^2 + J_-^2), \\
+        H_2 & = \frac{1}{2}W ( J_+J_- +J_{-}J_+ - N ),
+    \end{split}
+\end{align*}
+!et
+
+!split
+===== Quasispin operators =====
+
+These quasi spin operators obey the normal spin commutator relations
+!bt
+\begin{align*}
+    &[J_z,J_{\pm}] = \pm J_\pm, 
+    &[J_+,J_-] = 2 J_z, \\
+    &[J^2,J_{\pm}] = 0,
+    &[J^2,J_z] = 0,
+\end{align*}
+!et
+in addition to commuting with the number operator
+!bt
+\begin{align*}
+    [N,J_z] = [N,J_{\pm}] = [N,J^2] = 0.
+\end{align*}
+!et
+Using these relations we can show that the Hamiltonian (a product of
+quasi spin operators and the number operator) also commutes with
+$J^2$, that is $[H,J^2]=0$. This means that $H$ and $J^2$ have a shared
+eigenbasis, with $J$ being a so-called _good_ quantum number.
+
+!split
+===== System to diagonalize by traditional methods =====
+
+Using spin-eigenstates as the Hamiltonian basis, we define states
+through the normal approach $\vert J,J_z\rangle$ with $J$ and $ J_z$ as spin
+and spin-projections, respectively. The states $J_z = \pm J$ are the
+easiest to construct, corresponding to a single level being completely
+filled. States in between can then be found using the quasi-spin
+ladder operators following
+
+!bt
+\[
+    J_\pm \vert J,J_z\rangle = \sqrt{J(J+1)-J_z (J_z \pm 1)} \vert J,J_z \pm 1\rangle.
+\]
+!et
+
+Using this basis for the quasi-spin Hamiltonian, we can rewrite the explicit matrix $H_{J_z,J'_z} = \langle J,J_z\vert  H \vert J,J_z'\rangle$ can be constructed.
+
+!split
+===== The $J=1$ case =====
+
+For $N=2$ particles, we have the triplet $J=1$, with three possible projection $J_z = 0, \pm 1$. This gives the following matrix
+!bt
+\[
+    H = \begin{bmatrix}
+        -\epsilon & 0 & V \\
+        0 & W & 0 \\
+        V & 0 & \epsilon
+    \end{bmatrix}.
+\]
+!et
+By solving the eigenvalue problem, the ground state energy can be exactly found.
+
+
+!split
+===== The $J=2$ case =====
+
+Similarly, for the $N=4$ particles case we have $J = 2$ with five possible projections $J_z = 0,\pm1,\pm2$. This gives us the Hamiltonian matrix
+!bt
+\[
+    H = \begin{bmatrix}
+        -2\epsilon & 0  & \sqrt{6}V &0 &0 \\
+        0 & -\epsilon + 3W & 0 & 3V & 0 \\
+        \sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
+        0 & 3V & 0 & \epsilon + 3W & 0 \\
+        0 & 0 & \sqrt{6}V & 0 & 2\epsilon
+    \end{bmatrix}.
+\]
+!et
+
+!split
+===== More rewriting =====
+
+Following the work of LaRose and collaborators, see
+URL:"https://journals.aps.org/prc/abstract/10.1103/PhysRevC.106.024319",
+we can rewrite the Lipkin Hamiltonian for efficient adaptations to
+quantum computing.
+
+We have
+!bt
+\[
+    J_z = \sum_{i}^{N} j_{z}^{i} \hspace{20px} J_\pm = \sum_i^N j_{\pm}^{i} = \sum_i^N (j_{x}^{i}\pm ij_{y}^{i}),
+\]
+!et
+with $N$ being the number of particles. Additionally, since we have spin-$1/2$ fermions, the mapping to Pauli matrices follow
+!bt
+\[
+    j_{x}^{i} = \frac{1}{2}X_i,\hspace{20px}j_{y}^{i} = \frac{1}{2}Y_i,\hspace{20px}j_{z}^{i} = \frac{1}{2}Z_i.
+\]
+!et
+This means that we require $N$ qubits to calculate properties of a $N$ particle system, if no more symmetry reductions are considred.
+
+!split
+===== Lipkin Hamiltonian for quantum computing =====
+
+We rewrote our Hamiltonian as
+!bt
+\begin{align*}
+    \begin{split}
+        H_0 &= \frac{\epsilon}{2}\sum_{p}Z_p,  \\
+        H_1 &= \frac{1}{2}V \sum_{p < q}( X_p X_q - Y_p Y_q), \\
+        H_2 &= \frac{1}{2}W \sum_{p < q} \left( X_p X_q + Y_p Y_q \right). 
+    \end{split}
+\end{align*}
+!et
+
+For two particles coupling to spin $J=1$ we have
+!bt
+\[
+    H^{N=2} = \frac{\epsilon}{2}\left(Z_1 + Z_2\right) + \frac{W+V}{2} X_1 X_2 - \frac{W-V}{2} Y_1 Y_2.
+\]
+!et
+
+!split
+===== For four fermions =====
+Our Hamiltonian for $N=4$ is
+!bt
+\begin{align*}
+    \begin{split}
+        H^{N=4} =& \frac{\epsilon}{2}\left(Z_1 + Z_2 + Z_3 + Z_4\right) + \frac{W-V}{2}\Big( X_1 X_2 +\\ 
+        & X_1 X_3 + X_1 X_4 + X_2 X_3 + X_3 X_4 + X_3 X_4
+        \Big) \\
+        &+ \frac{W+V}{2}\Big( Y_1 Y_2 + Y_1 Y_3 + Y_1 Y_4 + Y_2 Y_3 \\
+        & + Y_3 Y_4 + Y_3 Y_4\Big).
+    \end{split}
+\end{align*}
+!et
+
+Note that well that a term like $Z_1$ reads $Z_1\otimes I_2 \otimes I_3 \otimes I_4$ where the subscript points to qubit $i$ and all matrices are $2\times 2$ matrices.
+!split
+===== Leaving out the $W$ term =====
+
+If we set $W = 0$ we can simplify the Hamiltonian. For this we  note that if we only include the $H_0$ and $H_1$ terms,  spins differing by $\pm2$ are the only possible non-diagonal couplings. Since $H_0$ is diagonal and single particle energies are degenerate, it does not break any symmetry.
+Instead of the $2J+1$ spin projections, we simply have $J+1$ relevant states. From URL:"https://journals.aps.org/prc/abstract/10.1103/PhysRevC.106.024319",
+the two-qubit Hamiltonian for $N=4$ can be written as
+!bt
+\[
+    H_{W=0}^{N=4} = \epsilon(Z_1 + Z_2) + \frac{\sqrt{6}}{2}V (X_1 + X_2 + Z_1 X_0 - X_1 Z_0).
+\]
+!et
+This is computationally more efficient since we only need half of the qubits.
+
+!split
+===== More details =====
+
+Here we give some additional details behind the rewriting of the Lipkin Hamiltonian in term of Pauli matrices and the identity matrix.
+For the one-body term we have
+!bt
+\begin{align*}
+    H_0 = \epsilon J_z = \epsilon \sum_{p} j_{z}^{p} = \frac{\epsilon}{2} \sum_p Z_p 
+\end{align*}
+!et
+
+Moving on to the $H_1$ term, we need to expand the square of the $J_\pm$ operators. Starting with $J_+$ we find
+!bt
+\begin{align*}
+    J_+^2 &= (\sum_p j_{x}^{p} + \imath j_{y}^{p})^2 = \sum_{pq}(j_{x}^{p} + \imath j_{y}^{p})(j_{x}^{q} + \imath j_{y}^{q}) \\
+    &= \sum_{pq} \left(j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} + \imath j_{y}^{p}j_{x}^{q} + \imath j_{x}^{p}j_{y}^{q}\right).
+\end{align*}
+!et
+
+
+!split
+===== Other manipulations =====
+
+Similarly, the $J_-^2$ term yields
+!bt
+\begin{align*}
+    J_-^2 = \sum_{pq} (j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} - \imath j_{y}^{p}j_{x}^{q} - \imath j_{x}^{p}j_{y}^{q}).
+\end{align*}
+!et
+Rewriting we get
+!bt
+\begin{align*}
+    J_+^2 + J_-^2 &= 2\sum_{pq} j_{x}^{p}j_{x}^{q} - j_{z}^{p}j_{z}^{q} \\
+    &= 2 \sum_p (j_{x}^{p})^2 - (j_{y}^{p})^2 + 4\sum_{p > q}( j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q}) \\
+    &= \frac{1}{2} \sum_p (X_p^2 - Y_p^2) + \sum_{p > q} (X_p X_q - Y_p Y_q)
+\end{align*}
+!et
+
+!split
+===== Final expression for $H_1$ and $H_2$ =====
+
+The diagonal term will cancel out, since the Pauli matrices are involutory, resulting in
+!bt
+\[
+    H_1 = \frac{1}{2}V \sum_{p > q}( X_p X_q - Y_p Y_q).
+\]
+!et
+Following the same procedure as above, we have finally
+!bt
+\[
+    H_2 = \frac{1}{2}W \sum_{p < q} (X_p X_q + Y_p Y_q). 
+\]
+!et
+
+
+!split
+===== Transforming Pauli and identity matrices =====
+
+FIGURE: [figures/table1.png, width=700 frac=1.0]
+
+
+!split
+===== Transforming Pauli and identity matrices, four particle case =====
+
+FIGURE: [figures/table2.png, width=700 frac=0.8]
+
+!split
+===== Plans for the week March 17-21 =====
+!bblock 
+o Discussion of the project only and work on finalizing the project
+!eblock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
