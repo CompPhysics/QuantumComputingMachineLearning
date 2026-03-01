@@ -91,7 +91,9 @@ and
 \]
 !et
 
-## Two-qubit Hamiltonian as example case
+
+!split
+===== Two-qubit Hamiltonian as example case =====
 * We are given a general two-qubit Hamiltonian \(H\), represented by a Hermitian \(4\times 4\) matrix.
 * Goal: approximate the ground-state energy
 * We will use the \textbf{Variational Quantum Eigensolver (VQE)}:
@@ -100,7 +102,8 @@ and
 * update parameters \(\bm{\theta}\) on a classical optimizer to (approximately) minimize \(E(\bm{\theta})\).
 
 
-## Measurement model: computational-basis (Pauli Z) readout
+!split
+===== Measurement model: computational-basis (Pauli Z) readout =====
 Most devices naturally measure each qubit in the computational basis
 \(\{|0\rangle,|1\rangle\}\), i.e. eigenbasis of \(\Z\).
 
@@ -124,7 +127,9 @@ z_2 = \begin{cases}+1,& b_2=0\\-1,& b_2=1\end{cases}.
 Then the estimator for \(\expval{\Z\otimes\Z}\) is the sample mean of the product \(z_1 z_2\).
 \textbf{Important:} Measuring \emph{both} qubits in the Z basis gives access to \(\Z\otimes \Z\) correlations in one shot.
 
-## Estimating \(\langle Z_1\rangle\), \(\langle Z_2\rangle\), \(\langle Z_1 Z_2\rangle\) from the same data
+!split
+===== Estimating \(\langle Z_1\rangle\), \(\langle Z_2\rangle\), \(\langle Z_1 Z_2\rangle\) from the same data =====
+
 Let \(p_{00},p_{01},p_{10},p_{11}\) be probabilities of outcomes \(|00\rangle,|01\rangle,|10\rangle,|11\rangle\).
 From Z-basis readout we have
 !bt
@@ -148,7 +153,8 @@ From Z-basis readout we have
 \textbf{Practical estimator:} with \(N\) shots and counts \(n_{ij}\) (so \(p_{ij}\approx n_{ij}/N\)),
 plug in \(p_{ij}=n_{ij}/N\) to obtain unbiased sample-mean estimators.
 
-## Why measuring both qubits is more convenient than only one
+!split
+===== Why measuring both qubits is more convenient than only one =====
 Suppose you only measure qubit 1 in Z and discard qubit 2. You can estimate \(\expval{\Z\otimes\I}\), but:
 * You \textbf{cannot} directly estimate the two-qubit correlator \(\expval{\Z\otimes \Z}\) without joint outcomes.
 * Many Hamiltonians include interaction terms like \(J\,\Z\otimes \Z\). Without joint readout, you would need additional circuitry or assumptions to reconstruct correlations.
@@ -158,7 +164,9 @@ Suppose you only measure qubit 1 in Z and discard qubit 2. You can estimate \(\e
 
 \textbf{Physics intuition:} the ground-state energy of an interacting two-qubit system depends on \emph{correlations}; you must measure both subsystems to access them.
 
-## Measuring general Pauli strings using Z-basis readout
+!split
+===== Measuring general Pauli strings using Z-basis readout =====
+
 Devices measure in Z, but VQE needs \(\expval{\X\otimes\X}\), \(\expval{\Y\otimes\Z}\), etc.
 
 \textbf{Strategy:} rotate the measurement basis so that measuring Z after a unitary \(U\) is equivalent to measuring another Pauli operator before \(U\).
@@ -179,8 +187,9 @@ Thus,
 
 For two-qubit strings like \(\X\otimes\Y\), apply the appropriate basis-change gates to each qubit and then measure both in Z.
 
-## Quantikz: measurement circuits for Pauli strings
-%\small
+!split
+===== Quantikz: measurement circuits for Pauli strings =====
+
 \textbf{Example 1:} measure \(\Z\otimes\Z\) (no basis change)
 !bt
 \[
@@ -205,9 +214,9 @@ For two-qubit strings like \(\X\otimes\Y\), apply the appropriate basis-change g
 \]
 !et
 
+!split
+===== Quantikz: measurement circuits for Pauli strings =====
 
-## Quantikz: measurement circuits for Pauli strings
-%\small
 
 \textbf{Example 3:} measure \(\Y\otimes\Y\) (apply \(S^\dagger\) then \(H\) on each qubit)
 !bt
@@ -221,8 +230,8 @@ For two-qubit strings like \(\X\otimes\Y\), apply the appropriate basis-change g
 \]
 !et
 
-
-## Setup and claim
+!split
+===== Setup and claim =====
 We consider a two-qubit state \(\rho\) and energy estimation for a Hamiltonian
 !bt
 \[
@@ -242,7 +251,8 @@ o exhibit distinct states with identical \(\rho_1\) but different \(\langle \Z\o
 o give a worked VQE example where relying on single-qubit measurements provably fails.
 
 
-## Formal fact 1: single-qubit statistics depend only on the reduced state
+!split
+===== Formal fact 1: single-qubit statistics depend only on the reduced state =====
 Let \(\{M_m\}\) be a POVM performed \emph{only} on qubit 1. Operationally this corresponds to
 measurement operators \(\{M_m\otimes \I\}\) on the two-qubit system.
 
@@ -270,7 +280,8 @@ p(m)=\Tr\!\big[M_m\,\rho_1\big],\qquad \rho_1:=\Tr_2(\rho).
 \textbf{Conclusion.} \emph{All} statistics from measurements that act only on qubit 1 depend only on \(\rho_1\).
 They are completely insensitive to correlations that live in \(\rho\) but vanish under \(\Tr_2\).
 
-## Corollary: no single-qubit readout can determine two-qubit correlators
+!split
+=====  Corollary: no single-qubit readout can determine two-qubit correlators =====
 A two-qubit correlator (e.g. \(\langle \Z\otimes\Z\rangle\)) is
 !bt
 \[
@@ -291,7 +302,8 @@ then \(\langle \Z\otimes\Z\rangle\) cannot be inferred from single-qubit measure
 
 Next slide: we construct such a pair explicitly (pure states, maximally entangled).
 
-## Exhibit: same reduced state, different \(\langle Z\otimes Z\rangle\)
+!split
+=====  Exhibit: same reduced state, different \(\langle Z\otimes Z\rangle\) =====
 Consider the Bell states
 !bt
 \[
@@ -312,7 +324,9 @@ For either state,
 
 Hence \emph{every} measurement on qubit 1 alone yields identical statistics for \(|\Phi^+\rangle\) and \(|\Psi^+\rangle\).
 
-\textbf{Compute the correlation.}
+
+!split
+=====  Compute the correlation =====
 Using \(\Z|0\rangle=+|0\rangle\), \(\Z|1\rangle=-|1\rangle\),
 !bt
 \[
@@ -337,8 +351,9 @@ Therefore,
 \textbf{Key consequence.} Single-qubit measurements cannot distinguish \(|\Phi^+\rangle\) from \(|\Psi^+\rangle\),
 yet the interaction observable \(\Z\otimes\Z\) takes opposite values.
 
-## Formal theorem: impossibility of recovering generic energies from one-qubit measurements
-\textbf{Theorem.}
+!split
+=====  Formal theorem: impossibility of recovering generic energies from one-qubit measurements =====
+_Theorem_
 Let \(H\) be any Hamiltonian that contains at least one nonzero two-qubit term, e.g. \(h_{zz}\,\Z\otimes\Z\) with \(h_{zz}\neq 0\).
 Then there exist states \(\rho,\rho'\) such that:
 !bt
@@ -368,7 +383,8 @@ Therefore
 so \(\Tr(H\rho)\neq \Tr(H\rho')\), while all one-qubit statistics on qubit 1 are identical.
 \(\square\)
 
-## Addressing the ``pre-rotation'' idea: why it doesn't save single-qubit readout
+!split
+=====  Addressing the ``pre-rotation'' idea: why it doesn't save single-qubit readout =====
 One may attempt: apply a two-qubit unitary \(U\), then measure only qubit 1 in the Z basis.
 This measures the observable
 !bt
@@ -385,7 +401,9 @@ on the original state.
 
 \textbf{Conceptual punchline:} two-qubit Hamiltonians depend on correlations; correlations are not encoded in a single reduced state.
 
-## Worked VQE failure example: Hamiltonian requiring correlations
+
+!split
+===== Worked VQE failure example: Hamiltonian requiring correlations =====
 Consider the interacting Hamiltonian
 !bt
 \[
@@ -415,7 +433,8 @@ They differ by \(\Delta E=2\), but have identical \(\rho_1=\I/2\).
 
 Therefore any VQE evaluation strategy that uses only qubit-1 measurement data \emph{cannot even tell whether the energy is \(-1\) or \(+1\)}.
 
-## VQE ansatz family demonstrating the failure concretely
+!split
+=====  VQE ansatz family demonstrating the failure concretely =====
 Take a simple two-qubit ansatz capable of preparing both Bell states:
 !bt
 \[
@@ -447,7 +466,9 @@ and similarly any single-qubit observable on qubit 1 has the same expectation (b
 
 \textbf{Thus:} if your VQE ``measurement layer'' reads only qubit 1, the cost function becomes \emph{constant} across this family and provides no gradient/no signal for optimization.
 
-## What measurement on both qubits provides (and why it fixes VQE)
+
+!split
+=====  What measurement on both qubits provides (and why it fixes VQE) =====
 If you measure \emph{both} qubits in the computational basis, each shot yields \(b_1b_2\in\{00,01,10,11\}\).
 Map bits to \(\pm 1\) eigenvalues:
 !bt
@@ -481,7 +502,8 @@ and the energy estimate is
 
 \textbf{Efficiency point:} the same shot record gives multiple observables at once; measuring only one qubit throws away correlation information and wastes shots.
 
-## Generalization: why this is not a special case
+!split
+=====  Generalization: why this is not a special case =====
 A generic two-qubit Hamiltonian has the Pauli expansion
 !bt
 \[
@@ -500,7 +522,9 @@ But measuring only qubit 1 gives access only to \(\langle \sigma_\alpha\otimes \
 so no function of \(\rho_1\) alone can reproduce all correlators.
 Thus single-qubit measurement cannot generally yield the correct energy landscape for VQE.
 
-## More examples of measurement circuits
+
+!split
+=====  More examples of measurement circuits =====
 Modern devices measure all qubits in the Z basis; other Pauli strings are measured via pre-rotations.
 \textbf{(i) \(X\otimes X\):} apply \(H\) on both, then Z readout
 !bt
@@ -527,7 +551,8 @@ Modern devices measure all qubits in the Z basis; other Pauli strings are measur
 !et
 
 
-## Why joint Z readout is sufficient for energy estimation
+!split
+=====  Why joint Z readout is sufficient for energy estimation =====
 Because each Pauli string measurement is reduced to:
 o local basis-change gates \(U_k = U_k^{(1)}\otimes U_k^{(2)}\),
 o joint Z readout producing bitstrings \(b_1 b_2\),
@@ -548,7 +573,9 @@ where the mapping depends on whether the rotated measurement corresponds to \(\X
 
 \textbf{And:} joint readout gives you correlators (e.g. \(Z_1 Z_2\)) needed for interaction energies.
 
-## (Optional) Operator grouping and measurement efficiency
+!split
+=====  Operator grouping and measurement efficiency =====
+
 Many Pauli strings \(\{P_k\}\) commute and can be measured in the same basis.
 For two qubits, an important commuting set is:
 !bt
@@ -564,7 +591,8 @@ and analogous for Y basis.
 
 \textbf{Benefit:} fewer distinct measurement circuits \(\Rightarrow\) fewer total shots for a target energy precision.
 
-## Summary
+!split
+=====  Summary =====
 * Any two-qubit Hermitian \(4\times 4\) Hamiltonian admits a Pauli expansion \(H=\sum h_{\alpha\beta}\sigma_\alpha\otimes\sigma_\beta\).
 * VQE minimizes \(E(\bm{\theta})=\langle \psi(\bm{\theta|)}H|\psi(\bm{\theta\rangle)}\) using the variational principle.
 * Energy estimation reduces to estimating expectation values of Pauli strings.
@@ -572,7 +600,8 @@ and analogous for Y basis.
 * Measuring \textbf{both qubits} is more convenient because it yields \(\Z\otimes\Z\) (and other two-qubit correlators) directly and improves shot efficiency by extracting multiple observables from one record.
 
 
-## More Summary (what you should remember)
+!split
+=====  More Summary (what you should remember) =====
 * \textbf{Formal fact:} any measurement acting only on qubit 1 depends only on the reduced state \(\rho_1=\Tr_2\rho\).
 * \textbf{Correlations are invisible locally:} there exist states with the same \(\rho_1\) but different \(\langle \sigma_\alpha\otimes\sigma_\beta\rangle\).
 * \textbf{VQE requires correlators} because interacting Hamiltonians include two-qubit terms at least.
