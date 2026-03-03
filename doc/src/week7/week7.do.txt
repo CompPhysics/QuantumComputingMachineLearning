@@ -18,14 +18,25 @@ o Work on project 1
 
 
 !split
-===== Readings =====
+===== Readings and notebooks =====
 !bblock
-o For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 and 3.1-3.4 of Hundt's book _Quantum Computing for Programmers_, contain most of the relevant information.
-o The VQE algorithm is discussed in Hundt's section 6.11, note that the solution of the two-qubit system is outdated, measuring on one qubit only is not the present standard
-o "See also the VQE review article by Tilly et al.":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
+* For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 and 3.1-3.4 of Hundt's book _Quantum Computing for Programmers_, contain most of the relevant information.
+* The VQE algorithm is discussed in Hundt's section 6.11, note that the solution of the two-qubit system is outdated, measuring on one qubit only is not the present standard
+* "See also the VQE review article by Tilly et al.":"https://www.sciencedirect.com/science/article/pii/S0370157322003118?via%3Dihub"
 * Jupyter-notebook on VQE and single-qubit problem at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week6/ipynb/single_qubit_vqe_modified.ipynb"
 * Jupyter-notebook on VQE and two-qubit problem at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week6/ipynb/two_qubit_vqe_modified.ipynb"
 !eblock
+
+
+
+!split
+===== More material  =====
+!bblock
+* Notes on why we measure on all qubits and not on one as in Hundt's chapter 6.11, see additional pdf file at 
+* Jupyter-notebook on VQE for the Lipkin model at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week6/ipynb/lipkinvqe.ipynb"
+!eblock
+
+
 
 
 !split
@@ -340,142 +351,6 @@ The term $W j^2$ is a constant shift and can often be omitted.
 
 
 
-!split
-===== Final Hamiltonian matrix =====
-These five states can in turn be used as computational basis states in
-order to define the Hamiltonian matrix to be diagonalized.
-The matrix elements are given by $\langle J,J_z \vert H \vert J',J_z' \rangle$.
-The
-Hamiltonian is hermitian and we obtain after all this labor of ours
-
-!bt
-\begin{equation}
-H_{J = 2} =
-\begin{bmatrix}
--2\varepsilon & 0 & \sqrt{6}V & 0 & 0 \\
-0 & -\varepsilon + 3W & 0 & 3V & 0 \\
-\sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
-0 & 3V & 0 & \varepsilon + 3W & 0 \\
-0 & 0 & \sqrt{6}V & 0 & 2\varepsilon
-\end{bmatrix}
-label{eq:HJ=2}
-\end{equation}
-!et
-
-
-
-
-
-===== Quantum Circuit, rewriting the Lipkin model in terms of Pauli matrices =====
-
-To solve the Lipkin model on a quantum computer we have to solve
-Schrodinger's equation. To achieve this, we will use the Variational
-Quantum Eigensolver (VQE) discussed earlier.
-
-Before we proceed however, we need to rewrite the quasispin operators in terms of Pauli spin matrices/operators.
-
-
-
-If we just keep the term with the interaction $V$, we have
-!bt
-\begin{align}
-H = \epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
-\end{align}
-!et
-We habe the quasispin operators
-!bt
-\[
-J_z=\sum_{n}j_z^{(n)},
-\]
-!et
-and
-!bt
-\[
-J_\pm=\sum_nj^{(n)}_{\pm},
-\]
-!et
-where we have the onebody operators
-!bt
-\[
-j_z^{(n)}=\frac{1}{2}\sum_{\sigma}\sigma a^\dagger_{n\sigma}a_{n\sigma},
-\]
-!et
-and
-!bt
-\[
-j^{(n)}_{\pm}=a^\dagger_{n\pm}a_{n\mp}.
-\]
-!et
-
-!split
-===== Commutation relations =====
-
-These operators obey the $SU(2)$ commutation relations
-
-!bt
-\[
-[J_+,J_-]=2J_z,
-\]
-!et
-and
-!bt
-\[
-[J_z,J_\pm]=\pm J_\pm.
-\]
-!et
-Here the ladder operators are defined as $J_{\pm}= J_x\pm iJ_y$. With this rewriting, we can see that the total spin operator $J^2$, which is defined as 
-!bt
-\[
-J^2= J^2_x+J^2_y+J^2_z =
-\frac{1}{2}\{J_+,J_-\}+J_z^2,
-\]
-!et
-commutes with the Hamiltonian since the Hamiltonian.
-
-!split
-===== Rotation operator =====
-
-We note also that the rotation operator
-!bt
-\[
-R=e^{i\phi J_z},
-\]
-!et
-commutes with the Hamiltonian, which can be explained as follows. Writing $J_z$ as
-!bt
-\[
-J_z=\frac{1}{2}(N_+-N_-),
-\]
-!et
-where $N_\pm=\sum_{n\pm}a^\dagger_{n\pm}a_{n\pm}$, allows us to see that it measures half the difference between the number of particles in the upper and lower levels.
-
-
-!split
-===== Possible eigenvalues =====
-
-Thus, the possible eigenvalues $r$ of the signature operator are
-!bt
-\begin{align}
-r=+1, & j_z=2n \\
-r=+i, & j_z=2n+\frac{1}{2} \\
-r=-1, & j_z=2n+1 \\
-r=-i, & j_z=2n+\frac{3}{2} \\
-\end{align}
-!et
-
-for $n\in\mathbb{Z}$. Note that $r$ is real or imaginary if the number
-of particles $N$ is even or odd, respectively. Since, as discussed
-above, the Lipkin Hamiltonian conserves $N$, $r$ cannot jump between
-being real and imaginary. Additionally, because particles must be
-moved in pairs, and $J_z$ measures half the difference between
-particles in the upper and lower levels, $j_z$ can only change by as
-
-!bt
-\[
-j_z\rightarrow \frac{1}{2}[(N_+\pm 2n)-(N_-\mp 2n)]
-\]
-!et
-or $j_z\rightarrow J_z\pm2n$.
 
 
 !split
@@ -508,13 +383,17 @@ mapping.
 !split
 ===== Converting to Pauli matrices =====
 
-The Hamiltonian takes the form
+The Hamiltonian takes the form (leaving out the $W$ term)
 
 !bt
 \begin{align}
 H=\epsilon J_z + \frac{1}{2}V(J^2_++J^2_-).
 \end{align}
 !et
+
+
+!split
+===== Writing in terms of one-body operators =====
 
 Plugging the mapping from the total $J$ operators to the individual one-body $j$ operators yields
 
@@ -574,7 +453,12 @@ With this form, we can clearly see that the first (one-body) term in
 the Hamiltonian returns the energy $-\epsilon/2$ or $+\epsilon/2$ if
 the qubit representing the particle of a doublet is in the ground
 ($\vert 1\rangle$) or excited ($\vert 0\rangle$) state,
-respectively. The action of the second (two-body) term in the
+respectively.
+
+!split
+===== Action of Hamiltonian =====
+
+The action of the second (two-body) term in the
 Hamiltonian can be determined by noting that
 !bt
 \begin{align}
@@ -593,43 +477,6 @@ ground states $\vert 00\rangle$ and the excited states $\vert
 11\rangle$ of their respective doublets.
 
 
-
-!split
-===== Summarizing the Lipkin model =====
-
-The Lipkin model is  rewritten in terms of the quasipin operators as
-!bt
-\begin{align*}
-    \begin{split}
-        H_0 &= \epsilon J_z, \\
-        H_1 &= \frac{1}{2}V (J_+^2 + J_-^2), \\
-        H_2 & = \frac{1}{2}W ( J_+J_- +J_{-}J_+ - N ),
-    \end{split}
-\end{align*}
-!et
-
-!split
-===== Quasispin operators =====
-
-These quasi spin operators obey the normal spin commutator relations
-!bt
-\begin{align*}
-    &[J_z,J_{\pm}] = \pm J_\pm, 
-    &[J_+,J_-] = 2 J_z, \\
-    &[J^2,J_{\pm}] = 0,
-    &[J^2,J_z] = 0,
-\end{align*}
-!et
-in addition to commuting with the number operator
-!bt
-\begin{align*}
-    [N,J_z] = [N,J_{\pm}] = [N,J^2] = 0.
-\end{align*}
-!et
-Using these relations we can show that the Hamiltonian (a product of
-quasi spin operators and the number operator) also commutes with
-$J^2$, that is $[H,J^2]=0$. This means that $H$ and $J^2$ have a shared
-eigenbasis, with $J$ being a so-called _good_ quantum number.
 
 !split
 ===== System to diagonalize by traditional methods =====
@@ -809,56 +656,6 @@ Following the same procedure as above, we have finally
 !et
 
 
-
-
-
-
-!split
-===== Quantum computing and solving  the eigenvalue problem for the Lipkin model =====
-
-
-We turn now to a simpler variant of the Lipkin model without the $W$-term and a total spin of $J=1$ only as maximum value of the spin.
-This corresponds to a system with $N=2$ particles (fermions in our case).
-Our Hamiltonian is given by the quasispin operators (see below) 
-!bt
-\[
-     \hat{H} = \epsilon\hat{J}_z -\frac{1}{2}V(\hat{J}_+\hat{J}_++\hat{J}_-\hat{J}_-).
-\]
-!et
-
-As discussed earlier
-the quasispin operators act like lowering and raising angular momentum
-operators.
-
-With these properties we can calculate the Hamiltonian
-matrix for the Lipkin model by computing the various matrix elements
-!bt
-\begin{equation}
-\langle JJ_z|H|JJ_z'\rangle,
-\end{equation}
-!et
-where the non-zero elements are given by
-!bt
-\[
-\begin{split}
-\langle JJ_z|H|JJ_z'\rangle & = \epsilon J_z\\
-\langle JJ_z|H|JJ_z'\pm 2\rangle & = \langle JJ_z\pm 2|H|JJ_z'\rangle \\ &= -\frac{1}{2}VC,
-\end{split}
-\]
-!et
-where $C$ is the Clebsch-Gordan coefficients (from the raising and lowering operators) one gets when
-$J_{\pm}^2$ operates on the state $|JJ_z\rangle$.  Using the above
-definitions we can calculate the exact solution to the Lipkin model.
- 
-With the $V$-interaction terms, we obtain the following Hamiltonian matrix
-!bt
-\begin{equation}
-\begin{pmatrix}-\epsilon & 0 & -V\\
- 0&0&0\\
- -V&0&\epsilon
-\end{pmatrix}
-\end{equation}
-!et
 
 
 !split
