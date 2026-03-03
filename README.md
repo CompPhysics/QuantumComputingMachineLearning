@@ -37,7 +37,7 @@ themes can be covered:
   - States in Hilbert Space, pure and mixed states
   - Video of lecture at https://youtu.be/J5lK-fTcTYY
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/HandWrittenNotes/2026/Lectureweek1.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week1
   - _Reading recommendation_: Scherer chapter 2 and/or Hidary chapter 12
 
 ## January 26 - January 30, 2026. Composite Systems and Tensor Products
@@ -53,7 +53,7 @@ themes can be covered:
   - Density matrices, entanglement and entropies
   - Video of lecture at https://youtu.be/xkbXx6XIlvU
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek3.pdf 
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
 
 
 
@@ -61,7 +61,7 @@ themes can be covered:
   - Reminder from last week on entanglement, density matrices and entropies
   - One-qubit and two-qubit gates, background and realizations
   - Simple Hamiltonian systems and getting started with the first project
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week4  
   - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11 and 3.1-3.4 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
   - Video of lecture at https://youtu.be/4Ew5UNHnsdM
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek4.pdf
@@ -72,10 +72,8 @@ themes can be covered:
   - Simple one-qubit and two-qubit Hamiltonians
   - Video of lecture at https://youtu.be/f9AfWyGWbCI
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lecturesweek5.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5. See in particular the additional jupyter-notebooks for the one- and two-qubit cases. For those of you who wish to test IBM's quantum computers with Qiskit, there are similar notebooks.
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week5. See in particular the additional jupyter-notebooks for the one- and two-qubit cases. For those of you who wish to test IBM's quantum computers with Qiskit, there are similar notebooks.
   - _Reading recommendation_: For the discussion of one-qubit, two-qubit and other gates, sections 2.6-2.11, 3.1-3.4 and 6.11.1-.6.11.3 of Hundt's book Quantum Computing for Programmers, contain most of the relevant information.
-- Video of lecture to be added  https://youtu.be/
-- Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek5.pdf
 
 
 ## February 23-27, 2026. Implementing the VQE with measurements and evaluation of gradients
@@ -84,15 +82,15 @@ themes can be covered:
   - Start discussions of Lipkin model
   - Video of lecture at https://youtu.be/MVLbBcTPwqg
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Notesweek6.pdf
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 ##  Note that the topics for the coming weeks may be changed! 
 
-##  March 2-6, 2026. Algorithms for solving quantum mechanical problems.
+##  March 2-6, 2026. VQE for two-qubit systems and the Lipkin model
+  - Implementing the VQE algorithm for the two-qubit and Lipkin-model Hamiltonians.
   - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch5.pdf
-  
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch4.pdf
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
 ##  March 9-13, 2026. Solving quantum mechanical problems
