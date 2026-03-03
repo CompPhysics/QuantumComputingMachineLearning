@@ -174,58 +174,6 @@ In hybrid algorithms:
 \item Core workflow: sampling full bitstrings
 \end{itemize}
 
-\medskip
-
-\textbf{Preskill (NISQ paradigm):}
-\[
-\text{prepare an } n\text{-qubit state and measure all qubits}, see \url{https://arxiv.org/pdf/1801.00862}
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Why textbooks differ}
-\begin{itemize}
-\item Early algorithms (Deutsch–Jozsa, phase estimation)
-\begin{itemize}
-\item Encode answer in a single qubit/register
-\end{itemize}
-
-\item Analytical simplifications:
-\begin{itemize}
-\item Easier to track one observable
-\end{itemize}
-
-\item Phase kickback techniques:
-\begin{itemize}
-\item Transfer information to one qubit
-\end{itemize}
-\end{itemize}
-
-\medskip
-
-\begin{block}{Conclusion}
-These are \textbf{pedagogical or theoretical constructions}, not optimal experimental strategies.
-\end{block}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Final theorem: Optimal measurement strategy}
-\begin{theorem}
-For variational and sampling-based quantum algorithms, measuring all qubits in the computational basis minimizes circuit depth while preserving full information about the quantum state.
-\end{theorem}
-
-\begin{proof}[Argument]
-\begin{itemize}
-\item Full measurement yields complete probability distribution $p(x)$
-\item Multi-qubit observables are computed from bitstrings
-\item Avoids additional unitary transformations
-\item Reduces noise accumulation
-\end{itemize}
-
-Thus, full-register measurement is optimal under realistic hardware constraints.
-\end{proof}
 \end{frame}
 
 
@@ -368,12 +316,10 @@ Replacing multi-qubit correlators with products of single-qubit expectations lea
 
 \begin{proof}
 Let $H = Z_1 Z_2$.
-
 True:
 \[
 E(\theta) = \langle Z_1 Z_2 \rangle.
 \]
-
 Approximation:
 \[
 E'(\theta) = \langle Z_1 \rangle \langle Z_2 \rangle.
@@ -383,115 +329,58 @@ Since correlations are neglected:
 \[
 E'(\theta) \neq E(\theta),
 \]
-
-and the optimization problem changes.
-
-Thus the minimizer of $E'$ is not the minimizer of $E$.
+and the optimization problem changes. Thus the minimizer of $E'$ is not the minimizer of $E$.
 \end{proof}
 \end{frame}
 
+
+
 %------------------------------------------------
 
-\begin{frame}{Numerical experiment}
-\begin{block}{Goal}
-Demonstrate failure of marginal reconstruction numerically.
-\end{block}
-
-\medskip
-
-We compare:
+\begin{frame}{Why textbooks differ}
 \begin{itemize}
-\item Exact expectation value
-\item Approximation using marginals
+\item Early algorithms (Deutsch–Jozsa, phase estimation)
+\begin{itemize}
+\item Encode answer in a single qubit/register
 \end{itemize}
-\end{frame}
 
-%------------------------------------------------
-
-\begin{frame}[fragile]{Python code}
-\begin{lstlisting}
-import numpy as np
-
-def state(theta):
-    return np.array([np.cos(theta), 0, 0, np.sin(theta)])
-
-Z = np.array([[1,0],[0,-1]])
-Z1Z2 = np.kron(Z, Z)
-
-def expectation(state, operator):
-    return np.real(state.conj().T @ operator @ state)
-
-def single_qubit_expectations(state):
-    rho = np.outer(state, state.conj())
-    Z1 = np.kron(Z, np.eye(2))
-    Z2 = np.kron(np.eye(2), Z)
-    return (np.trace(rho @ Z1), np.trace(rho @ Z2))
-
-thetas = np.linspace(0, np.pi/2, 50)
-
-true_vals = []
-approx_vals = []
-
-for theta in thetas:
-    psi = state(theta)
-    
-    # exact
-    true_vals.append(expectation(psi, Z1Z2))
-    
-    # marginals
-    z1, z2 = single_qubit_expectations(psi)
-    approx_vals.append(z1 * z2)
-
-print("True:", true_vals[:5])
-print("Approx:", approx_vals[:5])
-\end{lstlisting}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Result of numerical experiment}
+\item Analytical simplifications:
 \begin{itemize}
-\item Exact value:
-\[
-\langle Z_1 Z_2 \rangle = 1
-\]
-\item Approximation:
-\[
-(\cos 2\theta)^2
-\]
+\item Easier to track one observable
+\end{itemize}
+
+\item Phase kickback techniques:
+\begin{itemize}
+\item Transfer information to one qubit
+\end{itemize}
 \end{itemize}
 
 \medskip
 
 \begin{block}{Conclusion}
-Marginals fail to reproduce correlations.
+These are \textbf{pedagogical or theoretical constructions}, not optimal experimental strategies.
 \end{block}
 \end{frame}
 
 %------------------------------------------------
 
-\begin{frame}{Connection to VQE measurement problem}
-Modern VQE requires:
-\[
-H = \sum_k c_k P_k
-\]
+\begin{frame}{Final theorem: Optimal measurement strategy}
+\begin{theorem}
+For variational and sampling-based quantum algorithms, measuring all qubits in the computational basis minimizes circuit depth while preserving full information about the quantum state.
+\end{theorem}
 
-\medskip
+\begin{proof}[Argument]
+\begin{itemize}
+\item Full measurement yields complete probability distribution $p(x)$
+\item Multi-qubit observables are computed from bitstrings
+\item Avoids additional unitary transformations
+\item Reduces noise accumulation
+\end{itemize}
 
-Each term:
-\[
-\langle P_k \rangle
-\]
-is estimated from \textbf{joint measurement outcomes}.
-
-\medskip
-
-\begin{block}{Important fact}
-Grouping and simultaneous measurement reduce cost but still rely on multi-qubit outcomes  [oai_citation:0‡arXiv](https://arxiv.org/abs/1907.03358?utm_source=chatgpt.com)
-\end{block}
+Thus, full-register measurement is optimal under realistic hardware constraints.
+\end{proof}
 \end{frame}
 
-%------------------------------------------------
 
 \begin{frame}{Final conclusion}
 \begin{itemize}
