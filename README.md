@@ -84,78 +84,72 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Notesweek6.pdf
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
-##  Note that the topics for the coming weeks may be changed! 
+
 
 ##  March 2-6, 2026. VQE for two-qubit systems and the Lipkin model
   - Implementing the VQE algorithm for the two-qubit and Lipkin-model Hamiltonians.
-  - Video of lecture to be added  https://youtu.be/
+  - Video of lecture at https://youtu.be/
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch4.pdf
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
 ##  March 9-13, 2026. Solving quantum mechanical problems
   - Lipkin model and VQE
+  - Jordan-Wigner transformation and other Hamiltonians as examples
+  - Start discussion of Quantum Fourier Transforms
+  - Lab/exercise session: work on project 1
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
   - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch12.pdf
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch11.pdf
 
 
 ## March 16-20, 2026. Discussions of project 1 and work on the VQE
-  - Lipkin model and VQE
-  - Discussion of project 1 and work on finalizing project
+  - Quantum Fourier transforms
+  - Quantum Phase estimation algorithm
+  - Lab/exercise session: Discussion of project 1 and work on finalizing project
 - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 23-27, 2026
   - Quantum Fourier Transforms, algorithm and implementation
   - Quantum phase estimation algorithm
-  - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch26.pdf
+  - Setting up circuits for QFTs  
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
 ## March 30 - April 3, 2026, Public holiday in Norway no classes
 
+##  Note that the topics for the coming weeks may change! 
+
 
 ## April 6-10, 2026
   - Discrete Fourier transforms (DFTs, reminder from last week) ) and the fast Fourier Transform (FFT)
-  - Quantum Fourier transforms (QFTs), reminder from last week
-  - Setting up circuits for QFTs
   - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
 
 ## April 13-17, 2026
-  - Setting up circuits for QFTs
+  - Basics of quantum machine learning and discussion of support vector machines
   - Quantum phase estimation algorithm (QPE)
   - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
-  - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesApril7.pdf
-
 
 
 ## April 20-24, 2026 Quantum Machine Learning
   - Basics of quantum machine learning and discussion of support vector machines
-  - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesApril23.pdf  
+
 
 ## April 27-May 1, 2026 Quantum machine learning
   - Classical Support Vector Machines, reminder from last week
   - Classical Kernels and transition to Quantum Kernels
   - Quantum Support Vector Machines
-  - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesApril30.pdf
 
 
 ## May 4-8, 2026 Quantum Machine Learning
   - Quantum support vector machines, theory and code examples
   - Quantum neural networks, theory and code examples
-  - Video of lecture to be added at https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMay7.pdf
+
 
 ## May 11-15, 2026
   - Quantum neural networks, theory and code examples, contn from last week
   - Quantum and classical Boltzmann machines
-  - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMay14.pdf
 
 
 ## May 18-22, 2026
-  - Discussion of project 2
+  - Summary of course and discussion of project 2
