@@ -81,15 +81,15 @@ themes can be covered:
   - Simulations of  of Hamiltonians, focus on the one- and two-qubit Hamiltonians
   - Start discussions of Lipkin model
   - Video of lecture at https://youtu.be/MVLbBcTPwqg
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Notesweek6.pdf
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek6.pdf
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
 
 
 ##  March 2-6, 2026. VQE for two-qubit systems and the Lipkin model
   - Implementing the VQE algorithm for the two-qubit and Lipkin-model Hamiltonians.
-  - Video of lecture at https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch4.pdf
+  - Video of lecture at https://youtu.be/g-hKlUYxfcw
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek7.pdf
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week7
 
 
