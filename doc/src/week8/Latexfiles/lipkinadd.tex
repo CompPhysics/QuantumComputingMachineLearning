@@ -1,0 +1,659 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage{physics}
+\usepackage{braket}
+
+\title{Lipkin Hamiltonian to Pauli Strings}
+\subtitle{Quasispin Representation, Binary Encoding, and Direct Qubit Mapping}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Goal}
+We want to rewrite the Lipkin Hamiltonian
+\[
+H = \frac{\epsilon}{2}\left(J_z-\frac{N}{2}\right)
++ \frac{V}{2}\left(J_+^2+J_-^2\right)
++ \frac{W}{2}J_z^2
+\]
+in terms of tensor products of Pauli operators \(I,X,Y,Z\).
+
+\medskip
+
+Two cases will be treated:
+\begin{enumerate}
+\item \(N=4\) particles in the quasispin \(j=2\) sector, encoded on \textbf{3 qubits} (compressed binary encoding).
+\item \(N=6\) particles represented on \textbf{6 qubits} (direct collective-spin realization).
+\end{enumerate}
+
+The emphasis is on \emph{how} the mapping is constructed, not only on the final formulas.
+\end{frame}
+
+\begin{frame}{The quasispin algebra}
+The Lipkin model is naturally written in terms of collective quasispin operators
+\[
+J_x,\qquad J_y,\qquad J_z,
+\]
+with ladder operators
+\[
+J_\pm = J_x \pm iJ_y.
+\]
+
+They satisfy the \(su(2)\) commutation relations
+\[
+[J_x,J_y]=iJ_z,\qquad [J_y,J_z]=iJ_x,\qquad [J_z,J_x]=iJ_y,
+\]
+or equivalently
+\[
+[J_z,J_\pm]=\pm J_\pm,\qquad [J_+,J_-]=2J_z.
+\]
+\end{frame}
+
+\begin{frame}{Useful algebraic simplification}
+A key identity is
+\[
+J_+^2 + J_-^2
+=
+(J_x+iJ_y)^2 + (J_x-iJ_y)^2
+=
+2(J_x^2-J_y^2).
+\]
+
+Therefore the Hamiltonian may also be written as
+\[
+H
+=
+\frac{\epsilon}{2}\left(J_z-\frac{N}{2}\right)
++
+V\left(J_x^2-J_y^2\right)
++
+\frac{W}{2}J_z^2.
+\]
+
+This form is particularly convenient for direct qubit mappings.
+\end{frame}
+
+\begin{frame}{Quasispin basis}
+In the fixed-\(j\) representation, the natural basis is
+\[
+\ket{j,m},\qquad m=-j,-j+1,\dots,j.
+\]
+
+The standard actions are
+\[
+J_z\ket{j,m}=m\ket{j,m},
+\]
+\[
+J_+\ket{j,m}
+=
+\sqrt{j(j+1)-m(m+1)}\,\ket{j,m+1},
+\]
+\[
+J_-\ket{j,m}
+=
+\sqrt{j(j+1)-m(m-1)}\,\ket{j,m-1}.
+\]
+
+Thus \(J_z\) is diagonal, while \(J_\pm\) shift \(m\) by one unit.
+\end{frame}
+
+\begin{frame}{Strategy for producing Pauli strings}
+There are two standard routes:
+\begin{enumerate}
+\item \textbf{Compressed encoding:} encode the quasispin basis \(\ket{j,m}\) directly into computational basis states of a smaller qubit register.
+\item \textbf{Direct qubit mapping:} express the collective operators as sums over physical qubit Pauli operators and expand the Hamiltonian.
+\end{enumerate}
+
+In these notes:
+\begin{itemize}
+\item the \(N=4\) case uses route 1,
+\item the \(N=6\) case uses route 2.
+\end{itemize}
+\end{frame}
+
+\section{Part I: Four particles encoded on three qubits}
+
+\begin{frame}{Case \(N=4\): quasispin dimension}
+For \(N=4\), the quasispin is
+\[
+j = \frac{N}{2} = 2.
+\]
+
+Hence the Hilbert space dimension in the \(j=2\) sector is
+\[
+2j+1 = 5.
+\]
+
+Since
+\[
+2^2=4 < 5 \le 8 = 2^3,
+\]
+the smallest binary encoding requires \textbf{3 qubits}.
+\end{frame}
+
+\begin{frame}{Choice of binary encoding for \(N=4\)}
+We choose the map
+\[
+\ket{j=2,m=-2} \leftrightarrow \ket{000},
+\]
+\[
+\ket{j=2,m=-1} \leftrightarrow \ket{001},
+\]
+\[
+\ket{j=2,m=0} \leftrightarrow \ket{010},
+\]
+\[
+\ket{j=2,m=1} \leftrightarrow \ket{011},
+\]
+\[
+\ket{j=2,m=2} \leftrightarrow \ket{100}.
+\]
+
+The remaining computational states
+\[
+\ket{101},\ket{110},\ket{111}
+\]
+are unphysical and should be excluded or penalized.
+\end{frame}
+
+\begin{frame}{Projectors in terms of Pauli \(Z\)}
+For one qubit,
+\[
+\ket{0}\bra{0} = \frac{I+Z}{2},
+\qquad
+\ket{1}\bra{1} = \frac{I-Z}{2}.
+\]
+
+Thus for a three-qubit computational basis state \(\ket{abc}\),
+\[
+\ket{abc}\bra{abc}
+=
+\frac{1}{8}(I+(-1)^a Z_2)(I+(-1)^b Z_1)(I+(-1)^c Z_0).
+\]
+
+This gives a systematic way to build diagonal operators such as \(J_z\) and \(J_z^2\).
+\end{frame}
+
+\begin{frame}{Transition operators in terms of \(X\) and \(Y\)}
+For one qubit,
+\[
+\ket{1}\bra{0} = \frac{X-iY}{2},
+\qquad
+\ket{0}\bra{1} = \frac{X+iY}{2}.
+\]
+
+Therefore an off-diagonal transition such as
+\[
+\ket{a_2a_1a_0}\bra{b_2b_1b_0}
+\]
+is written as a tensor product of:
+\begin{itemize}
+\item projectors \(\frac{I\pm Z}{2}\) on unchanged bits,
+\item ladder pieces \(\frac{X\mp iY}{2}\) on flipped bits.
+\end{itemize}
+
+This is the basic rule for expanding \(J_+\), \(J_-\), and \(J_+^2+J_-^2\).
+\end{frame}
+
+\begin{frame}{Matrix form of \(J_z\) for \(j=2\)}
+In the encoded basis, \(J_z\) is diagonal:
+\[
+J_z
+=
+\sum_{m=-2}^{2} m \ket{m}\bra{m}.
+\]
+
+With the chosen binary map, this becomes
+\[
+J_z
+=
+-2\ket{000}\bra{000}
+-\ket{001}\bra{001}
++0\ket{010}\bra{010}
++\ket{011}\bra{011}
++2\ket{100}\bra{100}.
+\]
+
+We take the operator to vanish on the three unused basis states.
+\end{frame}
+
+\begin{frame}{Explicit Pauli decomposition of \(J_z\) (3 qubits)}
+Expanding the projectors gives
+\[
+J_z
+=
+-\frac{1}{4} IZI
++\frac{1}{4} IZZ
+-\frac{1}{2} ZII
+-\frac{1}{2} ZIZ
+-\frac{3}{4} ZZI
+-\frac{1}{4} ZZZ.
+\]
+
+Here the notation means, for example,
+\[
+IZZ = I\otimes Z\otimes Z,
+\qquad
+ZII = Z\otimes I\otimes I.
+\]
+
+This formula is exact on the chosen 5-dimensional encoded subspace.
+\end{frame}
+
+\begin{frame}{Explicit Pauli decomposition of \(J_z^2\) (3 qubits)}
+Since
+\[
+J_z^2 = \sum_{m=-2}^{2} m^2 \ket{m}\bra{m},
+\]
+we obtain
+\[
+J_z^2
+=
+\frac{5}{4} III
++\frac{3}{4} IIZ
++IZI
++IZZ
++\frac{1}{4} ZII
+-\frac{1}{4} ZIZ.
+\]
+
+This again acts exactly on the chosen encoded subspace and is set to zero on unused basis states.
+\end{frame}
+
+\begin{frame}{Action of the ladder operators for \(j=2\)}
+For \(j=2\),
+\[
+J_+\ket{-2}=2\ket{-1},
+\qquad
+J_+\ket{-1}=\sqrt{6}\ket{0},
+\]
+\[
+J_+\ket{0}=\sqrt{6}\ket{1},
+\qquad
+J_+\ket{1}=2\ket{2},
+\qquad
+J_+\ket{2}=0.
+\]
+
+Thus
+\[
+J_+
+=
+2\ket{001}\bra{000}
++\sqrt{6}\ket{010}\bra{001}
++\sqrt{6}\ket{011}\bra{010}
++2\ket{100}\bra{011}.
+\]
+
+And \(J_- = J_+^\dagger\).
+\end{frame}
+
+\begin{frame}{Why \(J_+^2+J_-^2\) is simpler than \(J_+\) itself}
+Because \(J_+^2\) changes \(m\) by two units, it connects only
+\[
+\ket{-2}\leftrightarrow \ket{0},
+\qquad
+\ket{-1}\leftrightarrow \ket{1},
+\qquad
+\ket{0}\leftrightarrow \ket{2}.
+\]
+
+For \(j=2\),
+\[
+J_+^2\ket{-2}=2\sqrt{6}\ket{0},
+\]
+\[
+J_+^2\ket{-1}=6\ket{1},
+\]
+\[
+J_+^2\ket{0}=2\sqrt{6}\ket{2}.
+\]
+
+Therefore
+\[
+J_+^2+J_-^2
+\]
+is real and Hermitian, and its Pauli decomposition contains only real coefficients.
+\end{frame}
+
+\begin{frame}{Explicit \(J_+^2+J_-^2\) decomposition for \(N=4\)}
+The exact three-qubit decomposition is
+\[
+J_+^2+J_-^2
+=
+\frac{3+\sqrt{6}}{2}\,IXI
++
+\frac{\sqrt{6}-3}{2}\,IXZ
++
+\frac{\sqrt{6}}{2}\,XXI
++
+\frac{\sqrt{6}}{2}\,XXZ
+\]
+\[
+\qquad
++
+\frac{\sqrt{6}}{2}\,YYI
++
+\frac{\sqrt{6}}{2}\,YYZ
++
+\frac{3+\sqrt{6}}{2}\,ZXI
++
+\frac{\sqrt{6}-3}{2}\,ZXZ.
+\]
+
+This is the key off-diagonal part of the Lipkin Hamiltonian in the compressed 3-qubit encoding.
+\end{frame}
+
+\begin{frame}{Final \(N=4\), 3-qubit Hamiltonian}
+Using
+\[
+H = \frac{\epsilon}{2}(J_z-2) + \frac{V}{2}(J_+^2+J_-^2) + \frac{W}{2}J_z^2,
+\]
+the encoded Hamiltonian is
+\[
+H_{N=4}^{(3q)}
+=
+\left(-\epsilon+\frac{5W}{8}\right)III
++\frac{3W}{8}IIZ
++\left(-\frac{\epsilon}{8}+\frac{W}{2}\right)IZI
++\left(\frac{\epsilon}{8}+\frac{W}{2}\right)IZZ
+\]
+\[
++\left(-\frac{\epsilon}{4}+\frac{W}{8}\right)ZII
++\left(-\frac{\epsilon}{4}-\frac{W}{8}\right)ZIZ
+-\frac{3\epsilon}{8}ZZI
+-\frac{\epsilon}{8}ZZZ
+\]
+\[
++\frac{V(3+\sqrt{6})}{4}IXI
++\frac{V(\sqrt{6}-3)}{4}IXZ
++\frac{V\sqrt{6}}{4}XXI
++\frac{V\sqrt{6}}{4}XXZ
+\]
+\[
++\frac{V\sqrt{6}}{4}YYI
++\frac{V\sqrt{6}}{4}YYZ
++\frac{V(3+\sqrt{6})}{4}ZXI
++\frac{V(\sqrt{6}-3)}{4}ZXZ.
+\]
+\end{frame}
+
+\begin{frame}{Physical-subspace penalty for the 3-qubit encoding}
+Because only five of the eight computational basis states are physical, it is often useful to add a penalty
+\[
+H_{\mathrm{pen}} = \lambda P_{\mathrm{unphys}},
+\]
+where
+\[
+P_{\mathrm{unphys}}
+=
+\ket{101}\bra{101}
++\ket{110}\bra{110}
++\ket{111}\bra{111}.
+\]
+
+This suppresses leakage into unused basis states.
+Each projector can again be written in terms of \(I\) and \(Z\) only.
+\end{frame}
+
+\begin{frame}{Interpretation of the 3-qubit mapping}
+The compressed mapping is efficient because:
+\begin{itemize}
+\item the \(j=2\) quasispin sector has dimension only \(5\),
+\item binary encoding uses only \(\lceil \log_2 5\rceil = 3\) qubits,
+\item all quasispin operators become finite sums of Pauli strings.
+\end{itemize}
+
+The price is that one must carefully enforce the physical code space.
+\end{frame}
+
+\section{Part II: Six particles on six qubits}
+
+\begin{frame}{Case \(N=6\): direct collective-spin realization}
+For \(N=6\), one natural choice is to use one qubit per particle.
+Then the collective quasispin operators are represented directly as
+\[
+J_x = \frac{1}{2}\sum_{i=1}^{6} X_i,
+\qquad
+J_y = \frac{1}{2}\sum_{i=1}^{6} Y_i,
+\qquad
+J_z = \frac{1}{2}\sum_{i=1}^{6} Z_i,
+\]
+where \(X_i,Y_i,Z_i\) act on qubit \(i\).
+\end{frame}
+
+\begin{frame}{Collective spin squares}
+Because \(X_i^2=Y_i^2=Z_i^2=I\),
+\[
+J_x^2
+=
+\frac{1}{4}\sum_{i=1}^{6} I
++
+\frac{1}{4}\sum_{i\neq j} X_iX_j
+=
+\frac{6}{4}I + \frac{1}{2}\sum_{i<j} X_iX_j.
+\]
+
+Similarly,
+\[
+J_y^2
+=
+\frac{6}{4}I + \frac{1}{2}\sum_{i<j} Y_iY_j,
+\]
+\[
+J_z^2
+=
+\frac{6}{4}I + \frac{1}{2}\sum_{i<j} Z_iZ_j.
+\]
+\end{frame}
+
+\begin{frame}{Rewrite the interaction term}
+Using
+\[
+J_+^2+J_-^2 = 2(J_x^2-J_y^2),
+\]
+we get
+\[
+\frac{V}{2}(J_+^2+J_-^2)
+=
+V(J_x^2-J_y^2).
+\]
+
+Substituting the previous expansions,
+\[
+J_x^2-J_y^2
+=
+\frac{1}{2}\sum_{i<j}\left(X_iX_j-Y_iY_j\right),
+\]
+since the identity contributions cancel.
+Therefore
+\[
+\frac{V}{2}(J_+^2+J_-^2)
+=
+\frac{V}{2}\sum_{i<j}\left(X_iX_j-Y_iY_j\right).
+\]
+\end{frame}
+
+\begin{frame}{Rewrite the linear \(J_z\) term}
+We have
+\[
+\frac{\epsilon}{2}\left(J_z-\frac{N}{2}\right)
+=
+\frac{\epsilon}{2}\left(\frac{1}{2}\sum_{i=1}^{6} Z_i - 3I\right).
+\]
+
+Hence
+\[
+\frac{\epsilon}{2}\left(J_z-\frac{N}{2}\right)
+=
+\frac{\epsilon}{4}\sum_{i=1}^{6} Z_i
+-
+\frac{3\epsilon}{2}I.
+\]
+\end{frame}
+
+\begin{frame}{Rewrite the \(J_z^2\) term}
+Using
+\[
+J_z^2
+=
+\frac{6}{4}I + \frac{1}{2}\sum_{i<j} Z_iZ_j,
+\]
+we obtain
+\[
+\frac{W}{2}J_z^2
+=
+\frac{3W}{4}I
++
+\frac{W}{4}\sum_{i<j} Z_iZ_j.
+\]
+\end{frame}
+
+\begin{frame}{Final \(N=6\), 6-qubit Hamiltonian}
+Collecting all pieces,
+\[
+H_{N=6}^{(6q)}
+=
+\left(-\frac{3\epsilon}{2}+\frac{3W}{4}\right)I
++
+\frac{\epsilon}{4}\sum_{i=1}^{6} Z_i
++
+\frac{V}{2}\sum_{i<j}\left(X_iX_j-Y_iY_j\right)
++
+\frac{W}{4}\sum_{i<j} Z_iZ_j.
+\]
+
+This is the clean direct Pauli-string representation on 6 qubits.
+\end{frame}
+
+\begin{frame}{How many Pauli terms appear for \(N=6\)?}
+For 6 qubits:
+\begin{itemize}
+\item one identity term,
+\item \(6\) one-body \(Z_i\) terms,
+\item \(\binom{6}{2}=15\) two-body \(X_iX_j\) terms,
+\item \(15\) two-body \(Y_iY_j\) terms,
+\item \(15\) two-body \(Z_iZ_j\) terms.
+\end{itemize}
+
+So the total number of Pauli strings is
+\[
+1 + 6 + 15 + 15 + 15 = 52.
+\]
+This is still highly structured, since all coefficients come from only three parameters \(\epsilon,V,W\).
+\end{frame}
+
+\begin{frame}{Explicit pairwise form for the interaction term}
+The interaction contribution is
+\[
+\frac{V}{2}
+\Big(
+X_1X_2-X_1Y_2
+\Big)
+\]
+No---that is not the correct structure.
+
+The correct two-body interaction is
+\[
+\frac{V}{2}\sum_{1\le i<j\le 6}
+\left(X_iX_j-Y_iY_j\right).
+\]
+
+Expanded explicitly, it includes pairs such as
+\[
+X_1X_2-Y_1Y_2,\quad
+X_1X_3-Y_1Y_3,\quad \dots,\quad
+X_5X_6-Y_5Y_6.
+\]
+
+This pairwise all-to-all form is a hallmark of the direct collective-spin mapping.
+\end{frame}
+
+\begin{frame}{Direct mapping versus compressed mapping}
+For \(N=6\), the direct 6-qubit representation has advantages:
+\begin{itemize}
+\item extremely simple operator formulas,
+\item immediate interpretation in terms of collective spin,
+\item no leakage into unphysical binary code states.
+\end{itemize}
+
+Its disadvantage is qubit cost:
+\begin{itemize}
+\item the physical symmetric subspace has dimension only \(N+1=7\),
+\item but the full register has dimension \(2^6=64\).
+\end{itemize}
+
+So this is simple but not qubit-optimal.
+\end{frame}
+
+\section{General Lessons and Comparison}
+
+\begin{frame}{Comparison of the two mappings}
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+Case & Qubits used & Main advantage \\
+\hline
+\(N=4\), compressed & 3 & minimal qubit count \\
+\(N=6\), direct & 6 & simplest Pauli expansion \\
+\hline
+\end{tabular}
+\end{center}
+
+More conceptually:
+\begin{itemize}
+\item compressed encodings reduce qubit count but require code-space management,
+\item direct collective encodings use more qubits but produce transparent many-body Pauli Hamiltonians.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{General recipe for quasispin-to-Pauli conversion}
+To convert a Lipkin quasispin Hamiltonian to Pauli strings:
+
+\begin{enumerate}
+\item Choose an encoding of the \(\ket{j,m}\) basis into computational basis states.
+\item Express diagonal operators (\(J_z\), \(J_z^2\)) using computational basis projectors.
+\item Express off-diagonal operators (\(J_\pm\), \(J_\pm^2\)) using transition operators built from \(X\) and \(Y\).
+\item Simplify using
+\[
+J_+^2+J_-^2 = 2(J_x^2-J_y^2)
+\]
+whenever a direct collective-spin realization is available.
+\item Collect coefficients into sums of Pauli strings.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Summary}
+We have shown how to transform the Lipkin Hamiltonian
+\[
+H = \frac{\epsilon}{2}\left(J_z-\frac{N}{2}\right)
++ \frac{V}{2}(J_+^2+J_-^2)
++ \frac{W}{2}J_z^2
+\]
+into Pauli-string form in two concrete cases:
+
+\begin{itemize}
+\item \(N=4\): exact \textbf{3-qubit compressed binary encoding} of the \(j=2\) quasispin sector,
+\item \(N=6\): exact \textbf{6-qubit direct collective-spin mapping}.
+\end{itemize}
+
+The central ideas are:
+\begin{itemize}
+\item diagonal operators from \(Z\)-projectors,
+\item transitions from \(X\) and \(Y\),
+\item collective-spin identities for simplification.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{End}
+\centering
+{\Large Questions?}
+\end{frame}
+
+\end{document}
