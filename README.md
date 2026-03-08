@@ -100,7 +100,7 @@ themes can be covered:
   - Lab/exercise session: work on project 1
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
   - Video of lecture to be added  https://youtu.be/
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/NotesMarch11.pdf
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek8.pdf
 
 
 ## March 16-20, 2026. Discussions of project 1 and work on the VQE
