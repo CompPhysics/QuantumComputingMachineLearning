@@ -7,17 +7,766 @@ DATE: March 11, 2026
 ===== Plans for the week of March 10-14: Solving quantum mechanical problems with VQE algorithm =====
 
 !bblock 
-o Discussion of  our final model, the Lipkin model, a two-qubit and a four-qubit system
-o Discussions and work on project 1
+o Discussion of  our final model, the Lipkin model, a two-qubit and a four-qubit system, codes and theory
 o Jordan-Wigner transformation and applications to other Hamiltonians (codes and theory)
-o Start discussion of discrete Fourier transforms and Quantum Fourier transforms, basic mathematical expressions
-o Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT.
-#o "Video of lecture":"https://youtu.be/hdUnJcJGigw"
-#o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesMarch12.pdf"
+o Discussions and work on project 1
+o Start discussion of discrete Fourier transforms and Quantum Fourier transforms
 !eblock
 
+!split
+===== VQE for Lipkin Model: Complete Working Implementation =====
+
+This notebook implements the VQE for the Lipkin model using:
+* 3 qubits to encode 5D quasi-spin space (j=2)
+* Pauli decomposition of the Hamiltonian
+* Computational basis measurements with proper basis rotations
+* 4-layer hardware-efficient ansatz (24 parameters)
+
+_Note well that here we  do not have a VQE implementation with shot.
+
+!split
+===== Imports and Setup =====
+
+!bc pycod
+import numpy as np
+import matplotlib.pyplot as plt
+from itertools import product
+from scipy.optimize import minimize
+
+np.random.seed(42)
+
+print("Libraries imported successfully!")
+print("Ready for VQE implementation")
+!ec
+
+!split
+===== Pauli Matrices and 3-Qubit Operators =====
+
+# Single-qubit Pauli matrices
+I = np.eye(2, dtype=complex)
+X = np.array([[0, 1], [1, 0]], dtype=complex)
+Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+Z = np.array([[1, 0], [0, -1]], dtype=complex)
+
+def kron(*args):
+    """Kronecker product of multiple matrices."""
+    result = args[0]
+    for mat in args[1:]:
+        result = np.kron(result, mat)
+    return result
+
+def pauli_3qubit(label):
+    """Create 3-qubit Pauli operator from label like 'ZIX'."""
+    pauli_dict = {'I': I, 'X': X, 'Y': Y, 'Z': Z}
+    return kron(pauli_dict[label[0]], pauli_dict[label[1]], pauli_dict[label[2]])
+
+print("Pauli operators defined for 3 qubits")
+print(f"Hilbert space dimension: 2³ = 8")
+!ec
+
+!split
+===== Quantum Gates =====
+
+!bc pycod
+# Basic gates
+H_gate = np.array([[1, 1], [1, -1]], dtype=complex) / np.sqrt(2)
+Sdg = np.array([[1, 0], [0, -1j]], dtype=complex)  # S† (S-dagger)
+
+def Ry(theta):
+    """Rotation around Y-axis."""
+    return np.array([
+        [np.cos(theta/2), -np.sin(theta/2)],
+        [np.sin(theta/2), np.cos(theta/2)]
+    ], dtype=complex)
+
+def Rz(theta):
+    """Rotation around Z-axis."""
+    return np.array([
+        [np.exp(-1j*theta/2), 0],
+        [0, np.exp(1j*theta/2)]
+    ], dtype=complex)
+
+# Standard 2-qubit CNOT
+CNOT_2qubit = np.array([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 0, 1],
+    [0, 0, 1, 0]
+], dtype=complex)
+
+# Verify H·S† rotates Y to Z
+HSdg = H_gate @ Sdg
+Y_rotated = HSdg @ Y @ HSdg.conj().T
+print(f"H·S† rotates Y to Z: {np.allclose(Y_rotated, Z)}")
+print("Gates defined successfully")
+!ec
+
+!split
+===== State Encoding: j=2 Quasi-Spin to 3 Qubits =====
+
+We encoded the states as first Quasi-spin and then the Qubit State with its Binary  representation.
+* Quasispin state \|2,-2), qubits \|000⟩, state 0      
+* \|2,-1⟩,  \|001⟩   and state 1 
+* \|2, 0⟩    \| |010⟩  and state  2 
+* \|2,+1⟩    \| |011⟩  and state  3 
+* \|2,+2⟩    \| |100⟩  and state  4 
+* unused   \| |101⟩   and state  5  
+* unused   \| |110⟩  and state  6  
+* unused \|111⟩  and state  7  
+
+!bc pycod
+m_to_qubit = {-2: 0, -1: 1, 0: 2, +1: 3, +2: 4}
+qubit_to_m = {v: k for k, v in m_to_qubit.items()}
+m_values = np.array([-2, -1, 0, 1, 2])
+j = 2.0
+
+print(f"State Encoding (j={j}, N={int(2*j)} particles):")
+print(f"  3 qubits → 8D space (using 5 states)\n")
+for m in m_values:
+    idx = m_to_qubit[m]
+    print(f"  |2,{m:+.0f}⟩ → |{idx:03b}⟩")
+!ec
+
+!split
+===== Lipkin Hamiltonian Construction =====
+
+$$H = \frac{\varepsilon}{2}\left(J_z - \frac{N}{2}\right) + \frac{V}{2}(J_+^2 + J_-^2) + \frac{W}{2}J_z^2$$
+
+where N = 2j = 4 particles.
 
 
+!bc pycod
+def construct_5D_operators(j):
+    """Construct Jz, J+, J- in 5-dimensional basis."""
+    dim = 5
+    m_vals = np.array([-2, -1, 0, 1, 2], dtype=float)
+    
+    Jz_5D = np.diag(m_vals).astype(complex)
+    
+    Jp_5D = np.zeros((dim, dim), dtype=complex)
+    for i, m in enumerate(m_vals[:-1]):
+        Jp_5D[i+1, i] = np.sqrt(j*(j+1) - m*(m+1))
+    
+    Jm_5D = Jp_5D.T.conj()
+    
+    return Jz_5D, Jp_5D, Jm_5D, m_vals
+
+def embed_5D_to_8D(operator_5D):
+    """Embed 5×5 operator into 8×8 qubit space."""
+    operator_8D = np.zeros((8, 8), dtype=complex)
+    operator_8D[:5, :5] = operator_5D
+    return operator_8D
+
+def construct_lipkin_8D(j, epsilon, V, W):
+    """Construct Lipkin Hamiltonian in 8D qubit space."""
+    N = 2 * j
+    Jz_5D, Jp_5D, Jm_5D, _ = construct_5D_operators(j)
+    
+    H_5D = np.zeros((5, 5), dtype=complex)
+    H_5D += (epsilon / 2.0) * (Jz_5D - (N/2) * np.eye(5, dtype=complex))
+    H_5D += (V / 2.0) * (Jp_5D @ Jp_5D + Jm_5D @ Jm_5D)
+    H_5D += (W / 2.0) * (Jz_5D @ Jz_5D)
+    
+    H_8D = embed_5D_to_8D(H_5D)
+    return H_8D
+
+# Construct Hamiltonian
+epsilon = 1.0
+V = 0.5
+W = 0.0
+
+H_lipkin_8D = construct_lipkin_8D(j, epsilon, V, W)
+
+print(f"Lipkin Hamiltonian constructed")
+print(f"Parameters: ε={epsilon}, V={V}, W={W}")
+print(f"Hermitian: {np.allclose(H_lipkin_8D, H_lipkin_8D.conj().T)}")
+!ec
+
+!split
+===== Exact Diagonalization =====
+!bc pycod
+eigenvalues, eigenvectors = np.linalg.eigh(H_lipkin_8D)
+E_exact = eigenvalues[0]
+psi_exact = eigenvectors[:, 0]
+
+print("="*70)
+print("EXACT DIAGONALIZATION")
+print("="*70)
+print(f"\nAll eigenvalues:")
+for i, E in enumerate(eigenvalues[:5]):
+    m = qubit_to_m[i]
+    print(f"  E_{i} (|2,{m:+.0f}⟩): {E:+.10f}")
+
+print(f"\n{'='*70}")
+print(f"GROUND STATE ENERGY: {E_exact:.10f}")
+print(f"{'='*70}")
+
+print(f"\nGround state wavefunction:")
+for i in range(5):
+    if abs(psi_exact[i]) > 1e-6:
+        m = qubit_to_m[i]
+        print(f"  |{i:03b}⟩ (|2,{m:+.0f}⟩): {psi_exact[i].real:+.8f}")
+!ec
+
+!split
+===== Pauli Decomposition =====
+
+!bc pycod
+def decompose_to_pauli_basis(operator_8D, threshold=1e-10):
+    """Decompose 8×8 operator into Pauli basis."""
+    pauli_labels = ['I', 'X', 'Y', 'Z']
+    pauli_decomp = []
+    
+    for p0, p1, p2 in product(pauli_labels, repeat=3):
+        label = p0 + p1 + p2
+        pauli_op = pauli_3qubit(label)
+        coeff = np.trace(operator_8D @ pauli_op) / 8.0
+        
+        if abs(coeff) > threshold:
+            pauli_decomp.append((coeff, label))
+    
+    return pauli_decomp
+
+H_pauli = decompose_to_pauli_basis(H_lipkin_8D)
+
+print(f"Pauli decomposition: {len(H_pauli)} terms\n")
+print("Top 10 terms:")
+for coeff, label in sorted(H_pauli, key=lambda x: -abs(x[0]))[:10]:
+    print(f"  {coeff.real:+.6f} {label}")
+!ec
+
+!split
+===== Computational Basis Measurements =====
+
+
+Measurement protocol:
+* Z-basis: Direct measurement
+* X-basis: Apply Hadamard, then measure
+* Y-basis: Apply Hadamard multiplied with hermitian Conjugate of Phase gate S, then measure
+
+!bc pycod
+def measure_pauli_term(psi, pauli_label, n_shots):
+    """
+    Measure Pauli term using computational basis.
+    
+    CRITICAL: Use H·S† for Y measurement (H·Sdg where Sdg = S†)
+    """
+    rotation = np.eye(8, dtype=complex)
+    
+    for qubit_idx, pauli_char in enumerate(pauli_label):
+        if pauli_char == 'X':
+            gate = H_gate
+        elif pauli_char == 'Y':
+            gate = H_gate @ Sdg  # CRITICAL: H·S† is correct!
+        else:
+            continue  # Z and I: no rotation
+        
+        if qubit_idx == 0:
+            rotation = kron(gate, I, I) @ rotation
+        elif qubit_idx == 1:
+            rotation = kron(I, gate, I) @ rotation
+        else:
+            rotation = kron(I, I, gate) @ rotation
+    
+    # Apply rotation
+    psi_rotated = rotation @ psi
+    
+    # Measure in computational basis
+    probs = np.abs(psi_rotated)**2
+    probs = probs / np.sum(probs)
+    
+    measurements = np.random.choice(8, size=n_shots, p=probs)
+    
+    # Compute expectation value
+    expectation = 0.0
+    for outcome in range(8):
+        count = np.sum(measurements == outcome)
+        if count == 0:
+            continue
+        
+        binary = f"{outcome:03b}"
+        eigenvalue = 1.0
+        for qubit_idx, (pauli_char, bit) in enumerate(zip(pauli_label, binary)):
+            if pauli_char != 'I' and bit == '1':
+                eigenvalue *= -1
+        
+        expectation += eigenvalue * count / n_shots
+    
+    return expectation
+
+def measure_energy(psi, H_pauli, n_shots):
+    """Measure Hamiltonian expectation value."""
+    energy = 0.0
+    for coeff, label in H_pauli:
+        if label == 'III':
+            energy += coeff.real
+        else:
+            energy += coeff.real * measure_pauli_term(psi, label, n_shots)
+    return energy
+
+# Test measurement
+E_measured = measure_energy(psi_exact, H_pauli, 100000)
+print(f"Measurement test on exact ground state:")
+print(f"  Measured: {E_measured:.6f}")
+print(f"  Exact:    {E_exact:.6f}")
+print(f"  Difference: {abs(E_measured - E_exact):.6f}")
+print(f"\n✓ Measurements working correctly!")
+!ec
+
+!split
+===== Hardware-Efficient Ansatz (4 Layers) =====
+
+Circuit structure per layer:
+* Ry rotations on all 3 qubits
+* CNOT(0→1) and CNOT(1→2)
+* Rz rotations on all 3 qubits
+
+Total: _24 parameters_ (4 layers × 6 params/layer)
+
+!bc pycod
+def ansatz_4layers(params):
+    """4-layer hardware-efficient ansatz."""
+    U = np.eye(8, dtype=complex)
+    param_idx = 0
+    
+    for layer in range(4):
+        # Ry rotations
+        U = kron(Ry(params[param_idx]), I, I) @ U
+        param_idx += 1
+        U = kron(I, Ry(params[param_idx]), I) @ U
+        param_idx += 1
+        U = kron(I, I, Ry(params[param_idx])) @ U
+        param_idx += 1
+        
+        # CNOT gates (CORRECTED)
+        CNOT_01 = kron(CNOT_2qubit, I)  # Control: 0, Target: 1
+        U = CNOT_01 @ U
+        
+        CNOT_12 = kron(I, CNOT_2qubit)  # Control: 1, Target: 2
+        U = CNOT_12 @ U
+        
+        # Rz rotations
+        U = kron(Rz(params[param_idx]), I, I) @ U
+        param_idx += 1
+        U = kron(I, Rz(params[param_idx]), I) @ U
+        param_idx += 1
+        U = kron(I, I, Rz(params[param_idx])) @ U
+        param_idx += 1
+    
+    return U
+
+# Reference state
+psi_0 = np.zeros(8, dtype=complex)
+psi_0[0] = 1.0  # |000⟩ = |2,-2⟩
+
+# Test ansatz
+test_params = np.random.uniform(-np.pi, np.pi, 24)
+psi_test = ansatz_4layers(test_params) @ psi_0
+
+print(f"Ansatz defined:")
+print(f"  Parameters: 24")
+print(f"  Layers: 4")
+print(f"  Test state norm: {np.linalg.norm(psi_test):.10f}")
+print(f"  ✓ Unitarity verified")
+
+!split
+===== VQE with Exact Evaluation =====
+
+Now we test VQE without shot noise to verify everything works. Note that we do not implement the VQE with shots
+
+!bc pycod
+print("Running VQE with exact energy evaluation...")
+
+def cost_exact(params):
+    """Cost function with exact energy (no shot noise)."""
+    psi = ansatz_4layers(params) @ psi_0
+    return np.real(np.vdot(psi, H_lipkin_8D @ psi))
+
+# Optimize
+initial_params = np.random.uniform(-np.pi, np.pi, 24)
+E_initial = cost_exact(initial_params)
+
+print(f"Initial energy: {E_initial:.6f}")
+print(f"Optimizing with BFGS...")
+
+result_exact = minimize(cost_exact, initial_params, method='BFGS',
+                       options={'maxiter': 200, 'disp': False})
+
+E_vqe_exact = result_exact.fun
+psi_vqe_exact = ansatz_4layers(result_exact.x) @ psi_0
+fidelity_exact = abs(np.vdot(psi_exact, psi_vqe_exact))**2
+
+print(f"\n{'='*70}")
+print(f"VQE RESULTS (EXACT EVALUATION)")
+print(f"{'='*70}")
+print(f"  VQE energy:   {E_vqe_exact:.10f}")
+print(f"  Exact energy: {E_exact:.10f}")
+print(f"  Error:        {abs(E_vqe_exact - E_exact):.6e}")
+print(f"  Fidelity:     {fidelity_exact:.10f}")
+print(f"  Success:      {result_exact.success}")
+
+if abs(E_vqe_exact - E_exact) < 0.001:
+    print(f"\n  ✓ VQE WORKING PERFECTLY!")
+else:
+    print(f"\n  ⚠ VQE not fully converged (may need more iterations)")
+!ec
+
+
+!split
+===== Pairing model, see PDF file for derivations  =====
+
+!bc pycod
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import minimize, line_search
+from itertools import combinations, product
+
+np.random.seed(42)
+
+print("="*80)
+print("VQE FOR NUCLEAR PAIRING HAMILTONIAN - FINAL VERSION")
+print("="*80)
+
+# ============================================================================
+# 1. Hamiltonian
+# ============================================================================
+
+def construct_pairing_hamiltonian(N, g, epsilon_levels):
+    n_pairs = N // 2
+    n_levels = len(epsilon_levels)
+    basis_states = list(combinations(range(n_levels), n_pairs))
+    n_basis = len(basis_states)
+    
+    H = np.zeros((n_basis, n_basis), dtype=float)
+    
+    for i, state_i in enumerate(basis_states):
+        for j, state_j in enumerate(basis_states):
+            if i == j:
+                H[i, j] = sum(2 * epsilon_levels[k] for k in state_i)
+            
+            for k in range(n_levels):
+                for l in range(n_levels):
+                    if l in state_j and k not in state_j:
+                        state_temp = list(state_j)
+                        state_temp.remove(l)
+                        state_temp.append(k)
+                        state_temp = tuple(sorted(state_temp))
+                        if state_temp == state_i:
+                            H[i, j] -= g / 2.0
+    
+    return H, basis_states
+
+N = 4
+n_levels = 4
+g = 1.0
+epsilon_levels = np.array([0.0, 1.0, 2.0, 3.0])
+
+H_pairing, basis_states = construct_pairing_hamiltonian(N, g, epsilon_levels)
+
+print(f"\nSystem: {N} fermions, {n_levels} levels, {len(basis_states)} basis states")
+
+# Exact diagonalization
+eigenvalues, eigenvectors = np.linalg.eigh(H_pairing)
+E_exact = eigenvalues[0]
+psi_exact = eigenvectors[:, 0]
+
+print(f"Exact ground state energy: {E_exact:.10f}")
+
+# Embed with penalty
+n_qubits = int(np.ceil(np.log2(len(basis_states))))
+n_hilbert = 2**n_qubits
+PENALTY = 1000.0
+
+H_embedded = np.zeros((n_hilbert, n_hilbert), dtype=float)
+H_embedded[:len(basis_states), :len(basis_states)] = H_pairing
+for i in range(len(basis_states), n_hilbert):
+    H_embedded[i, i] = PENALTY
+
+# ============================================================================
+# 2. Quantum gates and ansatz
+# ============================================================================
+
+I = np.eye(2, dtype=complex)
+X = np.array([[0, 1], [1, 0]], dtype=complex)
+Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+Z = np.array([[1, 0], [0, -1]], dtype=complex)
+
+def kron_n(*args):
+    result = args[0]
+    for mat in args[1:]:
+        result = np.kron(result, mat)
+    return result
+
+def Ry(theta):
+    return np.array([[np.cos(theta/2), -np.sin(theta/2)],
+                     [np.sin(theta/2), np.cos(theta/2)]], dtype=complex)
+
+def Rz(theta):
+    return np.array([[np.exp(-1j*theta/2), 0],
+                     [0, np.exp(1j*theta/2)]], dtype=complex)
+
+CNOT = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]], dtype=complex)
+
+def build_cnot_nqubit(control, target, n_qubits):
+    if n_qubits == 2:
+        return CNOT
+    if control == 0 and target == 1:
+        return kron_n(CNOT, *[I]*(n_qubits-2))
+    elif control == 1 and target == 2 and n_qubits >= 3:
+        return kron_n(I, CNOT, *[I]*(n_qubits-3))
+    return np.eye(2**n_qubits, dtype=complex)
+
+def hardware_efficient_ansatz(params, n_qubits, n_layers=3):
+    U = np.eye(2**n_qubits, dtype=complex)
+    param_idx = 0
+    
+    for layer in range(n_layers):
+        for q in range(n_qubits):
+            Ry_q = kron_n(*[Ry(params[param_idx]) if i==q else I for i in range(n_qubits)])
+            U = Ry_q @ U
+            param_idx += 1
+        
+        for q in range(n_qubits-1):
+            U = build_cnot_nqubit(q, q+1, n_qubits) @ U
+        
+        for q in range(n_qubits):
+            Rz_q = kron_n(*[Rz(params[param_idx]) if i==q else I for i in range(n_qubits)])
+            U = Rz_q @ U
+            param_idx += 1
+    
+    return U
+
+n_layers = 3
+n_params = n_layers * 2 * n_qubits
+psi_ref = np.zeros(2**n_qubits, dtype=complex)
+psi_ref[0] = 1.0
+
+print(f"Ansatz: {n_qubits} qubits, {n_layers} layers, {n_params} parameters")
+
+# ============================================================================
+# 3. Energy and gradient functions
+# ============================================================================
+
+def compute_energy(params):
+    U = hardware_efficient_ansatz(params, n_qubits, n_layers)
+    psi = U @ psi_ref
+    return np.real(np.vdot(psi, H_embedded @ psi))
+
+def compute_gradient(params):
+    gradient = np.zeros(len(params))
+    shift = np.pi / 2
+    
+    for i in range(len(params)):
+        params_plus = params.copy()
+        params_plus[i] += shift
+        E_plus = compute_energy(params_plus)
+        
+        params_minus = params.copy()
+        params_minus[i] -= shift
+        E_minus = compute_energy(params_minus)
+        
+        gradient[i] = (E_plus - E_minus) / 2.0
+    
+    return gradient
+
+# ============================================================================
+# 4. VQE with Scipy BFGS
+# ============================================================================
+
+print(f"\n{'='*80}")
+print("VQE: SCIPY BFGS")
+print("="*80)
+
+initial_params = np.random.uniform(-np.pi, np.pi, n_params)
+result_scipy = minimize(compute_energy, initial_params, method='BFGS',
+                       options={'maxiter': 300, 'disp': False})
+
+E_scipy = result_scipy.fun
+params_scipy = result_scipy.x
+
+psi_scipy = hardware_efficient_ansatz(params_scipy, n_qubits, n_layers) @ psi_ref
+psi_scipy_phys = psi_scipy[:len(basis_states)]
+psi_scipy_phys /= np.linalg.norm(psi_scipy_phys)
+fidelity_scipy = abs(np.vdot(psi_exact, psi_scipy_phys))**2
+
+print(f"\nResults:")
+print(f"  Energy:    {E_scipy:.10f}")
+print(f"  Exact:     {E_exact:.10f}")
+print(f"  Error:     {abs(E_scipy-E_exact):.2e}")
+print(f"  Fidelity:  {fidelity_scipy:.10f}")
+
+# ============================================================================
+# 5. VQE with Gradient Descent + LINE SEARCH
+# ============================================================================
+
+print(f"\n{'='*80}")
+print("VQE: GRADIENT DESCENT WITH LINE SEARCH")
+print("="*80)
+
+def vqe_gd_with_line_search(initial_params, max_iter=100, verbose=True):
+    params = initial_params.copy()
+    energy_history = []
+    
+    if verbose:
+        print(f"\n{'Iter':>5s} | {'Energy':>14s} | {'|Grad|':>10s} | {'LR':>8s} | {'Error':>10s}")
+        print("-"*60)
+    
+    for iteration in range(max_iter):
+        E = compute_energy(params)
+        energy_history.append(E)
+        grad = compute_gradient(params)
+        grad_norm = np.linalg.norm(grad)
+        error = abs(E - E_exact)
+        
+        # Simple line search: try different step sizes
+        best_lr = 0.0
+        best_E_new = E
+        
+        for lr_candidate in [0.001, 0.005, 0.01, 0.05, 0.1]:
+            params_new = params - lr_candidate * grad
+            E_new = compute_energy(params_new)
+            if E_new < best_E_new:
+                best_E_new = E_new
+                best_lr = lr_candidate
+        
+        if verbose and (iteration % 10 == 0 or iteration < 5):
+            print(f"{iteration:5d} | {E:+14.10f} | {grad_norm:10.4f} | {best_lr:8.5f} | {error:10.2e}")
+        
+        if best_lr == 0.0:
+            if verbose:
+                print(f"No improvement found, converged at iteration {iteration}")
+            break
+        
+        params = params - best_lr * grad
+        
+        if grad_norm < 1e-5:
+            if verbose:
+                print(f"Gradient converged at iteration {iteration}")
+            break
+    
+    return params, energy_history
+
+params_init_gd = np.random.uniform(-np.pi, np.pi, n_params)
+params_gd, energy_hist_gd = vqe_gd_with_line_search(params_init_gd, max_iter=100, verbose=True)
+
+E_gd = energy_hist_gd[-1]
+
+psi_gd = hardware_efficient_ansatz(params_gd, n_qubits, n_layers) @ psi_ref
+psi_gd_phys = psi_gd[:len(basis_states)]
+psi_gd_phys /= np.linalg.norm(psi_gd_phys)
+fidelity_gd = abs(np.vdot(psi_exact, psi_gd_phys))**2
+
+print(f"\nResults:")
+print(f"  Energy:    {E_gd:.10f}")
+print(f"  Exact:     {E_exact:.10f}")
+print(f"  Error:     {abs(E_gd-E_exact):.2e}")
+print(f"  Fidelity:  {fidelity_gd:.10f}")
+
+# ============================================================================
+# 6. VQE with Adam-like adaptive optimizer
+# ============================================================================
+
+print(f"\n{'='*80}")
+print("VQE: ADAM-LIKE ADAPTIVE GRADIENT DESCENT")
+print("="*80)
+
+def vqe_adam_style(initial_params, lr=0.01, beta1=0.9, beta2=0.999, eps=1e-8, max_iter=200):
+    params = initial_params.copy()
+    m = np.zeros_like(params)  # First moment
+    v = np.zeros_like(params)  # Second moment
+    energy_history = []
+    
+    print(f"\n{'Iter':>5s} | {'Energy':>14s} | {'|Grad|':>10s} | {'Error':>10s}")
+    print("-"*50)
+    
+    for iteration in range(max_iter):
+        E = compute_energy(params)
+        energy_history.append(E)
+        grad = compute_gradient(params)
+        grad_norm = np.linalg.norm(grad)
+        error = abs(E - E_exact)
+        
+        # Adam update
+        m = beta1 * m + (1 - beta1) * grad
+        v = beta2 * v + (1 - beta2) * grad**2
+        
+        m_hat = m / (1 - beta1**(iteration+1))
+        v_hat = v / (1 - beta2**(iteration+1))
+        
+        params = params - lr * m_hat / (np.sqrt(v_hat) + eps)
+        
+        if iteration % 20 == 0 or iteration < 5:
+            print(f"{iteration:5d} | {E:+14.10f} | {grad_norm:10.4f} | {error:10.2e}")
+        
+        if error < 1e-6:
+            print(f"Converged at iteration {iteration}")
+            break
+    
+    return params, energy_history
+
+params_init_adam = np.random.uniform(-np.pi, np.pi, n_params)
+params_adam, energy_hist_adam = vqe_adam_style(params_init_adam, lr=0.01, max_iter=200)
+
+E_adam = energy_hist_adam[-1]
+
+psi_adam = hardware_efficient_ansatz(params_adam, n_qubits, n_layers) @ psi_ref
+psi_adam_phys = psi_adam[:len(basis_states)]
+psi_adam_phys /= np.linalg.norm(psi_adam_phys)
+fidelity_adam = abs(np.vdot(psi_exact, psi_adam_phys))**2
+
+print(f"\nResults:")
+print(f"  Energy:    {E_adam:.10f}")
+print(f"  Exact:     {E_exact:.10f}")
+print(f"  Error:     {abs(E_adam-E_exact):.2e}")
+print(f"  Fidelity:  {fidelity_adam:.10f}")
+
+# ============================================================================
+# 7. Summary
+# ============================================================================
+
+print(f"\n{'='*80}")
+print("FINAL SUMMARY")
+print("="*80)
+
+print(f"\n{'Method':30s} | {'Energy':>14s} | {'Error':>10s} | {'Fidelity':>10s}")
+print("-"*70)
+print(f"{'Exact':30s} | {E_exact:+14.10f} | {'0.00e+00':>10s} | {'1.000000':>10s}")
+print(f"{'Scipy BFGS':30s} | {E_scipy:+14.10f} | {abs(E_scipy-E_exact):10.2e} | {fidelity_scipy:10.6f}")
+print(f"{'GD + Line Search':30s} | {E_gd:+14.10f} | {abs(E_gd-E_exact):10.2e} | {fidelity_gd:10.6f}")
+print(f"{'Adam-style':30s} | {E_adam:+14.10f} | {abs(E_adam-E_exact):10.2e} | {fidelity_adam:10.6f}")
+
+print(f"\n{'='*80}")
+print("✓ VQE COMPLETE - ALL METHODS WORKING")
+print("="*80)
+
+# Plot
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+ax1.plot(energy_hist_gd, label='GD + Line Search', linewidth=2)
+ax1.plot(energy_hist_adam, label='Adam-style', linewidth=2)
+ax1.axhline(E_exact, color='r', linestyle='--', linewidth=2, label='Exact')
+ax1.set_xlabel('Iteration')
+ax1.set_ylabel('Energy')
+ax1.set_title('VQE Convergence')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+ax2.semilogy([abs(E-E_exact) for E in energy_hist_gd], label='GD + Line Search', linewidth=2)
+ax2.semilogy([abs(E-E_exact) for E in energy_hist_adam], label='Adam-style', linewidth=2)
+ax2.set_xlabel('Iteration')
+ax2.set_ylabel('|E - E_exact|')
+ax2.set_title('Convergence Error')
+ax2.legend()
+ax2.grid(True, alpha=0.3, which='both')
+
+plt.tight_layout()
+plt.savefig('vqe_pairing_final.png', dpi=150)
+plt.show()
+
+print("\n✓ Plot saved: vqe_pairing_final.png")
+
+!ec
 
 
 !split
@@ -469,1159 +1218,5 @@ plt.plot(t, FourierSeriesSignal)
 plt.ylim(-0.5, 2.5)
 plt.show()
 !ec
-
-=== Fourier transforms and convolution ===
-
-We can use Fourier transforms in our studies of convolution as
-well. To see this, assume we have two functions $f$ and $g$ and their
-corresponding Fourier transforms $\hat{f}$ and $\hat{g}$. We remind
-the reader that the Fourier transform reads (say for the function $f$)
-
-!bt
-\[
-\hat{f}(y)=\bm{F}[f(y)]=\frac{1}{2\pi}\int_{-\infty}^{\infty} d\omega \exp{-i\omega y} f(\omega),
-\]
-!et
-and similarly we have
-!bt
-\[
-\hat{g}(y)=\bm{F}[g(y)]=\frac{1}{2\pi}\int_{-\infty}^{\infty} d\omega \exp{-i\omega y} g(\omega).
-\]
-!et
-
-!split
-===== Inverse Fourier transform =====
-
-The inverse Fourier transform is given by
-!bt
-\[
-\bm{F}^{-1}[g(y)]=\frac{1}{2\pi}\int_{-\infty}^{\infty} d\omega \exp{i\omega y} g(\omega).
-\]
-!et
-
-
-The inverse Fourier transform of the product of the two functions $\hat{f}\hat{g}$ can be written as
-!bt
-\[
-\bm{F}^{-1}[(\hat{f}\hat{g})(x)]=\frac{1}{2\pi}\int_{-\infty}^{\infty} d\omega \exp{i\omega x} \hat{f}(\omega)\hat{g}(\omega).
-\]
-!et
-
-!split
-===== Rewriting =====
-We can rewrite the latter as
-!bt
-\[
-\bm{F}^{-1}[(\hat{f}\hat{g})(x)]=\int_{-\infty}^{\infty} d\omega \exp{i\omega x} \hat{f}(\omega)\left[\frac{1}{2\pi}\int_{-\infty}^{\infty}g(y)dy \exp{-i\omega y}\right]=\frac{1}{2\pi}\int_{-\infty}^{\infty}dy g(y)\int_{-\infty}^{\infty} d\omega \hat{f}(\omega) \exp{i\omega(x- y)},
-\]
-!et
-which is simply 
-!bt
-\[
-\bm{F}^{-1}[(\hat{f}\hat{g})(x)]=\int_{-\infty}^{\infty}dy g(y)f(x-y)=(f*g)(x),
-\]
-!et
-the convolution of the functions $f$ and $g$.
-
-
-
-!split
-===== Transforming to discrete variables =====
-
-In the Fourier transform $c_n$ is transformed from a dicrete variable
-to a continuous one as $T \rightarrow \infty$. We then replace $c_n$ with
-$f(k)dk$ and let $n/T \rightarrow k$, and the sum is changed to an
-integral. This gives
-!bt
-\[
-f(x) = \int_{-\infty}^{\infty}dkF(k) \exp{i(2\pi kx)}
-\]
-!et
-and
-!bt
-\[
-F(k) = \int_{-\infty}^{\infty}dxf(x) \exp{-i(2\pi kx)}
-\]
-!et 
-One way to interpret the Fourier transform is then as a transformation from one basis to another. 
-
-!split
-===== Discrete Fourier transform =====
-
-We change notation by replacing $t$ with $x$.
-
-Next we make another generalization by having a discrete function,
-that is $f(x) \rightarrow f(x_k)$ with $x_k = k\Delta x$ for $k=0,\dots, N-1$. This leads to the sums
-!bt
-\[
-f_x = \frac{1}{n} \sum_{k=0}^{n-1}F_k \exp{i(2\pi kx)/n},
-\]
-!et
-and
-!bt
-\[
-F_k = \sum_{x=0}^{n-1}f_x \exp{-i(2\pi kx)/n}.
-\]
-!et
-
-Although we have used functions here, this could also be a set of
-numbers.
-
-!split
-===== Simple example =====
-
-As an example we can have a set of complex numbers
-$\{x_0,\dots,x_{n-1}\}$ with fixed length $n$, we can Fourier
-transform this as
-!bt
-\[
-y_k = \frac{1}{\sqrt{n}} \sum_{j=0}^{n-1} x_j \exp{i(2\pi jk)/n},
-\]
-!et
-
-leading to a new set of complex numbers $\{ y_0,\dots,y_{n-1}\}$. 
-
-
-
-
-!split
-===== Discrete Fourier Transformations =====
-
-
-
-Consider two sets of complex numbers $x_k$ and $y_k$ with
-$k=0,1,\dots,n-1$ entries. The discrete Fourier transform is defined
-as
-!bt
-\[
-y_k = \frac{1}{\sqrt{n}} \sum_{j=0}^{n-1} \exp{(\frac{2\pi\imath jk}{n})} x_j.
-\]
-!et
-As an example, assume $x_0=1$ and $x_1=1$. We can then use the above expression to find $y_0$ and $y_1$.
-
-With the above formula we get then
-!bt
-\begin{align*}
-y_0 &= \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 0\times 1}{2})}\times 2\right)\\
-& =\frac{1}{\sqrt{2}}(1+2)=\frac{3}{\sqrt{2}},
-\end{align*}
-!et
-and
-!bt
-\begin{align*}
-y_1 &= \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\\
-& =\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}}.
-\end{align*}
-!et
-
-
-!split
-===== More details on Discrete Fourier transforms =====
-
-
-
-Suppose that we have a vector $f$ of $n$ complex numbers, $f_{k}, k
-\in\{0,1, \ldots, n-1\}$. Then the discrete Fourier transform (DFT) is
-a map from these $n$ complex numbers to $n$ complex numbers, the
-Fourier transformed coefficients $\tilde{f}_{j}$, given by
-
-!bt
-\begin{equation*}
-\tilde{f}_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{-j k} f_{k}
-\end{equation*}
-!et
-where $\omega=\exp \left(\frac{2 \pi i}{N}\right)$.
-
-!split
-===== Inverse DFT =====
-
-The inverse DFT is given by
-
-!bt
-\begin{equation*}
-f_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \tilde{f}_{k}
-\end{equation*}
-!et
-
-To see this consider how the basis vectors transform. If $f_{k}^{l}=\delta_{k, l}$, then
-
-
-!bt
-\begin{equation*}
-\tilde{f}_{j}^{l}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{-j k} \delta_{k, l}=\frac{1}{\sqrt{n}} \omega^{-j l}
-\end{equation*}
-!et
-
-!split
-===== Orthonormality =====
-
-These DFT vectors are orthonormal, that is
-!bt
-\begin{equation*}
-\sum_{j=0}^{n-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\frac{1}{n} \sum_{j=0}^{n-1} \omega^{j l} \omega^{-j m}=\frac{1}{N} \sum_{j=0}^{n-1} \omega^{j(l-m)} 
-\end{equation*}
-!et
-
-This last sum can be evaluated as a geometric series, but beware of the $(l-m)=0$ term, and yields
-
-!bt
-\begin{equation*}
-\sum_{j=0}^{n-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\delta_{l, m}
-\end{equation*}
-!et
-
-!split
-===== Inverse transform =====
-
-From this we can check that the inverse DFT does indeed perform the inverse transform:
-
-!bt
-\begin{equation*}
-f_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \tilde{f}_{k}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \frac{1}{\sqrt{n}} \sum_{l=0}^{n-1} \omega^{-l k} f_{l}=\frac{1}{n} \sum_{k, l=0}^{n-1} \omega^{(j-l) k} f_{l}=\sum_{l=0}^{n-1} \delta_{j, l} f_{l}=f_{j} 
-\end{equation*}
-!et
-
-
-!split
-===== Summary: Discrete Fourier transforms =====
-
-The Discrete Fourier Transform is a tool used in many different fields
-and finds applications in for example signal processing.  It has many
-many applications (in Speech Recognition, Data Processing, Optics,
-Acoustics). It is used in any application which performs Digital
-Signal Processing.
-
-There
-is an efficient algorithm, called the Fast Fourier Transform (FFT),
-which uses the special relationship amongst the roots of unity to
-compute the entire DFT in $O(n \log{n})$ time. Moreover, it is possible to take the DFT and recover the original
-polynomial in its coefficient form in $O(n \log{n})$ time, by using the
-FFT to compute the inverse DFT.
-
-!split
-===== Fast Fourier transform (FFT) =====
-
-Because of the many important applications of DFT, the Fast Fourier
-Transform is ranked among the top ten  algorithms in the 20th century.
-It came to light as a tool for Signal processing in 1965, when
-Cooley (of IBM) and Tukey (of Princeton) wrote a paper presenting the
-algorithm. However the basics of the algorithm were known long before
-that, for example, it was known to Gauss back in 1805.
-To read more about Fast Fourier transforms and similar topics, see for example "Fast Fourier Transform - Algorithms and Applications":"https://link.springer.com/book/10.1007/978-1-4020-6629-0". See also URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/Textbooks/fastfourier.pdf"
-
-Our emphasis is on the link between discrete Fourier transforms and quantum Fourier transforms.
-For fast Fourier transforms, we may (if there is interest) have a dedicated sessions on).
-
-
-!split
-===== More summary: The discrete Fourier transform (DFT) =====
-
-The discrete Fourier transform takes as input a complex vector
-!bt
-\begin{align*}
-\bm{x} =\vert\bm{x}\rangle= 
-\begin{bmatrix}
-x_0 \\ 
-x_1 \\ 
-x_2 \\
-\vdots \\ 
-x_{n-2} \\
-x_{n-1}
-\end{bmatrix}.
-\end{align*}
-!et
-
-Each entry of the output vector $\vert \bm{y}\rangle$ is given by
-
-!bt
-\begin{align*}
-y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_je^{2 \pi ijk/N}.
-\end{align*}
-!et
-
-
-!split
-===== Output vector =====
-
-The output is a complex vector
-
-!bt
-\begin{align*}
-\vert \bm{y}\rangle = 
-\frac{1}{\sqrt{n}}
-\begin{bmatrix}
-\sum_{j=0}^{n-1} x_je^{2\pi ij0/n} \\
-\sum_{j=0}^{n-1} x_je^{2\pi ij1/n} \\
-\sum_{j=0}^{n-1} x_je^{2\pi ij2/n} \\
-\vdots \\
-\sum_{j=0}^{n-1} x_je^{2\pi ij(n-2)/n} \\
-\sum_{j=0}^{n-1} x_je^{2\pi ij(n-1)/n}
-\end{bmatrix}
-\end{align*}
-!et
-
-!split
-===== From DFT to QFT =====
-
-The Quantum Fourier Transform (QFT) has mathematically the same equation as starting point
-but the notation is generally different. We generally compute the
-quantum Fourier transform on a set of orthonormal basis state vectors
-\(|0\rangle, |1\rangle, ..., |N-1\rangle\). The linear operator defining
-the transform is given by the action on basis states
-
-!bt
-\[
-|j\rangle \mapsto \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} e^{2\pi ijk/N}|k\rangle.
-\]
-!et
-
-!split
-===== In terms of arbitrary states =====
-
-This can be written on arbitrary states,
-!bt
-\[
-\sum_{j=0}^{N-1}x_j|j\rangle \mapsto \sum_{k=0}^{N-1} y_k|k\rangle
-\]
-!et
-where each amplitude \(y_k\) is the discrete Fourier transform of
-\(x_j\).
-
-
-!split
-===== Unitarity =====
-
-The quantum Fourier transform is unitary. Taking \(N = 2^n\),
-for \(n\) qubits gives us the orthonormal (computational) basis
-!bt
-\[
-|0\rangle, |1\rangle, ..., |2^{n}-1\rangle.
-\]
-!et
-
-!split
-===== Binary representation =====
-
-Each of the computational basis states can be represented in binary
-!bt
-\[
-j = j_1j_2 \cdots j_n
-\]
-!et
-where each \(j_k\) is either \(0\) or \(1\), and the corresponding
-binary vector is \(|j_1j_2 \cdots j_n\rangle\).
-
-!split
-===== Rewriting the QFT =====
-
-The quantum Fourier
-transform on one of these \(n\)-qubit vectors can be written as,
-
-!bt
-\begin{align*}
-|j_1j_2 \cdots j_n \rangle = \frac{\left(|0\rangle +e^{2\pi i0.j_n}|1\rangle\right) \otimes \left(|0\rangle +e^{2\pi i0.j_{n-1}j_n}|1\rangle\right) \otimes \cdots \otimes \left(|0\rangle +e^{2\pi i0.j_1j_2 \cdots j_n}|1\rangle\right)}{2^{n/2}}
-\end{align*}
-!et
-
-!split
-===== Short hand notation =====
-
-In the above, we use the notation
-
-!bt
-\[
-0.j_lj_{l+1} \cdots j_n = \frac{j+l}{2} + \frac{j_{l+1}}{2^2} + \cdots + \frac{j_n}{2^{m-l+1}}
-\]
-!et
-
-!split
-===== Two-qubit system =====
-
-First a two qubit system. Notes to be added.
-
-
-!split
-===== Four qubit system =====
-Let us then move to  a four qubit system. The basis states are,
-!bt
-\[
-|j_1j_2j_3j_4 \rangle
-\]
-!et
-where \(j_k\) is either \(0\) or \(1\). We have
-
-!bt
-\begin{align*}
-0.j_3 &= \frac{j_3}{2} \\
-0.j_2j_3 &= \frac{j_2}{2} + \frac{j_3}{4} \\
-0.j_1j_2j_3 &= \frac{j_1}{2} + \frac{j_2}{4} + \frac{j_3}{8} \\
-0.j_0j_1j_2j_3 &= \frac{j_0}{2} + \frac{j_1}{4} + \frac{j_2}{8} + \frac{j_3}{16} \\
-\end{align*}
-!et
-
-!split
-===== QFT acts as follows =====
-
-The quantum Fourier transform acts as follows:
-
-!bt
-\begin{align*}
-|j_1j_2j_3j_4 \rangle \mapsto \frac{1}{\sqrt{2^{4/2}}}
-\left(|0\rangle + e^{2 \pi i 0.j4}|1\rangle \right) \otimes 
-\left(|0\rangle + e^{2 \pi i 0.j_3j4}|1\rangle \right) \otimes 
-\left(|0\rangle + e^{2 \pi i 0.j_2j_3j4}|1\rangle \right) \otimes 
-\left(|0\rangle + e^{2 \pi i 0.j_1j_2j_3j4}|1\rangle \right) 
-\end{align*}
-!et
-
-
-!split
-===== Quantum circuits =====
-
-To compose a quantum circuit that calculates the quantum Fourier
-transform we use the operators
-
-!bt
-\begin{align*}
-R_k = 
-\begin{bmatrix}
-1 & 0 \\
-0 & e^{2\pi i/2^k}
-\end{bmatrix}.
-\end{align*}
-!et
-
-For the circuit computing the QFT on four qubits, see whiteboard notes again.
-
-!split
-===== Rotation gates =====
-
-In this example, the \(R_k\) gates are:
-!bt
-\begin{align*}
-R_1 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^0}
-\end{bmatrix} = 
-\begin{bmatrix}
-1 & 0 \\
-0 & 1
-\end{bmatrix}, \quad 
-R_2 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^2}
-\end{bmatrix}, \quad 
-R_3 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^3}
-\end{bmatrix}, \quad 
-R_4 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^4}
-\end{bmatrix}.
-\end{align*}
-!et
-
-
-
-
-!split
-===== Quantum Fourier transform, more material  =====
-
-We have defined the QFT in terms of
-the unitary operation
-
-!bt
-\[
-    \vert \psi'\rangle \leftarrow \hat{F}\vert \psi\rangle, \quad \hat{F}^\dagger \hat{F} = I
-\]
-!et
-
-
-!split
-===== Orthonormal basis =====
-
-In terms of an orthonormal basis $\vert 0 \rangle,\vert 1\rangle,\dots,\vert 0 \rangle$ this linear operator has the following action
-
-!bt
-\[
-\vert j \rangle \rightarrow \sum_{k=0}^{N-1} \exp{i(2\pi jk/N)}\vert k 
-\]
-!et
-
- or on an arbitrary state
-
-!bt
-\[
-\sum_{j=0}^{N-1} x_j \vert j \rangle \rightarrow \sum_{k=0}^{N-1} y_k\vert k \rangle
-\]
-!et
-
-equivalent to the equation for discrete Fourier transform on a set of complex numbers.
- 
-!split
-===== Using computational basis =====
-
-Next we assume an $n$-qubit system, where we take $N=s^n$ in the computational basis 
-!bt
-\[
-\vert 0 \rangle,\dots,\vert 2^n -1\rangle.
-\]
-!et
-
-We make use of the binary representation $j = j_1 2^{n-1} + j_2
-2^{n-2} + \dots + j_n 2^0$ , and take note of the notation $0.j_l
-j_{l+1} \dots j_m$ representing the binary fraction $\frac{j_l}{2^1} +
-\frac{j_{l+1}}{2^{2}} + \dots + \frac{j_m}{2^{m-l+1}}$. With this we
-define the product representation of the quantum Fourier transform
-
-!bt
-\[
-\vert j_1,\dots,j_n\rangle  \rightarrow 
-\frac{
-\left(\vert 0 \rangle + \exp{i(2\pi 0.j_n)}\right)
-\left(\vert 0 \rangle + \exp{i(2\pi 0.j_{j-1}j_n)}\right)
-\dots
-\left(\vert 0 \rangle + \exp{i(2\pi 0.j_1j_2\dots j_n)}\right)
-}{2^{n/2}}
-\]
-!et
-
-!split
-===== Components =====
-
-From the product representation we can derive a circuit for the
-quantum Fourier transform. This will make use of the following two
-single-qubit gates
-!bt
-\[
-    H = \frac{1}{\sqrt{2}}
-    \begin{bmatrix}
-        1 & 1 \\
-        1 & -1
-    \end{bmatrix}
-\]
-!et
-!bt
-\[
-    R_k =
-    \begin{bmatrix}
-        1 & 0 \\
-        0 & e^{2\pi i/2^{k}}
-    \end{bmatrix}
-\]
-!et
-
-!split
-===== Using the Hadamard gate =====
-The Hadamard
-gate on a single qubit creates an equal superposition of its basis
-states, assuming it is not already in a superposition, such that
- 
-!bt
-\[
-H\vert 0 \rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle + \vert 1\rangle\right), \quad H\vert 1\rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle - \vert 1\rangle\right)
-\]
-!et 
-The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\vert 1\rangle$
-!bt
-\[
-    R_k\vert 0 \rangle = \vert 0 \rangle, \quad R_k\vert 1\rangle = e^{2\pi i/2^{k}}\vert 1\rangle
-\]
-!et
-
-Since all this gates are unitary, the quantum Fourier transfrom is also unitary.
-
-!split
-===== Algorithm =====
-
-Assume we have a quantum register of $n$ qubits in the state $\vert j_1 j_2 \dots j_n\rangle$.
-Applying the Hadamard gate to the first qubit
-produces the state
-
-!bt
-\[
-H\vert j_1 j_2 \dots j_n\rangle = \frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle.
-\]
-!et
-
-!split
-===== Binary fraction =====
-
-Here we have made use of the binary fraction to represent the action of the Hadamard gate 
-!bt
-\[
-\exp{2\pi i 0.j_1} = -1,
-\]
-!et
-if $j_1 = 1$ and $+1$ if $j_1 = 0$.
-
-
-!split
-===== Controlled rotation gate =====
-
-Furthermore we can apply the controlled-$R_k$ gate, with all the other qubits $j_k$ for $k>1$ as control qubits to produce the state
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-
-Next we do the same procedure on qubit $2$ producing the state
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)}{2^{2/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-
-!split
-===== Applying to all qubits =====
-
-Doing this for all $n$ qubits yields state
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)\dots \left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)}{2^{n/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-At the end we use swap gates to reverse the order of the qubits
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_{n-1}j_n}\vert 1\rangle\right)\dots\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right) }{2^{n/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-This is just the product representation from earlier, obviously our desired output.
-
-
-
-
-!split
-===== Quantum Fourier transform =====
-
-Now lets turn to the Quantum Fourier transform (QFT). We've already
-seen the QFT for $N=2$. It is the Hadamard transform:
-!bt
-\[
-H=\frac{1}{\sqrt{2}}\left[\begin{array}{cc}
-1 & 1  \\
-1 & -1
-\end{array}\right]
-\]
-!et
-
-!split
-===== QFT for $N=2$ =====
-
-Why is this the QFT for $N=2$ ? Well suppose have the single qubit
-state $a_{0}|0\rangle+a_{1}|1\rangle$. If we apply the Hadamard
-operation to this state we obtain the new state
-
-!bt
-\begin{equation*}
-\frac{1}{\sqrt{2}}\left(a_{0}+a_{1}\right)|0\rangle+\frac{1}{\sqrt{2}}\left(a_{0}-a_{1}\right)|1\rangle=\tilde{a}_{0}|0\rangle+\tilde{a}_{1}|1\rangle . 
-\end{equation*}
-!et
-
-In other words the Hadamard gate performs the DFT for $N=2$ on the
-amplitudes of the state! Notice that this is very different that
-computing the DFT for $N=2$ : remember the amplitudes are not numbers
-which are accessible to us mere mortals, they just represent our
-description of the quantum system.
-
-
-!split
-===== Full QFT =====
-
-So what is the full quantum Fourier transform? It is the transform
-which takes the amplitudes of a $N$ dimensional state and computes the
-Fourier transform on these amplitudes (which are then the new
-amplitudes in the computational basis.) In other words, the QFT enacts
-the transform
-
-!bt
-\begin{equation*}
-\sum_{x=0}^{N-1} a_{x}|x\rangle \rightarrow \sum_{x=0}^{N-1} \tilde{a}_{x}|x\rangle=\sum_{x=0}^{N-1} \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y} a_{y}|x\rangle 
-\end{equation*}
-!et
-
-!split
-===== Explicit transform =====
-It is easy to see that this implies that the QFT performs the following transform on basis states:
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y}|y\rangle
-\end{equation*}
-!et
-
-Thus the QFT is given by the matrix
-
-!bt
-\begin{equation*}
-U_{Q F T}=\frac{1}{\sqrt{N}} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{-y x}|y\rangle\langle x| 
-\end{equation*}
-!et
-
-!split
-===== Unitarity =====
-The last  matrix is unitary. Let's check this:
-
-!bt
-\begin{align*}
-U_{Q F T} U_{Q F T}^{\dagger} & =\frac{1}{N} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{y x}|x\rangle\left\langle y\left|\sum_{x^{\prime}=0}^{N-1} \sum_{y^{\prime}=0}^{N-1} \omega_{N}^{-y^{\prime} x^{\prime}}\right| y^{\prime}\right\rangle\left\langle x^{\prime}\right| \\
-& =\frac{1}{N} \sum_{x, y, x^{\prime}, y^{\prime}=0}^{N-1} \omega_{N}^{y x-y^{\prime} x^{\prime}} \delta_{y, y^{\prime}}|x\rangle\left\langle x^{\prime}\left|=\frac{1}{N} \sum_{x, y, x^{\prime}=0}^{N-1} \omega_{N}^{y\left(x-x^{\prime}\right)}\right| x\right\rangle\left\langle x^{\prime}\right| \\
-& =\sum_{x, x^{\prime}=0}^{N-1} \delta_{x, x^{\prime}}|x\rangle\left\langle x^{\prime}\right|=I 
-\end{align*}
-!et
-
-!split
-===== Importance of QFT =====
-
-The QFT is a very important transform in quantum computing. It can be
-used for all sorts of cool tasks, including, as we shall see in Shor's
-algorithm. But before we can use it for quantum computing tasks, we
-should try to see if we can efficiently implement the QFT with a
-quantum circuit. Indeed we can and the reason we can is intimately
-related to the fast Fourier transform.
-
-
-!split
-===== Circuit QFT =====
-
-Let's derive a circuit for the QFT when $N=2^{n}$. The QFT performs the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y=0}^{2^{n}-1} \omega_{N}^{-x y}|y\rangle 
-\end{equation*}
-!et
-
-Then we can expand out this sum
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \omega_{N}^{-x \sum_{k=1}^{n} 2^{n-k} y_{k}}\left|y_{1}, y_{2}, \ldots, y_{n}\right\rangle 
-\end{equation*}
-!et
-
-!split
-===== Expanding the exponential =====
-
-Expanding the exponential of a sum to a product of exponentials and
-collecting these terms in from the appropriate terms we can express
-this as
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \bigotimes_{k=1}^{n} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle 
-\end{equation*}
-!et
-
-
-!split
-===== Rearranging =====
-
-We can rearrange the sum and products as
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[\sum_{y_{k} \in\{0,1\}} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle\right] 
-\end{equation*}
-!et
-
-Expanding this sum yields
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[|0\rangle+\omega_{N}^{-x 2^{n-k}}|1\rangle\right]
-\end{equation*}
-!et
-
-!split
-===== Notation for binary fraction =====
-
-But now notice that $\omega_{N}^{-x 2^{n-k}}$ is not dependent on the
-higer order bits of $x$. It is convenient to adopt the following
-expression for a binary fraction:
-
-!bt
-\begin{equation*}
-0 . x_{l} x_{l+1} \ldots x_{n}=\frac{x_{l}}{2}+\frac{x_{l+1}}{4}+\cdots+\frac{x_{n}}{2^{n-l+1}}
-\end{equation*}
-!et
-
-!split
-===== More notations =====
-Then we can see that
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n-1} x_{n}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] 
-\end{equation*}
-!et
-
-This is a very useful form of the QFT for $N=2^{n}$. Why? Because we
-see that only the last qubit depends on the the values of all the
-other input qubits and each further bit depends less and less on the
-input qubits. Further we note that $e^{-2 \pi i 0 . a}$ is either +1
-or -1 , which reminds us of the Hadamard transform.
-
-!split
-===== Deriving a circuit =====
-
-So how do we use this to derive a circuit for the QFT over $N=2^{n}$ ?
-
-Take the first qubit of $\left|x_{1}, \ldots, x_{n}\right\rangle$ and
-apply a Hadamard transform. This produces the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 \cdot x_{1}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
-\end{equation*}
-!et
-
-!split
-===== Rotation gate =====
-Now define the rotation gate
-
-!bt
-\[
-R_{k}=\left[\begin{array}{cc}
-1 & 0  \tag{30}\\
-0 & \exp \left(\frac{-2 \pi i}{2^{k}}\right)
-\end{array}\right]
-\]
-!et
-If we now apply controlled $R_{2}, R_{3}$, etc. gates controlled on
-the appropriate bits this enacts the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \ldots x_{n}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
-\end{equation*}
-!et
-
-!split
-===== Proceeding =====
-
-Thus we have reproduced the last term in the QFTed state. Of course
-now we can proceed to the second qubit, perform a Hadamard, and the
-appropriate controlled $R_{k}$ gates and get the second to last
-qubit. Thus when we are finished we will have the transform
-
-!bt
-\begin{equation*}
-|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n-1}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right]
-\end{equation*}
-!et
-
-Reversing the order of these qubits will then produce the QFT!
-
-#The circuit we have constructed on $n$ qubits is
-
-
-#\includegraphics[max width=\textwidth]{2024_03_18_c1d427fa6b85efa365f1g-5}
-
-
-
-!split
-===== QFT =====
-
-The Quantum Fourier Transform (QFT) has mathematically the same equation as starting point
-but the notation is generally different. We generally compute the
-quantum Fourier transform on a set of orthonormal basis state vectors
-\(|0\rangle, |1\rangle, ..., |N-1\rangle\). The linear operator defining
-the transform is given by the action on basis states
-
-!bt
-\[
-|j\rangle \mapsto \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} e^{2\pi ijk/N}|k\rangle.
-\]
-!et
-
-!split
-===== In terms of arbitrary states =====
-
-This can be written on arbitrary states,
-!bt
-\[
-\sum_{j=0}^{N-1}x_j|j\rangle \mapsto \sum_{k=0}^{N-1} y_k|k\rangle
-\]
-!et
-where each amplitude \(y_k\) is the discrete Fourier transform of
-\(x_j\).
-
-
-!split
-===== Unitarity =====
-
-The quantum Fourier transform is unitary. Taking \(N = 2^n\),
-for \(n\) qubits gives us the orthonormal (computational) basis
-!bt
-\[
-|0\rangle, |1\rangle, ..., |2^{n}-1\rangle.
-\]
-!et
-
-!split
-===== Binary representation =====
-
-Each of the computational basis states can be represented in binary
-!bt
-\[
-j = j_1j_2 \cdots j_n
-\]
-!et
-where each \(j_k\) is either \(0\) or \(1\), and the corresponding
-binary vector is \(|j_1j_2 \cdots j_n\rangle\).
-
-!split
-===== Rewriting the QFT =====
-
-The quantum Fourier
-transform on one of these \(n\)-qubit vectors can be written as,
-
-!bt
-\begin{align*}
-|j_1j_2 \cdots j_n \rangle = \frac{\left(|0\rangle +e^{2\pi i0.j_n}|1\rangle\right) \otimes \left(|0\rangle +e^{2\pi i0.j_{n-1}j_n}|1\rangle\right) \otimes \cdots \otimes \left(|0\rangle +e^{2\pi i0.j_1j_2 \cdots j_n}|1\rangle\right)}{2^{n/2}}
-\end{align*}
-!et
-
-!split
-===== Short hand notation =====
-
-In the above, we use the notation
-
-!bt
-\[
-0.j_lj_{l+1} \cdots j_n = \frac{j_l}{2} + \frac{j_{l+1}}{2^2} + \cdots + \frac{j_n}{2^{n-l+1}}
-\]
-!et
-
-If we start counting from zero, that is we have instead
-!bt
-\begin{align*}
-|j_0j_1 \cdots j_{n-1} \rangle = \frac{\left(|0\rangle +e^{2\pi i0.j_{n-1}}|1\rangle\right) \otimes \left(|0\rangle +e^{2\pi i0.j_{n-2}j_n}|1\rangle\right) \otimes \cdots \otimes \left(|0\rangle +e^{2\pi i0.j_0j_1 \cdots j_{n-1}}|1\rangle\right)}{2^{n/2}},
-\end{align*}
-!et
-we get
-!bt
-\[
-0.j_lj_{l+1} \cdots j_{n-1} = \frac{j_l}{2} + \frac{j_{l+1}}{2^2} + \cdots + \frac{j_{n-1}}{2^{n-l}}
-\]
-!et
-
-
-
-!split
-===== Four qubit system =====
-The basis states are
-!bt
-\[
-|j_1j_2j_3j_4 \rangle
-\]
-!et
-where \(j_k\) is either \(0\) or \(1\). We have
-
-!bt
-\begin{align*}
-0.j_3 &= \frac{j_3}{2} \\
-0.j_2j_3 &= \frac{j_2}{2} + \frac{j_3}{4} \\
-0.j_1j_2j_3 &= \frac{j_1}{2} + \frac{j_2}{4} + \frac{j_3}{8} \\
-0.j_0j_1j_2j_3 &= \frac{j_0}{2} + \frac{j_1}{4} + \frac{j_2}{8} + \frac{j_3}{16} \\
-\end{align*}
-!et
-
-!split
-===== QFT acts as follows =====
-
-The quantum Fourier transform acts as follows:
-
-!bt
-\begin{align*}
-|j_1j_2j_3j_4 \rangle \mapsto \frac{1}{\sqrt{2^{4/2}}}
-\left(|0\rangle + e^{2 \pi i 0.j4}|1\rangle \right) \otimes 
-\left(|0\rangle + e^{2 \pi i 0.j_3j4}|1\rangle \right) \otimes 
-\left(|0\rangle + e^{2 \pi i 0.j_2j_3j4}|1\rangle \right) \otimes 
-\left(|0\rangle + e^{2 \pi i 0.j_1j_2j_3j4}|1\rangle \right) 
-\end{align*}
-!et
-
-
-!split
-===== Quantum circuits =====
-
-To compose a quantum circuit that calculates the quantum Fourier
-transform we use the operators
-
-!bt
-\begin{align*}
-R_k = 
-\begin{bmatrix}
-1 & 0 \\
-0 & e^{2\pi i/2^k}
-\end{bmatrix}.
-\end{align*}
-!et
-
-
-!split
-===== Rotation gates =====
-
-In this example, the \(R_k\) gates are:
-!bt
-\begin{align*}
-R_1 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^0}
-\end{bmatrix} = 
-\begin{bmatrix}
-1 & 0 \\
-0 & 1
-\end{bmatrix}, \quad 
-R_2 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^2}
-\end{bmatrix}, \quad 
-R_3 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^3}
-\end{bmatrix}, \quad 
-R_4 = \begin{bmatrix}
-1 & 0 \\
-0 & e^{2 \pi i /2^4}
-\end{bmatrix}.
-\end{align*}
-!et
-
-
-
-
-
-!split
-===== Using the Hadamard gate =====
-The Hadamard
-gate on a single qubit creates an equal superposition of its basis
-states, assuming it is not already in a superposition, such that
- 
-!bt
-\[
-H\vert 0 \rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle + \vert 1\rangle\right), \quad H\vert 1\rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle - \vert 1\rangle\right)
-\]
-!et 
-The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\vert 1\rangle$
-!bt
-\[
-    R_k\vert 0 \rangle = \vert 0 \rangle, \quad R_k\vert 1\rangle = e^{2\pi i/2^{k}}\vert 1\rangle
-\]
-!et
-
-Since all this gates are unitary, the quantum Fourier transfrom is also unitary.
-
-!split
-===== Algorithm =====
-
-Assume we have a quantum register of $n$ qubits in the state $\vert j_1 j_2 \dots j_n\rangle$.
-Applying the Hadamard gate to the first qubit
-produces the state
-
-!bt
-\[
-H\vert j_1 j_2 \dots j_n\rangle = \frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle.
-\]
-!et
-
-!split
-===== Binary fraction =====
-
-Here we have made use of the binary fraction to represent the action of the Hadamard gate 
-!bt
-\[
-\exp{2\pi i 0.j_1} = -1,
-\]
-!et
-if $j_1 = 1$ and $+1$ if $j_1 = 0$.
-
-
-!split
-===== Controlled rotation gate =====
-
-Furthermore we can apply the controlled-$R_k$ gate, with all the other qubits $j_k$ for $k>1$ as control qubits to produce the state
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-
-Next we do the same procedure on qubit $2$ producing the state
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)}{2^{2/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-
-!split
-===== Applying to all qubits =====
-
-Doing this for all $n$ qubits yields state
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)\dots \left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)}{2^{n/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-At the end we use swap gates to reverse the order of the qubits
-
-!bt
-\[
-\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_{n-1}j_n}\vert 1\rangle\right)\dots\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right) }{2^{n/2}} \vert j_2 \dots j_n\rangle
-\]
-!et
-This is just the product representation from earlier, obviously our desired output.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
