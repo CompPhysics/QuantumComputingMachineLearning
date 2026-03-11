@@ -99,7 +99,7 @@ themes can be covered:
   - Start discussion of Quantum Fourier Transforms
   - Lab/exercise session: work on project 1
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week8
-  - Video of lecture to be added  https://youtu.be/
+  - Video of lecture at https://youtu.be/C8vxBY-AmD8
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek8.pdf
 
 
