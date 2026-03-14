@@ -1,0 +1,39 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{qft}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{p}{:}
+
+   \PYG{c+c1}{\PYGZsh{} Inputs n qubits and returns QFT matrix of size (2\PYGZca{}n, 2\PYGZca{}n)}
+   \PYG{n}{dim} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{n}  \PYG{c+c1}{\PYGZsh{} Dimension of the Hilbert space}
+   \PYG{n}{omega} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{exp}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{n}{j} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi} \PYG{o}{/} \PYG{n}{dim}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Primitive root of unity}
+   \PYG{c+c1}{\PYGZsh{} Initialize QFT matrix}
+   \PYG{n}{QFT} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{,} \PYG{n}{dim}\PYG{p}{)}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+   \PYG{c+c1}{\PYGZsh{} Construct the QFT matrix}
+   \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}\PYG{p}{:}
+       \PYG{k}{for} \PYG{n}{j} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}\PYG{p}{:}
+           \PYG{n}{QFT}\PYG{p}{[}\PYG{n}{i}\PYG{p}{,} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{omega} \PYG{o}{*}\PYG{o}{*} \PYG{p}{(}\PYG{n}{i} \PYG{o}{*} \PYG{n}{j}\PYG{p}{)} \PYG{o}{/} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}
+   \PYG{k}{return} \PYG{n}{QFT}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{apply\PYGZus{}qft}\PYG{p}{(}\PYG{n}{state}\PYG{p}{)}\PYG{p}{:}
+   \PYG{n}{n} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{log2}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{state}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Number of qubits}
+   \PYG{n}{qft\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{qft}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+   \PYG{k}{return} \PYG{n}{qft\PYGZus{}matrix} \PYG{o}{@} \PYG{n}{state}
+\PYG{c+c1}{\PYGZsh{} Example: 3\PYGZhy{}qubit system}
+\PYG{n}{n\PYGZus{}qubits} \PYG{o}{=} \PYG{l+m+mi}{3}  \PYG{c+c1}{\PYGZsh{} QFT on 3 qubits (8 dimensions)}
+\PYG{n}{dim} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{n\PYGZus{}qubits}
+
+\PYG{c+c1}{\PYGZsh{} Define an example quantum state (|5⟩ in computational basis)}
+\PYG{n}{state} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+\PYG{n}{state}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}  \PYG{c+c1}{\PYGZsh{} |5⟩ = [0,0,0,0,0,1,0,0]}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Initial State |5⟩:}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{state}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} Apply QFT}
+\PYG{n}{qft\PYGZus{}state} \PYG{o}{=} \PYG{n}{apply\PYGZus{}qft}\PYG{p}{(}\PYG{n}{state}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{State after QFT:}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{round}\PYG{p}{(}\PYG{n}{qft\PYGZus{}state}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Rounded for better readability}
+\PYG{c+c1}{\PYGZsh{} Verify QFT is unitary (QFT * QFT† = I)}
+\PYG{n}{qft\PYGZus{}matrix} \PYG{o}{=} \PYG{n}{qft}\PYG{p}{(}\PYG{n}{n\PYGZus{}qubits}\PYG{p}{)}
+\PYG{n}{identity} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{dot}\PYG{p}{(}\PYG{n}{qft\PYGZus{}matrix}\PYG{p}{,} \PYG{n}{qft\PYGZus{}matrix}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{QFT * QFT† = Identity Matrix (Rounded):}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{round}\PYG{p}{(}\PYG{n}{identity}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{)}
+
+\end{MintedVerbatim}
