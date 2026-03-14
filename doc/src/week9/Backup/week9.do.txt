@@ -1,0 +1,427 @@
+TITLE: Quantum Computing and Quantum Machine Learning
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo, Norway
+DATE: March 18, 2026
+
+
+!split
+===== Plans for the week of March 16-20, 2026  =====
+!bblock 
+o Lipkin model for  VQE quantum computing
+o Discussion and work on  project 1
+!eblock
+
+
+!split
+===== More background material =====
+
+
+For the Lipkin model, we recommend strongly the work of LaRose and collaborators, see
+URL:"https://journals.aps.org/prc/abstract/10.1103/PhysRevC.106.024319", the article is also available at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/articles/PhysRevC.106.024319.pdf". See in particular section 3.
+
+
+For codes, feel free to be inspired and/or reuse the codes at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/Programs/LipkinModel".
+
+
+!split
+===== Hamiltonians and project 1 =====
+
+As an initial test, we consider a simply $2\times 2$ real
+Hamiltonian consistend of a diagonal part $H_0$ and off-diagonal part
+$H_I$, playing the roles of a non-interactive one-body and interactive
+two-body part respectively. Defined through their matrix elements, we
+express them in the Pauli basis $\vert 0\rangle$ and $\vert 1 \rangle$
+
+!bt
+\begin{align*}
+    \begin{split} 
+        H &= H_0 + H_I \\
+        H_0 = \begin{bmatrix}
+            E_1 & 0 \\
+            0 & E_2
+        \end{bmatrix}&, \hspace{20px}
+        H_I = \lambda \begin{bmatrix}
+            V_{11} & V_{12} \\
+            V_{21} & V_{22}
+        \end{bmatrix}
+    \end{split}
+\end{align*}
+!et
+Where $\lambda \in [0,1]$ is a coupling constant parameterizing the strength of the interaction. 
+
+!split
+===== Rewriting in terms of Pauli matrices =====
+
+Defining
+!bt
+\[
+    E_+ = \frac{E_1 + E_2}{2},\hspace{20px} E_- = \frac{E_1 - E_2}{2}
+\]
+!et
+we see that by combining the identity and $Z$ Pauli matrix, this can be expressed as
+
+!bt
+\[
+    H_0 = E_+ I + E_- Z
+\]
+!et
+
+For $H_1$ we use the same trick to fill the diagonal, defining $V_+ = (V_{11} + V_{22})/2, V_- = (V_{11} - V_{22})/2$. From the hermiticity requirements of $H$, we note that $V_{12} = V_{21} \equiv V_o$, which simplifies the problem to a simple $X$. This gives
+
+!bt
+\[
+    H_I = V_+ I + V_- Z + V_o X
+\]
+!et
+
+!split
+===== Measurement basis =====
+
+For this system we note that the Pauli $X$ matrix can be rewritten in terms of the Hadamard matrices and the Pauli $Z$ matrix, that is
+!bt
+\[
+X=HZH.
+\]
+!et
+
+
+!split
+===== Second Hamiltonian matrix problems =====
+
+The second case is defined as a $4 \times 4$ real Hamiltonian.
+This can be viewed as two  composite systems where each system is a two-level system. In the product basis $\vert 00\rangle$, $\vert 01\rangle$, $\vert 10\rangle$ and $\vert 11\rangle$
+we define the one-body part as 
+!bt
+\[
+    H_0 \vert ij \rangle = \epsilon_{ij}\vert ij\rangle, 
+\]
+!et
+with a two-body interaction defined as
+
+!bt
+\begin{align*}
+    \begin{split} 
+        H_I &= H_x X \otimes X + H_z Z \otimes Z \\
+        &= \begin{bmatrix}
+            H_z & 0 & 0 & H_z \\
+            0 & - H_z & H_x & 0 \\
+            0 & H_x & - H_z & 0 \\
+            H_x & 0 & 0 & H_z
+        \end{bmatrix}.
+    \end{split}
+\end{align*}
+!et
+
+Here $H_x$ and $H_z$ are coupling constants.
+
+!split
+===== Rewriting =====
+
+For the $4 \times 4$ case, the interacting part of the
+Hamiltonian is already
+written in terms of Pauli matrices. On the other hand, we need to be rewrite the diagonal term.
+We define
+!bt
+\begin{align*}
+    \epsilon_{\pm 0} = \frac{\epsilon_{00}\pm\epsilon_{01}}{2},\hspace{20px}\epsilon_{\pm 1} = \frac{\epsilon_{10}\pm\epsilon_{11}}{2}.
+\end{align*}
+!et
+We note that the energies $\epsilon_{00}$ and $\epsilon_{01}$ can be repeated on the diagonal. This is also the case for $\epsilon_{10}$ and $\epsilon_{11}$
+!bt
+\begin{align*}
+    D_{0} &= \epsilon_{+0} I\otimes I + \epsilon_{-0} I\otimes Z, \\
+    D_{1} &= \epsilon_{+0} I\otimes I + \epsilon_{-1} I\otimes Z.
+\end{align*}
+!et
+!split
+===== Further manipulations =====
+
+Using the Pauli $Z$ matrix and the identity matrix $I$ we define
+!bt
+\begin{align*}
+    P_{\pm} = \frac{1}{2}(I \pm Z),
+\end{align*}
+!et
+which we use to project out the first and last to two elements the of $4\times 4$ matrix
+!bt
+\[
+    P_0 = P_+ \otimes I,\hspace{20px}P_0 = P_- \otimes I.
+\]
+!et
+Adding $D_0$ and $D_1$, we get
+!bt
+\[
+    H_0 = P_0 D_0 + P_1 D_1= \alpha_+ I \otimes I + \alpha_- Z \otimes I + \beta_+ I \otimes Z + \beta_- Z \otimes Z, 
+\]
+!et
+where we have defined
+!bt
+\[
+    \alpha_\pm = \frac{\epsilon_{+0}\pm\epsilon_{+1}}{2}, \hspace{10px} \beta_\pm = \frac{\epsilon_{-0}\pm\epsilon_{+1}}{2}
+\]
+!et
+
+!split
+===== The Lipkin model =====
+
+Last week we introduced the Lipkin model which could be rewritten in terms of the quasipin operators as
+!bt
+\begin{align*}
+    \begin{split}
+        H_0 &= \epsilon J_z, \\
+        H_1 &= \frac{1}{2}V (J_+^2 + J_-^2), \\
+        H_2 & = \frac{1}{2}W ( J_+J_- +J_{-}J_+ - N ),
+    \end{split}
+\end{align*}
+!et
+
+!split
+===== Quasispin operators =====
+
+These quasi spin operators obey the normal spin commutator relations
+!bt
+\begin{align*}
+    &[J_z,J_{\pm}] = \pm J_\pm, 
+    &[J_+,J_-] = 2 J_z, \\
+    &[J^2,J_{\pm}] = 0,
+    &[J^2,J_z] = 0,
+\end{align*}
+!et
+in addition to commuting with the number operator
+!bt
+\begin{align*}
+    [N,J_z] = [N,J_{\pm}] = [N,J^2] = 0.
+\end{align*}
+!et
+Using these relations we can show that the Hamiltonian (a product of
+quasi spin operators and the number operator) also commutes with
+$J^2$, that is $[H,J^2]=0$. This means that $H$ and $J^2$ have a shared
+eigenbasis, with $J$ being a so-called _good_ quantum number.
+
+!split
+===== System to diagonalize by traditional methods =====
+
+Using spin-eigenstates as the Hamiltonian basis, we define states
+through the normal approach $\vert J,J_z\rangle$ with $J$ and $ J_z$ as spin
+and spin-projections, respectively. The states $J_z = \pm J$ are the
+easiest to construct, corresponding to a single level being completely
+filled. States in between can then be found using the quasi-spin
+ladder operators following
+
+!bt
+\[
+    J_\pm \vert J,J_z\rangle = \sqrt{J(J+1)-J_z (J_z \pm 1)} \vert J,J_z \pm 1\rangle.
+\]
+!et
+
+Using this basis for the quasi-spin Hamiltonian, we can rewrite the explicit matrix $H_{J_z,J'_z} = \langle J,J_z\vert  H \vert J,J_z'\rangle$ can be constructed.
+
+!split
+===== The $J=1$ case =====
+
+For $N=2$ particles, we have the triplet $J=1$, with three possible projection $J_z = 0, \pm 1$. This gives the following matrix
+!bt
+\[
+    H = \begin{bmatrix}
+        -\epsilon & 0 & V \\
+        0 & W & 0 \\
+        V & 0 & \epsilon
+    \end{bmatrix}.
+\]
+!et
+By solving the eigenvalue problem, the ground state energy can be exactly found.
+
+
+!split
+===== The $J=2$ case =====
+
+Similarly, for the $N=4$ particles case we have $J = 2$ with five possible projections $J_z = 0,\pm1,\pm2$. This gives us the Hamiltonian matrix
+!bt
+\[
+    H = \begin{bmatrix}
+        -2\epsilon & 0  & \sqrt{6}V &0 &0 \\
+        0 & -\epsilon + 3W & 0 & 3V & 0 \\
+        \sqrt{6}V & 0 & 4W & 0 & \sqrt{6}V \\
+        0 & 3V & 0 & \epsilon + 3W & 0 \\
+        0 & 0 & \sqrt{6}V & 0 & 2\epsilon
+    \end{bmatrix}.
+\]
+!et
+
+!split
+===== More rewriting =====
+
+Following the work of LaRose and collaborators, see
+URL:"https://journals.aps.org/prc/abstract/10.1103/PhysRevC.106.024319",
+we can rewrite the Lipkin Hamiltonian for efficient adaptations to
+quantum computing.
+
+We have
+!bt
+\[
+    J_z = \sum_{i}^{N} j_{z}^{i} \hspace{20px} J_\pm = \sum_i^N j_{\pm}^{i} = \sum_i^N (j_{x}^{i}\pm ij_{y}^{i}),
+\]
+!et
+with $N$ being the number of particles. Additionally, since we have spin-$1/2$ fermions, the mapping to Pauli matrices follow
+!bt
+\[
+    j_{x}^{i} = \frac{1}{2}X_i,\hspace{20px}j_{y}^{i} = \frac{1}{2}Y_i,\hspace{20px}j_{z}^{i} = \frac{1}{2}Z_i.
+\]
+!et
+This means that we require $N$ qubits to calculate properties of a $N$ particle system, if no more symmetry reductions are considred.
+
+!split
+===== Lipkin Hamiltonian for quantum computing =====
+
+We rewrote our Hamiltonian as
+!bt
+\begin{align*}
+    \begin{split}
+        H_0 &= \frac{\epsilon}{2}\sum_{p}Z_p,  \\
+        H_1 &= \frac{1}{2}V \sum_{p < q}( X_p X_q - Y_p Y_q), \\
+        H_2 &= \frac{1}{2}W \sum_{p < q} \left( X_p X_q + Y_p Y_q \right). 
+    \end{split}
+\end{align*}
+!et
+
+For two particles coupling to spin $J=1$ we have
+!bt
+\[
+    H^{N=2} = \frac{\epsilon}{2}\left(Z_1 + Z_2\right) + \frac{W+V}{2} X_1 X_2 - \frac{W-V}{2} Y_1 Y_2.
+\]
+!et
+
+!split
+===== For four fermions =====
+Our Hamiltonian for $N=4$ is
+!bt
+\begin{align*}
+    \begin{split}
+        H^{N=4} =& \frac{\epsilon}{2}\left(Z_1 + Z_2 + Z_3 + Z_4\right) + \frac{W-V}{2}\Big( X_1 X_2 +\\ 
+        & X_1 X_3 + X_1 X_4 + X_2 X_3 + X_3 X_4 + X_3 X_4
+        \Big) \\
+        &+ \frac{W+V}{2}\Big( Y_1 Y_2 + Y_1 Y_3 + Y_1 Y_4 + Y_2 Y_3 \\
+        & + Y_3 Y_4 + Y_3 Y_4\Big).
+    \end{split}
+\end{align*}
+!et
+
+Note that well that a term like $Z_1$ reads $Z_1\otimes I_2 \otimes I_3 \otimes I_4$ where the subscript points to qubit $i$ and all matrices are $2\times 2$ matrices.
+!split
+===== Leaving out the $W$ term =====
+
+If we set $W = 0$ we can simplify the Hamiltonian. For this we  note that if we only include the $H_0$ and $H_1$ terms,  spins differing by $\pm2$ are the only possible non-diagonal couplings. Since $H_0$ is diagonal and single particle energies are degenerate, it does not break any symmetry.
+Instead of the $2J+1$ spin projections, we simply have $J+1$ relevant states. From URL:"https://journals.aps.org/prc/abstract/10.1103/PhysRevC.106.024319",
+the two-qubit Hamiltonian for $N=4$ can be written as
+!bt
+\[
+    H_{W=0}^{N=4} = \epsilon(Z_1 + Z_2) + \frac{\sqrt{6}}{2}V (X_1 + X_2 + Z_1 X_0 - X_1 Z_0).
+\]
+!et
+This is computationally more efficient since we only need half of the qubits.
+
+!split
+===== More details =====
+
+Here we give some additional details behind the rewriting of the Lipkin Hamiltonian in term of Pauli matrices and the identity matrix.
+For the one-body term we have
+!bt
+\begin{align*}
+    H_0 = \epsilon J_z = \epsilon \sum_{p} j_{z}^{p} = \frac{\epsilon}{2} \sum_p Z_p 
+\end{align*}
+!et
+
+Moving on to the $H_1$ term, we need to expand the square of the $J_\pm$ operators. Starting with $J_+$ we find
+!bt
+\begin{align*}
+    J_+^2 &= (\sum_p j_{x}^{p} + \imath j_{y}^{p})^2 = \sum_{pq}(j_{x}^{p} + \imath j_{y}^{p})(j_{x}^{q} + \imath j_{y}^{q}) \\
+    &= \sum_{pq} \left(j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} + \imath j_{y}^{p}j_{x}^{q} + \imath j_{x}^{p}j_{y}^{q}\right).
+\end{align*}
+!et
+
+
+!split
+===== Other manipulations =====
+
+Similarly, the $J_-^2$ term yields
+!bt
+\begin{align*}
+    J_-^2 = \sum_{pq} (j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q} - \imath j_{y}^{p}j_{x}^{q} - \imath j_{x}^{p}j_{y}^{q}).
+\end{align*}
+!et
+Rewriting we get
+!bt
+\begin{align*}
+    J_+^2 + J_-^2 &= 2\sum_{pq} j_{x}^{p}j_{x}^{q} - j_{z}^{p}j_{z}^{q} \\
+    &= 2 \sum_p (j_{x}^{p})^2 - (j_{y}^{p})^2 + 4\sum_{p > q}( j_{x}^{p}j_{x}^{q} - j_{y}^{p}j_{y}^{q}) \\
+    &= \frac{1}{2} \sum_p (X_p^2 - Y_p^2) + \sum_{p > q} (X_p X_q - Y_p Y_q)
+\end{align*}
+!et
+
+!split
+===== Final expression for $H_1$ and $H_2$ =====
+
+The diagonal term will cancel out, since the Pauli matrices are involutory, resulting in
+!bt
+\[
+    H_1 = \frac{1}{2}V \sum_{p > q}( X_p X_q - Y_p Y_q).
+\]
+!et
+Following the same procedure as above, we have finally
+!bt
+\[
+    H_2 = \frac{1}{2}W \sum_{p < q} (X_p X_q + Y_p Y_q). 
+\]
+!et
+
+
+!split
+===== Background material on VQE and transformations into a computational basis =====
+
+The review of Tilly et al., see URL:"https://discovery.ucl.ac.uk/id/eprint/10157639/1/1-s2.0-S0370157322003118-main.pdf" (Physics Reports _986_, 1 (2022)), gives examples on how to arrive at the equations (see section 5.2) listed in the tables here. The article gives also an excellent overview of the VQE method.
+
+See also Hundt section 6.11.
+
+!split
+===== Transforming Pauli and identity matrices =====
+
+FIGURE: [figures/table1.png, width=700 frac=1.0]
+
+
+!split
+===== Transforming Pauli and identity matrices, four particle case =====
+
+FIGURE: [figures/table2.png, width=700 frac=0.8]
+
+
+
+!split
+===== Plans for the week March 24-28  =====
+
+
+!bblock 
+o Discussion of project 1 and possible paths for project 2
+o Introduction to Quantum Fourier transforms
+!eblock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
