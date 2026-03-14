@@ -1,0 +1,1331 @@
+
+% LaTeX Beamer file automatically generated from DocOnce
+% https://github.com/doconce/doconce
+
+%-------------------- begin beamer-specific preamble ----------------------
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{quantikz}
+\usepackage{listings}
+
+
+\usetheme{red_plain}
+\usecolortheme{default}
+
+% turn off the almost invisible, yet disturbing, navigation symbols:
+\setbeamertemplate{navigation symbols}{}
+
+% Examples on customization:
+%\usecolortheme[named=RawSienna]{structure}
+%\usetheme[height=7mm]{Rochester}
+%\setbeamerfont{frametitle}{family=\rmfamily,shape=\itshape}
+%\setbeamertemplate{items}[ball]
+%\setbeamertemplate{blocks}[rounded][shadow=true]
+%\useoutertheme{infolines}
+%
+%\usefonttheme{}
+%\useinntertheme{}
+%
+%\setbeameroption{show notes}
+%\setbeameroption{show notes on second screen=right}
+
+% fine for B/W printing:
+%\usecolortheme{seahorse}
+
+\usepackage{pgf}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{relsize}
+
+\usepackage{fancybox}  % make sure fancybox is loaded before fancyvrb
+
+\usepackage{fancyvrb}
+\usepackage{minted} % requires pygments and latex -shell-escape filename
+%\usepackage{anslistings}
+%\usepackage{listingsutf8}
+
+\usepackage{amsmath,amssymb,bm}
+%\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{colortbl}
+\usepackage[english]{babel}
+\usepackage{tikz}
+\usepackage{framed}
+% Use some nice templates
+\beamertemplatetransparentcovereddynamic
+
+% --- begin table of contents based on sections ---
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each section:
+% (Only section headings can enter the table of contents in Beamer
+% slides generated from DocOnce source, while subsections are used
+% for the title in ordinary slides.)
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>[plain]
+  \frametitle{}
+  %\frametitle{Outline}
+  \tableofcontents[currentsection]
+  \end{frame}
+}
+% --- end table of contents based on sections ---
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command:
+
+%\beamerdefaultoverlayspecification{<+->}
+
+\newcommand{\shortinlinecomment}[3]{\note{\textbf{#1}: #2}}
+\newcommand{\longinlinecomment}[3]{\shortinlinecomment{#1}{#2}{#3}}
+
+\definecolor{linkcolor}{rgb}{0,0,0.4}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkcolor,
+    urlcolor=linkcolor,
+    pdfmenubar=true,
+    pdftoolbar=true,
+    bookmarksdepth=3
+    }
+\setlength{\parskip}{0pt}  % {1em}
+
+\newenvironment{doconceexercise}{}{}
+\newcounter{doconceexercisecounter}
+\newenvironment{doconce:movie}{}{}
+\newcounter{doconce:movie:counter}
+
+\newcommand{\subex}[1]{\noindent\textbf{#1}}  % for subexercises: a), b), etc
+
+\logo{{\tiny \copyright\ 1999-2026, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license}}
+
+%-------------------- end beamer-specific preamble ----------------------
+
+% Add user's preamble
+
+
+
+
+% insert custom LaTeX commands...
+
+\raggedbottom
+\makeindex
+
+%-------------------- end preamble ----------------------
+
+\begin{document}
+
+% matching end for #ifdef PREAMBLE
+
+\newcommand{\exercisesection}[1]{\subsection*{#1}}
+
+
+
+% ------------------- main content ----------------------
+
+
+
+% ----------------- title -------------------------
+
+\title{Quantum Computing and Quantum Machine Learning}
+
+% ----------------- author(s) -------------------------
+
+\author{Morten Hjorth-Jensen\inst{1}}
+\institute{Department of Physics, University of Oslo, Norway\inst{1}}
+% ----------------- end author(s) -------------------------
+
+\date{March 18, 2026
+% <optional titlepage figure>
+\ \\ 
+{\tiny \copyright\ 1999-2026, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license}
+}
+
+\begin{frame}[plain,fragile]
+\titlepage
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Plans for the week of March 16-20, 2026}
+
+\begin{block}{}
+\begin{enumerate}
+\item From classical Fourier transforms to quantum Fourier transforms (QFTs).
+
+\item Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT.
+
+\item Discussion and work on  project 1
+\end{enumerate}
+
+\noindent
+\end{block}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Overarching motivation}
+
+We will start with a reminder on Fourier theory and in particular on discrete Fourier transforms (DFTs).  There are many
+motivations for the DFTs. For those of you familiar with signal
+processing, harmonic oscillations, and many other areas of
+applications, Fourier transforms are almost standard kitchen
+items. 
+
+But first some general motivation for Quantum Fourier Transforms (QFTs).
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum Fourier Transforms (QFTs)}
+
+\begin{itemize}
+\item QFTs are the quantum analogue of the Discrete Fourier Transforms (DFTs).
+
+\item They  play a crucial role in quantum algorithms like Shor’s Algorithm and Quantum Phase Estimation (algo for finding for example eigenvalues)
+
+\item QFTs provide an \emph{exponential speedup} over classical Fourier Transform methods.
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Why Quantum Fourier Transforms and exponential speedup}
+
+\begin{itemize}
+\item Classical Discrete Fourier Transforms (DFTs) require $O(N^2)$ operations.
+
+\item The Fast Fourier Transform (FFT) improves this to $O(N \log N)$ operations.
+
+\item QFTs reduce complexity to $O((\log N)^2)$ using quantum gates.
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum Fourier Transforms and quantum parallelism}
+
+\begin{itemize}
+\item QFTs act on a \emph{superposition} of states, processing all inputs simultaneously.
+
+\item This is crucial in algorithms like:
+\begin{itemize}
+
+  \item Shor’s Algorithm for factoring large numbers.
+
+  \item Quantum Phase Estimation (QPE) for eigenvalue extraction.
+\end{itemize}
+
+\noindent
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum Fourier Transforms and implementations}
+
+\begin{itemize}
+\item QFTs require only \emph{Hadamard gates and controlled-phase gates}.
+
+\item A 3-qubit QFT circuit uses only $O(n^2)$.
+
+\item This makes QFTs highly efficient for \emph{quantum hardware}.
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum Fourier Transform and Applications in Quantum Computing}
+
+\begin{itemize}
+\item \textbf{Shor’s Algorithm:} Uses QFTs to find periodicity in modular exponentiation.
+
+\item \textbf{Quantum Phase Estimation (QPE):} QFTs extract eigenvalues of for example unitary matrices or finding eigenvalues of a given Hamiltonian.
+
+\item \textbf{Quantum Signal Processing:} QFTs enable spectral analysis on quantum data. Important for AI applications.
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum Fourier Transforms and Reduced Memory Complexity (not covered)}
+
+\begin{itemize}
+\item Classical DFTs require $O(N)$ space.
+
+\item QFT store Fourier-transformed coefficients \emph{implicitly} in qubit amplitudes.
+
+\item Only $O(n)$ qubits are needed for a size $N = 2^n$ transformation.
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum Fourier Transforms and Quantum Signal Processing (not covered in this course)}
+
+QFTs enable applications such as:
+\begin{itemize}
+\item Quantum spectral analysis.
+
+\item Quantum image processing.
+
+\item Quantum filtering and denoising.
+\end{itemize}
+
+\noindent
+These can enhance AI, cryptography, and data processing.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Why Quantum Fourier Transforms? Brief summary}
+
+\begin{itemize}
+\item Quantum Fourier Transforms provide \emph{exponential speedup}
+
+\item They enable key quantum algorithms like \emph{Shor’s Algorithm} and \emph{Quantum Phase Estimation}.
+
+\item QFTs are  more efficient in \emph{memory usage and circuit complexity} than classical methods.
+
+\item Future quantum applications in \emph{signal processing, AI, and cryptography} will heavily rely on QFT.
+\end{itemize}
+
+\noindent
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Now technicalities: Reminder on Fourier theory, a familiar case first}
+
+For problems with so-called harmonic oscillations, given by for example the following differential equation
+\[
+m\frac{d^2x}{dt^2}+\eta\frac{dx}{dt}+x(t)=f(t),
+\]
+where $f(t)$ is an applied external force acting on the system (often
+called a driving force), one can use the theory of Fourier
+transformations to find the solutions of this type of equations.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Several driving forces}
+
+If one has several driving forces, $f(t)=\sum_n f_n(t)$, one can find
+the particular solution $x_{pn}(t)$ to the above differential equation for each $f_n$. The particular
+solution for the entire driving force is then given by a series like
+
+\[
+x_p(t)=\sum_nx_{pn}(t).
+\]
+
+This is known as the principle of superposition. It only applies when
+the homogenous equation is linear. 
+Superposition is especially useful when $f(t)$ can be written
+as a sum of sinusoidal terms, because the solutions for each
+sinusoidal (sine or cosine)  term is analytic.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Periodicity}
+
+Driving forces are often periodic, even when they are not
+sinusoidal. Periodicity implies that for some time $t$ our function repeats itself periodically after a period $T$, that is
+
+\[
+f(t+\tau)=f(t). 
+\]
+
+One example of a non-sinusoidal periodic force is a square wave. Many
+components in electric circuits are non-linear, for example diodes. This 
+makes many wave forms non-sinusoidal even when the circuits are being
+driven by purely sinusoidal sources.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Continuous Fourier transforms and the principle of Superposition}
+
+It was Fourier's idea to expand a continuous and periodic function $f(t)$ in terms of sums sine and cosine ordered functions (we will use exponentials however)
+as
+\[
+f(t) = \sum_{k=1}^{n}a_k\sin{(2\pi kt+\phi_n)},
+\]
+with $\phi_n$ being a constant phase. The function $f$ is assumed to be bounded in order to be able to define properly the error in truncating the sum
+over $n$, that is
+\[
+\int_a^b dt \vert f(t)\vert^2 \le M < \infty.
+\]
+
+Below we discuss how to find the coefficients $a_n$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Rewriting in terms of sines and cosines}
+
+It is common to rewrite the above sum in terms of sines and cosines and to add a complex constant $a_0$. This gives us
+\[
+f(t) = \frac{a_0}{2}+ \sum_{k=1}^{n}\left(a_k\cos{(2\pi kt)}+b_n\sin{(2\pi kt)}\right).
+\]
+Using the standard trigonometric relations
+\begin{align*}
+\cos{t} = \frac{\exp{\imath t}+\exp{-\imath t}}{2} & \hspace{0.5cm} \sin{t} = \frac{\exp{\imath t}-\exp{-\imath t}}{2\imath}.
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Exponential expression}
+
+We can rewrite the Fourier expansion as
+\[
+f(t) =\sum_{k=-n}^{n}c_{k}\exp{(2\pi\imath kt)}, 
+\]
+with $c_0=a_0/2$. The coefficients $c_k$ are complex and satisfy $c_{-k}=c_k^*$.
+The constant $c_{0}=c_0^*$ is a real number.
+
+The above sum can also be rewritten in terms of the real part of the exponentials as
+\[
+f(t) =2\mathrm{Re}\left(\sum_{k=0}^{n}c_{k}\exp{(2\pi\imath kt} \right),
+\]
+where we used that $c_{-k}=c_k^*$. We leave it as an exercise to the reader to show the latter expression.
+
+How do we determine the coefficients $c_k$?
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Determining $c_k$}
+
+Let us assume that we have a periodic function $f(t)$ 
+\[
+f(t) =\sum_{k=-n}^{n}c_{k}\exp{(2\pi\imath kt)}, 
+\]
+and we select the coefficient $c_l$, and multiply the l.h.s and r.h.s. with $\exp{(-2\pi\imath lt)}$, and isolate the $c_l$ terms
+\[
+c_l=f(t)\exp{(-2\pi\imath lt)}-\sum_{k=-n, k\ne l}^{n}c_{k}\exp{(2\pi\imath (k-l)t)}. 
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Integrating both sides}
+
+Then we integrate both sides (note we have assumed a period of one) from $0$ to $1$. This gives
+\[
+c_l=\int_0^1 dtf(t)\exp{(-2\pi\imath lt)},
+\]
+since the terms with the sum is zero.  We leave again this derivation as an exercise to the dedicated reader.
+If the function $f$ is real ($t$ nd $dt$ are real), then $c_l^*=c_{-l}$.
+The coefficients $c_n$ are normally called the Fourier coefficients and it is common to relabel them in terms of the function $f$ as
+\[
+\hat{f}(k)=\int_0^1 dt f(t)\exp{(-2\pi\imath kt)}.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Independence of interval length}
+
+In the discussions and equations above, we have assumed that the
+integration interval has a length of one, that is a period of length one. It is easy to change this
+length and as we show below, if we integrate from say $a$ to $a+1$, this is the same as integrating over an interval of length $1$.
+
+To show this, we need also to recall that our function $f(t)$ is assumed to be periodic, that is we need to satisfy
+\[
+f(a+1)=f(a).
+\]
+Later we will generalize this to a period of arbitrary length.
+
+Assume that $a$ is any number and taking the derivative of the integral with respect to $a$, we have
+\[
+\frac{d}{da}\left[\int_a^{a+1} dt f(t)\exp{(-2\pi\imath kt)}\right]. 
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Writing out the various terms}
+
+From the last equation we have then
+\[
+\exp{(-2\pi\imath ka)}\exp{(-2\pi\imath k)}f(a+1)-\exp{(-2\pi\imath ka)}f(a)=0,
+\]
+where we used the periodicity  $f(a+1)=f(a)$ and that $\exp{(-2\pi\imath k)}=1$ since $k$ is an integer.
+This shows that the expression for $\hat{f}$ is independent of $a$. A common instance is
+\[
+\hat{f}(k)=\int_{-\frac{1}{2}}^{\frac{1}{2}} dt f(t)\exp{(-2\pi\imath kt)}.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Changing period}
+
+What if the period is not equal to one? Assume we are working with a
+function $f(t)$ whose period is $T$. We can then define a function
+$g(t)$ with period one as
+\[
+g(t) = f(Tt),
+\]
+that is 
+\[
+g(t) =\sum_{k=-n}^{n}c_{n}\exp{(2\pi\imath kt)}, 
+\]
+and introducing the variable $s=Tt$ we have $g(t)=f(s)$ we have
+\[
+f(s) = g(t)=\sum_{k=-n}^{n}c_{n}\exp{(2\pi\imath kt)}=\sum_{k=-n}^{n}c_{k}\exp{(2\pi\imath ks/T)}. 
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Harmonics}
+
+The so-called harmonics are now defined as $\exp{(2\pi\imath ks/T)}$.
+We have 
+\[
+\hat{g}(k)=\int_0^1 dt g(t)\exp{(-2\pi\imath kt)},
+\]
+and using $s=Tt$ we have
+\[
+\hat{g}(k)=\int_0^1 dt g(t)\exp{(-2\pi\imath kt)}=\frac{1}{T}\int_0^T ds f(s)\exp{(-2\pi\imath ks/T)}.
+\]
+
+For a period $T$ we have thus the general expression for the Fourier transform
+\[
+\hat{f}(k)=c_k=\frac{1}{T}\int_0^T dt f(t)\exp{(-2\pi\imath kt/T)}.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Typical interval}
+
+An often used choice of interval is
+\[
+\hat{f}(k)=c_k=\frac{1}{T}\int_{-T/2}^{T/2} dt f(t)\exp{(-2\pi\imath kt/T)},
+\]
+and a common choice for the harmonics is $(1/\sqrt{T})\exp{(2\pi\imath kt/T)}$.
+
+As a small addendum, if the signal (function) $f(t)$ is real and even one has $f(-t)=f(t)$. If $f$ is an even function, then $\hat{f}$ is also an even function which leads to $\hat{f}(-k)=\hat{f}(k)$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Sinusoidal example}
+
+For the sinusoidal example the
+period is $T=2\pi/\omega$. However, higher harmonics can also
+satisfy the periodicity requirement. In general, any force that
+satisfies the periodicity requirement can be expressed as a sum over
+harmonics,
+
+\[
+f(t)=\frac{a_0}{2}+\sum_{n>0} a_n\cos(2n\pi t/T)+b_n\sin(2n\pi t/T).
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Square well example}
+
+In the code discussed earlier, we used a square well as a our
+example. If we assume our period has length $1$, we can define the
+square well function $f(t)$ as
+
+\[
+f(t)=\left\{\begin{array}{cc} 1 & 0 \le t \le \frac{1}{2} \\
+                              -1 & \frac{1}{2} < t \le 1\end{array}\right.
+\]
+
+The zeroth coefficient $a_0$ is zero since it is the average of the function $f(t)$ over the intergration domain $t\in [0,1]$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{The coefficients}
+
+We find that the other coefficients are
+\[
+\hat{f}(n)=c_n=\int_0^1 dt f(t)\exp{(-2\pi\imath nt)}=\frac{1}{\imath\pi n}\left(1-\exp{-\imath\pi n}\right).
+\]
+
+We note that $(1-\exp{-\imath\pi n})$ is zero when $n$ is an even
+number and $2$ when $n$ is an odd number. We can then combine the
+positive and negative values of $n$ using
+\[
+\exp{(2\pi\imath nt)}-\exp{(-2\pi\imath nt)}=2\imath \sin{(2\pi nt)},
+\]
+and we have
+\[
+f(t)=\frac{4}{\pi}\sum_{k=0}^{\infty}\frac{1}{2k+1}\sin{(2\pi(2k+1)t)}.
+\]
+\end{frame}
+
+
+\begin{frame}[plain,fragile]
+\frametitle{Inverse Fourier transform}
+
+The inverse Fourier transform is given by
+\[
+\bm{F}^{-1}[g(y)]=\frac{1}{2\pi}\int_{-\infty}^{\infty} d\omega \exp{i\omega y} g(\omega).
+\]
+
+The inverse Fourier transform of the product of the two functions $\hat{f}\hat{g}$ can be written as
+\[
+\bm{F}^{-1}[(\hat{f}\hat{g})(x)]=\frac{1}{2\pi}\int_{-\infty}^{\infty} d\omega \exp{i\omega x} \hat{f}(\omega)\hat{g}(\omega).
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Rewriting}
+
+We can rewrite the latter as
+\[
+\bm{F}^{-1}[(\hat{f}\hat{g})(x)]=\int_{-\infty}^{\infty} d\omega \exp{i\omega x} \hat{f}(\omega)\left[\frac{1}{2\pi}\int_{-\infty}^{\infty}g(y)dy \exp{-i\omega y}\right]=\frac{1}{2\pi}\int_{-\infty}^{\infty}dy g(y)\int_{-\infty}^{\infty} d\omega \hat{f}(\omega) \exp{i\omega(x- y)},
+\]
+which is simply 
+\[
+\bm{F}^{-1}[(\hat{f}\hat{g})(x)]=\int_{-\infty}^{\infty}dy g(y)f(x-y)=(f*g)(x),
+\]
+the convolution of the functions $f$ and $g$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Transforming to discrete variables}
+
+In the Fourier transform $c_n$ is transformed from a dicrete variable
+to a continuous one as $T \rightarrow \infty$. We then replace $c_n$ with
+$f(k)dk$ and let $n/T \rightarrow k$, and the sum is changed to an
+integral. This gives
+\[
+f(x) = \int_{-\infty}^{\infty}dkF(k) \exp{i(2\pi kx)}
+\]
+and
+\[
+F(k) = \int_{-\infty}^{\infty}dxf(x) \exp{-i(2\pi kx)}
+\]
+One way to interpret the Fourier transform is then as a transformation from one basis to another.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Discrete Fourier transform}
+
+We change notation by replacing $t$ with $x$.
+
+Next we make another generalization by having a discrete function,
+that is $f(x) \rightarrow f(x_k)$ with $x_k = k\Delta x$ for $k=0,\dots, N-1$. This leads to the sums
+\[
+f_x = \frac{1}{n} \sum_{k=0}^{n-1}F_k \exp{i(2\pi kx)/n},
+\]
+and
+\[
+F_k = \sum_{x=0}^{n-1}f_x \exp{-i(2\pi kx)/n}.
+\]
+
+Although we have used functions here, this could also be a set of
+numbers.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Simple example}
+
+As an example we can have a set of complex numbers
+$\{x_0,\dots,x_{n-1}\}$ with fixed length $n$, we can Fourier
+transform this as
+\[
+y_k = \frac{1}{\sqrt{n}} \sum_{j=0}^{n-1} x_j \exp{i(2\pi jk)/n},
+\]
+
+leading to a new set of complex numbers $\{ y_0,\dots,y_{n-1}\}$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Discrete Fourier Transformations}
+
+Consider two sets of complex numbers $x_k$ and $y_k$ with
+$k=0,1,\dots,n-1$ entries. The discrete Fourier transform is defined
+as
+\[
+y_k = \frac{1}{\sqrt{n}} \sum_{j=0}^{n-1} \exp{(\frac{2\pi\imath jk}{n})} x_j.
+\]
+As an example, assume $x_0=1$ and $x_1=1$. We can then use the above expression to find $y_0$ and $y_1$.
+
+With the above formula we get then
+\begin{align*}
+y_0 &= \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 0\times 1}{2})}\times 2\right)\\
+& =\frac{1}{\sqrt{2}}(1+2)=\frac{3}{\sqrt{2}},
+\end{align*}
+and
+\begin{align*}
+y_1 &= \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\\
+& =\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}}.
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{More details on Discrete Fourier transforms}
+
+Suppose that we have a vector $f$ of $n$ complex numbers, $f_{k}, k
+\in\{0,1, \ldots, n-1\}$. Then the discrete Fourier transform (DFT) is
+a map from these $n$ complex numbers to $n$ complex numbers, the
+Fourier transformed coefficients $\tilde{f}_{j}$, given by
+
+\begin{equation*}
+\tilde{f}_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{-j k} f_{k}
+\end{equation*}
+where $\omega=\exp \left(\frac{2 \pi i}{N}\right)$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Inverse DFT}
+
+The inverse DFT is given by
+
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \tilde{f}_{k}
+\end{equation*}
+
+To see this consider how the basis vectors transform. If $f_{k}^{l}=\delta_{k, l}$, then
+
+\begin{equation*}
+\tilde{f}_{j}^{l}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{-j k} \delta_{k, l}=\frac{1}{\sqrt{n}} \omega^{-j l}
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Orthonormality}
+
+These DFT vectors are orthonormal, that is
+\begin{equation*}
+\sum_{j=0}^{n-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\frac{1}{n} \sum_{j=0}^{n-1} \omega^{j l} \omega^{-j m}=\frac{1}{N} \sum_{j=0}^{n-1} \omega^{j(l-m)} 
+\end{equation*}
+
+This last sum can be evaluated as a geometric series, but beware of the $(l-m)=0$ term, and yields
+
+\begin{equation*}
+\sum_{j=0}^{n-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\delta_{l, m}
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Inverse transform}
+
+From this we can check that the inverse DFT does indeed perform the inverse transform:
+
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \tilde{f}_{k}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \frac{1}{\sqrt{n}} \sum_{l=0}^{n-1} \omega^{-l k} f_{l}=\frac{1}{n} \sum_{k, l=0}^{n-1} \omega^{(j-l) k} f_{l}=\sum_{l=0}^{n-1} \delta_{j, l} f_{l}=f_{j} 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Summary: Discrete Fourier transforms}
+
+The Discrete Fourier Transform is a tool used in many different fields
+and finds applications in for example signal processing.  It has many
+many applications (in Speech Recognition, Data Processing, Optics,
+Acoustics). It is used in any application which performs Digital
+Signal Processing.
+
+There
+is an efficient algorithm, called the Fast Fourier Transform (FFT),
+which uses the special relationship amongst the roots of unity to
+compute the entire DFT in $O(n \log{n})$ time. Moreover, it is possible to take the DFT and recover the original
+polynomial in its coefficient form in $O(n \log{n})$ time, by using the
+FFT to compute the inverse DFT.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Fast Fourier transform (FFT)}
+
+Because of the many important applications of DFT, the Fast Fourier
+Transform is ranked among the top ten  algorithms in the 20th century.
+It came to light as a tool for Signal processing in 1965, when
+Cooley (of IBM) and Tukey (of Princeton) wrote a paper presenting the
+algorithm. However the basics of the algorithm were known long before
+that, for example, it was known to Gauss back in 1805.
+To read more about Fast Fourier transforms and similar topics, see for example \href{{https://link.springer.com/book/10.1007/978-1-4020-6629-0}}{Fast Fourier Transform - Algorithms and Applications}. See also \href{{https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/Textbooks/fastfourier.pdf}}{\nolinkurl{https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/Textbooks/fastfourier.pdf}}
+
+Our emphasis is on the link between discrete Fourier transforms and quantum Fourier transforms.
+For fast Fourier transforms, we may (if there is interest) have a dedicated sessions.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{More summary: The discrete Fourier transform (DFT)}
+
+The discrete Fourier transform takes as input a complex vector
+\begin{align*}
+\bm{x} =\vert\bm{x}\rangle= 
+\begin{bmatrix}
+x_0 \\ 
+x_1 \\ 
+x_2 \\
+\vdots \\ 
+x_{n-2} \\
+x_{n-1}
+\end{bmatrix}.
+\end{align*}
+
+Each entry of the output vector $\vert \bm{y}\rangle$ is given by
+
+\begin{align*}
+y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_je^{2 \pi ijk/N}.
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Output vector}
+
+The output is a complex vector
+
+\begin{align*}
+\vert \bm{y}\rangle = 
+\frac{1}{\sqrt{n}}
+\begin{bmatrix}
+\sum_{j=0}^{n-1} x_je^{2\pi ij0/n} \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij1/n} \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij2/n} \\
+\vdots \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij(n-2)/n} \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij(n-1)/n}
+\end{bmatrix}
+\end{align*}
+\end{frame}
+
+\begin{frame}{Summarizing Discrete Fourier Transform}
+
+For vector
+
+\[
+x=(x_0,\dots,x_{N-1})
+\]
+
+\[
+y_k =
+\frac{1}{\sqrt N}
+\sum_{j=0}^{N-1}
+x_j e^{2\pi i jk/N}
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Fourier Matrix}
+
+\[
+F_{jk}=
+\frac{1}{\sqrt N}
+e^{2\pi i jk/N}
+\]
+
+Properties
+
+\begin{itemize}
+\item unitary
+\item periodic
+\item diagonalizes cyclic shifts
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}[plain,fragile]
+\frametitle{From DFT to QFT}
+
+The Quantum Fourier Transform (QFT) has mathematically the same equation as starting point
+but the notation is generally different. We generally compute the
+quantum Fourier transform on a set of orthonormal basis state vectors
+\(|0\rangle, |1\rangle, ..., |N-1\rangle\). The linear operator defining
+the transform is given by the action on basis states
+
+\[
+|j\rangle \mapsto \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} e^{2\pi ijk/N}|k\rangle.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{From DFT to QFT}
+
+The Quantum Fourier Transform (QFT) has mathematically the same equation as starting point
+but the notation is generally different. We generally compute the
+quantum Fourier transform on a set of orthonormal basis state vectors
+\(|0\rangle, |1\rangle, ..., |N-1\rangle\). The linear operator defining
+the transform is given by the action on basis states
+
+\[
+|j\rangle \mapsto \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} e^{2\pi ijk/N}|k\rangle.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{In terms of arbitrary states}
+
+This can be written on arbitrary states,
+\[
+\sum_{j=0}^{N-1}x_j|j\rangle \mapsto \sum_{k=0}^{N-1} y_k|k\rangle
+\]
+where each amplitude \(y_k\) is the discrete Fourier transform of
+\(x_j\).
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Unitarity}
+
+The quantum Fourier transform is unitary. Taking \(N = 2^n\),
+for \(n\) qubits gives us the orthonormal (computational) basis
+\[
+|0\rangle, |1\rangle, ..., |2^{n}-1\rangle.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Full QFT}
+
+So what is the full quantum Fourier transform? It is the transform
+which takes the amplitudes of a $N$ dimensional state and computes the
+Fourier transform on these amplitudes (which are then the new
+amplitudes in the computational basis.) In other words, the QFT enacts
+the transform
+
+\begin{equation*}
+\sum_{x=0}^{N-1} a_{x}|x\rangle \rightarrow \sum_{x=0}^{N-1} \tilde{a}_{x}|x\rangle=\sum_{x=0}^{N-1} \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y} a_{y}|x\rangle 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Explicit transform}
+
+It is easy to see that this implies that the QFT performs the following transform on basis states:
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y}|y\rangle
+\end{equation*}
+
+Thus the QFT is given by the matrix
+
+\begin{equation*}
+U_{Q F T}=\frac{1}{\sqrt{N}} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{-y x}|y\rangle\langle x| 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Unitarity}
+
+The last  matrix is unitary. Let's check this:
+
+\begin{align*}
+U_{Q F T} U_{Q F T}^{\dagger} & =\frac{1}{N} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{y x}|x\rangle\left\langle y\left|\sum_{x^{\prime}=0}^{N-1} \sum_{y^{\prime}=0}^{N-1} \omega_{N}^{-y^{\prime} x^{\prime}}\right| y^{\prime}\right\rangle\left\langle x^{\prime}\right| \\
+& =\frac{1}{N} \sum_{x, y, x^{\prime}, y^{\prime}=0}^{N-1} \omega_{N}^{y x-y^{\prime} x^{\prime}} \delta_{y, y^{\prime}}|x\rangle\left\langle x^{\prime}\left|=\frac{1}{N} \sum_{x, y, x^{\prime}=0}^{N-1} \omega_{N}^{y\left(x-x^{\prime}\right)}\right| x\right\rangle\left\langle x^{\prime}\right| \\
+& =\sum_{x, x^{\prime}=0}^{N-1} \delta_{x, x^{\prime}}|x\rangle\left\langle x^{\prime}\right|=I 
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Importance of QFT}
+
+The QFT is a very important transform in quantum computing. It can be
+used for all sorts of cool tasks, including, as we shall see in Shor's
+algorithm. But before we can use it for quantum computing tasks, we
+should try to see if we can efficiently implement the QFT with a
+quantum circuit. Indeed we can and the reason we can is intimately
+related to the fast Fourier transform.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Circuit QFT}
+
+Let's derive a circuit for the QFT when $N=2^{n}$. The QFT performs the transform
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y=0}^{2^{n}-1} \omega_{N}^{-x y}|y\rangle 
+\end{equation*}
+
+Then we can expand out this sum
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \omega_{N}^{-x \sum_{k=1}^{n} 2^{n-k} y_{k}}\left|y_{1}, y_{2}, \ldots, y_{n}\right\rangle 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Expanding the exponential}
+
+Expanding the exponential of a sum to a product of exponentials and
+collecting these terms in from the appropriate terms we can express
+this as
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \bigotimes_{k=1}^{n} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Rearranging}
+
+We can rearrange the sum and products as
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[\sum_{y_{k} \in\{0,1\}} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle\right] 
+\end{equation*}
+
+Expanding this sum yields
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[|0\rangle+\omega_{N}^{-x 2^{n-k}}|1\rangle\right]
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Notation for binary fraction}
+
+But now notice that $\omega_{N}^{-x 2^{n-k}}$ is not dependent on the
+higer order bits of $x$. It is convenient to adopt the following
+expression for a binary fraction:
+
+\begin{equation*}
+0 . x_{l} x_{l+1} \ldots x_{n}=\frac{x_{l}}{2}+\frac{x_{l+1}}{4}+\cdots+\frac{x_{n}}{2^{n-l+1}}
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{More notations}
+
+Then we can see that
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n-1} x_{n}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] 
+\end{equation*}
+
+This is a very useful form of the QFT for $N=2^{n}$. Why? Because we
+see that only the last qubit depends on the the values of all the
+other input qubits and each further bit depends less and less on the
+input qubits. Further we note that $e^{-2 \pi i 0 . a}$ is either +1
+or -1 , which reminds us of the Hadamard transform.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Deriving a circuit}
+
+So how do we use this to derive a circuit for the QFT over $N=2^{n}$ ?
+
+Take the first qubit of $\left|x_{1}, \ldots, x_{n}\right\rangle$ and
+apply a Hadamard transform. This produces the transform
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 \cdot x_{1}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Rotation gate}
+
+Now define the rotation gate
+
+\[
+R_{k}=\left[\begin{array}{cc}
+1 & 0  \tag{30}\\
+0 & \exp \left(\frac{-2 \pi i}{2^{k}}\right)
+\end{array}\right]
+\]
+If we now apply controlled $R_{2}, R_{3}$, etc. gates controlled on
+the appropriate bits this enacts the transform
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \ldots x_{n}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
+\end{equation*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Proceeding}
+
+Thus we have reproduced the last term in the QFTed state. Of course
+now we can proceed to the second qubit, perform a Hadamard, and the
+appropriate controlled $R_{k}$ gates and get the second to last
+qubit. Thus when we are finished we will have the transform
+
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n-1}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right]
+\end{equation*}
+
+Reversing the order of these qubits will then produce the QFT!
+
+% The circuit we have constructed on $n$ qubits is
+
+% \includegraphics[max width=\textwidth]{2024_03_18_c1d427fa6b85efa365f1g-5}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Two-qubit case}
+
+For a two-qubit system $n=2$, the QFT transformation is:
+\[
+\text{QFT} \vert x_0 x_1\rangle = \frac{1}{2} \sum_{y=0}^{3} e^{2\pi i x y / 4} \vert y\rangle, 
+\]
+where $x = x_0 x_1$ (binary representation).
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{QFT matrix}
+
+The QFT on two qubits has the matrix:
+\[
+   U_{\text{QFT}} = \frac{1}{2}
+   \begin{bmatrix}
+       1 & 1 & 1 & 1 \\
+       1 & i & -1 & -i \\
+       1 & -1 & 1 & -1 \\
+       1 & -i & -1 & i
+   \end{bmatrix}
+\]
+Exercise: apply this to the $\vert 01\rangle$ (binary 1) and $\vert 10\rangle$ (binary 2) stats.
+Hint: see Hundt section 6.2 and circuit figures as well.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Four-qubit system}
+
+The basis states are
+\[
+|j_1j_2j_3j_4 \rangle
+\]
+where \(j_k\) is either \(0\) or \(1\). We have
+
+\begin{align*}
+0.j_3 &= \frac{j_3}{2} \\
+0.j_2j_3 &= \frac{j_2}{2} + \frac{j_3}{4} \\
+0.j_1j_2j_3 &= \frac{j_1}{2} + \frac{j_2}{4} + \frac{j_3}{8} \\
+0.j_0j_1j_2j_3 &= \frac{j_0}{2} + \frac{j_1}{4} + \frac{j_2}{8} + \frac{j_3}{16} \\
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{QFT acts as follows}
+
+The quantum Fourier transform acts as follows:
+
+\begin{align*}
+|j_1j_2j_3j_4 \rangle \mapsto \frac{1}{\sqrt{2^{4/2}}}
+\left(|0\rangle + e^{2 \pi i 0.j4}|1\rangle \right) \otimes 
+\left(|0\rangle + e^{2 \pi i 0.j_3j4}|1\rangle \right) \otimes 
+\left(|0\rangle + e^{2 \pi i 0.j_2j_3j4}|1\rangle \right) \otimes 
+\left(|0\rangle + e^{2 \pi i 0.j_1j_2j_3j4}|1\rangle \right) 
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Quantum circuits}
+
+To compose a quantum circuit that calculates the quantum Fourier
+transform we use the operators
+
+\begin{align*}
+R_k = 
+\begin{bmatrix}
+1 & 0 \\
+0 & e^{2\pi i/2^k}
+\end{bmatrix}.
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Rotation gates}
+
+In this example, the \(R_k\) gates are:
+\begin{align*}
+R_1 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^0}
+\end{bmatrix} = 
+\begin{bmatrix}
+1 & 0 \\
+0 & 1
+\end{bmatrix}, \quad 
+R_2 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^2}
+\end{bmatrix}, \quad 
+R_3 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^3}
+\end{bmatrix}, \quad 
+R_4 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^4}
+\end{bmatrix}.
+\end{align*}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Using the Hadamard gate}
+
+The Hadamard
+gate on a single qubit creates an equal superposition of its basis
+states, assuming it is not already in a superposition, such that
+
+\[
+H\vert 0 \rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle + \vert 1\rangle\right), \quad H\vert 1\rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle - \vert 1\rangle\right)
+\]
+The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\vert 1\rangle$
+\[
+    R_k\vert 0 \rangle = \vert 0 \rangle, \quad R_k\vert 1\rangle = e^{2\pi i/2^{k}}\vert 1\rangle
+\]
+
+Since all this gates are unitary, the quantum Fourier transfrom is also unitary.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Algorithm}
+
+Assume we have a quantum register of $n$ qubits in the state $\vert j_1 j_2 \dots j_n\rangle$.
+Applying the Hadamard gate to the first qubit
+produces the state
+
+\[
+H\vert j_1 j_2 \dots j_n\rangle = \frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle.
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Binary fraction}
+
+Here we have made use of the binary fraction to represent the action of the Hadamard gate 
+\[
+\exp{2\pi i 0.j_1} = -1,
+\]
+if $j_1 = 1$ and $+1$ if $j_1 = 0$.
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Controlled rotation gate}
+
+Furthermore we can apply the controlled-$R_k$ gate, with all the other qubits $j_k$ for $k>1$ as control qubits to produce the state
+
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle
+\]
+
+Next we do the same procedure on qubit $2$ producing the state
+
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)}{2^{2/2}} \vert j_2 \dots j_n\rangle
+\]
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Applying to all qubits}
+
+Doing this for all $n$ qubits yields state
+
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)\dots \left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)}{2^{n/2}} \vert j_2 \dots j_n\rangle
+\]
+At the end we use swap gates to reverse the order of the qubits
+
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_{n-1}j_n}\vert 1\rangle\right)\dots\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right) }{2^{n/2}} \vert j_2 \dots j_n\rangle
+\]
+This is just the product representation from earlier, obviously our desired output.
+\end{frame}
+
+
+
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation}
+
+Each qubit accumulates phases from less significant bits.
+
+Controlled rotations naturally appear.
+
+\end{frame}
+
+
+
+\begin{frame}{General QFT Circuit}
+
+\begin{center}
+\begin{quantikz}
+\lstick{q0}&\gate{H}&\ctrl{1}&\ctrl{2}&\swap{2}&\qw\\
+\lstick{q1}&\qw&\gate{R2}&\ctrl{1}&\qw&\qw\\
+\lstick{q2}&\qw&\qw&\gate{R3}&\gate{H}&\swap{-2}
+\end{quantikz}
+\end{center}
+
+\end{frame}
+
+
+%------------------------------------------------
+
+\begin{frame}{Two-Qubit QFT}
+
+\begin{center}
+\begin{quantikz}
+\lstick{}&\gate{H}&\ctrl{1}&\swap{1}\\
+\lstick{}&\gate{R2}&\gate{H}&\swap{-1}
+\end{quantikz}
+\end{center}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Three-Qubit QFT}
+
+\begin{center}
+\begin{quantikz}
+\lstick{}&\gate{H}&\ctrl{1}&\ctrl{2}&\swap{2}\\
+\lstick{}&\gate{R2}&\gate{H}&\ctrl{1}&\qw\\
+\lstick{}&\gate{R3}&\gate{R2}&\gate{H}&\swap{-2}
+\end{quantikz}
+\end{center}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Gate Complexity}
+
+Number of gates
+
+\[
+\frac{n(n+1)}{2}
+\]
+
+Scaling
+
+\[
+O(n^2)
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Approximate QFT}
+
+Small rotations contribute little.
+
+Truncate rotations
+
+\[
+R_k \quad k>m
+\]
+
+
+Approximate QFT
+
+\[
+O(n\log n)
+\]
+
+\end{frame}
+
+\begin{frame}[plain,fragile]
+\frametitle{Plans for next week, March 23-27}
+
+\begin{enumerate}
+\item From QFTs to the quantum phase estimation algorithm and eigenvalues of for example the Lipkin  Hamiltonian
+
+\item Discussions of variants for project 2
+\end{enumerate}
+
+\noindent
+\end{frame}
+
+\end{document}
+
+
+

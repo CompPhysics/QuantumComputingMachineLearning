@@ -1,0 +1,609 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{Quantum Fourier Transform — Circuit\PYGZhy{}Level Implementation}
+
+\PYG{l+s+sd}{Builds the QFT and IQFT exactly as they are decomposed on a quantum computer:}
+\PYG{l+s+sd}{  • Hadamard gates  H}
+\PYG{l+s+sd}{  • Controlled phase\PYGZhy{}rotation gates  CR\PYGZus{}k  (= controlled\PYGZhy{}R\PYGZus{}k)}
+\PYG{l+s+sd}{  • SWAP gates to reverse qubit order}
+
+\PYG{l+s+sd}{All gates are represented as full 2\PYGZca{}n × 2\PYGZca{}n unitary matrices obtained by}
+\PYG{l+s+sd}{tensoring single\PYGZhy{}qubit and two\PYGZhy{}qubit gates with identity blocks, so every}
+\PYG{l+s+sd}{circuit matrix can be compared directly to the analytic QFT matrix from the}
+\PYG{l+s+sd}{original qft.py.}
+
+\PYG{l+s+sd}{Structure}
+\PYG{l+s+sd}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{l+s+sd}{  gate\PYGZus{}H(n, qubit)          – n\PYGZhy{}qubit Hadamard on `qubit`}
+\PYG{l+s+sd}{  gate\PYGZus{}R(k)                 – single\PYGZhy{}qubit phase rotation by 2π/2\PYGZca{}k}
+\PYG{l+s+sd}{  gate\PYGZus{}CR(n, ctrl, tgt, k)  – controlled\PYGZhy{}R\PYGZus{}k in n\PYGZhy{}qubit space}
+\PYG{l+s+sd}{  gate\PYGZus{}SWAP(n, i, j)        – SWAP on qubits i and j}
+\PYG{l+s+sd}{  qft\PYGZus{}circuit(n)            – full QFT unitary built from gates}
+\PYG{l+s+sd}{  iqft\PYGZus{}circuit(n)           – full IQFT unitary (reverse circuit, R → R†)}
+\PYG{l+s+sd}{  analytic\PYGZus{}qft(n)           – closed\PYGZhy{}form matrix for comparison}
+\PYG{l+s+sd}{  run\PYGZus{}all\PYGZus{}tests(n)           – unitarity + equivalence tests with plots}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib}
+\PYG{n}{matplotlib}\PYG{o}{.}\PYG{n}{use}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{Agg}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib}\PYG{n+nn}{.}\PYG{n+nn}{pyplot}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{plt}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib}\PYG{n+nn}{.}\PYG{n+nn}{gridspec}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{gridspec}
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 1.  Single\PYGZhy{}qubit gate matrices}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}H}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}2×2 Hadamard matrix.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,}  \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,}
+                     \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{]}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)} \PYG{o}{/} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}R}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Single\PYGZhy{}qubit phase\PYGZhy{}rotation gate R\PYGZus{}k:}
+
+\PYG{l+s+sd}{        R\PYGZus{}k = | 1    0          |}
+\PYG{l+s+sd}{              | 0    e\PYGZca{}\PYGZob{}2πi/2\PYGZca{}k\PYGZcb{}|}
+
+\PYG{l+s+sd}{    In the QFT circuit qubit j receives R\PYGZus{}k from a control qubit k steps}
+\PYG{l+s+sd}{    away, contributing a phase of 2π/2\PYGZca{}k to the |1⟩ component.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,}
+                     \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{exp}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{n}{j} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi} \PYG{o}{/} \PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{k}\PYG{p}{)}\PYG{p}{)}\PYG{p}{]}\PYG{p}{]}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}Rd}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Conjugate\PYGZhy{}transpose of R\PYGZus{}k  (used in the IQFT).\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{\PYGZus{}R}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 2.  Embedding single\PYGZhy{}qubit and two\PYGZhy{}qubit gates into the n\PYGZhy{}qubit space}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}embed\PYGZus{}single}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{qubit}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{gate2}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Embed a 2×2 gate acting on `qubit` into the full 2\PYGZca{}n × 2\PYGZca{}n space via}
+\PYG{l+s+sd}{    Kronecker products:}
+
+\PYG{l+s+sd}{        I ⊗ … ⊗ gate2 ⊗ … ⊗ I   (gate2 is at position `qubit`)}
+
+\PYG{l+s+sd}{    Qubit 0 is the most\PYGZhy{}significant (leftmost) qubit.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{ops} \PYG{o}{=} \PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}\PYG{p}{]} \PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{ops}\PYG{p}{[}\PYG{n}{qubit}\PYG{p}{]} \PYG{o}{=} \PYG{n}{gate2}
+    \PYG{n}{result} \PYG{o}{=} \PYG{n}{ops}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{op} \PYG{o+ow}{in} \PYG{n}{ops}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:}\PYG{p}{]}\PYG{p}{:}
+        \PYG{n}{result} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{kron}\PYG{p}{(}\PYG{n}{result}\PYG{p}{,} \PYG{n}{op}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{result}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}embed\PYGZus{}controlled}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{ctrl}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{tgt}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,}
+                      \PYG{n}{gate2}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Embed a controlled\PYGZhy{}gate into the 2\PYGZca{}n space.}
+
+\PYG{l+s+sd}{    The full matrix is built by projecting the control qubit onto |0⟩ and |1⟩:}
+
+\PYG{l+s+sd}{        U = P0\PYGZus{}ctrl ⊗ I\PYGZus{}tgt  +  P1\PYGZus{}ctrl ⊗ gate2\PYGZus{}tgt}
+
+\PYG{l+s+sd}{    where P0 = |0⟩⟨0| and P1 = |1⟩⟨1|.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{P0} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+    \PYG{n}{P1} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{]}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} Branch 1: ctrl = |0⟩ → identity on target}
+    \PYG{n}{ops0} \PYG{o}{=} \PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}\PYG{p}{]} \PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{ops0}\PYG{p}{[}\PYG{n}{ctrl}\PYG{p}{]} \PYG{o}{=} \PYG{n}{P0}
+    \PYG{n}{branch0} \PYG{o}{=} \PYG{n}{ops0}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{op} \PYG{o+ow}{in} \PYG{n}{ops0}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:}\PYG{p}{]}\PYG{p}{:}
+        \PYG{n}{branch0} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{kron}\PYG{p}{(}\PYG{n}{branch0}\PYG{p}{,} \PYG{n}{op}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} Branch 2: ctrl = |1⟩ → gate2 on target}
+    \PYG{n}{ops1} \PYG{o}{=} \PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}\PYG{p}{]} \PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{ops1}\PYG{p}{[}\PYG{n}{ctrl}\PYG{p}{]} \PYG{o}{=} \PYG{n}{P1}
+    \PYG{n}{ops1}\PYG{p}{[}\PYG{n}{tgt}\PYG{p}{]}  \PYG{o}{=} \PYG{n}{gate2}
+    \PYG{n}{branch1} \PYG{o}{=} \PYG{n}{ops1}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{op} \PYG{o+ow}{in} \PYG{n}{ops1}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:}\PYG{p}{]}\PYG{p}{:}
+        \PYG{n}{branch1} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{kron}\PYG{p}{(}\PYG{n}{branch1}\PYG{p}{,} \PYG{n}{op}\PYG{p}{)}
+
+    \PYG{k}{return} \PYG{n}{branch0} \PYG{o}{+} \PYG{n}{branch1}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}embed\PYGZus{}swap}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{i}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{j}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    SWAP gate on qubits i and j in the n\PYGZhy{}qubit space.}
+
+\PYG{l+s+sd}{    SWAP is decomposed as three CNOTs:}
+\PYG{l+s+sd}{        SWAP(i,j) = CNOT(i,j) · CNOT(j,i) · CNOT(i,j)}
+
+\PYG{l+s+sd}{    where CNOT(ctrl, tgt) is a controlled\PYGZhy{}X gate.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{X} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+    \PYG{n}{cnot\PYGZus{}ij} \PYG{o}{=} \PYG{n}{\PYGZus{}embed\PYGZus{}controlled}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{X}\PYG{p}{)}
+    \PYG{n}{cnot\PYGZus{}ji} \PYG{o}{=} \PYG{n}{\PYGZus{}embed\PYGZus{}controlled}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{X}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{cnot\PYGZus{}ij} \PYG{o}{@} \PYG{n}{cnot\PYGZus{}ji} \PYG{o}{@} \PYG{n}{cnot\PYGZus{}ij}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 3.  Public gate constructors (n\PYGZhy{}qubit space)}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{gate\PYGZus{}H}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{qubit}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    n\PYGZhy{}qubit Hadamard gate acting on `qubit`.}
+
+\PYG{l+s+sd}{    H = (1/√2) |0+1⟩⟨0| + (1/√2)|0\PYGZhy{}1⟩⟨1|}
+
+\PYG{l+s+sd}{    In the circuit diagram this is the first gate applied to each qubit}
+\PYG{l+s+sd}{    in the QFT layer.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{\PYGZus{}embed\PYGZus{}single}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{qubit}\PYG{p}{,} \PYG{n}{\PYGZus{}H}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{gate\PYGZus{}CR}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{ctrl}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{tgt}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{k}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Controlled phase\PYGZhy{}rotation CR\PYGZus{}k in the n\PYGZhy{}qubit space.}
+
+\PYG{l+s+sd}{    If the control qubit is |1⟩, apply R\PYGZus{}k to the target:}
+\PYG{l+s+sd}{        R\PYGZus{}k = diag(1, e\PYGZca{}\PYGZob{}2πi/2\PYGZca{}k\PYGZcb{})}
+
+\PYG{l+s+sd}{    In the standard QFT circuit qubit `qubit` receives CR\PYGZus{}k gates from}
+\PYG{l+s+sd}{    all subsequent qubits `qubit+1, qubit+2, …` with k = 2, 3, …}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{\PYGZus{}embed\PYGZus{}controlled}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{ctrl}\PYG{p}{,} \PYG{n}{tgt}\PYG{p}{,} \PYG{n}{\PYGZus{}R}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)}\PYG{p}{)}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{gate\PYGZus{}CRd}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{ctrl}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{tgt}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{k}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Controlled R\PYGZus{}k† (used in the IQFT).\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{\PYGZus{}embed\PYGZus{}controlled}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{ctrl}\PYG{p}{,} \PYG{n}{tgt}\PYG{p}{,} \PYG{n}{\PYGZus{}Rd}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)}\PYG{p}{)}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{gate\PYGZus{}SWAP}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{i}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{j}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}SWAP gate on qubits i and j in the n\PYGZhy{}qubit space.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{return} \PYG{n}{\PYGZus{}embed\PYGZus{}swap}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{j}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 4.  QFT circuit}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{qft\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Build the n\PYGZhy{}qubit QFT unitary from Hadamard, controlled\PYGZhy{}rotation, and}
+\PYG{l+s+sd}{    SWAP gates — exactly as implemented on a real quantum computer.}
+
+\PYG{l+s+sd}{    Circuit structure (qubit 0 = most significant):}
+\PYG{l+s+sd}{    ─────────────────────────────────────────────────}
+\PYG{l+s+sd}{    For each qubit j = 0, 1, …, n\PYGZhy{}1:}
+\PYG{l+s+sd}{      1. Apply H on qubit j}
+\PYG{l+s+sd}{      2. For each qubit m = j+1, j+2, …, n\PYGZhy{}1:}
+\PYG{l+s+sd}{            Apply CR\PYGZus{}\PYGZob{}m\PYGZhy{}j+1\PYGZcb{} with control=m, target=j}
+\PYG{l+s+sd}{            (rotation angle 2π / 2\PYGZca{}\PYGZob{}m\PYGZhy{}j+1\PYGZcb{})}
+
+\PYG{l+s+sd}{    Then reverse the qubit order with n//2 SWAP gates.}
+
+\PYG{l+s+sd}{    Gate count:  n Hadamards  +  n(n\PYGZhy{}1)/2 CR gates  +  ⌊n/2⌋ SWAPs}
+\PYG{l+s+sd}{    ─────────────────────────────────────────────────}
+\PYG{l+s+sd}{    Returns the 2\PYGZca{}n × 2\PYGZca{}n unitary matrix U\PYGZus{}QFT.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{dim} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{U}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{n}{j} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{p}{:}
+        \PYG{c+c1}{\PYGZsh{} Hadamard on qubit j}
+        \PYG{n}{U} \PYG{o}{=} \PYG{n}{gate\PYGZus{}H}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{j}\PYG{p}{)} \PYG{o}{@} \PYG{n}{U}
+        \PYG{c+c1}{\PYGZsh{} Controlled rotations from all later qubits}
+        \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{j} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{n}\PYG{p}{)}\PYG{p}{:}
+            \PYG{n}{k} \PYG{o}{=} \PYG{n}{m} \PYG{o}{\PYGZhy{}} \PYG{n}{j} \PYG{o}{+} \PYG{l+m+mi}{1}          \PYG{c+c1}{\PYGZsh{} rotation order: R\PYGZus{}2, R\PYGZus{}3, …}
+            \PYG{n}{U} \PYG{o}{=} \PYG{n}{gate\PYGZus{}CR}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{m}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{k}\PYG{p}{)} \PYG{o}{@} \PYG{n}{U}
+
+    \PYG{c+c1}{\PYGZsh{} Bit\PYGZhy{}reversal: swap qubit 0↔n\PYGZhy{}1, 1↔n\PYGZhy{}2, …}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n} \PYG{o}{/}\PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{U} \PYG{o}{=} \PYG{n}{gate\PYGZus{}SWAP}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{n} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{i}\PYG{p}{)} \PYG{o}{@} \PYG{n}{U}
+
+    \PYG{k}{return} \PYG{n}{U}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 5.  IQFT circuit}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{iqft\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Build the n\PYGZhy{}qubit inverse QFT from the reversed and conjugated circuit.}
+
+\PYG{l+s+sd}{    The IQFT is U\PYGZus{}QFT†.  On a quantum computer this is implemented by:}
+\PYG{l+s+sd}{      1. Undo the SWAP layer (SWAPs are self\PYGZhy{}inverse, same gates)}
+\PYG{l+s+sd}{      2. For each qubit j = n\PYGZhy{}1, n\PYGZhy{}2, …, 0  (reverse order):}
+\PYG{l+s+sd}{            For each qubit m = n\PYGZhy{}1, …, j+1  (reverse order):}
+\PYG{l+s+sd}{               Apply CR\PYGZus{}k†  with control=m, target=j}
+\PYG{l+s+sd}{            Apply H on qubit j}
+
+\PYG{l+s+sd}{    Gate count: same as QFT (all gates are inverted, SWAPs unchanged).}
+\PYG{l+s+sd}{    ─────────────────────────────────────────────────}
+\PYG{l+s+sd}{    Returns the 2\PYGZca{}n × 2\PYGZca{}n unitary matrix U\PYGZus{}IQFT = U\PYGZus{}QFT†.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{dim} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{U}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} Step 1: undo the SWAP layer first (SWAPs are self\PYGZhy{}inverse)}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n} \PYG{o}{/}\PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{U} \PYG{o}{=} \PYG{n}{gate\PYGZus{}SWAP}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{n} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{i}\PYG{p}{)} \PYG{o}{@} \PYG{n}{U}
+
+    \PYG{c+c1}{\PYGZsh{} Step 2: reverse the rotation + Hadamard layers}
+    \PYG{k}{for} \PYG{n}{j} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{:}
+        \PYG{c+c1}{\PYGZsh{} Inverse controlled rotations (reverse order)}
+        \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{:}
+            \PYG{n}{k} \PYG{o}{=} \PYG{n}{m} \PYG{o}{\PYGZhy{}} \PYG{n}{j} \PYG{o}{+} \PYG{l+m+mi}{1}
+            \PYG{n}{U} \PYG{o}{=} \PYG{n}{gate\PYGZus{}CRd}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{m}\PYG{p}{,} \PYG{n}{j}\PYG{p}{,} \PYG{n}{k}\PYG{p}{)} \PYG{o}{@} \PYG{n}{U}
+        \PYG{c+c1}{\PYGZsh{} Hadamard (self\PYGZhy{}inverse)}
+        \PYG{n}{U} \PYG{o}{=} \PYG{n}{gate\PYGZus{}H}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{j}\PYG{p}{)} \PYG{o}{@} \PYG{n}{U}
+
+    \PYG{k}{return} \PYG{n}{U}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 6.  Analytic reference matrix (from original qft.py)}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{analytic\PYGZus{}qft}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Closed\PYGZhy{}form QFT matrix:  F[j,k] = ω\PYGZca{}\PYGZob{}jk\PYGZcb{} / √(2\PYGZca{}n),  ω = e\PYGZca{}\PYGZob{}2πi/2\PYGZca{}n\PYGZcb{}.}
+
+\PYG{l+s+sd}{    Used as the ground\PYGZhy{}truth reference to verify the circuit construction.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{dim}   \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{omega} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{exp}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{n}{j} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi} \PYG{o}{/} \PYG{n}{dim}\PYG{p}{)}
+    \PYG{n}{idx}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{arange}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{power}\PYG{p}{(}\PYG{n}{omega}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{outer}\PYG{p}{(}\PYG{n}{idx}\PYG{p}{,} \PYG{n}{idx}\PYG{p}{)}\PYG{p}{)} \PYG{o}{/} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 7.  Unitarity and equivalence tests}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{run\PYGZus{}all\PYGZus{}tests}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{n\PYGZus{}random}\PYG{p}{:} \PYG{n+nb}{int} \PYG{o}{=} \PYG{l+m+mi}{300}\PYG{p}{,}
+                  \PYG{n}{seed}\PYG{p}{:} \PYG{n+nb}{int} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{savename}\PYG{p}{:} \PYG{n+nb}{str} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{qft\PYGZus{}circuit\PYGZus{}tests.png}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Run a full test suite and produce diagnostic plots.}
+
+\PYG{l+s+sd}{    Tests}
+\PYG{l+s+sd}{    \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{l+s+sd}{    1.  U\PYGZus{}circ · U\PYGZus{}circ†  ≈  I           (QFT circuit left\PYGZhy{}unitarity)}
+\PYG{l+s+sd}{    2.  U\PYGZus{}circ† · U\PYGZus{}circ  ≈  I           (QFT circuit right\PYGZhy{}unitarity)}
+\PYG{l+s+sd}{    3.  U\PYGZus{}iqft · U\PYGZus{}iqft†  ≈  I           (IQFT circuit unitarity)}
+\PYG{l+s+sd}{    4.  U\PYGZus{}iqft · U\PYGZus{}circ   ≈  I           (IQFT is inverse of QFT)}
+\PYG{l+s+sd}{    5.  |U\PYGZus{}circ \PYGZhy{} U\PYGZus{}analytic|  ≈  0      (circuit ≡ analytic formula)}
+\PYG{l+s+sd}{    6.  Norm preservation: ‖U|ψ⟩‖ = 1    for random states}
+\PYG{l+s+sd}{    7.  Round\PYGZhy{}trip fidelity:  |⟨ψ|IQFT·QFT|ψ⟩|² ≈ 1}
+\PYG{l+s+sd}{    8.  Eigenvalues of U\PYGZus{}circ on unit circle}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{o}{*}\PYG{l+m+mi}{62}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Gate\PYGZhy{}Circuit QFT/IQFT Tests  —  n=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ qubits  (dim=}\PYG{l+s+si}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{o}{*}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{o}{*}\PYG{l+m+mi}{62}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{dim}   \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*}\PYG{o}{*} \PYG{n}{n}
+    \PYG{n}{I}     \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+    \PYG{n}{rng}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{default\PYGZus{}rng}\PYG{p}{(}\PYG{n}{seed}\PYG{p}{)}
+
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Building QFT circuit …}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{end}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{flush}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+    \PYG{n}{U\PYGZus{}qft}  \PYG{o}{=} \PYG{n}{qft\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  done.}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Building IQFT circuit …}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{end}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{flush}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+    \PYG{n}{U\PYGZus{}iqft} \PYG{o}{=} \PYG{n}{iqft\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  done.}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{U\PYGZus{}ref}  \PYG{o}{=} \PYG{n}{analytic\PYGZus{}qft}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Compute all errors ─────────────────────────────────────────────}
+    \PYG{n}{err\PYGZus{}UUd}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft} \PYG{o}{@} \PYG{n}{U\PYGZus{}qft}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T} \PYG{o}{\PYGZhy{}} \PYG{n}{I}\PYG{p}{)}
+    \PYG{n}{err\PYGZus{}UdU}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T} \PYG{o}{@} \PYG{n}{U\PYGZus{}qft} \PYG{o}{\PYGZhy{}} \PYG{n}{I}\PYG{p}{)}
+    \PYG{n}{err\PYGZus{}iqft}  \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}iqft} \PYG{o}{@} \PYG{n}{U\PYGZus{}iqft}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T} \PYG{o}{\PYGZhy{}} \PYG{n}{I}\PYG{p}{)}
+    \PYG{n}{err\PYGZus{}inv}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}iqft} \PYG{o}{@} \PYG{n}{U\PYGZus{}qft} \PYG{o}{\PYGZhy{}} \PYG{n}{I}\PYG{p}{)}
+    \PYG{n}{err\PYGZus{}ref}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft} \PYG{o}{\PYGZhy{}} \PYG{n}{U\PYGZus{}ref}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Norm preservation ──────────────────────────────────────────────}
+    \PYG{n}{norm\PYGZus{}errors} \PYG{o}{=} \PYG{p}{[}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n\PYGZus{}random}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{v}  \PYG{o}{=} \PYG{n}{rng}\PYG{o}{.}\PYG{n}{standard\PYGZus{}normal}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{n}{j} \PYG{o}{*} \PYG{n}{rng}\PYG{o}{.}\PYG{n}{standard\PYGZus{}normal}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}
+        \PYG{n}{v} \PYG{o}{/}\PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{norm}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}
+        \PYG{n}{norm\PYGZus{}errors}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{norm}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft} \PYG{o}{@} \PYG{n}{v}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1.0}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n}{norm\PYGZus{}errors} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{norm\PYGZus{}errors}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Round\PYGZhy{}trip fidelities ──────────────────────────────────────────}
+    \PYG{n}{fidelities} \PYG{o}{=} \PYG{p}{[}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n\PYGZus{}random}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{v}   \PYG{o}{=} \PYG{n}{rng}\PYG{o}{.}\PYG{n}{standard\PYGZus{}normal}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{n}{j} \PYG{o}{*} \PYG{n}{rng}\PYG{o}{.}\PYG{n}{standard\PYGZus{}normal}\PYG{p}{(}\PYG{n}{dim}\PYG{p}{)}
+        \PYG{n}{v}  \PYG{o}{/}\PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{norm}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}
+        \PYG{n}{vrt} \PYG{o}{=} \PYG{n}{U\PYGZus{}iqft} \PYG{o}{@} \PYG{p}{(}\PYG{n}{U\PYGZus{}qft} \PYG{o}{@} \PYG{n}{v}\PYG{p}{)}
+        \PYG{n}{fidelities}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{vdot}\PYG{p}{(}\PYG{n}{v}\PYG{p}{,} \PYG{n}{vrt}\PYG{p}{)}\PYG{p}{)} \PYG{o}{*}\PYG{o}{*} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{fidelities} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{fidelities}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Eigenvalues ────────────────────────────────────────────────────}
+    \PYG{n}{eigvals}   \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{eigvals}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft}\PYG{p}{)}
+    \PYG{n}{ev\PYGZus{}dev}    \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{eigvals}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1.0}\PYG{p}{)}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Singular values ────────────────────────────────────────────────}
+    \PYG{n}{svs}    \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{svd}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft}\PYG{p}{,} \PYG{n}{compute\PYGZus{}uv}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{sv\PYGZus{}dev} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{svs} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1.0}\PYG{p}{)}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Print summary ──────────────────────────────────────────────────}
+    \PYG{n}{tol} \PYG{o}{=} \PYG{l+m+mf}{1e\PYGZhy{}10}
+    \PYG{n}{rows} \PYG{o}{=} \PYG{p}{[}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{U·U† = I  (max error)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}            \PYG{n}{err\PYGZus{}UUd}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}    \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{U†·U = I  (max error)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}             \PYG{n}{err\PYGZus{}UdU}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}    \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{IQFT·IQFT† = I  (max error)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}       \PYG{n}{err\PYGZus{}iqft}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}   \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{IQFT·QFT = I  (max error)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}          \PYG{n}{err\PYGZus{}inv}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}    \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Circuit vs analytic  (max error)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}   \PYG{n}{err\PYGZus{}ref}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}    \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Norm preservation  (max error)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}     \PYG{n}{norm\PYGZus{}errors}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Round\PYGZhy{}trip fidelity  (min)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}         \PYG{n}{fidelities}\PYG{o}{.}\PYG{n}{min}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{k+kc}{None}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Singular values ≈ 1  (max dev)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}     \PYG{n}{sv\PYGZus{}dev}\PYG{p}{,}           \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{|eigenvalue| ≈ 1  (max dev)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}        \PYG{n}{ev\PYGZus{}dev}\PYG{p}{,}           \PYG{n}{tol}\PYG{p}{)}\PYG{p}{,}
+    \PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{name}\PYG{p}{,} \PYG{n}{val}\PYG{p}{,} \PYG{n}{threshold} \PYG{o+ow}{in} \PYG{n}{rows}\PYG{p}{:}
+        \PYG{k}{if} \PYG{n}{threshold} \PYG{o+ow}{is} \PYG{k+kc}{None}\PYG{p}{:}
+            \PYG{n}{ok} \PYG{o}{=} \PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{val} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1.0}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{l+m+mf}{1e\PYGZhy{}10}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{n}{ok} \PYG{o}{=} \PYG{n}{val} \PYG{o}{\PYGZlt{}} \PYG{n}{threshold}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  }\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{✓}\PYG{l+s+s1}{\PYGZsq{}}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{ok}\PYG{+w}{ }\PYG{k}{else}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{✗}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{name}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}44s}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{val}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{o}{*}\PYG{l+m+mi}{62}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Plots ──────────────────────────────────────────────────────────}
+    \PYG{n}{\PYGZus{}plot\PYGZus{}tests}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{dim}\PYG{p}{,} \PYG{n}{U\PYGZus{}qft}\PYG{p}{,} \PYG{n}{U\PYGZus{}iqft}\PYG{p}{,}
+                \PYG{n}{err\PYGZus{}UUd}\PYG{p}{,} \PYG{n}{err\PYGZus{}UdU}\PYG{p}{,} \PYG{n}{err\PYGZus{}iqft}\PYG{p}{,} \PYG{n}{err\PYGZus{}inv}\PYG{p}{,} \PYG{n}{err\PYGZus{}ref}\PYG{p}{,}
+                \PYG{n}{norm\PYGZus{}errors}\PYG{p}{,} \PYG{n}{fidelities}\PYG{p}{,} \PYG{n}{eigvals}\PYG{p}{,} \PYG{n}{svs}\PYG{p}{,}
+                \PYG{n}{savename}\PYG{o}{=}\PYG{n}{savename}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 8.  Plotting}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{c+c1}{\PYGZsh{} Colour palette}
+\PYG{n}{BG}     \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}0d0f1a}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{PANEL}  \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}131629}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{ACCENT} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}4fc3f7}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{WARM}   \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}ff7043}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{GREEN}  \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}69f0ae}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{PURPLE} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}ce93d8}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{GRID}   \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}1e2340}\PYG{l+s+s2}{\PYGZdq{}}
+\PYG{n}{TEXT}   \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZsh{}e8eaf6}\PYG{l+s+s2}{\PYGZdq{}}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}plot\PYGZus{}tests}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{dim}\PYG{p}{,} \PYG{n}{U\PYGZus{}qft}\PYG{p}{,} \PYG{n}{U\PYGZus{}iqft}\PYG{p}{,}
+                \PYG{n}{err\PYGZus{}UUd}\PYG{p}{,} \PYG{n}{err\PYGZus{}UdU}\PYG{p}{,} \PYG{n}{err\PYGZus{}iqft}\PYG{p}{,} \PYG{n}{err\PYGZus{}inv}\PYG{p}{,} \PYG{n}{err\PYGZus{}ref}\PYG{p}{,}
+                \PYG{n}{norm\PYGZus{}errors}\PYG{p}{,} \PYG{n}{fidelities}\PYG{p}{,} \PYG{n}{eigvals}\PYG{p}{,} \PYG{n}{svs}\PYG{p}{,}
+                \PYG{n}{savename}\PYG{p}{)}\PYG{p}{:}
+
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{rcParams}\PYG{o}{.}\PYG{n}{update}\PYG{p}{(}\PYG{p}{\PYGZob{}}
+        \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{figure.facecolor}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}  \PYG{n}{BG}\PYG{p}{,}   \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{axes.facecolor}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}  \PYG{n}{PANEL}\PYG{p}{,}
+        \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{axes.edgecolor}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}    \PYG{n}{GRID}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{axes.labelcolor}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{n}{TEXT}\PYG{p}{,}
+        \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{xtick.color}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}       \PYG{n}{TEXT}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{ytick.color}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}     \PYG{n}{TEXT}\PYG{p}{,}
+        \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{text.color}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}        \PYG{n}{TEXT}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{grid.color}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}      \PYG{n}{GRID}\PYG{p}{,}
+        \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{grid.linewidth}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}    \PYG{l+m+mf}{0.6}\PYG{p}{,}  \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{legend.facecolor}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}\PYG{n}{PANEL}\PYG{p}{,}
+        \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{legend.edgecolor}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:}  \PYG{n}{GRID}\PYG{p}{,}
+    \PYG{p}{\PYGZcb{}}\PYG{p}{)}
+
+    \PYG{n}{fig} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{figure}\PYG{p}{(}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{22}\PYG{p}{,} \PYG{l+m+mi}{16}\PYG{p}{)}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{n}{BG}\PYG{p}{)}
+    \PYG{n}{fig}\PYG{o}{.}\PYG{n}{suptitle}\PYG{p}{(}
+        \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Gate\PYGZhy{}Circuit QFT / IQFT  —  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ qubits  (dim = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{dim}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+        \PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{17}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{y}\PYG{o}{=}\PYG{l+m+mf}{0.98}\PYG{p}{)}
+
+    \PYG{n}{gs} \PYG{o}{=} \PYG{n}{gridspec}\PYG{o}{.}\PYG{n}{GridSpec}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{figure}\PYG{o}{=}\PYG{n}{fig}\PYG{p}{,}
+                           \PYG{n}{hspace}\PYG{o}{=}\PYG{l+m+mf}{0.52}\PYG{p}{,} \PYG{n}{wspace}\PYG{o}{=}\PYG{l+m+mf}{0.42}\PYG{p}{,}
+                           \PYG{n}{left}\PYG{o}{=}\PYG{l+m+mf}{0.05}\PYG{p}{,} \PYG{n}{right}\PYG{o}{=}\PYG{l+m+mf}{0.97}\PYG{p}{,} \PYG{n}{top}\PYG{o}{=}\PYG{l+m+mf}{0.93}\PYG{p}{,} \PYG{n}{bottom}\PYG{o}{=}\PYG{l+m+mf}{0.05}\PYG{p}{)}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{ax}\PYG{p}{(}\PYG{n}{row}\PYG{p}{,} \PYG{n}{col}\PYG{p}{,} \PYG{o}{*}\PYG{o}{*}\PYG{n}{kw}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{a} \PYG{o}{=} \PYG{n}{fig}\PYG{o}{.}\PYG{n}{add\PYGZus{}subplot}\PYG{p}{(}\PYG{n}{gs}\PYG{p}{[}\PYG{n}{row}\PYG{p}{,} \PYG{n}{col}\PYG{p}{]}\PYG{p}{,} \PYG{o}{*}\PYG{o}{*}\PYG{n}{kw}\PYG{p}{)}
+        \PYG{n}{a}\PYG{o}{.}\PYG{n}{grid}\PYG{p}{(}\PYG{k+kc}{True}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.35}\PYG{p}{)}
+        \PYG{k}{return} \PYG{n}{a}
+
+    \PYG{c+c1}{\PYGZsh{} ── 1: U·U† error heatmap ─────────────────────────────────────────}
+    \PYG{n}{a1} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{im1} \PYG{o}{=} \PYG{n}{a1}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{err\PYGZus{}UUd}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{inferno}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                    \PYG{n}{vmax}\PYG{o}{=}\PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{err\PYGZus{}UUd}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mf}{1e\PYGZhy{}16}\PYG{p}{)}\PYG{p}{,}
+                    \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im1}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a1}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|error|}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a1}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{U·U† − I}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{err\PYGZus{}UUd}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a1}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a1}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row i}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 2: U†·U error heatmap ─────────────────────────────────────────}
+    \PYG{n}{a2} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{im2} \PYG{o}{=} \PYG{n}{a2}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{err\PYGZus{}UdU}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{inferno}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                    \PYG{n}{vmax}\PYG{o}{=}\PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{err\PYGZus{}UdU}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mf}{1e\PYGZhy{}16}\PYG{p}{)}\PYG{p}{,}
+                    \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im2}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a2}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|error|}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a2}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{U†·U − I}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{err\PYGZus{}UdU}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a2}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a2}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row i}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 3: IQFT·QFT = I heatmap ───────────────────────────────────────}
+    \PYG{n}{a3} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{im3} \PYG{o}{=} \PYG{n}{a3}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{err\PYGZus{}inv}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{plasma}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                    \PYG{n}{vmax}\PYG{o}{=}\PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{err\PYGZus{}inv}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mf}{1e\PYGZhy{}16}\PYG{p}{)}\PYG{p}{,}
+                    \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im3}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a3}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|error|}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a3}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{IQFT·QFT − I}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{err\PYGZus{}inv}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a3}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a3}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row i}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 4: Circuit vs analytic ────────────────────────────────────────}
+    \PYG{n}{a4} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{im4} \PYG{o}{=} \PYG{n}{a4}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{err\PYGZus{}ref}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{viridis}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                    \PYG{n}{vmax}\PYG{o}{=}\PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{err\PYGZus{}ref}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mf}{1e\PYGZhy{}16}\PYG{p}{)}\PYG{p}{,}
+                    \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im4}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a4}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|error|}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a4}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Circuit − Analytic}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{err\PYGZus{}ref}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a4}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a4}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row i}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 5: Norm preservation histogram ───────────────────────────────}
+    \PYG{n}{a5} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{a5}\PYG{o}{.}\PYG{n}{hist}\PYG{p}{(}\PYG{n}{norm\PYGZus{}errors}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{40}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{ACCENT}\PYG{p}{,} \PYG{n}{edgecolor}\PYG{o}{=}\PYG{n}{BG}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.85}\PYG{p}{)}
+    \PYG{n}{a5}\PYG{o}{.}\PYG{n}{axvline}\PYG{p}{(}\PYG{n}{norm\PYGZus{}errors}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{WARM}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,}
+               \PYG{n}{label}\PYG{o}{=}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{mean=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{norm\PYGZus{}errors}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{a5}\PYG{o}{.}\PYG{n}{axvline}\PYG{p}{(}\PYG{n}{norm\PYGZus{}errors}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{GREEN}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{ls}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZhy{}\PYGZhy{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,}
+               \PYG{n}{label}\PYG{o}{=}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{max=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{norm\PYGZus{}errors}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{a5}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Norm preservation}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(random states)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a5}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{|‖U|ψ⟩‖ − 1|}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a5}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{count}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{a5}\PYG{o}{.}\PYG{n}{legend}\PYG{p}{(}\PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{9}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 6: Round\PYGZhy{}trip fidelity histogram ─────────────────────────────}
+    \PYG{n}{a6} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{infid} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{fidelities}
+    \PYG{n}{a6}\PYG{o}{.}\PYG{n}{hist}\PYG{p}{(}\PYG{n}{infid}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{40}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{GREEN}\PYG{p}{,} \PYG{n}{edgecolor}\PYG{o}{=}\PYG{n}{BG}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.85}\PYG{p}{)}
+    \PYG{n}{a6}\PYG{o}{.}\PYG{n}{axvline}\PYG{p}{(}\PYG{n}{infid}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{WARM}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,}
+               \PYG{n}{label}\PYG{o}{=}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{mean=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{infid}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{a6}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Round\PYGZhy{}trip infidelity}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{1 − |⟨ψ|IQFT·QFT|ψ⟩|²}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a6}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{1 − fidelity}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a6}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{count}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{a6}\PYG{o}{.}\PYG{n}{legend}\PYG{p}{(}\PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{9}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 7: Singular values ────────────────────────────────────────────}
+    \PYG{n}{a7} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{sv\PYGZus{}dev} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{svs} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1.0}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n}{a7}\PYG{o}{.}\PYG{n}{scatter}\PYG{p}{(}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{svs}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,} \PYG{n}{svs}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{ACCENT}\PYG{p}{,} \PYG{n}{s}\PYG{o}{=}\PYG{l+m+mi}{14}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.75}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{a7}\PYG{o}{.}\PYG{n}{axhline}\PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{GREEN}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mf}{1.5}\PYG{p}{,} \PYG{n}{ls}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZhy{}\PYGZhy{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{σ = 1  (ideal)}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a7}\PYG{o}{.}\PYG{n}{fill\PYGZus{}between}\PYG{p}{(}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{svs}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{1e\PYGZhy{}10}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{+}\PYG{l+m+mf}{1e\PYGZhy{}10}\PYG{p}{,}
+                    \PYG{n}{color}\PYG{o}{=}\PYG{n}{GREEN}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.12}\PYG{p}{)}
+    \PYG{n}{a7}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Singular values}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max dev: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{sv\PYGZus{}dev}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a7}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{index}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a7}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{σ}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{a7}\PYG{o}{.}\PYG{n}{legend}\PYG{p}{(}\PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{9}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 8: Eigenvalues on unit circle ────────────────────────────────}
+    \PYG{n}{a8} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{equal}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{th} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linspace}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{l+m+mi}{400}\PYG{p}{)}
+    \PYG{n}{a8}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{th}\PYG{p}{)}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{th}\PYG{p}{)}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{GRID}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mf}{1.5}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{sc} \PYG{o}{=} \PYG{n}{a8}\PYG{o}{.}\PYG{n}{scatter}\PYG{p}{(}\PYG{n}{eigvals}\PYG{o}{.}\PYG{n}{real}\PYG{p}{,} \PYG{n}{eigvals}\PYG{o}{.}\PYG{n}{imag}\PYG{p}{,}
+                    \PYG{n}{c}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{angle}\PYG{p}{(}\PYG{n}{eigvals}\PYG{p}{)}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{hsv}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,}
+                    \PYG{n}{s}\PYG{o}{=}\PYG{l+m+mi}{28}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.85}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,}
+                    \PYG{n}{vmin}\PYG{o}{=}\PYG{o}{\PYGZhy{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{vmax}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{sc}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a8}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{arg(λ) [rad]}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a8}\PYG{o}{.}\PYG{n}{axhline}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{GRID}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mf}{0.8}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a8}\PYG{o}{.}\PYG{n}{axvline}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{GRID}\PYG{p}{,} \PYG{n}{lw}\PYG{o}{=}\PYG{l+m+mf}{0.8}\PYG{p}{)}
+    \PYG{n}{ev\PYGZus{}dev} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{eigvals}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1.0}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n}{a8}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Eigenvalues on unit circle}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max |λ|−1: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{ev\PYGZus{}dev}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a8}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Re(λ)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a8}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Im(λ)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 9: QFT circuit matrix — |U| ───────────────────────────────────}
+    \PYG{n}{a9} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{im9} \PYG{o}{=} \PYG{n}{a9}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft}\PYG{p}{)}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{magma}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                    \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im9}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a9}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|U\PYGZus{}}\PYG{l+s+si}{\PYGZob{}jk\PYGZcb{}}\PYG{l+s+s1}{|}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a9}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{|U\PYGZus{}QFT|  (circuit)}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{All entries = 1/√dim}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                 \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a9}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col k}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a9}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 10: IQFT matrix — |U†| ────────────────────────────────────────}
+    \PYG{n}{a10} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{im10} \PYG{o}{=} \PYG{n}{a10}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}iqft}\PYG{p}{)}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{magma}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                      \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im10}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a10}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|U\PYGZus{}}\PYG{l+s+si}{\PYGZob{}jk\PYGZcb{}}\PYG{l+s+s1}{|}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a10}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{|U\PYGZus{}IQFT|  (circuit)}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{All entries = 1/√dim}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                  \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a10}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col k}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a10}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 11: Phase of QFT matrix ───────────────────────────────────────}
+    \PYG{n}{a11} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{im11} \PYG{o}{=} \PYG{n}{a11}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{angle}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft}\PYG{p}{)}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{hsv}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,}
+                      \PYG{n}{vmin}\PYG{o}{=}\PYG{o}{\PYGZhy{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{vmax}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,}
+                      \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im11}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a11}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{arg(U\PYGZus{}}\PYG{l+s+si}{\PYGZob{}jk\PYGZcb{}}\PYG{l+s+s1}{) [rad]}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a11}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{arg(U\PYGZus{}QFT)  — phase pattern}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(circuit)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                  \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a11}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col k}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a11}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── 12: Phase difference circuit vs analytic ──────────────────────}
+    \PYG{n}{a12} \PYG{o}{=} \PYG{n}{ax}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{phase\PYGZus{}diff} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{angle}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{angle}\PYG{p}{(}\PYG{n}{analytic\PYGZus{}qft}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Wrap to [\PYGZhy{}π, π]}
+    \PYG{n}{phase\PYGZus{}diff} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{where}\PYG{p}{(}\PYG{n}{phase\PYGZus{}diff} \PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi} \PYG{o}{\PYGZhy{}} \PYG{n}{phase\PYGZus{}diff}\PYG{p}{,} \PYG{n}{phase\PYGZus{}diff}\PYG{p}{)}
+    \PYG{n}{im12} \PYG{o}{=} \PYG{n}{a12}\PYG{o}{.}\PYG{n}{imshow}\PYG{p}{(}\PYG{n}{phase\PYGZus{}diff}\PYG{p}{,} \PYG{n}{cmap}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{inferno}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{vmin}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,}
+                      \PYG{n}{interpolation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{nearest}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{aspect}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{auto}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{colorbar}\PYG{p}{(}\PYG{n}{im12}\PYG{p}{,} \PYG{n}{ax}\PYG{o}{=}\PYG{n}{a12}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{|Δarg| [rad]}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a12}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Phase diff: circuit vs analytic}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{(max }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{phase\PYGZus{}diff}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+                  \PYG{n}{color}\PYG{o}{=}\PYG{n}{TEXT}\PYG{p}{,} \PYG{n}{fontweight}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{bold}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{a12}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{col k}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;} \PYG{n}{a12}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{row j}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{savefig}\PYG{p}{(}\PYG{n}{savename}\PYG{p}{,} \PYG{n}{dpi}\PYG{o}{=}\PYG{l+m+mi}{150}\PYG{p}{,} \PYG{n}{bbox\PYGZus{}inches}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{tight}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{n}{BG}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{close}\PYG{p}{(}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{rcParams}\PYG{o}{.}\PYG{n}{update}\PYG{p}{(}\PYG{n}{plt}\PYG{o}{.}\PYG{n}{rcParamsDefault}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Saved }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{savename}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 9.  Circuit diagram printer}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{print\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{)}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Print a text schematic of the QFT circuit for n qubits.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{  QFT Circuit  —  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ qubits}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  }\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{─}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{*} \PYG{p}{(}\PYG{l+m+mi}{8} \PYG{o}{+} \PYG{l+m+mi}{9} \PYG{o}{*} \PYG{n}{n}\PYG{p}{)}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{j} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{row} \PYG{o}{=} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  q}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{j}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ ─── H}\PYG{l+s+s2}{\PYGZdq{}}
+        \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{j} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{n}\PYG{p}{)}\PYG{p}{:}
+            \PYG{n}{k} \PYG{o}{=} \PYG{n}{m} \PYG{o}{\PYGZhy{}} \PYG{n}{j} \PYG{o}{+} \PYG{l+m+mi}{1}
+            \PYG{n}{row} \PYG{o}{+}\PYG{o}{=} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{ ─ CR}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{(q}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}
+        \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{j}\PYG{p}{)}\PYG{p}{:}
+            \PYG{n}{row} \PYG{o}{+}\PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{           }\PYG{l+s+s2}{\PYGZdq{}} \PYG{p}{[}\PYG{p}{:}\PYG{p}{(}\PYG{l+m+mi}{11} \PYG{k}{if} \PYG{n}{j} \PYG{o}{==} \PYG{l+m+mi}{0} \PYG{k}{else} \PYG{l+m+mi}{11}\PYG{p}{)}\PYG{p}{]}
+        \PYG{n}{row} \PYG{o}{+}\PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{ ─── (swap)}\PYG{l+s+s2}{\PYGZdq{}}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{row}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Bit\PYGZhy{}reversal SWAP layer:}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n} \PYG{o}{/}\PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{    SWAP(q}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, q}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{o}{\PYGZhy{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  }\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{─}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{*} \PYG{p}{(}\PYG{l+m+mi}{8} \PYG{o}{+} \PYG{l+m+mi}{9} \PYG{o}{*} \PYG{n}{n}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Gate count:  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ H  +  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{o}{*}\PYG{p}{(}\PYG{n}{n}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{/}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ CR  +  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{o}{/}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ SWAP}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+\PYG{c+c1}{\PYGZsh{} 10. Demo}
+\PYG{c+c1}{\PYGZsh{} ═══════════════════════════════════════════════════════════════════════════════}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{demo}\PYG{p}{(}\PYG{n}{n}\PYG{p}{:} \PYG{n+nb}{int} \PYG{o}{=} \PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{═}\PYG{l+s+s1}{\PYGZsq{}}\PYG{o}{*}\PYG{l+m+mi}{62}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Gate\PYGZhy{}Circuit QFT Demo  —  n=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{  (dim=}\PYG{l+s+si}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{o}{*}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{═}\PYG{l+s+s1}{\PYGZsq{}}\PYG{o}{*}\PYG{l+m+mi}{62}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{print\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+
+    \PYG{n}{U\PYGZus{}qft}  \PYG{o}{=} \PYG{n}{qft\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+    \PYG{n}{U\PYGZus{}iqft} \PYG{o}{=} \PYG{n}{iqft\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+    \PYG{n}{U\PYGZus{}ref}  \PYG{o}{=} \PYG{n}{analytic\PYGZus{}qft}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Verify circuit == analytic ─────────────────────────────────────}
+    \PYG{n}{max\PYGZus{}diff} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}qft} \PYG{o}{\PYGZhy{}} \PYG{n}{U\PYGZus{}ref}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Max |circuit − analytic|        = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{max\PYGZus{}diff}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{  (expect \PYGZti{}0)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Verify IQFT = QFT† ─────────────────────────────────────────────}
+    \PYG{n}{max\PYGZus{}inv} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{U\PYGZus{}iqft} \PYG{o}{\PYGZhy{}} \PYG{n}{U\PYGZus{}qft}\PYG{o}{.}\PYG{n}{conj}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{T}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Max |IQFT − QFT†|               = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{max\PYGZus{}inv}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{  (expect \PYGZti{}0)}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} ── Apply to a specific state ──────────────────────────────────────}
+    \PYG{n}{state} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{o}{*}\PYG{n}{n}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{complex}\PYG{p}{)}
+    \PYG{n}{state}\PYG{p}{[}\PYG{l+m+mi}{5} \PYG{o}{\PYGZpc{}} \PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{o}{*}\PYG{n}{n}\PYG{p}{)}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mf}{1.0}               \PYG{c+c1}{\PYGZsh{} |5 mod 2\PYGZca{}n⟩}
+    \PYG{n}{label} \PYG{o}{=} \PYG{l+m+mi}{5} \PYG{o}{\PYGZpc{}} \PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{o}{*}\PYG{n}{n}\PYG{p}{)}
+
+    \PYG{n}{out}     \PYG{o}{=} \PYG{n}{U\PYGZus{}qft}  \PYG{o}{@} \PYG{n}{state}
+    \PYG{n}{rec}     \PYG{o}{=} \PYG{n}{U\PYGZus{}iqft} \PYG{o}{@} \PYG{n}{out}
+    \PYG{n}{fid}     \PYG{o}{=} \PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{vdot}\PYG{p}{(}\PYG{n}{state}\PYG{p}{,} \PYG{n}{rec}\PYG{p}{)}\PYG{p}{)}\PYG{o}{*}\PYG{o}{*}\PYG{l+m+mi}{2}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{  Initial state: |}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{label}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{⟩}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  After QFT  (amplitudes rounded):}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{    }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{round}\PYG{p}{(}\PYG{n}{out}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{  Round\PYGZhy{}trip fidelity |⟨}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{label}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{|IQFT·QFT|}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{label}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{⟩|² = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{fid}\PYG{l+s+si}{:}\PYG{l+s+s2}{.15f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{run\PYGZus{}all\PYGZus{}tests}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n}{savename}\PYG{o}{=}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{qft\PYGZus{}circuit\PYGZus{}tests\PYGZus{}n}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{.png}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} Run demo + tests for 3 and 4 qubits}
+    \PYG{n}{demo}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+    \PYG{n}{demo}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{)}
+
+
+\end{MintedVerbatim}

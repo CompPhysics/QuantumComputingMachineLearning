@@ -1,0 +1,304 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{quantikz}
+\usepackage{listings}
+
+\title{Quantum Phase Estimation}
+\author{Morten Hjorth-Jensen}
+\date{Additional notes spring 2026}
+
+\lstset{
+language=Python,
+basicstyle=\ttfamily\small,
+keywordstyle=\color{blue},
+commentstyle=\color{green!60!black}
+}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\section{Quantum Phase Estimation}
+
+\begin{frame}{Eigenvalue Problem}
+
+Suppose
+
+\[
+U|\psi\rangle=e^{2\pi i\phi}|\psi\rangle
+\]
+
+Goal
+
+\[
+\phi
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Registers}
+
+Two registers
+
+\begin{itemize}
+\item phase register
+\item eigenstate register
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Initial State}
+
+\[
+|0\rangle^{\otimes t}|\psi\rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Superposition}
+
+Apply Hadamards
+
+\[
+\frac{1}{2^{t/2}}
+\sum_k |k\rangle |\psi\rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Controlled Powers}
+
+Controlled
+
+\[
+U^{2^k}
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{State Before QFT}
+
+\[
+\frac{1}{2^{t/2}}
+\sum_k e^{2\pi i k\phi}|k\rangle|\psi\rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Inverse QFT}
+
+Inverse QFT converts phase to binary digits.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Measurement}
+
+Measurement yields
+
+\[
+\phi \approx 0.\phi_1\phi_2\dots
+\]
+
+\end{frame}
+
+%================================================
+\section{Error Analysis}
+
+\begin{frame}{Finite Precision}
+
+If
+
+\[
+\phi\neq k/2^t
+\]
+
+measurement yields nearest integer.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Probability Distribution}
+
+\[
+P(y)=
+\frac{1}{2^{2t}}
+\left|
+\sum_k e^{2\pi i k(\phi-y/2^t)}
+\right|^2
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Success Bound}
+
+Probability
+
+\[
+P \ge 4/\pi^2
+\]
+
+\end{frame}
+
+%================================================
+\section{Iterative Phase Estimation}
+
+\begin{frame}{Motivation}
+
+Standard QPE requires many qubits.
+
+Iterative version uses one ancilla.
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Iterative Circuit}
+
+\begin{center}
+\begin{quantikz}
+\lstick{}&\gate{H}&\ctrl{1}&\meter{}\\
+\lstick{psi}&\qw&\gate{U2k}&\qw
+\end{quantikz}
+\end{center}
+
+\end{frame}
+
+%================================================
+\section{Hamiltonian Eigenvalue Estimation}
+
+\begin{frame}{Hamiltonian Simulation}
+
+If
+
+\[
+U=e^{-iHt}
+\]
+
+then
+
+\[
+U|\psi_k\rangle=e^{-iE_k t}|\psi_k\rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Energy Extraction}
+
+\[
+E_k =
+\frac{2\pi\phi}{t}
+\]
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Applications}
+
+\begin{itemize}
+\item quantum chemistry
+\item materials science
+\item nuclear physics
+\end{itemize}
+
+\end{frame}
+
+%================================================
+\section{Connection to VQE}
+
+\begin{frame}{Comparison}
+
+Phase estimation
+
+\begin{itemize}
+\item exact
+\item deep circuits
+\end{itemize}
+
+VQE
+
+\begin{itemize}
+\item shallow circuits
+\item classical optimization
+\end{itemize}
+
+\end{frame}
+
+%================================================
+\section{Python Simulation}
+
+\begin{frame}[fragile]{QFT Matrix}
+
+\begin{lstlisting}
+import numpy as np
+
+def qft_matrix(n):
+
+    N=2**n
+    omega=np.exp(2j*np.pi/N)
+
+    F=np.zeros((N,N),dtype=complex)
+
+    for j in range(N):
+        for k in range(N):
+            F[j,k]=omega**(j*k)
+
+    return F/np.sqrt(N)
+\end{lstlisting}
+
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Example}
+
+\begin{lstlisting}
+n=3
+F=qft_matrix(n)
+
+state=np.zeros(2**n)
+state[1]=1
+
+result=F@state
+print(result)
+\end{lstlisting}
+
+\end{frame}
+
+%================================================
+\section{Summary}
+
+\begin{frame}{Summary}
+
+\begin{itemize}
+\item QFT efficiently computes Fourier transforms
+\item central primitive in quantum algorithms
+\item phase estimation extracts eigenvalues
+\item widely used in quantum simulation
+\end{itemize}
+
+\end{frame}
+
+\end{document}
