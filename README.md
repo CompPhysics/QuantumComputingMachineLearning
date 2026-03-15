@@ -55,8 +55,6 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek3.pdf 
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week3  
 
-
-
 ## February 9-13, 2026. Entanglement and entropies
   - Reminder from last week on entanglement, density matrices and entropies
   - One-qubit and two-qubit gates, background and realizations
@@ -103,53 +101,43 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek8.pdf
 
 
-## March 16-20, 2026. Discussions of project 1 and work on the VQE
+## March 16-20, 2026. Discussions of project 1 and start discussion of Quantum Fourier transofrms
   - Quantum Fourier transforms
-  - Quantum Phase estimation algorithm
-  - Lab/exercise session: Discussion of project 1 and work on finalizing project
-- Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
+  - Lab/exercise session: Discussion of project 1 and work on finalizing project 1
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
 
 ## March 23-27, 2026
   - Quantum Fourier Transforms, algorithm and implementation
-  - Quantum phase estimation algorithm
-  - Setting up circuits for QFTs  
+  - Quantum phase estimation (QPE) algorithm
+  - Setting up circuits for QFTs and the QPE  
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
 ## March 30 - April 3, 2026, Public holiday in Norway no classes
 
-##  Note that the topics for the coming weeks may change! 
+##  Note that the topics for the coming weeks may change. The focus will be on quantum machine learning, but we may add discussions of other algorithms as well like the QOAO. 
 
 
 ## April 6-10, 2026
-  - Discrete Fourier transforms (DFTs, reminder from last week) ) and the fast Fourier Transform (FFT)
+  - Basics of quantum machine learning (QML) 
   - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
 
 ## April 13-17, 2026
-  - Basics of quantum machine learning and discussion of support vector machines
-  - Quantum phase estimation algorithm (QPE)
-  - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
+  - QML
 
 
 ## April 20-24, 2026 Quantum Machine Learning
-  - Basics of quantum machine learning and discussion of support vector machines
+  - QML
 
 
 ## April 27-May 1, 2026 Quantum machine learning
-  - Classical Support Vector Machines, reminder from last week
-  - Classical Kernels and transition to Quantum Kernels
-  - Quantum Support Vector Machines
-
+  - QML
 
 ## May 4-8, 2026 Quantum Machine Learning
-  - Quantum support vector machines, theory and code examples
-  - Quantum neural networks, theory and code examples
-
+  - QML
 
 ## May 11-15, 2026
-  - Quantum neural networks, theory and code examples, contn from last week
-  - Quantum and classical Boltzmann machines
-
+  - QML, last lecture and summary of course
 
 ## May 18-22, 2026
-  - Summary of course and discussion of project 2
+  - Discussion of and work on project 2
