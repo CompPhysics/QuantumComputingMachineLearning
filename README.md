@@ -105,6 +105,9 @@ themes can be covered:
   - Quantum Fourier transforms
   - Lab/exercise session: Discussion of project 1 and work on finalizing project 1
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week9
+  - Video of lecture at https://youtu.be/qQw4zme7LyI
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek9.pdf
+
 
 ## March 23-27, 2026
   - Quantum Fourier Transforms, algorithm and implementation
