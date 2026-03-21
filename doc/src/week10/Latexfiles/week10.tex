@@ -1,0 +1,1153 @@
+\documentclass{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{quantikz}
+
+\title{The Quantum Fourier Transform and the Quantum Phase estimation algorithm}
+\author{Morten Hjorth-Jensen}
+\date{Week of March 23-27, 2026}
+
+\begin{document}
+
+%------------------------------------------------
+\frame{\titlepage}
+
+%------------------------------------------------
+\begin{frame}{Outline I}
+\begin{enumerate}
+\item Motivation and definition
+\item From the classical DFT to the QFT
+\item Derivation of the product form
+\item Circuit decomposition with Hadamards and controlled phases
+\item Worked 2- and 3-qubit examples
+\item Approximate QFT and complexity
+\item Connection to quantum phase estimation
+\item Implementation logic and simulation remarks
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Outline II}
+\begin{enumerate}
+
+\item Quantum Phase Estimation (QPE): goal and idea
+\item Step-by-step derivation of QPE
+\item Bit-string interpretation and precision
+\item Connection to Hamiltonian simulation
+\item Connection to Variational Quantum Eigensolvers (VQE)
+\item Summary and outlook
+\end{enumerate}
+\end{frame}
+
+
+
+%------------------------------------------------
+\begin{frame}{Motivation}
+The Quantum Fourier Transform (QFT) is one of the central algorithms in quantum computing. 
+
+It appears in:
+\begin{itemize}
+\item Shor's factoring algorithm,
+\item order finding,
+\item period finding,
+\item quantum phase estimation,
+\item several quantum simulation algorithms.
+\end{itemize}
+
+The QFT is the quantum analogue of the discrete Fourier transform, but it acts on the amplitudes of a quantum state.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Classical Discrete Fourier Transform}
+Given a vector \(x=(x_0,x_1,\dots,x_{N-1})\), the discrete Fourier transform is
+\[
+y_k = \frac{1}{\sqrt N}\sum_{j=0}^{N-1} x_j e^{2\pi i jk/N},
+\qquad k=0,\dots,N-1.
+\]
+
+Equivalently, the DFT matrix is
+\[
+F_N = \frac{1}{\sqrt N}
+\begin{pmatrix}
+1 & 1 & 1 & \cdots & 1 \\
+1 & \omega & \omega^2 & \cdots & \omega^{N-1} \\
+1 & \omega^2 & \omega^4 & \cdots & \omega^{2(N-1)} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & \omega^{N-1} & \omega^{2(N-1)} & \cdots & \omega^{(N-1)^2}
+\end{pmatrix}
+\]
+with
+\[
+\omega = e^{2\pi i/N}.
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Definition of the QFT}
+For \(N=2^n\), the QFT is the unitary transformation
+\[
+\operatorname{QFT}_N \ket{x}
+=
+\frac{1}{\sqrt N}
+\sum_{k=0}^{N-1}
+e^{2\pi i xk/N}\ket{k},
+\qquad x=0,\dots,N-1.
+\]
+
+Thus the QFT maps a computational basis state \(\ket{x}\) to a coherent superposition of all basis states with phases determined by \(x\).
+
+Because the map is linear, for a general state
+\[
+\ket{\psi}=\sum_{x=0}^{N-1} c_x \ket{x},
+\]
+we have
+\[
+\operatorname{QFT}_N \ket{\psi}
+=
+\sum_{x=0}^{N-1} c_x \operatorname{QFT}_N\ket{x}.
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Binary Representation of the Input}
+Let
+\[
+x = x_1 x_2 \dots x_n
+\]
+be the binary representation of the integer \(x\), meaning
+\[
+x = \sum_{j=1}^n x_j 2^{n-j},
+\qquad x_j\in\{0,1\}.
+\]
+
+We also write binary fractions as
+\[
+0.x_j x_{j+1}\dots x_n
+=
+\frac{x_j}{2}+\frac{x_{j+1}}{2^2}+\cdots+\frac{x_n}{2^{n-j+1}}.
+\]
+
+This notation is crucial because the QFT phases factor naturally into such binary fractions.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Step-by-Step Derivation of the Product Form I}
+Start from
+\[
+\operatorname{QFT}_N \ket{x}
+=
+\frac{1}{\sqrt{2^n}}
+\sum_{k=0}^{2^n-1}
+e^{2\pi i xk/2^n}\ket{k}.
+\]
+
+Write the output label \(k\) in binary:
+\[
+k = k_1 k_2 \dots k_n,
+\qquad
+k = \sum_{m=1}^n k_m 2^{n-m}.
+\]
+
+Then
+\[
+\frac{xk}{2^n}
+=
+x \sum_{m=1}^n \frac{k_m}{2^m}.
+\]
+
+Hence
+\[
+e^{2\pi i xk/2^n}
+=
+\prod_{m=1}^n e^{2\pi i x k_m / 2^m}.
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Step-by-Step Derivation of the Product Form II}
+Because each \(k_m\in\{0,1\}\), the sum over all \(k\) factorizes:
+\[
+\operatorname{QFT}_N \ket{x}
+=
+\frac{1}{2^{n/2}}
+\bigotimes_{m=1}^n
+\left(
+\ket{0} + e^{2\pi i x/2^m}\ket{1}
+\right).
+\]
+
+Now only the fractional part of \(x/2^m\) matters in the phase, and that fractional part is exactly
+\[
+0.x_{n-m+1}x_{n-m+2}\dots x_n.
+\]
+
+Thus
+\[
+\operatorname{QFT}_N \ket{x_1 x_2 \dots x_n}
+=
+\frac{1}{2^{n/2}}
+\left(\ket{0}+e^{2\pi i\,0.x_n}\ket{1}\right)
+\otimes
+\left(\ket{0}+e^{2\pi i\,0.x_{n-1}x_n}\ket{1}\right)
+\otimes \cdots
+\]
+\[
+\cdots \otimes
+\left(\ket{0}+e^{2\pi i\,0.x_1x_2\dots x_n}\ket{1}\right).
+\]
+
+The output order is therefore reversed relative to the input qubit order.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Final Product Form}
+The standard product form is
+\[
+\operatorname{QFT}_N \ket{x_1x_2\dots x_n}
+=
+\frac{1}{2^{n/2}}
+\left(\ket{0}+e^{2\pi i\,0.x_n}\ket{1}\right)
+\otimes
+\left(\ket{0}+e^{2\pi i\,0.x_{n-1}x_n}\ket{1}\right)
+\otimes \cdots
+\]
+\[
+\cdots \otimes
+\left(\ket{0}+e^{2\pi i\,0.x_1x_2\dots x_n}\ket{1}\right).
+\]
+
+This factorization is the key reason the QFT can be implemented efficiently.
+
+It shows that the QFT can be built from:
+\begin{itemize}
+\item Hadamard gates,
+\item controlled phase rotations,
+\item a final qubit reversal using SWAP gates.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Basic Gates Used in the QFT}
+The main one-qubit gate is the Hadamard
+\[
+H = \frac{1}{\sqrt 2}
+\begin{pmatrix}
+1 & 1 \\
+1 & -1
+\end{pmatrix},
+\]
+which creates equal superpositions.
+
+The phase rotations are
+\[
+R_k =
+\begin{pmatrix}
+1 & 0 \\
+0 & e^{2\pi i / 2^k}
+\end{pmatrix}.
+\]
+
+Controlled-\(R_k\) gates apply \(R_k\) to a target qubit only if the control qubit is \(\ket{1}\).
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{How the Circuit Arises}
+The first output qubit in the product form contains the phase
+\[
+e^{2\pi i\,0.x_1x_2\dots x_n}.
+\]
+
+This is produced by:
+\begin{itemize}
+\item a Hadamard on the first qubit, generating \(\frac{1}{\sqrt2}(\ket0+\ket1)\),
+\item then a sequence of controlled phase gates from the later qubits, adding the binary-fraction phase.
+\end{itemize}
+
+The same pattern repeats recursively for the remaining qubits.
+
+Thus the QFT circuit is naturally built qubit by qubit.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Two-Qubit QFT: Mathematical Form}
+For \(n=2\), we have \(N=4\), and
+\[
+\operatorname{QFT}_4 \ket{x_1x_2}
+=
+\frac{1}{2}
+\left(\ket0 + e^{2\pi i\,0.x_2}\ket1\right)
+\otimes
+\left(\ket0 + e^{2\pi i\,0.x_1x_2}\ket1\right).
+\]
+
+This requires:
+\begin{itemize}
+\item Hadamard on the first qubit,
+\item controlled-\(R_2\),
+\item Hadamard on the second qubit,
+\item then a SWAP to correct the reversed output order.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Two-Qubit QFT Circuit}
+\centering
+\begin{quantikz}
+\lstick{$q_0$} & \gate{H} & \ctrl{1} & \qw & \swap{1} & \qw \\
+\lstick{$q_1$} & \qw & \gate{R_2} & \gate{H} & \targX{}{} & \qw
+\end{quantikz}
+
+
+Here:
+\begin{itemize}
+\item \(H\) creates the superposition,
+\item \(R_2=\mathrm{diag}(1,e^{i\pi/2})\),
+\item the SWAP reverses the qubit order.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Three-Qubit QFT: Mathematical Structure}
+For \(n=3\),
+\[
+\operatorname{QFT}_8 \ket{x_1x_2x_3}
+=
+\frac{1}{\sqrt 8}
+\left(\ket0+e^{2\pi i\,0.x_3}\ket1\right)
+\otimes
+\left(\ket0+e^{2\pi i\,0.x_2x_3}\ket1\right)
+\otimes
+\left(\ket0+e^{2\pi i\,0.x_1x_2x_3}\ket1\right).
+\]
+
+The first qubit therefore requires phase contributions corresponding to
+\[
+\frac{x_2}{2} + \frac{x_3}{4},
+\]
+and this is exactly what the controlled \(R_2\) and \(R_3\) gates generate.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Three-Qubit QFT Circuit}
+\centering
+\begin{quantikz}
+\lstick{$q_0$} & \gate{H} & \ctrl{1}    & \ctrl{2}    & \qw      & \qw        & \qw      & \swap{2}   & \qw \\
+\lstick{$q_1$} & \qw      & \gate{R_2}  & \qw         & \gate{H} & \ctrl{1}   & \qw      & \qw        & \qw \\
+\lstick{$q_2$} & \qw      & \qw         & \gate{R_3}  & \qw      & \gate{R_2} & \gate{H} & \targX{}{} & \qw
+\end{quantikz}
+
+\vspace{0.5em}
+
+Conceptually:
+\begin{enumerate}
+\item \(H\) on qubit 0, then controlled \(R_2,R_3\)
+\item \(H\) on qubit 1, then controlled \(R_2\)
+\item \(H\) on qubit 2
+\item final reversal of qubit order
+\end{enumerate}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{General \(n\)-Qubit QFT Circuit}
+For qubit \(j\), counting from the top:
+
+\begin{enumerate}
+\item Apply a Hadamard \(H\)
+\item For each later qubit \(k>j\), apply a controlled \(R_{k-j+1}\)
+\item Continue recursively
+\item At the end, reverse qubit order with SWAP gates
+\end{enumerate}
+
+So the general structure is:
+\[
+H \to \text{controlled phases} \to H \to \text{controlled phases} \to \cdots \to \text{SWAP network}.
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{General Pattern in Quantikz}
+\centering
+\begin{quantikz}
+\lstick{$q_0$} & \gate{H} & \ctrl{1} & \ctrl{2} & \ctrl{3} & \qw \\
+\lstick{$q_1$} & \qw & \gate{R_2} & \ctrl{1} & \ctrl{2} & \qw \\
+\lstick{$q_2$} & \qw & \qw & \gate{R_2} & \ctrl{1} & \qw \\
+\lstick{$q_3$} & \qw & \qw & \qw & \gate{R_2} & \gate{H}
+\end{quantikz}
+
+\vspace{0.5em}
+
+This is a schematic pattern rather than a fully expanded full-\(n\) circuit. The key point is the nested structure of Hadamards and controlled phase gates.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Worked 3-Qubit Phase Example I}
+Take the computational basis input
+\[
+\ket{x}=\ket{101}.
+\]
+
+This means
+\[
+x_1=1,\qquad x_2=0,\qquad x_3=1,
+\qquad x=5.
+\]
+
+The product form gives
+\[
+\operatorname{QFT}_8 \ket{101}
+=
+\frac{1}{\sqrt8}
+\left(\ket0 + e^{2\pi i\,0.1}\ket1\right)
+\otimes
+\left(\ket0 + e^{2\pi i\,0.01}\ket1\right)
+\otimes
+\left(\ket0 + e^{2\pi i\,0.101}\ket1\right).
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Worked 3-Qubit Phase Example II}
+Now evaluate the binary fractions:
+\[
+0.1 = \frac12,
+\qquad
+0.01 = \frac14,
+\qquad
+0.101 = \frac12 + \frac18 = \frac58.
+\]
+
+Hence
+\[
+e^{2\pi i\,0.1} = e^{i\pi} = -1,
+\]
+\[
+e^{2\pi i\,0.01} = e^{i\pi/2} = i,
+\]
+\[
+e^{2\pi i\,0.101} = e^{2\pi i(5/8)} = e^{5\pi i/4}.
+\]
+
+Therefore
+\[
+\operatorname{QFT}_8 \ket{101}
+=
+\frac{1}{\sqrt8}
+(\ket0-\ket1)\otimes(\ket0+i\ket1)\otimes(\ket0+e^{5\pi i/4}\ket1).
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Worked 3-Qubit Phase Example III}
+This example shows exactly how the QFT encodes the binary digits of the input into relative phases.
+
+This phase encoding is what makes the QFT so useful in:
+\begin{itemize}
+\item phase estimation,
+\item period finding,
+\item extracting eigenphases of unitaries.
+\end{itemize}
+
+In other words, the QFT converts arithmetic structure into measurable interference structure.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Inverse QFT}
+The inverse QFT is obtained by reversing the circuit and taking Hermitian conjugates:
+\begin{itemize}
+\item replace each \(R_k\) by \(R_k^\dagger\),
+\item reverse the order of the gates,
+\item keep the same SWAP network.
+\end{itemize}
+
+Thus the inverse QFT is also efficient.
+
+In practice, many algorithms use the inverse QFT rather than the forward QFT.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Complexity of the QFT}
+For \(n\) qubits:
+\begin{itemize}
+\item \(n\) Hadamard gates,
+\item \(\frac{n(n-1)}{2}\) controlled phase gates,
+\item about \(\lfloor n/2 \rfloor\) SWAP gates.
+\end{itemize}
+
+Therefore the total gate count is
+\[
+O(n^2).
+\]
+
+This is exponentially more efficient than applying the classical DFT matrix directly to a \(2^n\)-dimensional vector.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Approximate QFT}
+Very small-angle phase gates contribute little.
+
+Hence we may truncate the circuit by dropping controlled \(R_k\) gates for large \(k\).
+
+This gives the approximate QFT:
+\begin{itemize}
+\item fewer gates,
+\item shallower circuit,
+\item often still sufficient for practical algorithms.
+\end{itemize}
+
+With suitable truncation, the gate complexity can be reduced to approximately
+\[
+O(n \log n).
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Quantum Phase Estimation I}
+Suppose
+\[
+U \ket{\psi} = e^{2\pi i \phi}\ket{\psi}
+\]
+for some eigenstate \(\ket{\psi}\).
+
+Quantum phase estimation aims to determine the phase \(\phi\).
+
+The algorithm uses:
+\begin{itemize}
+\item a control register prepared in superposition,
+\item controlled powers \(U^{2^j}\),
+\item an inverse QFT on the control register.
+\end{itemize}
+
+The inverse QFT converts the accumulated phase information into binary digits of \(\phi\).
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Quantum Phase Estimation II}
+Schematically,
+\[
+\frac{1}{2^{n/2}}\sum_{k=0}^{2^n-1} e^{2\pi i k\phi}\ket{k}
+\]
+is transformed by the inverse QFT into a computational basis state approximating the binary expansion of \(\phi\).
+
+Thus the QFT acts as a phase decoder.
+
+This is why it is central to:
+\begin{itemize}
+\item Shor's algorithm,
+\item Hamiltonian eigenvalue estimation,
+\item quantum simulation,
+\item metrological phase extraction.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Implementation Logic in a Notebook or Simulator}
+A typical notebook implementation of the QFT proceeds as follows:
+
+\begin{enumerate}
+\item Choose the number of qubits \(n\)
+\item Loop over qubits \(j=0,\dots,n-1\)
+\item Apply \(H\) on qubit \(j\)
+\item For each later qubit \(k>j\), apply a controlled phase \(R_{k-j+1}\)
+\item At the end, reverse the qubit order with SWAP gates
+\end{enumerate}
+
+This is exactly the constructive logic derived from the product form.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Pseudocode for QFT Construction}
+\[
+\begin{array}{l}
+\texttt{for } j=0 \texttt{ to } n-1: \\
+\qquad \texttt{apply H on qubit } j \\
+\qquad \texttt{for } k=j+1 \texttt{ to } n-1: \\
+\qquad\qquad \texttt{apply controlled-}R_{k-j+1}\texttt{ from } k \texttt{ to } j \\
+\texttt{for } j=0 \texttt{ to } \lfloor n/2\rfloor-1: \\
+\qquad \texttt{swap qubit } j \texttt{ with qubit } n-1-j
+\end{array}
+\]
+
+Depending on software conventions, the control and target order may appear reversed relative to the mathematical derivation, but the logical structure is the same.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Simulation Remarks}
+When simulating the QFT numerically, it is useful to compare:
+\begin{itemize}
+\item the circuit output state,
+\item the exact matrix formula
+\[
+\operatorname{QFT}_N\ket{x}
+=
+\frac{1}{\sqrt N}\sum_{k=0}^{N-1} e^{2\pi i xk/N}\ket{k},
+\]
+\item and the product-form prediction.
+\end{itemize}
+
+This provides a clean consistency check:
+\begin{itemize}
+\item amplitudes should have equal magnitude \(1/\sqrt N\),
+\item phases should match the Fourier kernel,
+\item output qubit order must be checked carefully.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Common Source of Confusion: Bit Reversal}
+A frequent issue is the ordering of bits.
+
+The product form naturally produces the qubits in reversed order:
+\[
+(x_1x_2\dots x_n)\mapsto
+(\text{phase involving }x_n)\otimes \cdots \otimes (\text{phase involving }x_1\dots x_n).
+\]
+
+Thus:
+\begin{itemize}
+\item either include final SWAP gates,
+\item or accept the reversed output convention.
+\end{itemize}
+
+Many software libraries omit the final SWAPs and simply document the reversed ordering.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Why the QFT Matters Physically}
+The QFT is not just an abstract transform.
+
+It provides a mechanism for:
+\begin{itemize}
+\item converting phase information into computational-basis information,
+\item exploiting interference to extract periodicity,
+\item connecting time evolution phases to measurable outputs.
+\end{itemize}
+
+In this sense, the QFT is a bridge between
+\[
+\text{dynamical phase accumulation}
+\qquad\longrightarrow\qquad
+\text{algorithmic readout}.
+\]
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Summary}
+The Quantum Fourier Transform:
+\begin{itemize}
+\item is the quantum analogue of the discrete Fourier transform,
+\item acts as
+\[
+\ket{x}\mapsto \frac{1}{\sqrt N}\sum_k e^{2\pi i xk/N}\ket{k},
+\]
+\item factorizes into one-qubit phase states,
+\item is implemented using \(H\), controlled \(R_k\), and SWAP gates,
+\item has gate complexity \(O(n^2)\),
+\item is central to phase estimation and many other algorithms.
+\end{itemize}
+\end{frame}
+
+
+%================================================
+\begin{frame}{Quantum Phase Estimation: Problem Statement}
+Suppose \(U\) is a unitary operator and \(\ket{\psi}\) is one of its eigenstates:
+\[
+U\ket{\psi}=e^{2\pi i \phi}\ket{\psi},
+\qquad 0\le \phi <1.
+\]
+
+The goal of Quantum Phase Estimation (QPE) is to estimate the phase \(\phi\).
+
+Equivalently, QPE extracts the eigenvalue of \(U\) in phase form.
+\end{frame}
+
+%================================================
+\begin{frame}{Why QPE Matters}
+QPE is central because many physical problems can be mapped to eigenvalue estimation.
+
+Examples:
+\begin{itemize}
+\item energy estimation in quantum chemistry,
+\item eigenvalue problems in many-body physics,
+\item Hamiltonian simulation,
+\item Shor's algorithm and period finding.
+\end{itemize}
+
+If we can encode a Hamiltonian into a unitary, then QPE can extract its eigenvalues.
+\end{frame}
+
+%================================================
+\begin{frame}{Registers Used in QPE}
+QPE uses two registers:
+
+\begin{itemize}
+\item a control register of \(n\) qubits, initialized in \(\ket{0}^{\otimes n}\),
+\item a system register, initialized in the eigenstate \(\ket{\psi}\).
+\end{itemize}
+
+So the initial state is
+\[
+\ket{0}^{\otimes n}\ket{\psi}.
+\]
+
+The control register stores the estimated phase bits.
+\end{frame}
+
+%================================================
+\begin{frame}{Step 1: Create a Uniform Superposition}
+Apply Hadamard gates to all control qubits:
+\[
+\ket{0}^{\otimes n}
+\mapsto
+\frac{1}{2^{n/2}}
+\sum_{k=0}^{2^n-1}\ket{k}.
+\]
+
+So the total state becomes
+\[
+\frac{1}{2^{n/2}}
+\sum_{k=0}^{2^n-1}
+\ket{k}\ket{\psi}.
+\]
+
+This prepares the control register as a coherent superposition of all binary numbers \(k\).
+\end{frame}
+
+%================================================
+\begin{frame}{Step 2: Controlled Powers of \(U\)}
+Now apply controlled powers of \(U\):
+\[
+U^{2^0}, U^{2^1}, U^{2^2}, \dots, U^{2^{n-1}}.
+\]
+
+Each control qubit determines whether the corresponding power is applied.
+
+Because \(\ket{\psi}\) is an eigenstate,
+\[
+U^{2^j}\ket{\psi} = e^{2\pi i 2^j \phi}\ket{\psi}.
+\]
+
+Hence each controlled unitary writes phase information into the control register.
+\end{frame}
+
+%================================================
+\begin{frame}{Step 2: State After Controlled Powers}
+If the control register basis state is \(\ket{k}\), then the controlled operations apply \(U^k\), giving
+\[
+U^k\ket{\psi} = e^{2\pi i k\phi}\ket{\psi}.
+\]
+
+Therefore the combined state becomes
+\[
+\frac{1}{2^{n/2}}
+\sum_{k=0}^{2^n-1}
+e^{2\pi i k\phi}\ket{k}\ket{\psi}.
+\]
+
+The system register factors out, and the control register now contains the phase information.
+\end{frame}
+
+%================================================
+\begin{frame}{Key Observation}
+The control register is in the state
+\[
+\frac{1}{2^{n/2}}
+\sum_{k=0}^{2^n-1} e^{2\pi i k\phi}\ket{k},
+\]
+which is exactly a Fourier-type state.
+
+This is why the inverse QFT is the correct next step:
+it converts this phase-encoded superposition into a computational basis approximation of \(\phi\).
+\end{frame}
+
+%================================================
+\begin{frame}{Step 3: Apply the Inverse QFT}
+Applying \(\mathrm{QFT}^{-1}\) to the control register gives
+\[
+\mathrm{QFT}^{-1}
+\left(
+\frac{1}{2^{n/2}}
+\sum_{k=0}^{2^n-1} e^{2\pi i k\phi}\ket{k}
+\right).
+\]
+
+If
+\[
+\phi = \frac{m}{2^n}
+\]
+exactly for some integer \(m\), then this becomes
+\[
+\ket{m}.
+\]
+
+So the control register stores the exact \(n\)-bit binary expansion of \(\phi\).
+\end{frame}
+
+%================================================
+\begin{frame}{Exact QPE Case}
+Suppose
+\[
+\phi = 0.\phi_1\phi_2\dots\phi_n
+=
+\frac{m}{2^n}.
+\]
+
+Then after inverse QFT, the control register becomes
+\[
+\ket{\phi_1\phi_2\dots\phi_n}.
+\]
+
+Thus measuring the control register returns the exact binary digits of \(\phi\).
+
+This is the cleanest case of QPE.
+\end{frame}
+
+%================================================
+\begin{frame}{Step-by-Step Derivation with Binary Fractions}
+Let
+\[
+\phi = 0.\phi_1\phi_2\dots\phi_n\dots
+\]
+
+Then one can show that the control-register state after controlled powers factorizes as
+\[
+\frac{1}{2^{n/2}}
+\left(\ket0 + e^{2\pi i\, 2^{n-1}\phi}\ket1\right)
+\otimes
+\left(\ket0 + e^{2\pi i\, 2^{n-2}\phi}\ket1\right)
+\otimes \cdots
+\]
+\[
+\cdots \otimes
+\left(\ket0 + e^{2\pi i\, \phi}\ket1\right).
+\]
+
+Because
+\[
+2^{n-1}\phi = \phi_1.\phi_2\phi_3\dots,
+\]
+only the fractional parts matter in the phases, so each qubit encodes one successive binary suffix.
+\end{frame}
+
+%================================================
+\begin{frame}{How the Bits Emerge}
+Using the binary expansion of \(\phi\), the control-register state becomes
+\[
+\frac{1}{2^{n/2}}
+\left(\ket0 + e^{2\pi i\,0.\phi_n}\ket1\right)
+\otimes
+\left(\ket0 + e^{2\pi i\,0.\phi_{n-1}\phi_n}\ket1\right)
+\otimes \cdots
+\]
+\[
+\cdots \otimes
+\left(\ket0 + e^{2\pi i\,0.\phi_1\phi_2\dots\phi_n}\ket1\right),
+\]
+which has exactly the structure of a QFT state.
+
+Therefore applying \(\mathrm{QFT}^{-1}\) yields the bit string
+\[
+\phi_1\phi_2\dots\phi_n.
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{QPE Circuit}
+\centering
+\begin{quantikz}
+\lstick{$\ket{0}$}    & \gate{H} & \ctrl{3} & \qw      & \qw      & \gate[3]{\mathrm{QFT}^\dagger} & \meter{} \\
+\lstick{$\ket{0}$}    & \gate{H} & \qw      & \ctrl{2} & \qw      & \ghost{\mathrm{QFT}^\dagger}   & \meter{} \\
+\lstick{$\ket{0}$}    & \gate{H} & \qw      & \qw      & \ctrl{1} & \ghost{\mathrm{QFT}^\dagger}   & \meter{} \\
+\lstick{$\ket{\psi}$} & \qw      & \gate{U^4} & \gate{U^2} & \gate{U} & \qw                          & \qw
+\end{quantikz}
+
+\vspace{0.5em}
+
+This example shows a 3-qubit control register and one system register.
+\end{frame}
+
+%================================================
+\begin{frame}{Worked Example: \(\phi=5/8\)}
+Suppose
+\[
+\phi = \frac{5}{8} = 0.101.
+\]
+
+Then the ideal QPE output on a 3-qubit control register is
+\[
+\ket{101}.
+\]
+
+Indeed,
+\[
+e^{2\pi i \phi} = e^{2\pi i (5/8)}.
+\]
+
+After the controlled powers and inverse QFT, the control register collapses to the bit string \(101\) with probability 1.
+\end{frame}
+
+%================================================
+\begin{frame}{When \(\phi\) Is Not Exactly Representable}
+If \(\phi\) is not exactly of the form \(m/2^n\), then QPE does not return one exact bit string.
+
+Instead, the output is a probability distribution peaked near the best \(n\)-bit approximation:
+\[
+\phi \approx \frac{m}{2^n}.
+\]
+
+The measurement outcome gives the nearest binary approximation with high probability.
+\end{frame}
+
+%================================================
+\begin{frame}{Precision of QPE}
+With \(n\) control qubits, QPE resolves phases to approximately
+\[
+\Delta \phi \sim \frac{1}{2^n}.
+\]
+
+Thus the precision improves exponentially with the number of control qubits.
+
+This exponential precision is one of the main reasons QPE is so powerful.
+\end{frame}
+
+%================================================
+\begin{frame}{From Phases to Energies}
+Suppose \(H\) is a Hamiltonian with eigenstate \(\ket{E}\):
+\[
+H\ket{E} = E\ket{E}.
+\]
+
+Define the time-evolution operator
+\[
+U(t)=e^{-iHt}.
+\]
+
+Then
+\[
+U(t)\ket{E} = e^{-iEt}\ket{E}.
+\]
+
+Comparing with
+\[
+U\ket{\psi}=e^{2\pi i \phi}\ket{\psi},
+\]
+we identify
+\[
+\phi = -\frac{Et}{2\pi} \mod 1.
+\]
+
+Thus QPE can estimate energies if we can implement \(e^{-iHt}\).
+\end{frame}
+
+%================================================
+\begin{frame}{Connection to Hamiltonian Simulation}
+QPE requires controlled applications of
+\[
+U^{2^j} = e^{-iH t 2^j}.
+\]
+
+So QPE depends directly on the ability to perform Hamiltonian simulation.
+
+In practice this may be done using:
+\begin{itemize}
+\item Trotter-Suzuki decompositions,
+\item linear-combination-of-unitaries methods,
+\item qubitization,
+\item problem-specific simulation techniques.
+\end{itemize}
+
+Thus:
+\[
+\text{Hamiltonian simulation} + \text{QPE}
+\quad \Rightarrow \quad
+\text{energy estimation}.
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Physical Interpretation}
+QPE measures the dynamical phase accumulated by an energy eigenstate under time evolution.
+
+The algorithm turns the phase
+\[
+e^{-iEt}
+\]
+into a bit string encoding the energy.
+
+So one can view QPE as a highly precise interferometric energy-measurement protocol.
+\end{frame}
+
+%================================================
+\begin{frame}{Why QPE Is Important in Quantum Chemistry}
+In quantum chemistry and many-body physics, the main goal is often to compute eigenenergies of a Hamiltonian.
+
+If we can prepare an approximate eigenstate with sufficient overlap with the true ground state, then QPE can project onto the exact eigenvalue with high precision.
+
+This makes QPE a natural route to:
+\begin{itemize}
+\item ground-state energies,
+\item excited-state energies,
+\item spectral properties.
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Connection to VQE}
+The Variational Quantum Eigensolver (VQE) and QPE aim at similar physics goals, but in different ways.
+
+\textbf{VQE:}
+\begin{itemize}
+\item variational,
+\item hybrid quantum-classical,
+\item optimized by minimizing
+\[
+E(\bm{\theta}) = \bra{\psi(\bm{\theta})} H \ket{\psi(\bm{\theta})},
+\]
+\item suitable for noisy near-term devices.
+\end{itemize}
+
+\textbf{QPE:}
+\begin{itemize}
+\item not variational,
+\item requires coherent controlled time evolution,
+\item provides direct eigenvalue estimation,
+\item suited to fault-tolerant quantum computers.
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{How VQE and QPE Complement Each Other}
+A common long-term strategy is:
+\begin{enumerate}
+\item Use a variational method such as VQE to prepare a good approximate eigenstate
+\[
+\ket{\psi_{\mathrm{trial}}}
+\]
+with large overlap with the true eigenstate.
+
+\item Use that state as the input to QPE.
+
+\item QPE then refines the energy estimate to high precision.
+\end{enumerate}
+
+So VQE can be viewed as a state-preparation front end for QPE.
+\end{frame}
+
+%================================================
+\begin{frame}{Overlap Requirement}
+If the initial state is
+\[
+\ket{\psi_{\mathrm{trial}}} = \sum_j c_j \ket{E_j},
+\]
+then QPE outputs \(E_j\) with probability
+\[
+|c_j|^2.
+\]
+
+Therefore the success probability depends on the overlap with the desired eigenstate.
+
+This is exactly why improved ans\"atze in VQE are also valuable for QPE-based workflows.
+\end{frame}
+
+%================================================
+\begin{frame}{QPE vs VQE in Practice}
+\textbf{VQE}
+\begin{itemize}
+\item shallow circuits,
+\item many repeated measurements,
+\item classical optimization loop,
+\item noise tolerant,
+\item limited by optimization difficulty and shot cost.
+\end{itemize}
+
+\textbf{QPE}
+\begin{itemize}
+\item deep coherent circuits,
+\item requires controlled \(e^{-iHt}\),
+\item very precise,
+\item ideal for fault-tolerant hardware,
+\item often viewed as the long-term gold standard for energy estimation.
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Semiclassical Interpretation}
+One may interpret QPE as repeatedly extracting successive binary digits of a phase.
+
+The inverse QFT acts globally, but conceptually it decodes the phase one bit at a time.
+
+This bitwise structure is one reason QPE is so elegant mathematically.
+\end{frame}
+
+%================================================
+\begin{frame}{Implementation Logic in a Notebook}
+A standard notebook implementation of QPE typically proceeds as follows:
+\begin{enumerate}
+\item choose the number of control qubits,
+\item initialize the system register in an eigenstate or approximate eigenstate,
+\item apply Hadamards to the control register,
+\item apply controlled \(U^{2^j}\),
+\item apply inverse QFT,
+\item measure the control register,
+\item interpret the measurement as an estimate of \(\phi\).
+\end{enumerate}
+
+If the notebook also implements the QFT explicitly, it will usually reuse the same Hadamard + controlled-phase + swap pattern.
+\end{frame}
+
+%================================================
+\begin{frame}{Summary of the Full Picture}
+\[
+\text{Hamiltonian } H
+\quad \longrightarrow \quad
+U(t)=e^{-iHt}
+\quad \longrightarrow \quad
+\text{QPE}
+\quad \longrightarrow \quad
+E
+\]
+
+The QFT is the phase-decoding engine inside QPE.
+
+VQE and QPE are complementary:
+\begin{itemize}
+\item VQE is a near-term variational energy estimator,
+\item QPE is a long-term high-precision eigenvalue estimator,
+\item VQE can provide input states for QPE.
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Summary}
+In these notes we have seen that:
+\begin{itemize}
+\item the QFT maps
+\[
+\ket{x}\mapsto \frac{1}{\sqrt N}\sum_k e^{2\pi i xk/N}\ket{k},
+\]
+\item QPE uses controlled powers of a unitary and the inverse QFT to extract eigenphases,
+\item for Hamiltonian evolution
+\[
+U(t)=e^{-iHt},
+\]
+QPE becomes an energy-estimation algorithm,
+\item VQE and QPE address related eigenvalue problems with different hardware requirements.
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Possible Next Topics}
+Natural follow-ups include:
+\begin{itemize}
+\item error and success-probability bounds,
+\item Hamiltonian simulation methods,
+\item comparison with Bayesian phase estimation,
+\item detailed quantum chemistry applications.
+\end{itemize}
+\end{frame}
+
+\end{document}
