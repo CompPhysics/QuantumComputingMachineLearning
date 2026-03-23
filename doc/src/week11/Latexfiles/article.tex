@@ -1,0 +1,580 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{bm}
+
+\title{Quantum Approximate Optimization Algorithm (QAOA)}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%------------------------------------------------
+\section{Background}
+%------------------------------------------------
+
+\begin{frame}{Combinatorial Optimization Problems}
+\begin{itemize}
+\item Goal: Optimize an objective function over discrete variables
+\[
+C(x): \{0,1\}^n \rightarrow \mathbb{R}
+\]
+\item Many problems (MaxCut, Knapsack, TSP) are NP-hard
+\item Exact solutions scale exponentially with system size
+\item Approximate algorithms aim for
+\[
+\alpha = \frac{C(x^*)}{C_{\max}} \lesssim 1
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QUBO Formulation}
+\begin{itemize}
+\item Quadratic Unconstrained Binary Optimization (QUBO):
+\[
+C(x) = x^T Q x = \sum_{i,j} Q_{ij} x_i x_j
+\]
+\item Optimization problem:
+\[
+x^* = \arg\min_{x \in \{0,1\}^n} C(x)
+\]
+\item NP-hard in general
+\item Can be mapped to Ising variables:
+\[
+z_i = 2x_i - 1, \quad z_i \in \{-1,1\}
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QUBO and Ising Hamiltonians}
+\begin{itemize}
+\item QUBO $\leftrightarrow$ Ising model mapping
+\item Cost function becomes Hamiltonian:
+\[
+\hat{H}_C = \sum_{i,j} J_{ij} Z_i Z_j + \sum_i h_i Z_i
+\]
+\item Enables quantum optimization via ground state search
+\item Basis for both annealing and QAOA
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{MaxCut Problem}
+\begin{itemize}
+\item Graph $G=(V,E)$ with weights $w_{ij}$
+\item Partition vertices into two sets
+\item Objective:
+\[
+C(x) = \sum_{i,j} w_{ij} x_i(1-x_j)
+\]
+\item NP-hard problem
+\item Benchmark problem for QAOA
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Classical Optimization Methods}
+\begin{itemize}
+\item Exact methods:
+\begin{itemize}
+\item Branch-and-bound
+\item Quadratic programming
+\end{itemize}
+\item Approximation methods:
+\begin{itemize}
+\item Semidefinite programming (Goemans–Williamson)
+\item Approximation ratio $\alpha \approx 0.878$
+\end{itemize}
+\item Heuristics:
+\begin{itemize}
+\item Simulated annealing
+\item Genetic algorithms
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Variational Quantum Algorithms (VQAs)}
+\begin{itemize}
+\item Hybrid quantum-classical optimization loop
+\item Parameterized quantum state:
+\[
+|\psi(\theta)\rangle = U(\theta)|0\rangle
+\]
+\item Variational principle:
+\[
+E(\theta) = \langle \psi(\theta) | \hat{H} | \psi(\theta) \rangle
+\]
+\item Classical optimizer minimizes $E(\theta)$
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Variational Quantum Eigensolver (VQE)}
+\begin{itemize}
+\item Solve eigenvalue problem:
+\[
+E_0 \approx \min_{\theta} \langle \psi(\theta)|\hat{H}|\psi(\theta)\rangle
+\]
+\item Key ingredients:
+\begin{itemize}
+\item Ansatz $U(\theta)$
+\item Measurement of expectation values
+\item Classical optimization
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Quantum Adiabatic Algorithm (QAA)}
+\begin{itemize}
+\item Time-dependent Hamiltonian:
+\[
+\hat{H}(t) = f(t)\hat{H}_C + g(t)\hat{H}_M
+\]
+\item Adiabatic theorem:
+\begin{itemize}
+\item Slow evolution preserves eigenstate
+\end{itemize}
+\item Trotterized evolution:
+\[
+U(t) \approx \prod_k e^{-i \hat{H}_C \Delta t} e^{-i \hat{H}_M \Delta t}
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QAOA Overview}
+\begin{itemize}
+\item Discretized version of QAA
+\item Alternating layers:
+\[
+|\psi_p(\gamma,\beta)\rangle =
+\prod_{k=1}^p e^{-i\beta_k \hat{H}_M} e^{-i\gamma_k \hat{H}_C} |s\rangle
+\]
+\item Initial state:
+\[
+|s\rangle = |+\rangle^{\otimes n}
+\]
+\item Optimize parameters $(\gamma,\beta)$
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QAOA Cost Function}
+\begin{itemize}
+\item Expectation value:
+\[
+F_p(\gamma,\beta) =
+\langle \psi_p | \hat{H}_C | \psi_p \rangle
+\]
+\item Optimization:
+\[
+(\gamma^*,\beta^*) = \arg\max F_p
+\]
+\item Approximation ratio:
+\[
+\alpha = \frac{F_p(\gamma^*,\beta^*)}{C_{\max}}
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\section{QAOA Analysis}
+%------------------------------------------------
+
+\begin{frame}{QAOA Ansatz Structure}
+\begin{itemize}
+\item General unitary:
+\[
+U(\gamma,\beta) =
+\prod_{k=1}^p e^{-i\beta_k \hat{H}_M} e^{-i\gamma_k \hat{H}_C}
+\]
+\item Choice of ansatz affects:
+\begin{itemize}
+\item Expressivity
+\item Trainability
+\item Hardware efficiency
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Ansatz Variants}
+\begin{itemize}
+\item Multi-angle QAOA:
+\begin{itemize}
+\item Independent parameters per gate
+\end{itemize}
+\item Adaptive QAOA:
+\begin{itemize}
+\item Problem-specific ansatz construction
+\end{itemize}
+\item Counterdiabatic QAOA:
+\begin{itemize}
+\item Faster convergence via additional terms
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Parameter Optimization}
+\begin{itemize}
+\item Classical optimization challenges:
+\begin{itemize}
+\item High-dimensional parameter space
+\item Local minima
+\end{itemize}
+\item Strategies:
+\begin{itemize}
+\item Good initialization
+\item Gradient-based methods
+\item Exploiting symmetries
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Barren Plateaus}
+\begin{itemize}
+\item Problem: exponentially vanishing gradients
+\[
+\text{Var}[\partial_i C(\theta)] \sim \mathcal{O}(b^{-n})
+\]
+\item Consequence:
+\begin{itemize}
+\item Training becomes inefficient
+\end{itemize}
+\item Mitigation:
+\begin{itemize}
+\item Structured ansätze
+\item Problem-inspired circuits
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Computational Efficiency}
+\begin{itemize}
+\item Potential quantum speedup unclear
+\item Limitations:
+\begin{itemize}
+\item Circuit depth
+\item Optimization overhead
+\end{itemize}
+\item Improvements:
+\begin{itemize}
+\item Better ansätze
+\item Parameter reuse
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Solution Quality}
+\begin{itemize}
+\item Performance measured by approximation ratio
+\item Depends on:
+\begin{itemize}
+\item Circuit depth $p$
+\item Problem structure
+\end{itemize}
+\item $p \to \infty$:
+\begin{itemize}
+\item Recovers adiabatic evolution
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Noise and Hardware Effects}
+\begin{itemize}
+\item NISQ devices introduce:
+\begin{itemize}
+\item Gate errors
+\item Decoherence
+\end{itemize}
+\item Strategies:
+\begin{itemize}
+\item Noise mitigation
+\item Hardware-aware ansätze
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item QAOA is a leading variational algorithm for optimization
+\item Built on:
+\begin{itemize}
+\item QUBO/Ising mapping
+\item Hybrid optimization
+\end{itemize}
+\item Key challenges:
+\begin{itemize}
+\item Parameter optimization
+\item Noise and scalability
+\end{itemize}
+\item Active research area with many variants
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\end{document}
+
+
+
+%================================================
+\section{QAOA for MaxCut: Explicit Construction}
+%================================================
+
+\begin{frame}{MaxCut as a Quantum Hamiltonian}
+\begin{itemize}
+\item Classical objective:
+\[
+C(x) = \sum_{(i,j)\in E} w_{ij} x_i (1 - x_j)
+\]
+\item Map binary variables:
+\[
+x_i = \frac{1 - Z_i}{2}
+\]
+\item Cost Hamiltonian:
+\[
+\hat{H}_C = \frac{1}{2} \sum_{(i,j)\in E} w_{ij}(I - Z_i Z_j)
+\]
+\item Ground state encodes optimal cut
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Mixer Hamiltonian}
+\begin{itemize}
+\item Standard choice:
+\[
+\hat{H}_M = \sum_i X_i
+\]
+\item Properties:
+\begin{itemize}
+\item Does not commute with $\hat{H}_C$
+\item Generates transitions between bitstrings
+\end{itemize}
+\item Initial state:
+\[
+|s\rangle = |+\rangle^{\otimes n}
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QAOA Circuit Structure}
+\begin{itemize}
+\item One QAOA layer:
+\[
+U_C(\gamma) = e^{-i\gamma \hat{H}_C}, \quad
+U_M(\beta) = e^{-i\beta \hat{H}_M}
+\]
+\item State:
+\[
+|\psi_p\rangle = \prod_{k=1}^p U_M(\beta_k) U_C(\gamma_k) |s\rangle
+\]
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{Gate Decomposition (MaxCut)}
+  \begin{itemize}
+  \item Two-qubit interaction:
+    \[
+    e^{-i\gamma Z_i Z_j}
+    \]
+  \item Decomposition:
+    \begin{itemize}
+    \item CNOT -- $R_Z$ -- CNOT
+    \end{itemize}
+  \item Mixer:
+    \[
+    e^{-i\beta X_i} = R_X(2\beta)
+    \]
+  \end{itemize}
+\end{frame}
+
+%================================================
+\section{Analytic Solution for $p=1$}
+%================================================
+
+\begin{frame}{QAOA at $p=1$}
+  \begin{itemize}
+  \item State:
+    \[
+    |\psi(\gamma,\beta)\rangle = e^{-i\beta \hat{H}_M} e^{-i\gamma \hat{H}_C} |+\rangle^{\otimes n}
+    \]
+  \item Expectation value:
+    \[
+    F(\gamma,\beta) =
+    \langle \psi | \hat{H}_C | \psi \rangle
+    \]
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Edge Contribution}
+  \begin{itemize}
+  \item For one edge $(i,j)$:
+    \[
+    \langle Z_i Z_j \rangle =
+    \sin(4\beta)\sin(2\gamma)
+    \]
+  \item Total energy:
+    \[
+    F(\gamma,\beta) =
+    \sum_{(i,j)} \frac{w_{ij}}{2}
+    \left(1 - \sin(4\beta)\sin(2\gamma)\right)
+    \]
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Optimal Parameters (Regular Graphs)}
+  \begin{itemize}
+  \item For regular graphs:
+    \[
+    \beta^* = \frac{\pi}{8}, \quad
+    \gamma^* = \frac{\pi}{4}
+    \]
+  \item Leads to approximation ratio:
+    \[
+    \alpha \approx 0.6924 \quad (\text{triangle-free graphs})
+    \]
+  \item Matches known analytical results
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation}
+  \begin{itemize}
+  \item $p=1$ captures:
+    \begin{itemize}
+    \item Short-range correlations
+    \item Local structure of graph
+    \end{itemize}
+  \item Increasing $p$:
+    \begin{itemize}
+    \item Builds long-range correlations
+    \item Approaches adiabatic limit
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+%================================================
+\section{QAOA as Trotterized Adiabatic Evolution}
+%================================================
+
+\begin{frame}{Adiabatic Evolution}
+  \begin{itemize}
+  \item Time-dependent Hamiltonian:
+    \[
+    \hat{H}(t) = (1-s(t))\hat{H}_M + s(t)\hat{H}_C
+    \]
+  \item Ground state evolves:
+    \[
+    |\psi(T)\rangle = \mathcal{T}
+    \exp\left(-i\int_0^T \hat{H}(t) dt\right)|s\rangle
+    \]
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Trotterization}
+  \begin{itemize}
+  \item Discretize time:
+    \[
+    U(T) \approx \prod_{k=1}^p
+    e^{-i\Delta t \hat{H}_C}
+    e^{-i\Delta t \hat{H}_M}
+    \]
+  \item Compare with QAOA:
+    \[
+    \gamma_k \sim s(t_k)\Delta t, \quad
+    \beta_k \sim (1-s(t_k))\Delta t
+    \]
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Variational Generalization}
+  \begin{itemize}
+  \item QAOA replaces schedule with free parameters:
+    \[
+    (\gamma_k,\beta_k) \text{ optimized}
+    \]
+  \item Advantages:
+    \begin{itemize}
+    \item No need for slow evolution
+    \item Adaptation to hardware constraints
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Physics}
+  \begin{itemize}
+  \item QAOA $\leftrightarrow$ discrete quantum quench sequence
+  \item Equivalent to:
+    \begin{itemize}
+    \item Digital adiabatic evolution
+    \item Variational time evolution
+    \end{itemize}
+  \item Links to:
+    \begin{itemize}
+    \item Quantum control theory
+    \item Many-body dynamics
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Limit $p \to \infty$}
+  \begin{itemize}
+  \item QAOA converges to adiabatic algorithm:
+    \[
+    \lim_{p \to \infty} |\psi_p\rangle \rightarrow |\psi_{\text{ground}}\rangle
+    \]
+  \item Trade-off:
+    \begin{itemize}
+    \item Large $p$ → accuracy
+    \item Small $p$ → NISQ feasibility
+    \end{itemize}
+  \end{itemize}
+  \end{frame}
