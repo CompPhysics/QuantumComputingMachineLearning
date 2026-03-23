@@ -112,7 +112,7 @@ themes can be covered:
 ## March 23-27, 2026
   - Quantum Fourier Transforms, algorithm and implementation
   - Quantum phase estimation (QPE) algorithm
-  - Setting up circuits for QFTs and the QPE  
+  - Setting up circuits for QFTs and the QPE  and discussion of codes
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
 
