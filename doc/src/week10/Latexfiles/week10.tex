@@ -9,9 +9,9 @@
 \usepackage{mathtools}
 \usepackage{quantikz}
 
-\title{The Quantum Fourier Transform and the Quantum Phase estimation algorithm}
+\title{Quantum Fourier Transform and Quantum Phase estimation algorithms}
 \author{Morten Hjorth-Jensen}
-\date{Week of March 23-27, 2026}
+\date{FYS5419/9419: Week of March 23-27, 2026}
 
 \begin{document}
 
@@ -19,25 +19,17 @@
 \frame{\titlepage}
 
 %------------------------------------------------
-\begin{frame}{Outline I}
+\begin{frame}{Outline}
 \begin{enumerate}
 \item From the classical DFT to the QFT, reminder from last week
 \item Circuit decomposition with Hadamards and controlled phases
-\item Worked 2- and 3-qubit examples
 \item Approximate QFT and complexity
-\item Implementation logic and simulation remarks
-\end{enumerate}
-\end{frame}
-
-\begin{frame}{Outline II}
-\begin{enumerate}
 \item Quantum Phase Estimation (QPE)
-\item Bit-string interpretation and precision
 \item Connection to Hamiltonian simulation
 \item Connection to Variational Quantum Eigensolvers (VQE)
-\item Summary and outlook
 \item Themes for the second project
 \end{enumerate}
+See also separate jupyter-notebooks at \url{https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10/ipynb}
 \end{frame}
 
 
@@ -59,7 +51,7 @@ The QFT is the quantum analogue of the discrete Fourier transform, but it acts o
 \end{frame}
 
 %------------------------------------------------
-\begin{frame}{Classical Discrete Fourier Transform}
+\begin{frame}{Classical Discrete Fourier Transform, reminder from last week}
 Given a vector \(x=(x_0,x_1,\dots,x_{N-1})\), the discrete Fourier transform is
 \[
 y_k = \frac{1}{\sqrt N}\sum_{j=0}^{N-1} x_j e^{2\pi i jk/N},
@@ -359,7 +351,7 @@ For qubit \(j\), counting from the top:
 \item At the end, reverse qubit order with SWAP gates
 \end{enumerate}
 
-So the general structure is:
+The general structure is:
 \[
 H \to \text{controlled phases} \to H \to \text{controlled phases} \to \cdots \to \text{SWAP network}.
 \]
@@ -394,16 +386,16 @@ x_1=1,\qquad x_2=0,\qquad x_3=1,
 \]
 
 The product form gives
-\[
+\begin{align*}
 \operatorname{QFT}_8 \ket{101}
-=
+= &
 \frac{1}{\sqrt8}
 \left(\ket0 + e^{2\pi i\,0.1}\ket1\right)
 \otimes
-\left(\ket0 + e^{2\pi i\,0.01}\ket1\right)
-\otimes
+\left(\ket0 + e^{2\pi i\,0.01}\ket1\right) \\
+\otimes &
 \left(\ket0 + e^{2\pi i\,0.101}\ket1\right).
-\]
+\end{align*}
 \end{frame}
 
 %------------------------------------------------
@@ -479,7 +471,7 @@ Therefore the total gate count is
 O(n^2).
 \]
 
-This is exponentially more efficient than applying the classical DFT matrix directly to a \(2^n\)-dimensional vector.
+This is exponentially more efficient than applying the classical DFT matrix directly to a \(2^n\)-dimensional vector. The latter requires $O(N^2)$ operations, with $N=2^n$. With three qubits we have already $9$ versus $64$ operations. With 100 qubits we have $10^4$ compared with $2^{200}\sim 1.6\times 10^{60}$.  
 \end{frame}
 
 %------------------------------------------------
@@ -501,48 +493,10 @@ O(n \log n).
 \]
 \end{frame}
 
-%------------------------------------------------
-\begin{frame}{Connection to Quantum Phase Estimation I}
-Suppose
-\[
-U \ket{\psi} = e^{2\pi i \phi}\ket{\psi}
-\]
-for some eigenstate \(\ket{\psi}\).
-
-Quantum phase estimation aims to determine the phase \(\phi\).
-
-The algorithm uses:
-\begin{itemize}
-\item a control register prepared in superposition,
-\item controlled powers \(U^{2^j}\),
-\item an inverse QFT on the control register.
-\end{itemize}
-
-The inverse QFT converts the accumulated phase information into binary digits of \(\phi\).
-\end{frame}
 
 %------------------------------------------------
-\begin{frame}{Connection to Quantum Phase Estimation II}
-Schematically,
-\[
-\frac{1}{2^{n/2}}\sum_{k=0}^{2^n-1} e^{2\pi i k\phi}\ket{k}
-\]
-is transformed by the inverse QFT into a computational basis state approximating the binary expansion of \(\phi\).
-
-Thus the QFT acts as a phase decoder.
-
-This is why it is central to:
-\begin{itemize}
-\item Shor's algorithm,
-\item Hamiltonian eigenvalue estimation,
-\item quantum simulation,
-\item metrological phase extraction.
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-\begin{frame}{Implementation Logic in a Notebook or Simulator}
-A typical notebook implementation of the QFT proceeds as follows:
+\begin{frame}{Implementation}
+A typical implementation of the QFT proceeds as follows:
 
 \begin{enumerate}
 \item Choose the number of qubits \(n\)
@@ -553,6 +507,7 @@ A typical notebook implementation of the QFT proceeds as follows:
 \end{enumerate}
 
 This is exactly the constructive logic derived from the product form.
+See the jupyter-notebook at \url{https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10} for implementaions.
 \end{frame}
 
 %------------------------------------------------
@@ -1080,8 +1035,8 @@ This bitwise structure is one reason QPE is so elegant mathematically.
 \end{frame}
 
 %================================================
-\begin{frame}{Implementation Logic in a Notebook}
-A standard notebook implementation of QPE typically proceeds as follows:
+\begin{frame}{Implementation}
+A implementation of the QPE typically proceeds as follows:
 \begin{enumerate}
 \item choose the number of control qubits,
 \item initialize the system register in an eigenstate or approximate eigenstate,
@@ -1136,10 +1091,10 @@ QPE becomes an energy-estimation algorithm,
 \end{frame}
 
 %================================================
-\begin{frame}{Possible Next Topics and suggestions for the second project}
+\begin{frame}{Suggestions for the second project}
 \begin{itemize}
 \item Continuation of project 1 with  more realistic systems and using adaptive VQE on actual (real) quantum computers
-\item Implementation and studies of the Quantum Approximate Optimization Algorithm (QAOA): Simulation of linear algebra systems on quantum computers, solving differential equations
+\item Implementation and studies of the Quantum Approximate Optimization Algorithm (QAOA): Simulation of linear algebra systems on quantum computers, solving for example differential equations
 \item Applications and implementations of quantum machine learning algorithms
 \item Implement quantum neural networks for PINNs
 \item Detailed quantum chemistry applications.
@@ -1153,7 +1108,7 @@ QPE becomes an energy-estimation algorithm,
 \item Studies of entanglement and physical realization of quantum gates and circuits
 \item Implementing Shor's algorithm or other algorithms
 \item Parallelizing the Variational Quantum Eigensolver with multi-GPU scaling, see \url{https://arxiv.org/abs/2601.09951}
-\item Implementing and comparing the quantum phase estimation algorithm with VQE, see recent QPE paper at \url{"https://arxiv.org/abs/2601.05788}
+\item Implementing and comparing the quantum phase estimation algorithm with VQE, see for example recent QPE paper at \url{"https://arxiv.org/abs/2601.05788}
 \item Studies of hyperparameters in VQE, see for example \url{https://arxiv.org/abs/2601.16679}
 \item Implementing unitary coupled cluster theory on a quantum computer, see \url{https://arxiv.org/abs/2501.15893}
 \end{itemize}
