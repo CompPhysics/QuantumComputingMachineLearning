@@ -1,0 +1,922 @@
+\documentclass{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{quantikz}
+
+\title{The Quantum Approximate Optimization Algorithm (QAOA)}
+\subtitle{Theory, Circuits, and Applications}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+%------------------------------------------------
+\frame{\titlepage}
+
+%------------------------------------------------
+\begin{frame}{Outline}
+\begin{enumerate}
+\item Motivation: Optimization in physics
+\item Variational quantum algorithms
+\item Definition of QAOA
+\item Cost Hamiltonians and problem encoding
+\item QAOA circuit construction
+\item Example: MaxCut
+\item Classical optimization loop
+\item Performance and limitations
+\end{enumerate}
+\end{frame}
+
+%================================================
+\begin{frame}{Motivation}
+Many problems in physics and computer science reduce to optimization:
+
+\begin{itemize}
+\item Ground-state energy minimization
+\item Spin models (Ising, Heisenberg)
+\item Combinatorial optimization (MaxCut, SAT)
+\end{itemize}
+
+General form:
+\[
+\min_{z \in \{0,1\}^n} C(z)
+\]
+
+QAOA is designed to solve such problems using quantum circuits.
+\end{frame}
+
+%================================================
+\begin{frame}{Variational Quantum Algorithms}
+QAOA belongs to the class of hybrid quantum-classical algorithms.
+
+Idea:
+\begin{itemize}
+\item Prepare a parametrized quantum state \(\ket{\psi(\boldsymbol{\theta})}\)
+\item Measure expectation value:
+\[
+E(\boldsymbol{\theta}) = \bra{\psi(\boldsymbol{\theta})} H_C \ket{\psi(\boldsymbol{\theta})}
+\]
+\item Optimize parameters classically
+\end{itemize}
+
+This is closely related to VQE.
+\end{frame}
+
+%================================================
+\begin{frame}{Definition of QAOA}
+QAOA constructs the state
+\[
+\ket{\psi_p(\boldsymbol{\gamma}, \boldsymbol{\beta})}
+=
+\prod_{k=1}^p
+e^{-i \beta_k H_M}
+e^{-i \gamma_k H_C}
+\ket{+}^{\otimes n}
+\]
+
+where:
+\begin{itemize}
+\item \(H_C\): cost Hamiltonian
+\item \(H_M\): mixing Hamiltonian
+\item \(p\): circuit depth
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Initial State}
+The algorithm starts from
+\[
+\ket{+}^{\otimes n}
+=
+\frac{1}{2^{n/2}} \sum_z \ket{z}
+\]
+
+This represents an equal superposition of all candidate solutions.
+\end{frame}
+
+%================================================
+\begin{frame}{Cost Hamiltonian}
+The classical cost function is encoded as a diagonal Hamiltonian:
+\[
+H_C = \sum_z C(z) \ket{z}\bra{z}
+\]
+
+Example (Ising form):
+\[
+H_C = \sum_{i<j} J_{ij} Z_i Z_j + \sum_i h_i Z_i
+\]
+
+Thus:
+\[
+C(z) = \bra{z} H_C \ket{z}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Mixing Hamiltonian}
+The standard choice is
+\[
+H_M = \sum_{i=1}^n X_i
+\]
+
+This generates transitions between computational basis states and ensures exploration of the search space.
+\end{frame}
+
+%================================================
+\begin{frame}{QAOA Circuit Structure}
+Each layer consists of:
+\begin{enumerate}
+\item Cost unitary:
+\[
+U_C(\gamma) = e^{-i \gamma H_C}
+\]
+\item Mixer:
+\[
+U_M(\beta) = e^{-i \beta H_M}
+\]
+\end{enumerate}
+
+Repeated \(p\) times.
+\end{frame}
+
+%================================================
+\begin{frame}{QAOA Circuit (p=1)}
+\centering
+\begin{quantikz}
+\lstick{$\ket{+}$} & \gate{$e^{-i\gamma H_C}$} & \gate{$e^{-i\beta X}$} & \meter{} \\
+\lstick{$\ket{+}$} & \gate{$e^{-i\gamma H_C}$} & \gate{$e^{-i\beta X}$} & \meter{}
+\end{quantikz}
+\end{frame}
+
+%================================================
+\begin{frame}{Example: MaxCut Problem}
+Given a graph \(G=(V,E)\), maximize:
+\[
+C(z) = \sum_{(i,j)\in E} \frac{1 - z_i z_j}{2}
+\]
+
+Mapping to Hamiltonian:
+\[
+H_C = \sum_{(i,j)\in E} \frac{1 - Z_i Z_j}{2}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{MaxCut Cost Unitary}
+For one edge:
+\[
+e^{-i\gamma (1 - Z_i Z_j)/2}
+\]
+
+Circuit implementation:
+\centering
+\begin{quantikz}
+\lstick{$q_i$} & \ctrl{1} & \gate{$R_z(2\gamma)$} & \ctrl{1} \\
+\lstick{$q_j$} & \targ{}  & \qw                  & \targ{}
+\end{quantikz}
+\end{frame}
+
+%================================================
+\begin{frame}{Mixer Unitary}
+For each qubit:
+\[
+e^{-i\beta X}
+\]
+
+Circuit:
+\[
+R_x(2\beta)
+\]
+
+\centering
+\begin{quantikz}
+\lstick{$q_i$} & \gate{$R_x(2\beta)$}
+\end{quantikz}
+\end{frame}
+
+%================================================
+\begin{frame}{Expectation Value}
+We evaluate:
+\[
+\langle H_C \rangle =
+\bra{\psi(\gamma,\beta)} H_C \ket{\psi(\gamma,\beta)}
+\]
+
+This is estimated via measurements on the quantum device.
+\end{frame}
+
+%================================================
+\begin{frame}{Classical Optimization Loop}
+\begin{enumerate}
+\item Initialize parameters \((\gamma,\beta)\)
+\item Run quantum circuit
+\item Measure expectation value
+\item Update parameters using classical optimizer
+\end{enumerate}
+
+Repeat until convergence.
+\end{frame}
+
+%================================================
+\begin{frame}{Physical Interpretation}
+QAOA can be viewed as a discretized quantum annealing process:
+
+\[
+H(t) = (1-s(t))H_M + s(t)H_C
+\]
+
+with alternating evolution under \(H_C\) and \(H_M\).
+\end{frame}
+
+%================================================
+\begin{frame}{Performance}
+\begin{itemize}
+\item \(p=1\): shallow circuits, limited accuracy
+\item larger \(p\): better approximation
+\item classical optimization becomes harder
+\end{itemize}
+
+Tradeoff:
+\[
+\text{accuracy} \leftrightarrow \text{circuit depth}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Relation to VQE}
+QAOA is a special case of VQE:
+\begin{itemize}
+\item structured ansatz
+\item problem-inspired Hamiltonians
+\end{itemize}
+
+Difference:
+\begin{itemize}
+\item QAOA: alternating operators
+\item VQE: general parametrized circuits
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Limitations}
+\begin{itemize}
+\item Barren plateaus in optimization
+\item Hardware noise
+\item scaling with problem size
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Summary}
+QAOA:
+\begin{itemize}
+\item encodes optimization problems into Hamiltonians
+\item uses alternating quantum evolution
+\item is hybrid quantum-classical
+\item connects quantum computing with statistical physics
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+
+
+\documentclass{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{quantikz}
+
+\title{Quantum Approximate Optimization Algorithm}
+\subtitle{Adiabatic Origins, Analytics, and Statistical Physics Connections}
+\author{}
+\date{}
+
+\begin{document}
+
+%------------------------------------------------
+\frame{\titlepage}
+
+%------------------------------------------------
+\begin{frame}{Outline}
+\begin{enumerate}
+\item QAOA review
+\item Adiabatic quantum computation
+\item Trotterization $\Rightarrow$ QAOA
+\item MaxCut as an Ising model
+\item Analytical solution at $p=1$
+\item Statistical mechanics interpretation
+\end{enumerate}
+\end{frame}
+
+%================================================
+\begin{frame}{QAOA State}
+\[
+\ket{\psi_p(\boldsymbol{\gamma},\boldsymbol{\beta})}
+=
+\prod_{k=1}^p e^{-i\beta_k H_M} e^{-i\gamma_k H_C}
+\ket{+}^{\otimes n}
+\]
+
+\begin{itemize}
+\item $H_C$: problem Hamiltonian
+\item $H_M = \sum_i X_i$: mixing Hamiltonian
+\end{itemize}
+
+Goal:
+\[
+\max \bra{\psi} H_C \ket{\psi}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Adiabatic Quantum Computation}
+Consider a time-dependent Hamiltonian:
+\[
+H(s) = (1-s)H_M + s H_C, \quad s \in [0,1]
+\]
+
+Adiabatic theorem:
+\begin{itemize}
+\item If evolution is slow, system stays in ground state
+\item Final state $\rightarrow$ ground state of $H_C$
+\end{itemize}
+
+Time evolution:
+\[
+U = \mathcal{T}\exp\left(-i\int_0^T H(s) ds\right)
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Discretization of Adiabatic Evolution}
+Divide time into $p$ steps:
+\[
+U \approx \prod_{k=1}^p
+e^{-i \Delta t ((1-s_k)H_M + s_k H_C)}
+\]
+
+Using Trotter decomposition:
+\[
+e^{-i (A+B)\Delta t}
+\approx
+e^{-iA\Delta t} e^{-iB\Delta t}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{From Adiabatic Evolution to QAOA}
+Applying Trotterization:
+\[
+U \approx \prod_{k=1}^p
+e^{-i\beta_k H_M} e^{-i\gamma_k H_C}
+\]
+
+Thus:
+\[
+\boxed{\text{QAOA is a discretized (Trotterized) adiabatic evolution}}
+\]
+
+Key idea:
+\begin{itemize}
+\item Replace fixed schedule with variational parameters
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{MaxCut as an Ising Model}
+MaxCut cost:
+\[
+C(z) = \sum_{(i,j)\in E} \frac{1 - z_i z_j}{2}
+\]
+
+Hamiltonian form:
+\[
+H_C = \sum_{(i,j)\in E} \frac{1 - Z_i Z_j}{2}
+\]
+
+Equivalent to Ising model:
+\[
+H = -\sum_{i<j} J_{ij} Z_i Z_j
+\]
+
+Thus QAOA solves an Ising ground-state problem.
+\end{frame}
+
+%================================================
+\begin{frame}{Statistical Mechanics Interpretation}
+Define partition function:
+\[
+Z = \mathrm{Tr}(e^{-\beta H})
+\]
+
+QAOA instead prepares:
+\[
+\ket{\psi(\gamma,\beta)} \sim e^{-i\beta H_M} e^{-i\gamma H_C}
+\]
+
+Interpretation:
+\begin{itemize}
+\item Imaginary time: classical Gibbs states
+\item Real time: quantum interference
+\end{itemize}
+
+QAOA interpolates between:
+\[
+\text{thermal sampling} \leftrightarrow \text{coherent dynamics}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Analytical Example: Single Edge}
+Consider two qubits with one edge:
+\[
+H_C = \frac{1 - Z_1 Z_2}{2}
+\]
+
+Initial state:
+\[
+\ket{+}^{\otimes 2}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Apply Cost Unitary}
+\[
+U_C(\gamma) = e^{-i\gamma H_C}
+\]
+
+Since $Z_1 Z_2$ eigenvalues $\pm1$:
+\[
+U_C = e^{-i\gamma/2} e^{i\gamma Z_1 Z_2 /2}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Apply Mixer}
+\[
+U_M(\beta) = e^{-i\beta (X_1 + X_2)}
+\]
+
+Acts as rotations:
+\[
+R_x(2\beta)
+\]
+on each qubit.
+\end{frame}
+
+%================================================
+\begin{frame}{Expectation Value}
+We compute:
+\[
+\langle H_C \rangle =
+\frac{1}{2}(1 - \langle Z_1 Z_2 \rangle)
+\]
+
+After algebra (standard result):
+\[
+\langle Z_1 Z_2 \rangle =
+\sin(4\beta)\sin(2\gamma)
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Optimization (p=1)}
+Thus:
+\[
+\langle H_C \rangle =
+\frac{1}{2}(1 - \sin(4\beta)\sin(2\gamma))
+\]
+
+Maximize by choosing:
+\[
+\beta = \frac{\pi}{8}, \quad \gamma = \frac{\pi}{4}
+\]
+
+This gives optimal cut value.
+\end{frame}
+
+%================================================
+\begin{frame}{Interpretation of p=1 Result}
+Key insight:
+\begin{itemize}
+\item Even shallow circuits capture nontrivial correlations
+\item Performance improves with connectivity
+\end{itemize}
+
+For general graphs:
+\begin{itemize}
+\item expectation depends on local graph structure
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Connection to Spin Systems}
+QAOA operates directly on spin Hamiltonians:
+\[
+H = \sum J_{ij} Z_i Z_j
+\]
+
+This is:
+\begin{itemize}
+\item classical Ising model
+\item quantum transverse-field Ising model
+\end{itemize}
+
+Thus QAOA = controlled exploration of spin configurations.
+\end{frame}
+
+%================================================
+\begin{frame}{QAOA vs Classical Methods}
+Classical:
+\begin{itemize}
+\item simulated annealing
+\item Monte Carlo
+\end{itemize}
+
+QAOA:
+\begin{itemize}
+\item uses interference instead of thermal sampling
+\item explores many configurations simultaneously
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Summary}
+\begin{itemize}
+\item QAOA arises from Trotterized adiabatic evolution
+\item Encodes optimization as Ising Hamiltonians
+\item p=1 case admits analytical solutions
+\item Connects quantum computing with statistical physics
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+
+\documentclass{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{quantikz}
+
+\title{Quantum Approximate Optimization Algorithm}
+\subtitle{From Adiabatic Dynamics to Statistical Physics and Control Theory}
+\author{}
+\date{}
+
+\begin{document}
+
+%------------------------------------------------
+\frame{\titlepage}
+
+%------------------------------------------------
+\begin{frame}{Overview}
+\begin{itemize}
+\item Optimization problems and spin systems
+\item QAOA construction
+\item Adiabatic origin and Trotterization
+\item Analytical structure (p=1)
+\item General graphs and locality
+\item Landscape and optimization theory
+\item Statistical mechanics connections
+\item Control-theoretic interpretation
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Optimization as Physics}
+Many optimization problems map to:
+\[
+\min_z C(z)
+\]
+
+Equivalent to finding ground state of:
+\[
+H_C = \sum_z C(z)\ket{z}\bra{z}
+\]
+
+This is identical to:
+\begin{itemize}
+\item classical spin systems
+\item Ising Hamiltonians
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Ising Representation}
+General Ising form:
+\[
+H_C = \sum_{i<j} J_{ij} Z_i Z_j + \sum_i h_i Z_i
+\]
+
+Binary variables:
+\[
+z_i \in \{-1,1\}
+\]
+
+Thus QAOA operates directly on many-body Hamiltonians.
+\end{frame}
+
+%================================================
+\begin{frame}{QAOA Ansatz}
+\[
+\ket{\psi_p(\gamma,\beta)} =
+\prod_{k=1}^p e^{-i\beta_k H_M} e^{-i\gamma_k H_C}
+\ket{+}^{\otimes n}
+\]
+
+Mixer:
+\[
+H_M = \sum_i X_i
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Physical Picture}
+\begin{itemize}
+\item $H_C$: encodes energy landscape
+\item $H_M$: induces transitions
+\end{itemize}
+
+Thus:
+\[
+\text{QAOA = controlled quantum exploration of configuration space}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Circuit Representation}
+\centering
+\begin{quantikz}
+\lstick{$\ket{+}$} & \gate{$e^{-i\gamma H_C}$} & \gate{$e^{-i\beta X}$} & \qw \\
+\lstick{$\ket{+}$} & \gate{$e^{-i\gamma H_C}$} & \gate{$e^{-i\beta X}$} & \qw
+\end{quantikz}
+\end{frame}
+
+%================================================
+\begin{frame}{Adiabatic Evolution}
+\[
+H(s) = (1-s)H_M + s H_C
+\]
+
+Evolution:
+\[
+U = \mathcal{T} e^{-i\int_0^T H(s)ds}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Trotterization}
+Discretize:
+\[
+U \approx \prod_{k=1}^p e^{-i\Delta t H(s_k)}
+\]
+
+Apply Trotter:
+\[
+e^{-i(A+B)} \approx e^{-iA} e^{-iB}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{QAOA as Trotterized Adiabatic Evolution}
+\[
+\boxed{
+U \approx \prod_{k=1}^p e^{-i\beta_k H_M} e^{-i\gamma_k H_C}
+}
+\]
+
+Key difference:
+\begin{itemize}
+\item adiabatic: fixed schedule
+\item QAOA: variational parameters
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{MaxCut Problem}
+\[
+C(z)=\sum_{(i,j)} \frac{1-z_i z_j}{2}
+\]
+
+Hamiltonian:
+\[
+H_C = \sum_{(i,j)} \frac{1-Z_i Z_j}{2}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Local Structure}
+Important fact:
+\begin{itemize}
+\item At depth $p$, correlations extend only distance $p$
+\end{itemize}
+
+Thus expectation values depend only on local subgraphs.
+\end{frame}
+
+%================================================
+\begin{frame}{Analytical p=1: Setup}
+Single edge:
+\[
+H_C = \frac{1-Z_1Z_2}{2}
+\]
+
+Initial state:
+\[
+\ket{+}^{\otimes 2}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Evolution}
+State:
+\[
+\ket{\psi} = e^{-i\beta H_M} e^{-i\gamma H_C} \ket{++}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Key Computation}
+One finds:
+\[
+\langle Z_1 Z_2 \rangle = \sin(4\beta)\sin(2\gamma)
+\]
+
+Thus:
+\[
+\langle H_C \rangle = \frac{1}{2}(1-\sin(4\beta)\sin(2\gamma))
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Optimal Parameters}
+Maximized at:
+\[
+\beta = \frac{\pi}{8}, \quad \gamma = \frac{\pi}{4}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{General Graphs}
+For arbitrary graph:
+\begin{itemize}
+\item expectation depends on local neighborhoods
+\item can be computed analytically for small $p$
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Statistical Mechanics View}
+Define:
+\[
+Z = \mathrm{Tr}(e^{-\beta H})
+\]
+
+QAOA:
+\[
+\ket{\psi} = e^{-i\beta H_M} e^{-i\gamma H_C}\ket{+}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Real vs Imaginary Time}
+\begin{itemize}
+\item imaginary time: $e^{-\beta H}$ → Gibbs states
+\item real time: $e^{-iHt}$ → unitary evolution
+\end{itemize}
+
+QAOA operates in real time.
+\end{frame}
+
+%================================================
+\begin{frame}{Relation to Annealing}
+\begin{itemize}
+\item simulated annealing: thermal fluctuations
+\item quantum annealing: tunneling
+\item QAOA: controlled coherent evolution
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Energy Landscape}
+Define:
+\[
+E(\gamma,\beta)=\bra{\psi}H_C\ket{\psi}
+\]
+
+Properties:
+\begin{itemize}
+\item highly non-convex
+\item periodic
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Parameter Landscape}
+\begin{itemize}
+\item small $p$: smooth landscape
+\item large $p$: complex landscape
+\end{itemize}
+
+Connections to:
+\begin{itemize}
+\item spin-glass landscapes
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Control-Theoretic View}
+QAOA:
+\[
+U(\theta)=\mathcal{T} e^{-i\int dt [u_1(t)H_C + u_2(t)H_M]}
+\]
+
+Piecewise constant controls:
+\[
+u_1(t), u_2(t)
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Continuous Limit}
+As $p\to\infty$:
+\[
+\text{QAOA} \to \text{continuous Schr\"odinger evolution}
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Connection to Optimal Control}
+Goal:
+\[
+\max \bra{\psi(T)}H_C\ket{\psi(T)}
+\]
+
+This is a quantum control problem.
+\end{frame}
+
+%================================================
+\begin{frame}{Relation to VQE}
+\begin{itemize}
+\item QAOA: structured ansatz
+\item VQE: general ansatz
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Scaling Challenges}
+\begin{itemize}
+\item parameter optimization
+\item noise
+\item circuit depth
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Barren Plateaus}
+Gradients may vanish exponentially:
+\[
+\partial_\theta E \to 0
+\]
+\end{frame}
+
+%================================================
+\begin{frame}{Why QAOA Still Works}
+Structure:
+\begin{itemize}
+\item locality
+\item problem-inspired ansatz
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{Summary}
+\begin{itemize}
+\item QAOA = Trotterized adiabatic evolution
+\item maps optimization → spin systems
+\item admits analytic results at small $p$
+\item connects quantum computing and statistical physics
+\end{itemize}
+\end{frame}
+
+\end{document}
