@@ -1,0 +1,599 @@
+\documentclass{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{quantikz}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  showstringspaces=false,
+  breaklines=true
+}
+
+\title{Using QAOA to Optimize Mean Squared Error}
+\subtitle{From MSE to QUBO, Ising Hamiltonians, and Variational Quantum Circuits}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Outline}
+\begin{enumerate}
+\item Why MSE is not directly a QAOA problem
+\item Binary encoding of continuous parameters
+\item MSE \(\rightarrow\) QUBO \(\rightarrow\) Ising mapping
+\item Fully explicit one-parameter linear fit
+\item Extension to two-parameter regression
+\item Regularized regression: \(L_2\) and \(L_1\)-type penalties
+\item PDE discretizations and QAOA
+\item QAOA circuit and Qiskit implementation sketch
+\item Limitations and outlook
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Why QAOA Is Not Directly an MSE Optimizer}
+The mean squared error is usually a continuous objective:
+\[
+L(\theta)=\frac1N \sum_{i=1}^N \left(y_i-f(x_i;\theta)\right)^2.
+\]
+
+QAOA is designed for discrete optimization:
+\[
+\min_{z\in\{0,1\}^m} C(z),
+\]
+or equivalently for a cost Hamiltonian diagonal in the computational basis.
+
+Therefore the strategy is:
+\[
+\text{continuous MSE}
+\;\longrightarrow\;
+\text{binary encoding}
+\;\longrightarrow\;
+\text{QUBO}
+\;\longrightarrow\;
+\text{Ising Hamiltonian}
+\;\longrightarrow\;
+\text{QAOA}.
+\]
+\end{frame}
+
+\begin{frame}{Binary Encoding of Parameters}
+Suppose a parameter \(\theta\) is restricted to a finite interval and represented by \(m\) bits:
+\[
+\theta = \theta_{\min} + \Delta \sum_{k=0}^{m-1} 2^k z_k,
+\qquad z_k\in\{0,1\}.
+\]
+
+Here:
+\begin{itemize}
+\item \(\theta_{\min}\): lower bound,
+\item \(\Delta\): resolution,
+\item \(z_k\): binary decision variables.
+\end{itemize}
+
+For several parameters \(\theta_1,\dots,\theta_p\), we encode each parameter separately.
+Once substituted into the MSE, the loss becomes a polynomial in binary variables.
+\end{frame}
+
+\begin{frame}{From MSE to QUBO}
+A quadratic unconstrained binary optimization (QUBO) problem has the form
+\[
+C(z)=c_0+\sum_i c_i z_i+\sum_{i<j} c_{ij} z_i z_j,
+\qquad z_i\in\{0,1\}.
+\]
+
+If the model is linear in the encoded binary variables, then the squared loss naturally becomes quadratic in the bits.
+
+This is ideal for QAOA, because QUBO maps directly to an Ising Hamiltonian.
+\end{frame}
+
+\begin{frame}{QUBO to Ising Mapping}
+Use the standard relation
+\[
+z_i=\frac{1-Z_i}{2},
+\]
+where \(Z_i\) is the Pauli-\(Z\) operator on qubit \(i\).
+
+Then a QUBO
+\[
+C(z)=c_0+\sum_i c_i z_i+\sum_{i<j} c_{ij} z_i z_j
+\]
+becomes
+\[
+H_C = \text{const} + \sum_i h_i Z_i + \sum_{i<j} J_{ij} Z_i Z_j.
+\]
+
+This Hamiltonian is diagonal in the computational basis and is therefore a valid QAOA cost Hamiltonian.
+\end{frame}
+
+\begin{frame}{Worked Example: One-Parameter Linear Fit}
+Consider the model
+\[
+f(x;a)=ax,
+\]
+and the dataset
+\[
+(x_1,y_1)=(1,1), \qquad (x_2,y_2)=(2,2).
+\]
+
+Take a two-bit encoding
+\[
+a=z_0+2z_1,
+\qquad z_0,z_1\in\{0,1\}.
+\]
+
+Then
+\[
+L(a)=\frac12\left[(1-a)^2 + (2-2a)^2\right].
+\]
+
+We now express this entirely in terms of \(z_0,z_1\).
+\end{frame}
+
+\begin{frame}{Expanding the Worked Example}
+Insert
+\[
+a=z_0+2z_1
+\]
+into
+\[
+L(a)=\frac12\left[(1-a)^2+(2-2a)^2\right].
+\]
+
+Since
+\[
+(1-a)^2 = 1 - 2a + a^2,
+\qquad
+(2-2a)^2 = 4 - 8a + 4a^2,
+\]
+we get
+\[
+L(a)=\frac12\left(5 - 10a + 5a^2\right)
+=
+\frac52 - 5a + \frac52 a^2.
+\]
+
+Now substitute \(a=z_0+2z_1\).
+\end{frame}
+
+\begin{frame}{Compute the Binary Polynomial}
+We have
+\[
+a^2 = (z_0+2z_1)^2 = z_0^2 + 4z_1^2 + 4z_0z_1.
+\]
+
+Because \(z_i^2=z_i\) for binary variables,
+\[
+a^2 = z_0 + 4z_1 + 4z_0z_1.
+\]
+
+Therefore
+\[
+L(z_0,z_1)
+=
+\frac52 - 5(z_0+2z_1) + \frac52(z_0+4z_1+4z_0z_1).
+\]
+
+Collecting terms:
+\[
+\boxed{
+L(z_0,z_1)=\frac52 - \frac52 z_0 + 10 z_0z_1
+}
+\]
+
+Remarkably, the \(z_1\) term cancels in this particular dataset.
+\end{frame}
+
+\begin{frame}{QUBO Coefficients for the Worked Example}
+Thus the QUBO is
+\[
+C(z_0,z_1)=c_0+c_1 z_0 + c_2 z_1 + c_{12} z_0 z_1
+\]
+with
+\[
+c_0=\frac52,\qquad
+c_1=-\frac52,\qquad
+c_2=0,\qquad
+c_{12}=10.
+\]
+
+This is now in a form directly usable for QAOA.
+\end{frame}
+
+\begin{frame}{Map the Worked Example to an Ising Hamiltonian}
+Use
+\[
+z_0=\frac{1-Z_0}{2},\qquad
+z_1=\frac{1-Z_1}{2}.
+\]
+
+Then
+\[
+z_0 z_1=\frac14(1-Z_0-Z_1+Z_0Z_1).
+\]
+
+So
+\[
+H_C
+=
+\frac52
+-\frac52 \frac{1-Z_0}{2}
++10\cdot \frac14(1-Z_0-Z_1+Z_0Z_1).
+\]
+
+Simplify term by term.
+\end{frame}
+
+\begin{frame}{Final Cost Hamiltonian}
+After simplification:
+\[
+H_C
+=
+\frac{15}{4}
+-\frac{5}{4} Z_0
+-\frac{5}{2} Z_1
++\frac{5}{2} Z_0 Z_1.
+\]
+
+Thus the corresponding Ising coefficients are
+\[
+\text{const}=\frac{15}{4},\qquad
+h_0=-\frac54,\qquad
+h_1=-\frac52,\qquad
+J_{01}=\frac52.
+\]
+
+This is the Hamiltonian used in the QAOA cost unitary
+\[
+U_C(\gamma)=e^{-i\gamma H_C}.
+\]
+\end{frame}
+
+\begin{frame}{Check the Four Bitstrings}
+The bitstrings correspond to:
+\[
+00 \Rightarrow a=0,\qquad
+01 \Rightarrow a=2,\qquad
+10 \Rightarrow a=1,\qquad
+11 \Rightarrow a=3.
+\]
+
+Evaluate the MSE:
+\[
+L(0)=\frac12(1^2+2^2)=\frac52,
+\]
+\[
+L(1)=0,
+\]
+\[
+L(2)=\frac12(1+4)=\frac52,
+\]
+\[
+L(3)=\frac12(4+16)=10.
+\]
+
+So the optimum is clearly at
+\[
+a=1 \quad \Longleftrightarrow \quad z_0=1,\; z_1=0.
+\]
+\end{frame}
+
+\begin{frame}{QAOA Ansatz for the Worked Example}
+For two qubits and depth \(p=1\), the QAOA state is
+\[
+\ket{\psi(\gamma,\beta)}
+=
+e^{-i\beta(X_0+X_1)} e^{-i\gamma H_C} \ket{+}^{\otimes 2}.
+\]
+
+The standard mixer Hamiltonian is
+\[
+H_M = X_0 + X_1.
+\]
+
+The optimization target is
+\[
+\min_{\gamma,\beta} \bra{\psi(\gamma,\beta)} H_C \ket{\psi(\gamma,\beta)}.
+\]
+\end{frame}
+
+\begin{frame}{QAOA Circuit for the Worked Example}
+\centering
+\begin{quantikz}
+\lstick{$\ket{+}$} & \gate{$e^{-i\gamma H_C}$} & \gate{$R_x(2\beta)$} & \meter{} \\
+\lstick{$\ket{+}$} & \gate{$e^{-i\gamma H_C}$} & \gate{$R_x(2\beta)$} & \meter{}
+\end{quantikz}
+
+\vspace{0.7em}
+
+The cost unitary itself can be decomposed into
+\begin{itemize}
+\item one-qubit \(R_z\) rotations from the \(Z_i\) terms,
+\item a two-qubit entangling gate from the \(Z_0 Z_1\) term.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Two-Parameter Regression}
+Now consider
+\[
+f(x;a,b)=ax+b.
+\]
+
+The MSE is
+\[
+L(a,b)=\frac1N\sum_{i=1}^N \left(y_i-a x_i-b\right)^2.
+\]
+
+Encode
+\[
+a=a_{\min}+\sum_{k=0}^{m_a-1}\alpha_k z_k,
+\qquad
+b=b_{\min}+\sum_{\ell=0}^{m_b-1}\beta_\ell w_\ell.
+\]
+
+Then the loss becomes a quadratic polynomial in all binary variables
+\[
+q=(z_0,\dots,z_{m_a-1},w_0,\dots,w_{m_b-1}).
+\]
+\end{frame}
+
+\begin{frame}{General Two-Parameter QUBO Structure}
+Since the model is affine in \(a\) and \(b\), the squared loss produces terms of the form
+\[
+L(q)
+=
+c_0 + \sum_i c_i q_i + \sum_{i<j} c_{ij} q_i q_j.
+\]
+
+The linear coefficients come from:
+\begin{itemize}
+\item \(a\)-terms,
+\item \(b\)-terms,
+\item offsets from \(a_{\min},b_{\min}\).
+\end{itemize}
+
+The quadratic coefficients come from:
+\begin{itemize}
+\item \(a^2\),
+\item \(b^2\),
+\item \(ab\)-cross terms.
+\end{itemize}
+
+This remains a QUBO problem and therefore admits a direct Ising representation.
+\end{frame}
+
+\begin{frame}{Regularized Regression: \(L_2\) Penalty}
+Suppose we add ridge regularization:
+\[
+L_{\mathrm{ridge}}(a,b)
+=
+\frac1N\sum_{i=1}^N (y_i-ax_i-b)^2 + \lambda(a^2+b^2).
+\]
+
+After binary encoding, the \(a^2\) and \(b^2\) terms remain quadratic in the bits.
+
+Hence:
+\[
+\boxed{
+\text{MSE + } L_2 \text{ regularization still maps naturally to QUBO.}
+}
+\]
+
+So ridge-type penalties are straightforward to incorporate into QAOA.
+\end{frame}
+
+\begin{frame}{Regularized Regression: \(L_1\)-Type Penalty}
+If instead we add
+\[
+L_{\mathrm{lasso}}(a,b)
+=
+\frac1N\sum_{i=1}^N (y_i-ax_i-b)^2 + \lambda(|a|+|b|),
+\]
+then the absolute value is not polynomial.
+
+Possible remedies:
+\begin{itemize}
+\item discretize \(a,b\) to be nonnegative,
+\item introduce auxiliary binary variables,
+\item represent sign and magnitude separately,
+\item use penalty constructions to approximate \(|a|\).
+\end{itemize}
+
+Thus \(L_1\)-type penalties can be handled, but the QUBO construction becomes more elaborate.
+\end{frame}
+
+\begin{frame}{From PDEs to Optimization}
+Many PDEs become linear systems after discretization:
+\[
+A\mathbf{u}=\mathbf{f}.
+\]
+
+Equivalently, one can solve the variational problem
+\[
+\min_{\mathbf{u}}
+\left(
+\frac12 \mathbf{u}^T A \mathbf{u} - \mathbf{f}^T \mathbf{u}
+\right).
+\]
+
+If \(\mathbf{u}\) is treated as continuous, this is not a natural QAOA problem.
+
+But if the field values are discretized into binary variables, then QAOA can be used on the resulting QUBO.
+\end{frame}
+
+\begin{frame}{Binary Encoding of a PDE Field}
+Suppose a discretized field is represented by \(u_i\), and each \(u_i\) is encoded as
+\[
+u_i = u_{\min} + \Delta \sum_{k=0}^{m-1} 2^k z_{ik}.
+\]
+
+Then the variational PDE functional becomes a polynomial in the binary variables \(z_{ik}\).
+
+For linear elliptic problems, this typically yields a quadratic form:
+\[
+C(z)=z^T Q z + c^T z + c_0,
+\]
+that is, again a QUBO.
+
+So in principle:
+\[
+\text{discretized PDE} \;\longrightarrow\; \text{binary field encoding} \;\longrightarrow\; \text{QAOA}.
+\]
+\end{frame}
+
+\begin{frame}{Interpretation for PDEs}
+This is conceptually possible, but usually not the most efficient approach.
+
+Why?
+\begin{itemize}
+\item PDEs are naturally continuous problems,
+\item fine discretization requires many bits,
+\item the number of qubits grows rapidly,
+\item standard linear algebra or VQE-like continuous variational approaches are often better suited.
+\end{itemize}
+
+So QAOA is more natural for PDE-inspired problems with
+\begin{itemize}
+\item discrete controls,
+\item combinatorial constraints,
+\item or low-resolution binary field models.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Qiskit Sketch: Build the Cost Hamiltonian}
+Below is a minimal sketch for the worked two-qubit example.
+
+\begin{lstlisting}[language=Python]
+from qiskit.quantum_info import SparsePauliOp
+
+# H_C = 15/4 - 5/4 Z0 - 5/2 Z1 + 5/2 Z0 Z1
+cost_hamiltonian = SparsePauliOp.from_list([
+    ("II", 15/4),
+    ("ZI", -5/4),
+    ("IZ", -5/2),
+    ("ZZ",  5/2),
+])
+\end{lstlisting}
+
+This Hamiltonian can be fed into a QAOA routine together with a classical optimizer.
+\end{frame}
+
+\begin{frame}{Qiskit Sketch: Run QAOA}
+\begin{lstlisting}[language=Python]
+from qiskit_algorithms import QAOA
+from qiskit_algorithms.optimizers import COBYLA
+from qiskit.primitives import Sampler
+
+sampler = Sampler()
+optimizer = COBYLA(maxiter=100)
+
+qaoa = QAOA(
+    sampler=sampler,
+    optimizer=optimizer,
+    reps=1
+)
+
+result = qaoa.compute_minimum_eigenvalue(cost_hamiltonian)
+print(result.eigenvalue)
+print(result.best_measurement)
+\end{lstlisting}
+
+The best measured bitstring is then decoded back into the model parameter \(a\).
+\end{frame}
+
+\begin{frame}{Decoding the Bitstring}
+For the worked example, the decoding rule is
+\[
+a=z_0+2z_1.
+\]
+
+Thus:
+\begin{itemize}
+\item bitstring \(10\) means \(a=1\),
+\item bitstring \(01\) means \(a=2\),
+\item bitstring \(11\) means \(a=3\).
+\end{itemize}
+
+After the QAOA optimization, one takes the highest-probability or lowest-energy bitstring and converts it back into the regression parameters.
+\end{frame}
+
+\begin{frame}{Advantages and Limitations}
+Advantages:
+\begin{itemize}
+\item natural for discrete or combinatorial regression variants,
+\item can incorporate binary constraints directly,
+\item unified QUBO framework.
+\end{itemize}
+
+Limitations:
+\begin{itemize}
+\item continuous MSE must be discretized,
+\item encoding overhead can be large,
+\item standard gradient-based regression is usually much more efficient,
+\item current hardware limits practical scale.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{When QAOA Is Most Natural}
+QAOA is most appropriate when the learning problem has discrete structure, for example:
+\begin{itemize}
+\item sparse feature selection,
+\item binary model selection,
+\item quantized parameter search,
+\item discrete control optimization,
+\item low-resolution binary PDE field approximations,
+\item regression with combinatorial penalties.
+\end{itemize}
+
+For smooth continuous least-squares problems, classical optimization or VQE-like continuous methods are usually more natural.
+\end{frame}
+
+\begin{frame}{Summary}
+To use QAOA for MSE minimization:
+\begin{enumerate}
+\item write the MSE,
+\item encode parameters with bits,
+\item expand the result as a QUBO,
+\item map the QUBO to an Ising Hamiltonian,
+\item run QAOA,
+\item decode the optimal bitstring into the fitted parameters.
+\end{enumerate}
+
+In the fully explicit straight-line example,
+\[
+L(z_0,z_1)=\frac52 - \frac52 z_0 + 10 z_0 z_1
+\]
+and the QAOA cost Hamiltonian is
+\[
+H_C
+=
+\frac{15}{4}
+-\frac{5}{4} Z_0
+-\frac{5}{2} Z_1
++\frac{5}{2} Z_0 Z_1.
+\]
+\end{frame}
+
+\begin{frame}{Possible Extensions}
+Natural follow-up topics include:
+\begin{itemize}
+\item explicit \(a,b\) regression with four or more qubits,
+\item higher-order polynomial fitting,
+\item constrained regression and feature selection,
+\item PDE discretizations leading to QUBOs,
+\item comparison with VQE and quantum linear-system solvers.
+\end{itemize}
+\end{frame}
+
+\end{document}
