@@ -115,23 +115,20 @@ themes can be covered:
   - Setting up circuits for QFTs and the QPE  and discussion of codes
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
 
-
 ## March 30 - April 3, 2026, Public holiday in Norway no classes
 
-##  Note that the topics for the coming weeks may change. The focus will be on quantum machine learning, but we may add discussions of other algorithms as well like the QOAO. 
-
-
 ## April 6-10, 2026
-  - Basics of quantum machine learning (QML) 
-  - Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFT and QPE.
+  - The QAOA algorithm
+  - The HHL algorithm for solving linear algebra problems
 
 ## April 13-17, 2026
-  - QML
+  - Basics of quantum machine learning (QML) 
+  - Support vector machines
 
+##  Note that the topics for the coming weeks may change. The focus will be on quantum machine learning, but we may add discussions of other algorithms
 
 ## April 20-24, 2026 Quantum Machine Learning
-  - QML
-
+  - Quantum machine learning
 
 ## April 27-May 1, 2026 Quantum machine learning
   - QML
