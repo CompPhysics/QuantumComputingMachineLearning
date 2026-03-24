@@ -1,0 +1,813 @@
+TITLE: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo, Norway
+DATE: April 8, 2026
+
+
+!split
+===== Plans for the week of April 6-104, 2026 =====
+
+!bblock 
+o Discrete Fourier transforms (DFTs, reminder from last week) ) and the fast Fourier Transform (FFT) (see URL:"https://en.wikipedia.org/wiki/Fast_Fourier_transform")
+o Quantum Fourier transforms (QFTs), reminder from last week
+o Setting up circuits for QFTs
+o Reading recommendation Hundt, Quantum Computing for Programmers, sections 6.1-6.4 on QFTs and QPE.
+#o "Video of lecture TBA":"https://youtu.be/"
+#o "Whiteboard notes":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril2.pdf"
+!eblock
+
+!split
+===== Brief reminder on Fourier transforms =====
+
+Last week we reviewed some basic properties of Fourier transforms and derived the expressions for the quantum Fourier variant.
+We restate some of these results here.
+"For more information, see slides from previous week":"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/pub/week10/ipynb/week10.ipynb"
+
+
+
+!split
+===== Discrete Fourier transforms =====
+
+The Discrete Fourier Transform is a tool used in many different fields
+and finds applications in for example signal processing.  It has many
+many applications (in Speech Recognition, Data Processing, Optics,
+Acoustics). It is used in any application which performs Digital
+Signal Processing.
+
+There
+is an efficient algorithm, called the Fast Fourier Transform (FFT),
+which uses the special relationship amongst the roots of unity to
+compute the entire DFT in $O(n \log{n})$ time. Moreover, it is possible to take the DFT and recover the original
+polynomial in its coefficient form in $O(n \log{n})$ time, by using the
+FFT to compute the inverse DFT.
+
+!split
+===== Fast Fourier transform (FFT) =====
+
+Because of the many important applications of DFT, the Fast Fourier
+Transform is ranked among the top ten  algorithms in the 20th century.
+It came to light as a tool for Signal processing in 1965, when
+Cooley (of IBM) and Tukey (of Princeton) wrote a paper presenting the
+algorithm. However the basics of the algorithm were known long before
+that, for example, it was known to Gauss back in 1805.
+To read more about Fast Fourier transforms and similar topics, see for example "Fast Fourier Transform - Algorithms and Applications":"https://link.springer.com/book/10.1007/978-1-4020-6629-0". See also URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/Textbooks/fastfourier.pdf"
+
+For a discussion of FFT, see for example URL:"https://en.wikipedia.org/wiki/Fast_Fourier_transform"
+
+
+!split
+===== The discrete Fourier transform (DFT) =====
+
+The discrete Fourier transform takes as input a complex vector
+!bt
+\begin{align*}
+\bm{x} =\vert\bm{x}\rangle= 
+\begin{bmatrix}
+x_0 \\ 
+x_1 \\ 
+x_2 \\
+\vdots \\ 
+x_{n-2} \\
+x_{n-1}
+\end{bmatrix}.
+\end{align*}
+!et
+
+Each entry of the output vector $\vert \bm{y}\rangle$ is given by
+
+!bt
+\begin{align*}
+y_k = \frac{1}{\sqrt{N}} \sum_{j=0}^{N-1} x_je^{2 \pi ijk/N}.
+\end{align*}
+!et
+
+
+!split
+===== Output vector =====
+
+The output is a complex vector
+
+!bt
+\begin{align*}
+\vert \bm{y}\rangle = 
+\frac{1}{\sqrt{n}}
+\begin{bmatrix}
+\sum_{j=0}^{n-1} x_je^{2\pi ij0/n} \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij1/n} \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij2/n} \\
+\vdots \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij(n-2)/n} \\
+\sum_{j=0}^{n-1} x_je^{2\pi ij(n-1)/n}
+\end{bmatrix}
+\end{align*}
+!et
+
+!split
+===== Simple example =====
+
+As an example we can have a set of complex numbers
+$\{x_0,\dots,x_{n-1}\}$ with fixed length $n$, we can Fourier
+transform this as
+!bt
+\[
+y_k = \frac{1}{\sqrt{n}} \sum_{j=0}^{n-1} x_j \exp{i(2\pi jk)/n},
+\]
+!et
+
+leading to a new set of complex numbers $\{ y_0,\dots,y_{n-1}\}$. 
+
+
+
+
+!split
+===== Discrete Fourier Transformations =====
+
+
+
+Consider two sets of complex numbers $x_k$ and $y_k$ with
+$k=0,1,\dots,n-1$ entries. The discrete Fourier transform is defined
+as
+!bt
+\[
+y_k = \frac{1}{\sqrt{n}} \sum_{j=0}^{n-1} \exp{(\frac{2\pi\imath jk}{n})} x_j.
+\]
+!et
+As an example, assume $x_0=1$ and $x_1=1$. We can then use the above expression to find $y_0$ and $y_1$.
+
+!split
+===== Simple example =====
+With the above formula we get then
+!bt
+\begin{align*}
+y_0 &= \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 0\times 1}{2})}\times 2\right)\\
+& =\frac{1}{\sqrt{2}}(1+2)=\frac{3}{\sqrt{2}},
+\end{align*}
+!et
+and
+!bt
+\begin{align*}
+y_1 &= \frac{1}{\sqrt{2}} \left( \exp{(\frac{2\pi\imath 0\times 1}{2})} \times 1+\exp{(\frac{2\pi\imath 1\times 1}{2})}\times 2\right)=\\
+& =\frac{1}{\sqrt{2}}(1+2\exp{(\pi\imath)})=-\frac{1}{\sqrt{2}}.
+\end{align*}
+!et
+
+
+!split
+===== More details on Discrete Fourier transforms =====
+
+
+
+Suppose that we have a vector $f$ of $n$ complex numbers, $f_{k}, k
+\in\{0,1, \ldots, n-1\}$. Then the discrete Fourier transform (DFT) is
+a map from these $n$ complex numbers to $n$ complex numbers, the
+Fourier transformed coefficients $\tilde{f}_{j}$, given by
+
+!bt
+\begin{equation*}
+\tilde{f}_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{-j k} f_{k}
+\end{equation*}
+!et
+where $\omega=\exp \left(\frac{2 \pi i}{N}\right)$.
+
+!split
+===== Inverse DFT =====
+
+The inverse DFT is given by
+
+!bt
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \tilde{f}_{k}
+\end{equation*}
+!et
+
+To see this consider how the basis vectors transform. If $f_{k}^{l}=\delta_{k, l}$, then
+
+
+!bt
+\begin{equation*}
+\tilde{f}_{j}^{l}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{-j k} \delta_{k, l}=\frac{1}{\sqrt{n}} \omega^{-j l}
+\end{equation*}
+!et
+
+!split
+===== Orthonormality =====
+
+These DFT vectors are orthonormal, that is
+!bt
+\begin{equation*}
+\sum_{j=0}^{n-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\frac{1}{n} \sum_{j=0}^{n-1} \omega^{j l} \omega^{-j m}=\frac{1}{N} \sum_{j=0}^{n-1} \omega^{j(l-m)} 
+\end{equation*}
+!et
+
+This last sum can be evaluated as a geometric series, but beware of the $(l-m)=0$ term, and yields
+
+!bt
+\begin{equation*}
+\sum_{j=0}^{n-1} \tilde{f}^{l}{ }_{j}^{*} \tilde{f}_{j}^{m}=\delta_{l, m}
+\end{equation*}
+!et
+
+!split
+===== Inverse transform =====
+
+From this we can check that the inverse DFT does indeed perform the inverse transform:
+
+!bt
+\begin{equation*}
+f_{j}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \tilde{f}_{k}=\frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \omega^{j k} \frac{1}{\sqrt{n}} \sum_{l=0}^{n-1} \omega^{-l k} f_{l}=\frac{1}{n} \sum_{k, l=0}^{n-1} \omega^{(j-l) k} f_{l}=\sum_{l=0}^{n-1} \delta_{j, l} f_{l}=f_{j} 
+\end{equation*}
+!et
+
+!split
+===== QFT, short review from last week =====
+
+o QFTs are the quantum analogue of the Discrete Fourier Transform (DFT).
+o They play a crucial role in quantum algorithms like Shor’s Algorithm and the Quantum Phase Estimation (QPE) algorithm
+o QFTs provide an *exponential speedup* over classical Fourier Transform methods.
+
+
+
+!split
+===== Advantage 1: Exponential Speedup =====
+o Classical Discrete Fourier Transforms (DFTs) require $O(N^2)$ operations.
+o The Fast Fourier Transforms (FFTs) improve this to $O(N \log N)$ operations.
+o QFTs reduce complexity to $O((\log N)^2)$ using quantum gates.
+
+!split
+===== Advantage 2: Quantum Parallelism =====
+QFTs act on a *superposition* of states, processing all inputs simultaneously.
+This is crucial in algorithms like:
+o Shor’s Algorithm for factoring large numbers.
+o Quantum Phase Estimation (QPE) for eigenvalue extraction.
+
+!split
+===== Advantage 3: Compact Circuit Implementation =====
+
+o QFTs require only *Hadamard gates and controlled-phase gates*.
+o QFTs are highly efficient for *quantum hardware*.
+
+!split
+===== Advantage 4: Applications in Quantum Computing =====
+o _Shor’s Algorithm:_ Uses QFT to find periodicity in modular exponentiation.
+o _Quantum Phase Estimation (QPE):_ Extracts eigenvalues of unitary matrices.
+o _Quantum Signal Processing:_ Enables spectral analysis on quantum data.
+
+!split
+===== Advantage 5: Reduced Memory Complexity =====
+
+o Classical DFTs require $O(N)$ space.
+o QFTs store Fourier-transformed coefficients *implicitly* in qubit amplitudes.
+o Only $O(n)$ qubits are needed for a size $N = 2^n$ transformation.
+
+!split
+===== Advantage 6: Quantum Signal Processing =====
+QFTs enable applications such as:
+o Quantum spectral analysis.
+o Quantum image processing.
+o Quantum filtering and denoising.
+
+These can enhance AI, cryptography, and data processing.
+
+
+!split
+===== From DFT to QFT =====
+
+The Quantum Fourier Transform (QFT) has mathematically the same equation as starting point
+but the notation is generally different. We generally compute the
+quantum Fourier transform on a set of orthonormal basis state vectors
+\(|0\rangle, |1\rangle, ..., |N-1\rangle\). The linear operator defining
+the transform is given by the action on basis states
+
+!bt
+\[
+|j\rangle \mapsto \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} e^{2\pi ijk/N}|k\rangle.
+\]
+!et
+
+!split
+===== In terms of arbitrary states =====
+
+This can be written on arbitrary states,
+!bt
+\[
+\sum_{j=0}^{N-1}x_j|j\rangle \mapsto \sum_{k=0}^{N-1} y_k|k\rangle
+\]
+!et
+where each amplitude \(y_k\) is the discrete Fourier transform of
+\(x_j\).
+
+
+!split
+===== Unitarity =====
+
+The quantum Fourier transform is unitary. Taking \(N = 2^n\),
+for \(n\) qubits gives us the orthonormal (computational) basis
+!bt
+\[
+|0\rangle, |1\rangle, ..., |2^{n}-1\rangle.
+\]
+!et
+
+!split
+===== Full QFT =====
+
+So what is the full quantum Fourier transform? It is the transform
+which takes the amplitudes of a $N$ dimensional state and computes the
+Fourier transform on these amplitudes (which are then the new
+amplitudes in the computational basis.) In other words, the QFT enacts
+the transform
+
+!bt
+\begin{equation*}
+\sum_{x=0}^{N-1} a_{x}|x\rangle \rightarrow \sum_{x=0}^{N-1} \tilde{a}_{x}|x\rangle=\sum_{x=0}^{N-1} \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y} a_{y}|x\rangle 
+\end{equation*}
+!et
+
+!split
+===== Explicit transform =====
+
+It is easy to see that this implies that the QFT performs the following transform on basis states:
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{N}} \sum_{y=0}^{N-1} \omega_{N}^{-x y}|y\rangle
+\end{equation*}
+!et
+
+Thus the QFT is given by the matrix
+
+!bt
+\begin{equation*}
+U_{Q F T}=\frac{1}{\sqrt{N}} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{-y x}|y\rangle\langle x| 
+\end{equation*}
+!et
+
+!split
+===== Unitarity =====
+The last  matrix is unitary. Let's check this:
+
+!bt
+\begin{align*}
+U_{Q F T} U_{Q F T}^{\dagger} & =\frac{1}{N} \sum_{x=0}^{N-1} \sum_{y=0}^{N-1} \omega_{N}^{y x}|x\rangle\left\langle y\left|\sum_{x^{\prime}=0}^{N-1} \sum_{y^{\prime}=0}^{N-1} \omega_{N}^{-y^{\prime} x^{\prime}}\right| y^{\prime}\right\rangle\left\langle x^{\prime}\right| \\
+& =\frac{1}{N} \sum_{x, y, x^{\prime}, y^{\prime}=0}^{N-1} \omega_{N}^{y x-y^{\prime} x^{\prime}} \delta_{y, y^{\prime}}|x\rangle\left\langle x^{\prime}\left|=\frac{1}{N} \sum_{x, y, x^{\prime}=0}^{N-1} \omega_{N}^{y\left(x-x^{\prime}\right)}\right| x\right\rangle\left\langle x^{\prime}\right| \\
+& =\sum_{x, x^{\prime}=0}^{N-1} \delta_{x, x^{\prime}}|x\rangle\left\langle x^{\prime}\right|=I 
+\end{align*}
+!et
+
+!split
+===== Importance of QFT =====
+
+The QFT is a very important transform in quantum computing. It can be
+used for all sorts of cool tasks, including, as we shall see in Shor's
+algorithm. But before we can use it for quantum computing tasks, we
+should try to see if we can efficiently implement the QFT with a
+quantum circuit. Indeed we can and the reason we can is intimately
+related to the fast Fourier transform.
+
+
+!split
+===== Circuit QFT =====
+
+Let's derive a circuit for the QFT when $N=2^{n}$. The QFT performs the transform
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y=0}^{2^{n}-1} \omega_{N}^{-x y}|y\rangle 
+\end{equation*}
+!et
+
+Then we can expand out this sum
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \omega_{N}^{-x \sum_{k=1}^{n} 2^{n-k} y_{k}}\left|y_{1}, y_{2}, \ldots, y_{n}\right\rangle 
+\end{equation*}
+!et
+
+!split
+===== Expanding the exponential =====
+
+Expanding the exponential of a sum to a product of exponentials and
+collecting these terms in from the appropriate terms we can express
+this as
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \sum_{y_{1}, y_{2}, \ldots, y_{n} \in\{0,1\}} \bigotimes_{k=1}^{n} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle 
+\end{equation*}
+!et
+
+
+!split
+===== Rearranging =====
+
+We can rearrange the sum and products as
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[\sum_{y_{k} \in\{0,1\}} \omega_{N}^{-x 2^{n-k} y_{k}}\left|y_{k}\right\rangle\right] 
+\end{equation*}
+!et
+
+Expanding this sum yields
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}} \bigotimes_{k=1}^{n}\left[|0\rangle+\omega_{N}^{-x 2^{n-k}}|1\rangle\right]
+\end{equation*}
+!et
+
+!split
+===== Notation for binary fraction =====
+
+But now notice that $\omega_{N}^{-x 2^{n-k}}$ is not dependent on the
+higer order bits of $x$. It is convenient to adopt the following
+expression for a binary fraction:
+
+!bt
+\begin{equation*}
+0 . x_{l} x_{l+1} \ldots x_{n}=\frac{x_{l}}{2}+\frac{x_{l+1}}{4}+\cdots+\frac{x_{n}}{2^{n-l+1}}
+\end{equation*}
+!et
+
+!split
+===== More notations =====
+
+Then we can see that
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n-1} x_{n}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] 
+\end{equation*}
+!et
+
+This is a very useful form of the QFT for $N=2^{n}$. Why? Because we
+see that only the last qubit depends on the the values of all the
+other input qubits and each further bit depends less and less on the
+input qubits. Further we note that $e^{-2 \pi i 0 . a}$ is either +1
+or -1 , which reminds us of the Hadamard transform.
+
+!split
+===== Deriving a circuit =====
+
+So how do we use this to derive a circuit for the QFT over $N=2^{n}$ ?
+
+Take the first qubit of $\left|x_{1}, \ldots, x_{n}\right\rangle$ and
+apply a Hadamard transform. This produces the transform
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 \cdot x_{1}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
+\end{equation*}
+!et
+
+!split
+===== Rotation gate =====
+Now define the rotation gate
+
+!bt
+\[
+R_{k}=\left[\begin{array}{cc}
+1 & 0  \tag{30}\\
+0 & \exp \left(\frac{-2 \pi i}{2^{k}}\right)
+\end{array}\right]
+\]
+!et
+If we now apply controlled $R_{2}, R_{3}$, etc. gates controlled on
+the appropriate bits this enacts the transform
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \ldots x_{n}}|1\rangle\right] \otimes\left|x_{2}, x_{3}, \ldots, x_{n}\right\rangle 
+\end{equation*}
+!et
+
+!split
+===== Proceeding =====
+
+Thus we have reproduced the last term in the QFTed state. Of course
+now we can proceed to the second qubit, perform a Hadamard, and the
+appropriate controlled $R_{k}$ gates and get the second to last
+qubit. Thus when we are finished we will have the transform
+
+!bt
+\begin{equation*}
+|x\rangle \rightarrow \frac{1}{\sqrt{2^{n}}}\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n}}|1\rangle\right] \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{1} x_{2} \cdots x_{n-1}}|1\rangle\right] \otimes \cdots \otimes\left[|0\rangle+e^{-2 \pi i 0 . x_{n}}|1\rangle\right]
+\end{equation*}
+!et
+
+Reversing the order of these qubits will then produce the QFT!
+
+#The circuit we have constructed on $n$ qubits is
+
+
+#\includegraphics[max width=\textwidth]{2024_03_18_c1d427fa6b85efa365f1g-5}
+
+
+
+!split
+===== Two-qubit case =====
+
+For a two-qubit system $n=2$, the QFT transformation is:
+!bt
+\[
+\text{QFT} \vert x_0 x_1\rangle = \frac{1}{2} \sum_{y=0}^{3} e^{2\pi i x y / 4} \vert y\rangle, 
+\]
+!et
+where $x = x_0 x_1$ (binary representation).
+
+!split
+===== QFT matrix =====
+
+The QFT on two qubits has the matrix:
+!bt
+\[
+   U_{\text{QFT}} = \frac{1}{2}
+   \begin{bmatrix}
+       1 & 1 & 1 & 1 \\
+       1 & i & -1 & -i \\
+       1 & -1 & 1 & -1 \\
+       1 & -i & -1 & i
+   \end{bmatrix}
+\]
+!et
+Exercise: apply this to the $\vert 01\rangle$ (binary 1) and $\vert 10\rangle$ (binary 2) stats.
+Hint: see Hundt section 6.2 and circuit figures as well.
+
+!split
+===== Three-qubit case =====
+
+See whiteboard notes April 2.
+
+!split
+===== Four-qubit system =====
+The basis states are
+!bt
+\[
+|j_1j_2j_3j_4 \rangle
+\]
+!et
+where \(j_k\) is either \(0\) or \(1\). We have
+
+!bt
+\begin{align*}
+0.j_3 &= \frac{j_3}{2} \\
+0.j_2j_3 &= \frac{j_2}{2} + \frac{j_3}{4} \\
+0.j_1j_2j_3 &= \frac{j_1}{2} + \frac{j_2}{4} + \frac{j_3}{8} \\
+0.j_0j_1j_2j_3 &= \frac{j_0}{2} + \frac{j_1}{4} + \frac{j_2}{8} + \frac{j_3}{16} \\
+\end{align*}
+!et
+
+!split
+===== QFT acts as follows =====
+
+The quantum Fourier transform acts as follows:
+
+!bt
+\begin{align*}
+|j_1j_2j_3j_4 \rangle \mapsto \frac{1}{\sqrt{2^{4/2}}}
+\left(|0\rangle + e^{2 \pi i 0.j4}|1\rangle \right) \otimes 
+\left(|0\rangle + e^{2 \pi i 0.j_3j4}|1\rangle \right) \otimes 
+\left(|0\rangle + e^{2 \pi i 0.j_2j_3j4}|1\rangle \right) \otimes 
+\left(|0\rangle + e^{2 \pi i 0.j_1j_2j_3j4}|1\rangle \right) 
+\end{align*}
+!et
+
+
+!split
+===== Quantum circuits =====
+
+To compose a quantum circuit that calculates the quantum Fourier
+transform we use the operators
+
+!bt
+\begin{align*}
+R_k = 
+\begin{bmatrix}
+1 & 0 \\
+0 & e^{2\pi i/2^k}
+\end{bmatrix}.
+\end{align*}
+!et
+
+
+!split
+===== Rotation gates =====
+
+In this example, the \(R_k\) gates are:
+!bt
+\begin{align*}
+R_1 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^0}
+\end{bmatrix} = 
+\begin{bmatrix}
+1 & 0 \\
+0 & 1
+\end{bmatrix}, \quad 
+R_2 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^2}
+\end{bmatrix}, \quad 
+R_3 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^3}
+\end{bmatrix}, \quad 
+R_4 = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2 \pi i /2^4}
+\end{bmatrix}.
+\end{align*}
+!et
+
+
+
+
+
+!split
+===== Using the Hadamard gate =====
+The Hadamard
+gate on a single qubit creates an equal superposition of its basis
+states, assuming it is not already in a superposition, such that
+ 
+!bt
+\[
+H\vert 0 \rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle + \vert 1\rangle\right), \quad H\vert 1\rangle = \frac{1}{\sqrt{2}} \left(\vert 0 \rangle - \vert 1\rangle\right)
+\]
+!et 
+The $R_k$ gate simply adds a phase if the qubit it acts on is in the state $\vert 1\rangle$
+!bt
+\[
+    R_k\vert 0 \rangle = \vert 0 \rangle, \quad R_k\vert 1\rangle = e^{2\pi i/2^{k}}\vert 1\rangle
+\]
+!et
+
+Since all this gates are unitary, the quantum Fourier transfrom is also unitary.
+
+!split
+===== Algorithm =====
+
+Assume we have a quantum register of $n$ qubits in the state $\vert j_1 j_2 \dots j_n\rangle$.
+Applying the Hadamard gate to the first qubit
+produces the state
+
+!bt
+\[
+H\vert j_1 j_2 \dots j_n\rangle = \frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle.
+\]
+!et
+
+!split
+===== Binary fraction =====
+
+Here we have made use of the binary fraction to represent the action of the Hadamard gate 
+!bt
+\[
+\exp{2\pi i 0.j_1} = -1,
+\]
+!et
+if $j_1 = 1$ and $+1$ if $j_1 = 0$.
+
+
+!split
+===== Controlled rotation gate =====
+
+Furthermore we can apply the controlled-$R_k$ gate, with all the other qubits $j_k$ for $k>1$ as control qubits to produce the state
+
+!bt
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)}{2^{1/2}} \vert j_2 \dots j_n\rangle
+\]
+!et
+
+Next we do the same procedure on qubit $2$ producing the state
+
+!bt
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)}{2^{2/2}} \vert j_2 \dots j_n\rangle
+\]
+!et
+
+!split
+===== Applying to all qubits =====
+
+Doing this for all $n$ qubits yields state
+
+!bt
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_2\dots j_n}\vert 1\rangle\right)\dots \left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)}{2^{n/2}} \vert j_2 \dots j_n\rangle
+\]
+!et
+At the end we use swap gates to reverse the order of the qubits
+
+!bt
+\[
+\frac{\left(\vert 0 \rangle + e^{2\pi i 0.j_n}\vert 1\rangle\right)\left(\vert 0 \rangle + e^{2\pi i 0.j_{n-1}j_n}\vert 1\rangle\right)\dots\left(\vert 0 \rangle + e^{2\pi i 0.j_1j_2\dots j_n}\vert 1\rangle\right) }{2^{n/2}} \vert j_2 \dots j_n\rangle
+\]
+!et
+This is just the product representation from earlier, obviously our desired output.
+
+!split
+===== QFT example codes =====
+This code sets up the QFT for $n$ qubits.
+!bc pycod
+import numpy as np
+def qft(n):
+
+   # Inputs n qubits and returns QFT matrix of size (2^n, 2^n)
+   dim = 2 ** n  # Dimension of the Hilbert space
+   omega = np.exp(2j * np.pi / dim)  # Primitive root of unity
+   # Initialize QFT matrix
+   QFT = np.zeros((dim, dim), dtype=complex)
+   # Construct the QFT matrix
+   for i in range(dim):
+       for j in range(dim):
+           QFT[i, j] = omega ** (i * j) / np.sqrt(dim)
+   return QFT
+
+def apply_qft(state):
+   n = int(np.log2(len(state)))  # Number of qubits
+   qft_matrix = qft(n)
+   return qft_matrix @ state
+# Example: 3-qubit system
+n_qubits = 3  # QFT on 3 qubits (8 dimensions)
+dim = 2 ** n_qubits
+
+# Define an example quantum state (|5⟩ in computational basis)
+state = np.zeros(dim, dtype=complex)
+state[5] = 1  # |5⟩ = [0,0,0,0,0,1,0,0]
+
+print("Initial State |5⟩:", state)
+# Apply QFT
+qft_state = apply_qft(state)
+print("\nState after QFT:")
+print(np.round(qft_state, 4))  # Rounded for better readability
+# Verify QFT is unitary (QFT * QFT† = I)
+qft_matrix = qft(n_qubits)
+identity = np.dot(qft_matrix, qft_matrix.conj().T)
+print("\nQFT * QFT† = Identity Matrix (Rounded):")
+print(np.round(identity, 4))
+!ec
+
+
+!split
+===== Example using Qiskit =====
+
+!bc pycod
+import numpy as np
+from qiskit import QuantumCircuit, Aer, execute
+def qft(circuit, n):
+    # Apply the Quantum Fourier Transform to the first n qubits in the circuit
+    # Apply Hadamard gates and controlled rotations
+    for j in range(n):
+        circuit.h(j)
+        for k in range(j + 1, n):
+            circuit.cp(np.pi / 2**(k - j), k, j)
+    # Swap the qubits to reverse their order
+    for i in range(n // 2):
+        circuit.swap(i, n - i - 1)
+# Number of qubits
+n = 4
+# Create a quantum circuit with n qubits
+qc = QuantumCircuit(n)
+# Apply QFT to the quantum circuit
+qft(qc, n)
+# Draw the resulting circuit
+print("Quantum Circuit for QFT:")
+print(qc.draw(output='text'))
+# Run the quantum circuit on a statevector simulator backend                                                                      backend = Aer.get_backend('statevector_simulator')
+# Execute the quantum circuit and get results                                                                                     job = execute(qc, backend)
+result = job.result()
+output_state_vector = result.get_statevector()
+print("\nOutput State Vector:")
+print(output_state_vector)
+!ec
+
+
+!split
+===== Example using Pennylane =====
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+# Define the number of qubits
+n_qubits = 3
+# Create a device using default.qubit
+dev = qml.device("default.qubit", wires=n_qubits)
+# Define the Quantum Fourier Transform as a Quantum Function
+@qml.qnode(dev)
+def qft_circuit():
+    for j in range(n_qubits):
+        # Apply the Hadamard gate to the j-th qubit
+        qml.Hadamard(wires=j)
+        # Apply controlled phase shifts
+        for k in range(j + 1, n_qubits):
+            qml.ControlledPhaseShift(np.pi / 2 ** (k - j), wires=[k, j])
+    
+    # PennyLane natively returns the state, but if you want measurement in computational basis:
+    return qml.probs(wires=range(n_qubits))
+
+# Execute the QFT circuit
+probabilities = qft_circuit()
+# Print the resulting state probabilities
+print("Probabilities after performing QFT:")
+print(probabilities)
+!ec
+
