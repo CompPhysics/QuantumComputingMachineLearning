@@ -1,0 +1,928 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{graphicx}
+
+\usetheme{Madrid}
+
+\title{Adaptive Variational Quantum Eigensolver (ADAPT-VQE)}
+\subtitle{Variational Quantum Algorithms and Many-Body Physics}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{Why Adaptive Ansätze?}
+\begin{itemize}
+\item Standard VQE relies on fixed ansatz
+\item Problems:
+\begin{itemize}
+\item Overparameterization
+\item Barren plateaus
+\item Poor physical interpretability
+\end{itemize}
+\item Goal: construct ansatz \emph{adaptively}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physics Motivation}
+\begin{itemize}
+\item Ground state problem:
+\[
+H|\psi_0\rangle = E_0 |\psi_0\rangle
+\]
+\item Variational principle:
+\[
+E[\psi] = \frac{\langle \psi|H|\psi\rangle}{\langle \psi|\psi\rangle}
+\]
+\item Seek optimal parameterized wavefunction
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Standard VQE}
+%================================================
+
+\begin{frame}{Variational Quantum Eigensolver}
+\[
+|\psi(\theta)\rangle = U(\theta)|0\rangle
+\]
+\[
+E(\theta) = \langle \psi(\theta)|H|\psi(\theta)\rangle
+\]
+\begin{itemize}
+\item Classical optimizer minimizes $E(\theta)$
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Ansatz Challenge}
+\begin{itemize}
+\item Hardware-efficient ansatz:
+\begin{itemize}
+\item Shallow but unstructured
+\end{itemize}
+\item Problem-inspired ansatz (e.g. UCC):
+\begin{itemize}
+\item Physically motivated but deep
+\end{itemize}
+\item Trade-off motivates adaptive methods
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Coupled Cluster Connection}
+%================================================
+
+\begin{frame}{Coupled Cluster Ansatz}
+\[
+|\psi\rangle = e^{T} |\phi_0\rangle
+\]
+\[
+T = T_1 + T_2 + \cdots
+\]
+\begin{itemize}
+\item $T_k$ generates $k$-particle excitations
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Unitary Coupled Cluster}
+\[
+|\psi\rangle = e^{T - T^\dagger} |\phi_0\rangle
+\]
+\begin{itemize}
+\item Hermitian generator
+\item Suitable for quantum circuits
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{ADAPT-VQE Idea}
+%================================================
+
+\begin{frame}{Core Idea}
+\begin{itemize}
+\item Build ansatz iteratively
+\item Select operators based on gradient
+\item Add most important operator at each step
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Operator Pool}
+\begin{itemize}
+\item Define pool:
+\[
+\{A_k\}
+\]
+\item Example:
+\begin{itemize}
+\item Fermionic excitations
+\item Pauli strings
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Gradient Selection}
+%================================================
+
+\begin{frame}{Gradient Criterion}
+\[
+g_k = \left| \frac{\partial E}{\partial \theta_k} \right|
+\]
+\[
+= \left| \langle \psi | [H, A_k] | \psi \rangle \right|
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physical Interpretation}
+\begin{itemize}
+\item Measures how strongly operator $A_k$ lowers energy
+\item Equivalent to residual in many-body methods
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{ADAPT-VQE Algorithm}
+%================================================
+
+\begin{frame}{Algorithm Steps}
+\begin{enumerate}
+\item Initialize reference state
+\item Compute gradients for all $A_k$
+\item Select operator with largest gradient
+\item Add to ansatz
+\item Re-optimize parameters
+\item Repeat until convergence
+\end{enumerate}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Ansatz Growth}
+\[
+U(\theta) =
+e^{\theta_n A_n} \cdots e^{\theta_1 A_1}
+\]
+\end{frame}
+
+%================================================
+\section{Circuit Representation}
+%================================================
+
+\begin{frame}{Single Operator Circuit}
+\[
+\begin{quantikz}
+\lstick{|0\rangle} & \gate{e^{\theta A_k}} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Layered Circuit}
+\[
+\begin{quantikz}
+\lstick{|0\rangle} & \gate{A_1} & \gate{A_2} & \gate{A_3} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Measurement of Gradients}
+%================================================
+
+\begin{frame}{Commutator Evaluation}
+\[
+\langle [H,A_k] \rangle
+\]
+\begin{itemize}
+\item Requires decomposition into Pauli terms
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Measurement Cost}
+\begin{itemize}
+\item Scales with operator pool size
+\item Trade-off:
+\begin{itemize}
+\item Smaller pool → faster
+\item Larger pool → more expressive
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Convergence}
+%================================================
+
+\begin{frame}{Stopping Criterion}
+\[
+\max_k g_k < \epsilon
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Energy Convergence}
+\begin{itemize}
+\item Typically exponential convergence
+\item Often fewer parameters than UCC
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Advantages}
+%================================================
+
+\begin{frame}{Why ADAPT-VQE?}
+\begin{itemize}
+\item Compact ansatz
+\item Problem-specific structure
+\item Reduced circuit depth
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physics Insight}
+\begin{itemize}
+\item Builds correlations step by step
+\item Analogous to:
+\begin{itemize}
+\item Coupled cluster iterations
+\item Many-body perturbation expansion
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Challenges}
+%================================================
+
+\begin{frame}{Main Limitations}
+\begin{itemize}
+\item Large measurement overhead
+\item Operator pool design
+\item Noise sensitivity
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Extensions}
+%================================================
+
+\begin{frame}{Variants}
+\begin{itemize}
+\item Qubit-ADAPT
+\item Batched ADAPT
+\item Gradient-free variants
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item ADAPT-VQE constructs ansatz dynamically
+\item Uses gradient to guide operator selection
+\item Strong connection to many-body methods
+\item Promising for NISQ devices
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Variational Principle and Many-Body Context}
+%================================================
+
+\begin{frame}{Ground State Problem}
+\[
+H|\psi_0\rangle = E_0 |\psi_0\rangle
+\]
+\[
+E[\psi] = \frac{\langle \psi|H|\psi\rangle}{\langle \psi|\psi\rangle}
+\]
+\begin{itemize}
+\item Central problem in quantum many-body physics
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Reference State}
+\begin{itemize}
+\item Start from Hartree–Fock determinant:
+\[
+|\phi_0\rangle
+\]
+\item Build correlations via excitation operators
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Second Quantization and Excitations}
+%================================================
+
+\begin{frame}{Fermionic Operators}
+\[
+\{a_p, a_q^\dagger\} = \delta_{pq}
+\]
+\begin{itemize}
+\item Creation and annihilation operators
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Excitation Operators}
+\[
+T_1 = \sum_{ai} t_i^a a_a^\dagger a_i
+\]
+\[
+T_2 = \sum_{abij} t_{ij}^{ab} a_a^\dagger a_b^\dagger a_j a_i
+\]
+\end{frame}
+
+%================================================
+\section{Jordan–Wigner Mapping}
+%================================================
+
+\begin{frame}{Fermion-to-Qubit Mapping}
+\[
+a_p = \frac{1}{2}(X_p + iY_p)\prod_{j<p} Z_j
+\]
+\[
+a_p^\dagger = \frac{1}{2}(X_p - iY_p)\prod_{j<p} Z_j
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Mapping}
+\[
+a_p^\dagger a_q \rightarrow \text{Pauli strings}
+\]
+\begin{itemize}
+\item Leads to nonlocal strings of $Z$ operators
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Unitary Coupled Cluster}
+%================================================
+
+\begin{frame}{UCC Ansatz}
+\[
+|\psi\rangle = e^{T - T^\dagger} |\phi_0\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{BCH Expansion}
+\[
+e^{-T}He^{T} = H + [H,T] + \frac{1}{2}[[H,T],T] + \cdots
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Classical CC vs UCC}
+\begin{itemize}
+\item CC:
+\[
+e^{T}
+\]
+(non-unitary)
+\item UCC:
+\[
+e^{T - T^\dagger}
+\]
+(unitary)
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{ADAPT-VQE Framework}
+%================================================
+
+\begin{frame}{Adaptive Ansatz}
+\[
+U(\theta) = \prod_k e^{\theta_k A_k}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Operator Pool}
+\begin{itemize}
+\item Fermionic excitations mapped to qubits
+\item Anti-Hermitian operators:
+\[
+A_k = \tau_k - \tau_k^\dagger
+\]
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Gradient Derivation via BCH}
+%================================================
+
+\begin{frame}{Energy Functional}
+\[
+E(\theta) = \langle \psi(\theta)|H|\psi(\theta)\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Single Parameter Variation}
+\[
+|\psi(\theta)\rangle = e^{\theta A}|\psi\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Derivative of Energy}
+\[
+\frac{dE}{d\theta}
+=
+\langle \psi | A^\dagger H + H A | \psi \rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Using Anti-Hermiticity}
+\[
+A^\dagger = -A
+\]
+\[
+\frac{dE}{d\theta}
+=
+\langle \psi | [H,A] | \psi \rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{BCH Interpretation}
+\[
+e^{-\theta A} H e^{\theta A}
+=
+H + \theta[H,A] + \frac{\theta^2}{2}[[H,A],A] + \cdots
+\]
+\begin{itemize}
+\item Gradient corresponds to first-order term
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{ADAPT Selection Rule}
+%================================================
+
+\begin{frame}{Gradient Norm}
+\[
+g_k = |\langle \psi | [H,A_k] | \psi \rangle|
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physical Meaning}
+\begin{itemize}
+\item Measures residual correlation
+\item Analogous to CC amplitude equations
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Comparison with Coupled Cluster}
+%================================================
+
+\begin{frame}{CC Amplitude Equations}
+\[
+\langle \phi_\mu | e^{-T}He^T | \phi_0 \rangle = 0
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{ADAPT vs CC}
+\begin{itemize}
+\item CC:
+\begin{itemize}
+\item Solve nonlinear equations
+\end{itemize}
+\item ADAPT:
+\begin{itemize}
+\item Greedy operator selection
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{ADAPT vs UCCSD}
+\begin{itemize}
+\item UCCSD:
+\begin{itemize}
+\item Fixed ansatz
+\end{itemize}
+\item ADAPT:
+\begin{itemize}
+\item Dynamically constructed
+\item Typically fewer parameters
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Circuit Implementation}
+%================================================
+
+\begin{frame}{Operator Circuit}
+\[
+\begin{quantikz}
+\lstick{} & \gate{e^{\theta_k A_k}} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Ansatz Growth}
+\[
+U = e^{\theta_n A_n}\cdots e^{\theta_1 A_1}
+\]
+\end{frame}
+
+%================================================
+\section{Measurement Considerations}
+%================================================
+
+\begin{frame}{Commutator Evaluation}
+\[
+[H,A_k] = \sum_i c_i P_i
+\]
+\begin{itemize}
+\item Measured via Pauli decomposition
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Cost Scaling}
+\begin{itemize}
+\item Scales with operator pool
+\item Main bottleneck
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Convergence and Scaling}
+%================================================
+
+\begin{frame}{Stopping Criterion}
+\[
+\max_k g_k < \epsilon
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Efficiency}
+\begin{itemize}
+\item Compact ansatz
+\item Often faster convergence than UCCSD
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Interpretation}
+%================================================
+
+\begin{frame}{Many-Body View}
+\begin{itemize}
+\item ADAPT = iterative correlation builder
+\item Similar to perturbation expansion
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to BCH}
+\begin{itemize}
+\item Expansion defines effective Hamiltonian
+\item Gradient = leading correction
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item ADAPT-VQE builds ansatz dynamically
+\item Gradient derived from commutator:
+\[
+\langle [H,A] \rangle
+\]
+\item Strong connection to:
+\begin{itemize}
+\item Coupled cluster theory
+\item BCH expansion
+\item Many-body perturbation theory
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+%================================================
+\section{Higher-Order BCH and Many-Body Structure}
+%================================================
+
+\begin{frame}{Baker--Campbell--Hausdorff Expansion}
+For an operator $A$,
+\[
+\bar{H} = e^{-A} H e^{A}
+\]
+expands as
+\[
+\bar{H} = H + [H,A] + \frac{1}{2}[[H,A],A]
++ \frac{1}{6}[[[H,A],A],A] + \cdots
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Nested Commutators Structure}
+Define:
+\[
+\text{ad}_A(H) = [H,A]
+\]
+Then:
+\[
+\bar{H} = \sum_{n=0}^\infty \frac{1}{n!} \text{ad}_A^n(H)
+\]
+
+\begin{itemize}
+\item Generates hierarchy of many-body terms
+\item Higher commutators → higher excitation rank
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example: Two-Body Hamiltonian}
+Let
+\[
+H = H_1 + H_2
+\]
+\begin{itemize}
+\item $H_1$: one-body
+\item $H_2$: two-body
+\end{itemize}
+
+Then:
+\[
+[H,T_1] \rightarrow \text{one- and two-body terms}
+\]
+\[
+[[H,T_1],T_1] \rightarrow \text{two- and three-body terms}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physical Meaning of BCH}
+\begin{itemize}
+\item BCH builds effective Hamiltonian
+\item Encodes correlations iteratively
+\item ADAPT selects dominant directions in this expansion
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Diagrammatic Interpretation}
+%================================================
+
+\begin{frame}{Goldstone Diagram View}
+\begin{itemize}
+\item Each commutator corresponds to diagrams
+\item $[H,T]$:
+\begin{itemize}
+\item Single interaction insertion
+\end{itemize}
+\item $[[H,T],T]$:
+\begin{itemize}
+\item Two interaction insertions
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Linked Diagram Theorem}
+\begin{itemize}
+\item Only connected diagrams contribute
+\item Ensures size extensivity
+\end{itemize}
+
+\[
+E = \langle \phi_0 | \bar{H} | \phi_0 \rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{ADAPT-VQE Interpretation}
+\begin{itemize}
+\item Each selected operator adds diagram class
+\item Greedy selection = dominant diagram contributions
+\item Equivalent to truncated linked expansion
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Connection to MBPT}
+%================================================
+
+\begin{frame}{Many-Body Perturbation Theory}
+\begin{itemize}
+\item Expand in interaction strength:
+\[
+E = E^{(0)} + E^{(1)} + E^{(2)} + \cdots
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{MBPT vs Coupled Cluster}
+\begin{itemize}
+\item MBPT:
+\begin{itemize}
+\item Order-by-order expansion
+\end{itemize}
+\item CC:
+\begin{itemize}
+\item Infinite resummation
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{ADAPT as Adaptive MBPT}
+\begin{itemize}
+\item ADAPT selects most important excitation
+\item Equivalent to adaptive resummation
+\item Avoids fixed truncation (like CCSD)
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Time-Dependent Coupled Cluster}
+%================================================
+
+\begin{frame}{Time-Dependent Ansatz}
+\[
+|\psi(t)\rangle = e^{T(t)} |\phi_0\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{TDCC Equation}
+\[
+i \frac{d}{dt}|\psi\rangle = H |\psi\rangle
+\]
+leads to
+\[
+i \dot{T} = \text{projection of } e^{-T}He^T
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Linearized TDCC}
+Small fluctuations:
+\[
+T(t) = T_0 + \delta T(t)
+\]
+leads to
+\[
+i \frac{d}{dt} \delta T = \mathcal{L} \delta T
+\]
+\end{frame}
+
+%================================================
+\section{Linear Response and EOM-CC}
+%================================================
+
+\begin{frame}{Equation-of-Motion CC}
+\[
+H e^T |R\rangle = \omega e^T |R\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Linear Response Equation}
+\[
+(\omega I - \mathcal{L}) x = b
+\]
+\begin{itemize}
+\item Same structure as HHL and TDHF
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{RPA Structure}
+\[
+\begin{pmatrix}
+A & B \\
+-B^* & -A^*
+\end{pmatrix}
+\begin{pmatrix}
+X \\ Y
+\end{pmatrix}
+=
+\omega
+\begin{pmatrix}
+X \\ Y
+\end{pmatrix}
+\]
+\end{frame}
+
+%================================================
+\section{Unified Picture}
+%================================================
+
+\begin{frame}{Unifying View}
+\begin{itemize}
+\item BCH → effective Hamiltonian
+\item CC → resummation of diagrams
+\item ADAPT → adaptive selection
+\item TDCC → time evolution
+\item Linear response → inverse operator
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Key Insight}
+\begin{block}{Core idea}
+ADAPT-VQE constructs a wavefunction by selecting operators that maximize:
+\[
+\langle [H,A_k] \rangle
+\]
+\end{block}
+
+\begin{block}{Interpretation}
+This is equivalent to selecting directions that contribute most strongly in:
+\begin{itemize}
+\item BCH expansion
+\item diagrammatic expansion
+\item perturbative corrections
+\end{itemize}
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final Conceptual Bridge}
+\begin{itemize}
+\item ADAPT-VQE = variational CC
+\item Gradient = BCH first-order term
+\item Ansatz = dynamically selected excitation algebra
+\item Measurement = projection of many-body residual
+\end{itemize}
+\end{frame}
+
+
+\end{document}
