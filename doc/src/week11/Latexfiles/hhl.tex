@@ -1,0 +1,762 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{graphicx}
+
+\usetheme{Madrid}
+
+\title{The HHL Algorithm}
+\subtitle{Quantum Linear Systems and Spectral Methods}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{Linear Systems Everywhere}
+\begin{itemize}
+\item Solve:
+\[
+A \mathbf{x} = \mathbf{b}
+\]
+\item Appears in:
+\begin{itemize}
+\item PDEs
+\item Machine learning
+\item Many-body physics
+\end{itemize}
+\item Classical cost: $\mathcal{O}(N^3)$ (dense case)
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Quantum Goal}
+\begin{itemize}
+\item Encode vector as quantum state:
+\[
+|b\rangle = \sum_i b_i |i\rangle
+\]
+\item Goal:
+\[
+|x\rangle \propto A^{-1}|b\rangle
+\]
+\item Output is a quantum state, not a classical vector
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Spectral Decomposition}
+%================================================
+
+\begin{frame}{Eigenbasis Representation}
+\[
+A |u_j\rangle = \lambda_j |u_j\rangle
+\]
+\[
+|b\rangle = \sum_j \beta_j |u_j\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Formal Solution}
+\[
+A^{-1}|b\rangle = \sum_j \frac{\beta_j}{\lambda_j} |u_j\rangle
+\]
+\begin{itemize}
+\item Problem reduces to eigenvalue inversion
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Quantum Phase Estimation}
+%================================================
+
+\begin{frame}{Hamiltonian Encoding}
+\begin{itemize}
+\item Assume $A$ is Hermitian
+\item Implement:
+\[
+U = e^{iAt}
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QPE Action}
+\[
+|u_j\rangle \rightarrow |u_j\rangle |\lambda_j\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{State After QPE}
+\[
+\sum_j \beta_j |u_j\rangle |\lambda_j\rangle
+\]
+\end{frame}
+
+%================================================
+\section{Controlled Rotation}
+%================================================
+
+\begin{frame}{Key Step: Inversion}
+\begin{itemize}
+\item Introduce ancilla qubit
+\item Perform controlled rotation:
+\[
+|\lambda_j\rangle \rightarrow
+\sqrt{1-\frac{C^2}{\lambda_j^2}}|0\rangle +
+\frac{C}{\lambda_j}|1\rangle
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{State After Rotation}
+\[
+\sum_j \beta_j |u_j\rangle |\lambda_j\rangle
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}|0\rangle +
+\frac{C}{\lambda_j}|1\rangle
+\right)
+\]
+\end{frame}
+
+%================================================
+\section{Uncomputation}
+%================================================
+
+\begin{frame}{Inverse QPE}
+\begin{itemize}
+\item Remove eigenvalue register
+\item Leaves:
+\[
+\sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final State}
+\[
+|x\rangle \propto A^{-1}|b\rangle
+\]
+\end{frame}
+
+%================================================
+\section{Full Circuit}
+%================================================
+
+\begin{frame}{HHL Circuit (Overview)}
+\centering
+\begin{quantikz}
+\lstick{$|b\rangle$} & \qw & \qw & \qw & \qw & \qw \\
+\lstick{$|0\rangle^{\otimes m}$} & \gate{QPE} & \qw & \gate{QPE^\dagger} & \qw & \qw \\
+\lstick{$|0\rangle$} & \qw & \gate{R(\lambda^{-1})} & \qw & \meter{} & \qw
+\end{quantikz}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Detailed Circuit Step 1: QPE}
+\centering
+\begin{quantikz}
+\lstick{$|b\rangle$} & \ctrl{1} & \qw \\
+\lstick{$|0\rangle$} & \gate{e^{iAt}} & \qw
+\end{quantikz}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Detailed Circuit Step 2: Controlled Rotation}
+\centering
+\begin{quantikz}
+\lstick{$|\lambda\rangle$} & \ctrl{1} & \qw \\
+\lstick{$|0\rangle$} & \gate{R_y(\lambda^{-1})} & \qw
+\end{quantikz}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Detailed Circuit Step 3: Uncomputation}
+\centering
+\begin{quantikz}
+\lstick{} & \gate{QPE^\dagger} & \qw
+\end{quantikz}
+\end{frame}
+
+%================================================
+\section{Measurement}
+%================================================
+
+\begin{frame}{Post-selection}
+\begin{itemize}
+\item Measure ancilla
+\item Condition on $|1\rangle$
+\item Success probability depends on $\kappa$
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Complexity}
+%================================================
+
+\begin{frame}{Runtime}
+\[
+\mathcal{O}\left(\kappa^2 \log N\right)
+\]
+\begin{itemize}
+\item $\kappa$ = condition number
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Conditions for Speedup}
+\begin{itemize}
+\item Sparse matrix
+\item Efficient Hamiltonian simulation
+\item Efficient state preparation
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Limitations}
+%================================================
+
+\begin{frame}{Readout Problem}
+\begin{itemize}
+\item Cannot extract full vector efficiently
+\item Only expectation values accessible
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Condition Number Issue}
+\begin{itemize}
+\item Runtime scales with $\kappa$
+\item Ill-conditioned systems are hard
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Physics Interpretation}
+%================================================
+
+\begin{frame}{Operator View}
+\[
+A^{-1} = \sum_j \frac{1}{\lambda_j} |u_j\rangle \langle u_j|
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Green's Functions}
+\[
+G = (A)^{-1}
+\]
+\begin{itemize}
+\item Resolvent operator
+\item Linear response theory
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Many-Body Perspective}
+\begin{itemize}
+\item HHL = spectral filtering
+\item Similar to:
+\begin{itemize}
+\item Imaginary time evolution
+\item Projection methods
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Applications}
+%================================================
+
+\begin{frame}{Applications}
+\begin{itemize}
+\item Quantum machine learning
+\item PDE solvers
+\item Data fitting
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item HHL solves $A x = b$ in quantum form
+\item Uses:
+\begin{itemize}
+\item Phase estimation
+\item Controlled rotation
+\item Uncomputation
+\end{itemize}
+\item Connects strongly to spectral physics
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{HHL and Green's Function Formalism}
+%================================================
+
+\begin{frame}{From Linear Systems to Resolvents}
+A central observation is that HHL solves a linear system
+\[
+A x = b
+\]
+by preparing a quantum state proportional to
+\[
+|x\rangle \propto A^{-1}|b\rangle.
+\]
+In many-body physics, the inverse of an operator is precisely the basic structure of a
+\emph{resolvent} or \emph{Green's function}.
+
+If we define
+\[
+G(z) = (z I - H)^{-1},
+\]
+then solving
+\[
+(zI-H)|x\rangle = |b\rangle
+\]
+is equivalent to preparing
+\[
+|x\rangle = G(z)|b\rangle.
+\]
+
+Thus HHL may be viewed as a quantum algorithm for applying a resolvent operator to a source state.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Spectral Form of the Green's Function}
+Let
+\[
+H|u_j\rangle = E_j |u_j\rangle.
+\]
+Then the resolvent has the spectral decomposition
+\[
+G(z) = (zI-H)^{-1}
+= \sum_j \frac{1}{z-E_j} |u_j\rangle \langle u_j|.
+\]
+If
+\[
+|b\rangle = \sum_j \beta_j |u_j\rangle,
+\]
+then
+\[
+G(z)|b\rangle = \sum_j \frac{\beta_j}{z-E_j}|u_j\rangle.
+\]
+
+This is structurally identical to the HHL transformation:
+\[
+A^{-1}|b\rangle
+=
+\sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle.
+\]
+
+Hence, HHL implements the same spectral inversion mechanism that underlies Green's functions.
+\end{frame}
+
+%------------------------------------------------~
+\begin{frame}{Physical Meaning of the Spectral Filter}
+  The factor
+  \[
+  \frac{1}{z-E_j}
+  \]
+  acts as a spectral filter.
+
+  \begin{itemize}
+  \item Eigenmodes with energies near \(z\) are enhanced.
+  \item Eigenmodes far from \(z\) are suppressed.
+  \item The inverse operator encodes propagation and response properties.
+  \end{itemize}
+
+  In this sense, HHL is not merely a linear solver. It is a \emph{spectral transformation algorithm}:
+  it maps a source state to a response state through an inverse operator.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Retarded Green's Function}
+  In condensed matter and many-body theory, one often uses
+  \[
+  G^R(\omega) = \frac{1}{\omega + i\eta - H},
+  \qquad \eta > 0.
+  \]
+  The small positive \(\eta\) regularizes the inverse and enforces causal boundary conditions.
+
+  Applying this operator to a source state gives
+  \[
+  |x(\omega)\rangle = G^R(\omega)|b\rangle.
+  \]
+
+  Formally, an HHL-type algorithm can be interpreted as a way of preparing a quantum state proportional to this frequency-dependent response vector, provided one can encode the shifted operator
+  \[
+  A(\omega) = \omega I - H
+  \]
+  or
+  \[
+  A(\omega) = \omega I + i\eta - H.
+  \]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Correlation Functions}
+  Many observables in quantum many-body physics can be written in terms of Green's functions or resolvents.
+
+  For an operator \(\hat{O}\), a typical linear-response quantity has the form
+  \[
+  \chi(\omega)
+  =
+  \langle \psi_0 |
+  \hat{O}^\dagger
+  \frac{1}{\omega + i\eta - (H-E_0)}
+  \hat{O}
+  |\psi_0\rangle.
+  \]
+  If we define the source state
+  \[
+  |b\rangle = \hat{O}|\psi_0\rangle,
+  \]
+  then
+  \[
+  \chi(\omega)
+  =
+  \langle b|
+  \frac{1}{\omega + i\eta - (H-E_0)}
+  |b\rangle.
+  \]
+
+  This shows that HHL-like inversion is directly connected to computing dynamical susceptibilities.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{HHL as a Green's Function Engine}
+  At a conceptual level, HHL performs three tasks:
+  \begin{enumerate}
+  \item Decompose the source state into eigenmodes.
+  \item Invert the spectral coefficients:
+    \[
+    \lambda_j \mapsto \frac{1}{\lambda_j}.
+    \]
+  \item Recombine the filtered eigenmodes into the response state.
+  \end{enumerate}
+
+  This is exactly what is needed for:
+  \begin{itemize}
+  \item resolvent methods,
+  \item Green's function methods,
+  \item frequency-domain linear response,
+  \item projection-based many-body calculations.
+  \end{itemize}
+\end{frame}
+
+%================================================
+\section{HHL and Linear Response Theory}
+%================================================
+
+\begin{frame}{Linear Response in Physics}
+  Suppose a system with Hamiltonian \(H_0\) is perturbed by
+  \[
+  V(t) = - f(t)\hat{F}.
+  \]
+  To first order, the expectation value of an observable \(\hat{O}\) changes as
+  \[
+  \delta \langle \hat{O}(t) \rangle
+  =
+  \int dt' \, \chi_{OF}(t-t') f(t'),
+  \]
+  where \(\chi_{OF}\) is the response function.
+
+  In the frequency domain, one typically writes
+  \[
+  \delta \langle \hat{O}(\omega)\rangle
+  =
+  \chi_{OF}(\omega) f(\omega).
+  \]
+
+  The response function is often expressible through inverse operators of the form
+  \[
+  (\omega I - M)^{-1},
+  \]
+  which is precisely the structure targeted by HHL.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Resolvent Form of the Susceptibility}
+  A standard spectral representation is
+  \[
+  \chi_{OF}(\omega)
+  =
+  \sum_{n\neq 0}
+  \left(
+  \frac{\langle 0|\hat{O}|n\rangle \langle n|\hat{F}|0\rangle}
+       {\omega-(E_n-E_0)+i\eta}
+       -
+       \frac{\langle 0|\hat{F}|n\rangle \langle n|\hat{O}|0\rangle}
+            {\omega+(E_n-E_0)+i\eta}
+            \right).
+            \]
+            This is a sum over poles, or equivalently a matrix element of a resolvent.
+
+            Thus linear response is fundamentally an \emph{inverse-operator problem}, which places it in the same mathematical class as HHL.
+\end{frame}
+
+%================================================
+\section{HHL and Time-Dependent Hartree--Fock}
+%================================================
+
+\begin{frame}{What is Time-Dependent Hartree--Fock?}
+  Time-dependent Hartree--Fock (TDHF) describes the evolution of a Slater determinant under a time-dependent mean field.
+
+  At the one-body density-matrix level,
+  \[
+  i\hbar \frac{d\rho}{dt} = [h[\rho],\rho].
+  \]
+
+  To study small oscillations around a stationary solution \(\rho_0\), one linearizes:
+  \[
+  \rho(t) = \rho_0 + \delta\rho(t),
+  \]
+  leading to an equation of motion for the fluctuation \(\delta\rho\).
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Linearized TDHF}
+  After linearization, one obtains a matrix equation of the form
+  \[
+  i\hbar \frac{d}{dt}\delta \rho = \mathcal{L}\,\delta \rho + s(t),
+  \]
+  where:
+  \begin{itemize}
+  \item \(\mathcal{L}\) is the linearized Liouvillian or RPA matrix,
+  \item \(s(t)\) is an external driving term.
+  \end{itemize}
+
+  In the frequency domain, this becomes
+  \[
+  (\omega I - \mathcal{L}) \delta \rho(\omega) = s(\omega).
+  \]
+
+  This is now explicitly a linear system. Its solution is
+  \[
+  \delta \rho(\omega) = (\omega I - \mathcal{L})^{-1} s(\omega).
+  \]
+
+  That is exactly the algebraic structure addressed by HHL.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{TDHF as an HHL-Type Problem}
+  The formal similarity is immediate:
+  \[
+  A x = b
+  \qquad \Longleftrightarrow \qquad
+  (\omega I - \mathcal{L}) \delta \rho(\omega) = s(\omega).
+  \]
+  Hence:
+  \[
+  A \leftrightarrow \omega I - \mathcal{L},
+  \qquad
+  x \leftrightarrow \delta \rho(\omega),
+  \qquad
+  b \leftrightarrow s(\omega).
+  \]
+
+  If one can encode the linear-response matrix \(\mathcal{L}\) into a quantum representation, then an HHL-type algorithm could in principle prepare a state proportional to the TDHF response.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Random Phase Approximation (RPA)}
+  The small-amplitude limit of TDHF is closely related to the Random Phase Approximation (RPA).
+
+  One typically obtains a non-Hermitian eigenvalue problem of the form
+  \[
+  \begin{pmatrix}
+    A & B \\
+    -B^* & -A^*
+  \end{pmatrix}
+  \begin{pmatrix}
+    X \\ Y
+  \end{pmatrix}
+  =
+  \omega
+  \begin{pmatrix}
+    X \\ Y
+  \end{pmatrix}.
+  \]
+  Equivalently, one can formulate a driven linear-response problem
+  \[
+  (\omega I - M)\,v = s.
+  \]
+
+  Again, this is an inverse problem. The response amplitudes are obtained by applying the resolvent
+  \[
+  (\omega I - M)^{-1}
+  \]
+  to a source vector.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{What HHL Would Compute in TDHF}
+  In a TDHF or RPA context, one is often interested in:
+  \begin{itemize}
+  \item transition amplitudes,
+  \item density oscillations,
+  \item response to an external field,
+  \item strength functions.
+  \end{itemize}
+
+  These quantities can often be expressed as matrix elements involving the response vector:
+  \[
+  S(\omega) \sim \langle s | (\omega I - M)^{-1} | s \rangle.
+  \]
+
+  Thus an HHL-type routine would not need to output the full vector \(\delta\rho(\omega)\). It would already be useful if it allowed efficient estimation of such expectation values.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Strength Functions and Dynamical Response}
+  A common observable in TDHF and RPA is the strength function
+  \[
+  S_F(\omega)
+  =
+  -\frac{1}{\pi}\operatorname{Im}\chi_F(\omega),
+  \]
+  where
+  \[
+  \chi_F(\omega)
+  =
+  \langle 0|\hat{F}^\dagger
+  \frac{1}{\omega + i\eta - (H-E_0)}
+  \hat{F}|0\rangle.
+  \]
+
+  This is exactly a Green's function expression. Hence:
+  \[
+  \text{TDHF/RPA response}
+  \quad \longleftrightarrow \quad
+  \text{resolvent evaluation}
+  \quad \longleftrightarrow \quad
+  \text{HHL-type inversion}.
+  \]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Why This Connection is Interesting}
+  The HHL framework is potentially relevant because:
+  \begin{itemize}
+  \item linear response is naturally formulated as a linear system,
+  \item inverse operators define propagators and susceptibilities,
+  \item many observables are expectation values rather than full vectors,
+  \item this aligns well with quantum output models.
+  \end{itemize}
+
+  From a physics viewpoint, HHL is best interpreted not only as a solver of \(Ax=b\), but as a quantum method for preparing \emph{response states} and probing \emph{spectral properties}.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Important Caveats}
+  There are, however, important obstacles:
+  \begin{itemize}
+  \item The matrix \(A\) must be efficiently block-encoded or simulated.
+  \item TDHF/RPA matrices may be non-Hermitian.
+  \item Condition numbers may be large near resonances.
+  \item State preparation and measurement may dominate the cost.
+  \end{itemize}
+
+  Therefore, the connection is mathematically deep and physically appealing, but practical advantage depends strongly on encoding, sparsity, conditioning, and the observables of interest.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Hermitian Embedding of Non-Hermitian Problems}
+  If the response matrix \(M\) is non-Hermitian, one common strategy is Hermitian embedding:
+  \[
+  \mathcal{H}
+  =
+  \begin{pmatrix}
+    0 & M \\
+    M^\dagger & 0
+  \end{pmatrix}.
+  \]
+  Then \(\mathcal{H}\) is Hermitian, and one may reformulate the problem in an enlarged space.
+
+  This is often the natural bridge between:
+  \begin{itemize}
+  \item non-Hermitian response equations,
+  \item quantum phase estimation or HHL-type methods,
+  \item Green's function formulations on quantum hardware.
+  \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Conceptual Summary}
+  \begin{block}{Key idea}
+    HHL applies an inverse operator spectrally:
+    \[
+    A^{-1} = \sum_j \frac{1}{\lambda_j}|u_j\rangle\langle u_j|.
+    \]
+  \end{block}
+
+  \begin{block}{Green's function viewpoint}
+    Choose
+    \[
+    A = zI - H,
+    \]
+    then HHL prepares a state proportional to
+    \[
+    (zI-H)^{-1}|b\rangle.
+    \]
+  \end{block}
+
+  \begin{block}{TDHF / linear-response viewpoint}
+    Choose
+    \[
+    A = \omega I - \mathcal{L},
+    \]
+    then HHL prepares a state proportional to the driven response
+    \[
+    \delta\rho(\omega) = (\omega I - \mathcal{L})^{-1} s(\omega).
+    \]
+  \end{block}
+  \end{frame}
+
+
+\end{document}
+
+
+
