@@ -114,6 +114,8 @@ themes can be covered:
   - Quantum phase estimation (QPE) algorithm
   - Setting up circuits for QFTs and the QPE  and discussion of codes
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
+  - Video of lecture at https://youtu.be/N9AXHW72qwI
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek10.pdf
 
 ## March 30 - April 3, 2026, Public holiday in Norway no classes
 
