@@ -1,0 +1,648 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\usetheme{Madrid}
+
+\title{The Quantum Fourier Transform}
+\subtitle{Two-Qubit Derivation, Binary Fractions, and Phase Estimation}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{Why the Quantum Fourier Transform?}
+The quantum Fourier transform (QFT) is one of the central subroutines in quantum computing.
+
+\medskip
+
+It appears in:
+\begin{itemize}
+\item quantum phase estimation,
+\item Shor's factoring algorithm,
+\item hidden subgroup algorithms,
+\item period finding and spectral analysis.
+\end{itemize}
+
+\medskip
+
+Mathematically, it is the unitary map
+\[
+\mathrm{QFT}_N \ket{x}
+=
+\frac{1}{\sqrt{N}}
+\sum_{k=0}^{N-1}
+e^{2\pi i xk/N}\ket{k},
+\qquad N=2^n.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Main Goals of These Notes}
+We will:
+\begin{enumerate}
+\item derive the two-qubit QFT step by step,
+\item explain why the output appears in reversed order,
+\item generalize the circuit to \(n\) qubits,
+\item show the role of binary fractions,
+\item connect the QFT directly to quantum phase estimation.
+\end{enumerate}
+\end{frame}
+
+%================================================
+\section{Definition of the QFT}
+%================================================
+
+\begin{frame}{Definition}
+For \(N=2^n\), the QFT acts on the computational basis as
+\[
+\mathrm{QFT}_N \ket{x}
+=
+\frac{1}{\sqrt{N}}
+\sum_{k=0}^{N-1}
+\omega_N^{xk}\ket{k},
+\qquad
+\omega_N=e^{2\pi i/N}.
+\]
+
+If
+\[
+x = x_{n-1}2^{n-1}+x_{n-2}2^{n-2}+\cdots+x_1 2 + x_0,
+\]
+with \(x_j\in\{0,1\}\), then \(\ket{x}\equiv \ket{x_{n-1}\cdots x_0}\).
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Binary Fractions}
+A compact way to write QFT output phases uses binary fractions.
+
+\medskip
+
+For bits \(x_1,x_0\), define
+\[
+0.x_1x_0 = \frac{x_1}{2}+\frac{x_0}{4}.
+\]
+
+More generally,
+\[
+0.x_{m}x_{m-1}\cdots x_0
+=
+\frac{x_m}{2}+\frac{x_{m-1}}{2^2}+\cdots+\frac{x_0}{2^{m+1}}.
+\]
+
+These binary fractions will appear naturally in the tensor-product form of the QFT.
+\end{frame}
+
+%================================================
+\section{Two-Qubit QFT: Algebraic Derivation}
+%================================================
+
+\begin{frame}{Two-Qubit Input State}
+Let
+\[
+\ket{x}=\ket{x_1x_0},
+\qquad x=2x_1+x_0,
+\]
+where \(x_1\) is the most significant bit and \(x_0\) the least significant bit.
+
+For two qubits, \(N=4\), so
+\[
+\mathrm{QFT}_4 \ket{x}
+=
+\frac{1}{2}
+\sum_{k=0}^{3}
+e^{2\pi i xk/4}\ket{k}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Expand the Sum Explicitly}
+Write \(k=2k_1+k_0\), with \(k_1,k_0\in\{0,1\}\). Then
+\[
+\mathrm{QFT}_4 \ket{x_1x_0}
+=
+\frac{1}{2}
+\sum_{k_1,k_0\in\{0,1\}}
+e^{2\pi i (2x_1+x_0)(2k_1+k_0)/4}
+\ket{k_1k_0}.
+\]
+
+Expand the exponent:
+\[
+\frac{(2x_1+x_0)(2k_1+k_0)}{4}
+=
+x_1k_1 + \frac{x_1k_0}{2} + \frac{x_0k_1}{2} + \frac{x_0k_0}{4}.
+\]
+
+Since \(e^{2\pi i x_1k_1}=1\) for integers \(x_1k_1\), we obtain
+\[
+e^{2\pi i xk/4}
+=
+e^{2\pi i \left( \frac{x_1k_0}{2} + \frac{x_0k_1}{2} + \frac{x_0k_0}{4}\right)}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Factorization into a Tensor Product}
+Now separate the dependence on \(k_1\) and \(k_0\):
+\[
+e^{2\pi i xk/4}
+=
+e^{2\pi i k_1 \left(\frac{x_0}{2}\right)}
+\,
+e^{2\pi i k_0 \left(\frac{x_1}{2}+\frac{x_0}{4}\right)}.
+\]
+
+Hence
+\[
+\mathrm{QFT}_4 \ket{x_1x_0}
+=
+\frac{1}{2}
+\sum_{k_1,k_0}
+e^{2\pi i k_1(0.x_0)}
+e^{2\pi i k_0(0.x_1x_0)}
+\ket{k_1k_0}.
+\]
+
+This factorizes as
+\[
+\mathrm{QFT}_4 \ket{x_1x_0}
+=
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{2\pi i\,0.x_0}\ket{1}\right)
+\otimes
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{2\pi i\,0.x_1x_0}\ket{1}\right).
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation of the Two Output Qubits}
+We have found
+\[
+\mathrm{QFT}_4 \ket{x_1x_0}
+=
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{2\pi i\,0.x_0}\ket{1}\right)
+\otimes
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{2\pi i\,0.x_1x_0}\ket{1}\right).
+\]
+
+Key point:
+\begin{itemize}
+\item the first factor depends only on \(x_0\),
+\item the second factor depends on \(x_1x_0\).
+\end{itemize}
+
+So the least significant phase appears first. This is why the circuit output is naturally in reversed order.
+\end{frame}
+
+%================================================
+\section{Two-Qubit Circuit}
+%================================================
+
+\begin{frame}{Useful Elementary Gates}
+We use:
+\[
+H\ket{0}=\frac{\ket{0}+\ket{1}}{\sqrt{2}},
+\qquad
+H\ket{1}=\frac{\ket{0}-\ket{1}}{\sqrt{2}},
+\]
+and the controlled phase gate
+\[
+R_2=
+\begin{pmatrix}
+1&0\\
+0&e^{2\pi i/2^2}
+\end{pmatrix}
+=
+\begin{pmatrix}
+1&0\\
+0&e^{i\pi/2}
+\end{pmatrix}.
+\]
+
+For two qubits, the QFT uses one Hadamard on each qubit, one controlled-\(R_2\), and one final SWAP.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Two-Qubit QFT Circuit}
+\centering
+\begin{quantikz}[row sep=0.35cm, column sep=0.5cm]
+\lstick{$\ket{x_1}$} & \gate{H} & \ctrl{1}   & \qw      & \swap{1}   & \qw \\
+\lstick{$\ket{x_0}$} & \qw      & \gate{R_2} & \gate{H} & \targX{}{} & \qw
+\end{quantikz}
+
+\medskip
+
+Reading from left to right:
+\begin{enumerate}
+\item apply \(H\) to the most significant qubit,
+\item apply a controlled \(R_2\),
+\item apply \(H\) to the least significant qubit,
+\item swap the two output qubits.
+\end{enumerate}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 1: Apply \(H\) to the First Qubit}
+Start with
+\[
+\ket{x_1x_0}.
+\]
+
+Applying \(H\) to the first qubit gives
+\[
+\ket{x_1x_0}
+\mapsto
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{i\pi x_1}\ket{1}\right)\otimes \ket{x_0}.
+\]
+
+Since \(e^{i\pi x_1}=(-1)^{x_1}\), this is
+\[
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{2\pi i \, x_1/2}\ket{1}\right)\otimes \ket{x_0}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 2: Controlled Phase \(R_2\)}
+The controlled-\(R_2\) adds a phase \(e^{i\pi/2}\) only when both qubits are in \(\ket{1}\).
+
+Thus the amplitude of \(\ket{1}\otimes\ket{x_0}\) picks up an extra factor
+\[
+e^{2\pi i\, x_0/4}.
+\]
+
+So the state becomes
+\[
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i \left(\frac{x_1}{2}+\frac{x_0}{4}\right)}
+\ket{1}
+\right)\otimes \ket{x_0}.
+\]
+
+That is
+\[
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i\, 0.x_1x_0}\ket{1}
+\right)\otimes \ket{x_0}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 3: Hadamard on the Second Qubit}
+Now apply \(H\) to the second qubit:
+\[
+\ket{x_0}
+\mapsto
+\frac{1}{\sqrt{2}}
+\left(\ket{0}+e^{2\pi i\,x_0/2}\ket{1}\right).
+\]
+
+Hence the full state becomes
+\[
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i\,0.x_1x_0}\ket{1}
+\right)
+\otimes
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i\,0.x_0}\ket{1}
+\right).
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 4: Why the SWAP is Needed}
+At this stage, the circuit has produced
+\[
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i\,0.x_1x_0}\ket{1}
+\right)
+\otimes
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i\,0.x_0}\ket{1}
+\right),
+\]
+which is the correct QFT state but with the qubits in reversed order compared with the standard algebraic expression.
+
+The final SWAP changes
+\[
+\ket{q_1}\ket{q_0}\longrightarrow \ket{q_0}\ket{q_1},
+\]
+restoring the conventional most-significant-to-least-significant ordering.
+\end{frame}
+
+%================================================
+\section{Generalization to \(n\) Qubits}
+%================================================
+
+\begin{frame}{General Tensor-Product Form}
+For
+\[
+\ket{x}=\ket{x_{n-1}x_{n-2}\cdots x_1x_0},
+\]
+the QFT can be written as
+\[
+\mathrm{QFT}_{2^n}\ket{x}
+=
+\frac{1}{2^{n/2}}
+\bigotimes_{j=0}^{n-1}
+\left(
+\ket{0}
++
+e^{2\pi i\,0.x_jx_{j-1}\cdots x_0}\ket{1}
+\right),
+\]
+up to reversal of qubit order.
+
+Equivalently, in standard order,
+\[
+\mathrm{QFT}_{2^n}\ket{x}
+=
+\bigotimes_{m=0}^{n-1}
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}
++
+e^{2\pi i\,0.x_{n-1-m}\cdots x_0}\ket{1}
+\right),
+\]
+followed by a bit-reversal.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Meaning of the Binary Fractions}
+The phases in the \(n\)-qubit QFT are:
+\[
+0.x_0 = \frac{x_0}{2},
+\]
+\[
+0.x_1x_0 = \frac{x_1}{2}+\frac{x_0}{4},
+\]
+\[
+0.x_2x_1x_0 = \frac{x_2}{2}+\frac{x_1}{4}+\frac{x_0}{8},
+\]
+and so on.
+
+Thus each output qubit stores a phase that depends on a progressively longer suffix of the input bit string.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{General \(n\)-Qubit QFT Circuit}
+For \(n\) qubits, the QFT circuit is built recursively:
+\begin{itemize}
+\item apply \(H\) to the first qubit,
+\item apply controlled-\(R_2, R_3,\dots,R_n\) from lower qubits,
+\item move to the next qubit,
+\item finish with pairwise swaps.
+\end{itemize}
+
+The controlled phase gates are
+\[
+R_k=
+\begin{pmatrix}
+1 & 0 \\
+0 & e^{2\pi i/2^k}
+\end{pmatrix}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Schematic \(n\)-Qubit Circuit}
+\centering
+\begin{quantikz}[row sep=0.25cm, column sep=0.3cm]
+\lstick{$\ket{x_{n-1}}$} & \gate{H} & \ctrl{1}   & \ctrl{2}   & \qw      & \cdots & \ctrl{3} & \qw \\
+\lstick{$\ket{x_{n-2}}$} & \qw      & \gate{R_2} & \qw        & \gate{H} & \cdots & \ctrl{2} & \qw \\
+\lstick{$\ket{x_{n-3}}$} & \qw      & \qw        & \gate{R_3} & \qw      & \cdots & \ctrl{1} & \qw \\
+\vdots                 &          &            &            &          & \ddots &            &     \\
+\lstick{$\ket{x_0}$}     & \qw      & \qw        & \qw        & \qw      & \cdots & \gate{R_n} & \gate{H} & \qw
+\end{quantikz}
+
+followed by swaps
+\[
+(1\leftrightarrow n),\quad
+(2\leftrightarrow n-1),\quad \dots
+\]
+to reverse the order of the output qubits.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Gate Count}
+The exact \(n\)-qubit QFT uses:
+\begin{itemize}
+\item \(n\) Hadamard gates,
+\item \(\frac{n(n-1)}{2}\) controlled phase gates,
+\item \(\lfloor n/2\rfloor\) swaps.
+\end{itemize}
+
+So the exact gate complexity is
+\[
+\mathcal{O}(n^2).
+\]
+
+If very small controlled phases are neglected, one gets the approximate QFT, which can reduce the gate count significantly.
+\end{frame}
+
+%================================================
+\section{Connection to Phase Estimation}
+%================================================
+
+\begin{frame}{Why the QFT Appears in Phase Estimation}
+Suppose
+\[
+U\ket{u}=e^{2\pi i \phi}\ket{u},
+\qquad 0\le \phi<1.
+\]
+
+Quantum phase estimation aims to determine the binary digits of \(\phi\).
+
+The algorithm creates a superposition of time labels:
+\[
+\frac{1}{2^{m/2}}\sum_{k=0}^{2^m-1}\ket{k}\ket{u},
+\]
+and controlled powers of \(U\) convert this into
+\[
+\frac{1}{2^{m/2}}\sum_{k=0}^{2^m-1} e^{2\pi i k\phi}\ket{k}\ket{u}.
+\]
+
+This is a Fourier-type state in the control register.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Inverse QFT Extracts the Phase Bits}
+If
+\[
+\phi = 0.\phi_1\phi_2\cdots \phi_m
+\]
+has an exact \(m\)-bit binary expansion, then the inverse QFT maps
+\[
+\frac{1}{2^{m/2}}
+\sum_{k=0}^{2^m-1} e^{2\pi i k\phi}\ket{k}
+\longrightarrow
+\ket{\phi_1\phi_2\cdots \phi_m}.
+\]
+
+So the QFT and inverse QFT are the natural transformations that convert between:
+\begin{itemize}
+\item phase-encoded superpositions,
+\item binary computational-basis strings.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Binary Fractions in Phase Estimation}
+The measured output bits are precisely the binary fraction digits:
+\[
+\phi = 0.\phi_1\phi_2\cdots \phi_m
+=
+\frac{\phi_1}{2}+\frac{\phi_2}{4}+\cdots+\frac{\phi_m}{2^m}.
+\]
+
+This is exactly the same binary-fraction structure that appears in the QFT tensor-product decomposition.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Two-Qubit Phase Estimation Example}
+With two control qubits, suppose
+\[
+\phi = 0.\phi_1\phi_0
+=
+\frac{\phi_1}{2}+\frac{\phi_0}{4}.
+\]
+
+Then after the controlled powers of \(U\), the control register is in the state
+\[
+\frac{1}{2}
+\sum_{k=0}^{3} e^{2\pi i k\phi}\ket{k}.
+\]
+
+Applying \(\mathrm{QFT}_4^{-1}\) yields
+\[
+\ket{\phi_1\phi_0},
+\]
+assuming the phase is exactly representable with two binary digits.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Conceptual Link}
+The QFT reorganizes information in a way that is natural for phases.
+
+\medskip
+
+In phase estimation:
+\begin{itemize}
+\item controlled powers of \(U\) write the eigenphase into amplitudes,
+\item the inverse QFT converts those phase patterns into a binary number.
+\end{itemize}
+
+So the deep link is:
+\[
+\text{QFT} \leftrightarrow \text{binary fractions} \leftrightarrow \text{phase readout}.
+\]
+\end{frame}
+
+%================================================
+\section{Geometric and Physical Interpretation}
+%================================================
+
+\begin{frame}{Complex-Phase View}
+Each output qubit of the QFT is a qubit on the equator of the Bloch sphere:
+\[
+\frac{1}{\sqrt{2}}
+\left(
+\ket{0}+e^{i\theta}\ket{1}
+\right).
+\]
+
+The angle \(\theta\) is determined by a binary fraction of the input bits.
+
+Thus the QFT converts a computational basis state into a tensor product of phase states.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Why the Output is Reversed}
+The circuit builds the least significant phase first:
+\[
+0.x_0,\quad 0.x_1x_0,\quad 0.x_2x_1x_0,\dots
+\]
+
+Therefore the qubits emerge in little-endian order.
+
+The final swaps simply restore the conventional ordering of the qubits. In many algorithms, these swaps can be omitted if one keeps track of the reversed labeling classically.
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item For two qubits,
+\[
+\mathrm{QFT}_4\ket{x_1x_0}
+=
+\frac{1}{\sqrt{2}}
+(\ket{0}+e^{2\pi i\,0.x_0}\ket{1})
+\otimes
+\frac{1}{\sqrt{2}}
+(\ket{0}+e^{2\pi i\,0.x_1x_0}\ket{1}),
+\]
+up to output reversal.
+\item The circuit uses Hadamards, controlled phase gates, and a final SWAP.
+\item For \(n\) qubits, the QFT produces one output qubit per binary fraction suffix.
+\item This binary-fraction structure is exactly what makes the QFT central in phase estimation.
+\end{itemize}
+\end{frame}
+
+\end{document}
