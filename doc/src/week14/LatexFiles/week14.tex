@@ -6,7 +6,7 @@
 
 \documentclass{beamer}
 
-\usetheme{red_plain}
+\usetheme{Madrid}
 \usecolortheme{default}
 
 % turn off the almost invisible, yet disturbing, navigation symbols:
@@ -37,7 +37,9 @@
 \usepackage{fancybox}  % make sure fancybox is loaded before fancyvrb
 
 \usepackage{fancyvrb}
-\usepackage{minted} % requires pygments and latex -shell-escape filename
+% minted replaced with listings (no shell-escape required)
+\usepackage{listings}
+\lstset{basicstyle=\small\ttfamily,breaklines=true,language=Python}
 %\usepackage{anslistings}
 %\usepackage{listingsutf8}
 
@@ -48,6 +50,8 @@
 \usepackage{colortbl}
 \usepackage[english]{babel}
 \usepackage{tikz}
+\usepackage{quantikz}
+\usepackage{braket}
 \usepackage{framed}
 % Use some nice templates
 \beamertemplatetransparentcovereddynamic
@@ -172,6 +176,11 @@
 \end{block}
 \end{frame}
 
+
+%================================================
+\section{Introduction to Quantum Machine Learning}
+%================================================
+
 \begin{frame}[plain,fragile]
 \frametitle{What is Machine Learning?}
 
@@ -196,6 +205,7 @@ Machine Learning (ML) is the study of algorithms that improve through data exper
 \]
 \end{block}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{What is Quantum Machine Learning?}
@@ -214,6 +224,7 @@ Quantum Machine Learning (QML) integrates quantum computing with machine learnin
 \noindent
 \end{block}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Quantum Speedups in ML}
@@ -242,6 +253,7 @@ Example - Quantum Fourier transforms:
 
 Advantage: Speedups in high-dimensional optimization and linear algebra problems.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Challenges in Quantum Machine Learning}
@@ -272,6 +284,47 @@ Advantage: Speedups in high-dimensional optimization and linear algebra problems
 \noindent
 \end{block}
 \end{frame}
+%------------------------------------------------
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{Why Quantum Machine Learning?}
+\begin{itemize}
+\item Classical ML struggles with high-dimensional feature spaces
+\item Kernel methods implicitly lift data into large Hilbert spaces
+\item Quantum systems naturally live in exponentially large Hilbert spaces
+\end{itemize}
+
+\medskip
+
+\begin{block}{Key Idea}
+Use a quantum computer to efficiently compute inner products in large Hilbert spaces.
+\end{block}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physics Viewpoint}
+\begin{itemize}
+\item Data $\rightarrow$ quantum state $\ket{\phi(x)}$
+\item Kernel:
+\[
+K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2
+\]
+\item This is a transition probability between quantum states
+\end{itemize}
+
+\medskip
+
+Thus QSVMs are naturally formulated in quantum mechanics.
+\end{frame}
+
+
+%================================================
+\section{Overview of Quantum Machine Learning Methods}
+%================================================
 
 \begin{frame}[plain,fragile]
 \frametitle{Classical Support Vector Machines (SVMs)}
@@ -282,35 +335,7 @@ of SVMs is to find the optimal separating hyperplane (in
 high-dimensional space) that provides a maximum margin between
 classes.
 \end{frame}
-
-\begin{frame}[plain,fragile]
-\frametitle{First mathematical formulation of SVMs (formal details below)}
-
-For a dataset \((\mathbf{x}_i, y_i)\) where \(\mathbf{x}_i \in
-\mathbb{R}^n\) and \(y_i \in \{-1, 1\}\), the decision boundary is
-defined as:
-\[
-f(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b = 0.
-\]
-
-The goal is to optimize
-\[
-\min_{\mathbf{w}, b} \frac{1}{2} ||\mathbf{w}||^2,
-\]
-subject to
-\[
-y_i (\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad \forall i
-\]
-\end{frame}
-
-\begin{frame}[plain,fragile]
-\frametitle{Kernels and more}
-
-In classical SVMs, kernels help with non-linear data
-separations. Quantum computers can speed up the computation of complex
-kernel evaluations by efficiently simulating an inner product in an
-exponentially large Hilbert space.
-\end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Quantum Support Vector Machines (QSVMs)}
@@ -336,6 +361,7 @@ the classical data $\bm{x}$.
 
 Advantage: Potentially exponential speedup over classical SVMs.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Quantum Neural Networks (QNNs)}
@@ -358,6 +384,7 @@ U(\theta) = \prod_i R_y(\theta_i) \cdot CNOT \cdot R_x(\theta_i)
 \end{block}
 Advantage:Quantum gradients enable exploration of non-convex landscapes.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Quantum Boltzmann Machines (QBMs)}
@@ -380,6 +407,12 @@ H = -\sum_i b_i \sigma_i^z - \sum_{ij} w_{ij} \sigma_i^z \sigma_j^z
 \end{block}
 Advantage: Efficient sampling in complex probability distributions.
 \end{frame}
+%------------------------------------------------
+
+
+%================================================
+\section{Classical Support Vector Machines: Theory}
+%================================================
 
 \begin{frame}[plain,fragile]
 \frametitle{Classical Support Vector Machines, overarching aims (best visualized with jupyter-notebook)}
@@ -396,6 +429,28 @@ The case with two well-separated classes only can be understood in an
 intuitive way in terms of lines in a two-dimensional space separating
 the two classes (see figure below).
 \end{frame}
+%------------------------------------------------
+
+\begin{frame}[plain,fragile]
+\frametitle{First mathematical formulation of SVMs (formal details below)}
+
+For a dataset \((\mathbf{x}_i, y_i)\) where \(\mathbf{x}_i \in
+\mathbb{R}^n\) and \(y_i \in \{-1, 1\}\), the decision boundary is
+defined as:
+\[
+f(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b = 0.
+\]
+
+The goal is to optimize
+\[
+\min_{\mathbf{w}, b} \frac{1}{2} ||\mathbf{w}||^2,
+\]
+subject to
+\[
+y_i (\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad \forall i
+\]
+\end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Basic mathematics}
@@ -412,6 +467,7 @@ below.  We distinguish also between linear and non-linear
 approaches. The latter are the most frequent ones since it is rather
 unlikely that we can separate classes easily by say straight lines.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Hyperplanes and all that}
@@ -496,7 +552,7 @@ circles.
 
 
 
-\begin{minted}[fontsize=\fontsize{9pt}{9pt},linenos=false,mathescape,baselinestretch=1.0,fontfamily=tt,xleftmargin=2mm]{python}
+\begin{lstlisting}
 from sklearn import datasets
 from sklearn.svm import SVC, LinearSVC
 from sklearn.linear_model import SGDClassifier
@@ -567,8 +623,9 @@ plt.show()
 
 
 
-\end{minted}
+\end{lstlisting}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{What is a hyperplane?}
@@ -582,6 +639,7 @@ subspace of dimension of $p-1$.  As an example, in two dimension, a
 hyperplane is simply as straight line while in three dimensions it is
 a two-dimensional subspace, or stated simply, a plane.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Two-dimensional case}
@@ -600,6 +658,7 @@ We can then rewrite the above equation as
 \bm{x}^T\bm{w}+b=0.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{A $p$-dimensional space of features}
@@ -616,31 +675,29 @@ of dimension $n\times p$, where $n$ represents the observations for each feature
 \bm{x}_i = \begin{bmatrix} x_{i1} \\ x_{i2} \\ \dots \\ \dots \\ x_{ip} \end{bmatrix}.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{More details}
 
-If the above condition is not met for a given vector $\bm{x}_i$ we have 
+We need to remember that we took $dx$ and $dy$ to be arbitrary and thus we must have
 \[
-b+w_1x_{i1}+w_2x_{i2}+\dots +w_px_{ip} >0,
+\frac{\partial f}{\partial x}+\lambda\frac{\partial \phi}{\partial x} =0,
 \]
-if our output $y_i=1$.
-In this case we say that $\bm{x}_i$ lies on one of the sides of the hyperplane and if 
+and
 \[
-b+w_1x_{i1}+w_2x_{i2}+\dots +w_px_{ip} < 0,
+\frac{\partial f}{\partial y}+\lambda\frac{\partial \phi}{\partial y} =0.
 \]
-for the class of observations $y_i=-1$, 
-then $\bm{x}_i$ lies on the other side. 
-
-Equivalently, for the two classes of observations we have 
+When all these equations are satisfied, $df=0$.  We have four unknowns, $x,y,z$ and
+$\lambda$. Actually we want only $x,y,z$, $\lambda$ needs not to be determined, 
+it is therefore often called
+Lagrange's undetermined multiplier.
+If we have a set of constraints $\phi_k$ we have the equations
 \[
-y_i\left(b+w_1x_{i1}+w_2x_{i2}+\dots +w_px_{ip}\right) > 0. 
+\frac{\partial f}{\partial x_i}+\sum_k\lambda_k\frac{\partial \phi_k}{\partial x_i} =0.
 \]
-
-When we try to separate hyperplanes, if it exists, we can use it to
-construct a natural classifier: a test observation is assigned a given
-class depending on which side of the hyperplane it is located.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{The two-dimensional case}
@@ -654,6 +711,7 @@ data points of both classes. Maximizing the margin distance provides
 some reinforcement so that future data points can be classified with
 more confidence.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Linear classifier}
@@ -668,6 +726,7 @@ Unfortunately there are many ways in which we can place a hyperplane
 to divide the data.  Below is an example of two candidate hyperplanes
 for our data sample.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Getting into the details}
@@ -685,6 +744,7 @@ The signed distance $\delta$ from any point defined by a vector $\bm{x}$ and a p
 \delta = \frac{1}{\vert\vert \bm{w}\vert\vert}(\bm{w}^T\bm{x}+b).
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{First attempt at a minimization approach}
@@ -709,6 +769,7 @@ and
 \frac{\partial C}{\partial \bm{w}} = -\sum_{i\in M} y_ix_i.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Solving the equations}
@@ -723,6 +784,7 @@ and
 \]
 where $\eta$ is our by now well-known learning rate.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Problems with the Simpler Approach}
@@ -740,6 +802,7 @@ before the solutions converge and if the data cannot be separated
 properly into two distinct classes, we may not experience a converge
 at all.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{A better approach}
@@ -755,6 +818,7 @@ y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, p.
 \]
 All points are thus at a signed distance from the decision boundary defined by the line $L$. The parameters $b$ and $w_1$ and $w_2$ define this line.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Largest value $M$}
@@ -778,6 +842,7 @@ $\bm{w}$. We want to minimize the norm in order to have a as large as
 possible margin $M$. Before we proceed, we need to remind ourselves
 about Lagrangian multipliers.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{A quick Reminder on Lagrangian Multipliers}
@@ -796,6 +861,7 @@ due to
 df = \frac{\partial f}{\partial x}dx+\frac{\partial f}{\partial y}dy+\frac{\partial f}{\partial z}dz.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Not all variables are indepenent of each other}
@@ -816,6 +882,7 @@ the variables $x,y,z$
 d\phi = \frac{\partial \phi}{\partial x}dx+\frac{\partial \phi}{\partial y}dy+\frac{\partial \phi}{\partial z}dz =0.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Only two independent variables}
@@ -829,6 +896,7 @@ because there are now only two independent variables!  Assume $x$ and $y$ are th
 variables.
 Then $dz$ is no longer arbitrary.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Adding the Multiplier}
@@ -848,27 +916,7 @@ Our multiplier is chosen so that
 \frac{\partial f}{\partial z}+\lambda\frac{\partial \phi}{\partial z} =0.
 \]
 \end{frame}
-
-\begin{frame}[plain,fragile]
-\frametitle{More details}
-
-We need to remember that we took $dx$ and $dy$ to be arbitrary and thus we must have
-\[
-\frac{\partial f}{\partial x}+\lambda\frac{\partial \phi}{\partial x} =0,
-\]
-and
-\[
-\frac{\partial f}{\partial y}+\lambda\frac{\partial \phi}{\partial y} =0.
-\]
-When all these equations are satisfied, $df=0$.  We have four unknowns, $x,y,z$ and
-$\lambda$. Actually we want only $x,y,z$, $\lambda$ needs not to be determined, 
-it is therefore often called
-Lagrange's undetermined multiplier.
-If we have a set of constraints $\phi_k$ we have the equations
-\[
-\frac{\partial f}{\partial x_i}+\sum_k\lambda_k\frac{\partial \phi_k}{\partial x_i} =0.
-\]
-\end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Setting up the problem}
@@ -879,6 +927,7 @@ In order to solve the above problem, we define the following Lagrangian function
 \]
 where $\lambda_i$ is a so-called Lagrange multiplier subject to the condition $\lambda_i \geq 0$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Setting up derivaties}
@@ -897,6 +946,7 @@ Inserting these constraints into the equation for ${\cal L}$ we obtain
 \]
 subject to the constraints $\lambda_i\geq 0$ and $\sum_i\lambda_iy_i=0$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Karush-Kuhn-Tucker condition}
@@ -914,26 +964,29 @@ We must in addition satisfy the \href{{https://en.wikipedia.org/wiki/Karush%E2%8
 \noindent
 When $\lambda_i > 0$, the vectors $\bm{x}_i$ are called support vectors. They are the vectors closest to the line (or hyperplane) and define the margin $M$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{The problem to solve}
 
-We can rewrite 
+Using our definition of the kernel We can rewrite again the Lagrangian
 \[
-{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{z}_j,
 \]
-and its constraints in terms of a matrix-vector problem where we minimize w.r.t. $\lambda$ the following problem
+subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ in terms of a convex optimization problem
 \[
-\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1\bm{x}_1^T\bm{x}_1 & y_1y_2\bm{x}_1^T\bm{x}_2 & \dots & \dots & y_1y_n\bm{x}_1^T\bm{x}_n \\
-y_2y_1\bm{x}_2^T\bm{x}_1 & y_2y_2\bm{x}_2^T\bm{x}_2 & \dots & \dots & y_1y_n\bm{x}_2^T\bm{x}_n \\
+\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1K(\bm{x}_1,\bm{x}_1) & y_1y_2K(\bm{x}_1,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_1,\bm{x}_n) \\
+y_2y_1K(\bm{x}_2,\bm{x}_1) & y_2y_2(\bm{x}_2,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_2,\bm{x}_n) \\
 \dots & \dots & \dots & \dots & \dots \\
 \dots & \dots & \dots & \dots & \dots \\
-y_ny_1\bm{x}_n^T\bm{x}_1 & y_ny_2\bm{x}_n^T\bm{x}_2 & \dots & \dots & y_ny_n\bm{x}_n^T\bm{x}_n \\
+y_ny_1K(\bm{x}_n,\bm{x}_1) & y_ny_2K(\bm{x}_n\bm{x}_2) & \dots & \dots & y_ny_nK(\bm{x}_n,\bm{x}_n) \\
 \end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
 \]
 subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
-$\bm{y}=[y_1,y_2,\dots,y_n]$.
+$\bm{y}=[y_1,y_2,\dots,y_n]$. 
+If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{The last steps}
@@ -956,6 +1009,7 @@ or if we write it out in terms of the support vectors only, with $N_s$ being the
 b = \frac{1}{N_s}\sum_{j\in N_s}\left(y_j-\sum_{i=1}^n\lambda_iy_i\bm{x}_i^T\bm{x}_j\right).
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Classifier equations}
@@ -966,6 +1020,7 @@ y_i = \mathrm{sign}(\bm{w}^T\bm{x}_i+b).
 \]
 Below we discuss how to find the optimal values of $\lambda_i$. Before we proceed however, we discuss now the so-called soft classifier.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{A soft classifier}
@@ -988,6 +1043,7 @@ y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i,
 \]
 with the requirement $\xi_i\geq 0$. The total violation is now $\sum_i\xi$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Misclassification}
@@ -1001,6 +1057,7 @@ wrong side of their margins.
 Misclassifications occur when $\xi_i > 1$. Thus bounding the total sum by some value $C$ bounds in turn the total number of
 misclassifications.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Soft optmization problem}
@@ -1015,23 +1072,7 @@ y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i \hspace{0.1cm}\forall i,
 \]
 with the requirement $\xi_i\geq 0$.
 \end{frame}
-
-\begin{frame}[plain,fragile]
-\frametitle{Derivatives with respect to $b$ and $\bm{w}$}
-
-Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
-\[
-\frac{\partial {\cal L}}{\partial b} = -\sum_{i} \lambda_iy_i=0,
-\]
-and 
-\[
-\frac{\partial {\cal L}}{\partial \bm{w}} = 0 = \bm{w}-\sum_{i} \lambda_iy_i\bm{x}_i, 
-\]
-and
-\[
-\lambda_i = C-\gamma_i \hspace{0.1cm}\forall i.
-\]
-\end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{New constraints}
@@ -1053,6 +1094,82 @@ and
 y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_) \geq 0 \hspace{0.1cm}\forall i.
 \]
 \end{frame}
+%------------------------------------------------
+
+\begin{frame}{Binary Classification}
+Given labeled data:
+\[
+(x_i, y_i), \quad y_i \in \{-1,1\}
+\]
+
+Find hyperplane:
+\[
+w \cdot x + b = 0
+\]
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}{Maximum Margin Principle}
+Solve:
+\[
+\min_{w,b} \frac{1}{2}\|w\|^2
+\]
+subject to:
+\[
+y_i(w\cdot x_i + b) \ge 1
+\]
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}{Dual Formulation}
+\[
+\max_{\alpha}
+\sum_i \alpha_i
+-
+\frac{1}{2}
+\sum_{i,j} \alpha_i \alpha_j y_i y_j K(x_i,x_j)
+\]
+
+with:
+\[
+K(x_i,x_j) = x_i \cdot x_j
+\]
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}{Kernel Trick}
+Replace inner product:
+\[
+x_i \cdot x_j \rightarrow K(x_i,x_j)
+\]
+
+\medskip
+
+Implicit mapping:
+\[
+x \rightarrow \phi(x)
+\]
+
+\[
+K(x,x') = \phi(x) \cdot \phi(x')
+\]
+\end{frame}
+%------------------------------------------------
+
+
+%================================================
+\section{Kernels and Non-linearity}
+%================================================
+
+\begin{frame}[plain,fragile]
+\frametitle{Kernels and more}
+
+In classical SVMs, kernels help with non-linear data
+separations. Quantum computers can speed up the computation of complex
+kernel evaluations by efficiently simulating an inner product in an
+exponentially large Hilbert space.
+\end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Kernels and non-linearity}
@@ -1120,7 +1237,7 @@ we need to introduce for example a polynomial transformation to a two-dimensiona
 
 
 
-\begin{minted}[fontsize=\fontsize{9pt}{9pt},linenos=false,mathescape,baselinestretch=1.0,fontfamily=tt,xleftmargin=2mm]{python}
+\begin{lstlisting}
 import numpy as np
 import os
 
@@ -1169,8 +1286,9 @@ plt.subplots_adjust(right=1)
 plt.show()
 
 
-\end{minted}
+\end{lstlisting}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{The equations}
@@ -1191,6 +1309,7 @@ y_i(\bm{w}^T\bm{z}_i+b)= 1 \hspace{0.1cm}\forall i,
 \]
 from which we also find $b$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Defining the kernel}
@@ -1204,6 +1323,7 @@ For the above example, the kernel reads
 K(\bm{x}_i,\bm{x}_j)=[x_i^2, y_i^2, \sqrt{2}x_iy_i]^T\begin{bmatrix} x_j^2 \\ y_j^2 \\ \sqrt{2}x_jy_j \end{bmatrix}=x_i^2x_j^2+2x_ix_jy_iy_j+y_i^2y_j^2.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Kernel trick}
@@ -1218,6 +1338,7 @@ kernel trick and the result leads to the same as if we went through
 the trouble of performing the transformation
 $\phi(\bm{x}_i)^T\phi(\bm{x}_j)$ during the SVM calculations.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{The problem to solve}
@@ -1239,6 +1360,7 @@ subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =
 $\bm{y}=[y_1,y_2,\dots,y_n]$. 
 If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Convex optimization}
@@ -1252,6 +1374,7 @@ Below we discuss how to solve these equations. Here we note that the matrix $\bm
 Given a kernel $K$ and the targets $y_i$ this matrix is easy to set up. The constraint $\bm{y}^T\bm{\lambda}=0$ leads to $f=0$ and $\bm{A}=\bm{y}$. How to set up the matrix $\bm{G}$ is discussed later. Here note that the inequalities $0\leq \lambda_i \leq C$ can be split up into
 $0\leq \lambda_i$ and $\lambda_i \leq C$. These two inequalities define then the matrix $\bm{G}$ and the vector $\bm{h}$.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Different kernels}
@@ -1270,6 +1393,7 @@ There are several popular kernels being used. These are
 \noindent
 and many other ones.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Mercer's theorem}
@@ -1292,11 +1416,12 @@ Note that some frequently used kernels (such as the Sigmoid kernel)
 don’t respect all of Mercer’s conditions, yet they generally work well
 in practice.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{The moons example}
 
-\begin{minted}[fontsize=\fontsize{9pt}{9pt},linenos=false,mathescape,baselinestretch=1.0,fontfamily=tt,xleftmargin=2mm]{python}
+\begin{lstlisting}
 from __future__ import division, print_function, unicode_literals
 
 import numpy as np
@@ -1487,8 +1612,9 @@ for i, svm_clf in enumerate(svm_clfs):
 plt.show()
 
 
-\end{minted}
+\end{lstlisting}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Mathematical optimization of convex functions}
@@ -1507,6 +1633,7 @@ problems called convex optmization problems.
 
 Convex optimization problems play a central role in applied mathematics and we recommend strongly \href{{http://web.stanford.edu/~boyd/cvxbook/}}{Boyd and Vandenberghe's text on the topics}.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{How do we solve these problems?}
@@ -1524,15 +1651,16 @@ The functions we need are contained in the \href{{https://cvxopt.org/userguide/c
 
 
 
-\begin{minted}[fontsize=\fontsize{9pt}{9pt},linenos=false,mathescape,baselinestretch=1.0,fontfamily=tt,xleftmargin=2mm]{python}
+\begin{lstlisting}
 import numpy
 import cvxopt
 
-\end{minted}
+\end{lstlisting}
 
 
 This will make our life much easier. You don't need to write your own optimizer.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{A simple example}
@@ -1553,6 +1681,7 @@ Let us show how to perform the optmization using a simple case. Assume we want t
     &3x+4y  \leq  80.  \\ \nonumber
 \end{align*}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Rewriting in terms of vectors and matrices}
@@ -1566,6 +1695,7 @@ Similarly, we can now set up the inequalities (we need to change $\geq$ to $\leq
 \begin{bmatrix} -1 & 0 \\ 0 & -1 \\ -1 & -3 \\ 2 & 5 \\ 3 & 4\end{bmatrix}\begin{bmatrix} x \\ y\end{bmatrix} \preceq \begin{bmatrix}0 \\ 0\\ -15 \\ 100 \\ 80\end{bmatrix}.
 \]
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Rewriting inequalities}
@@ -1597,7 +1727,7 @@ The following code solves the equations for us
 
 
 
-\begin{minted}[fontsize=\fontsize{9pt}{9pt},linenos=false,mathescape,baselinestretch=1.0,fontfamily=tt,xleftmargin=2mm]{python}
+\begin{lstlisting}
 # Import the necessary packages
 import numpy
 from cvxopt import matrix
@@ -1613,8 +1743,9 @@ sol['x']
 sol['primal objective']
 print(sol['x'] )
 
-\end{minted}
+\end{lstlisting}
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{Back to the more realistic cases}
@@ -1634,6 +1765,12 @@ With  the slack constants this leads to the additional constraint $0\leq \lambda
 
 Using the \textbf{CVXOPT} library, the matrix $P$ would then be defined by the above matrix while the KKT conditions would all be collected by the matrix $G$.
 \end{frame}
+%------------------------------------------------
+
+
+%================================================
+\section{Towards Quantum Support Vector Machines}
+%================================================
 
 \begin{frame}[plain,fragile]
 \frametitle{Quantum SVMs}
@@ -1643,6 +1780,7 @@ that are in either one group or another and we want to find a line that
 separates these two groups. This line can be linear, but it can also be
 much more complex, which can be achieved by the use of Kernels.
 \end{frame}
+%------------------------------------------------
 
 \begin{frame}[plain,fragile]
 \frametitle{What will we need in the case of a quantum computer?}
@@ -1663,109 +1801,7 @@ can apply a measurement that returns a classical value \(-1\) or
 of the classical data.
 \end{block}
 \end{frame}
-
-
-
-%================================================
-\section{Motivation}
-%================================================
-
-\begin{frame}{Why Quantum Machine Learning?}
-\begin{itemize}
-\item Classical ML struggles with high-dimensional feature spaces
-\item Kernel methods implicitly lift data into large Hilbert spaces
-\item Quantum systems naturally live in exponentially large Hilbert spaces
-\end{itemize}
-
-\medskip
-
-\begin{block}{Key Idea}
-Use a quantum computer to efficiently compute inner products in large Hilbert spaces.
-\end{block}
-\end{frame}
-
 %------------------------------------------------
-
-\begin{frame}{Physics Viewpoint}
-\begin{itemize}
-\item Data $\rightarrow$ quantum state $\ket{\phi(x)}$
-\item Kernel:
-\[
-K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2
-\]
-\item This is a transition probability between quantum states
-\end{itemize}
-
-\medskip
-
-Thus QSVMs are naturally formulated in quantum mechanics.
-\end{frame}
-
-%================================================
-\section{Classical Support Vector Machines}
-%================================================
-
-\begin{frame}{Binary Classification}
-Given labeled data:
-\[
-(x_i, y_i), \quad y_i \in \{-1,1\}
-\]
-
-Find hyperplane:
-\[
-w \cdot x + b = 0
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Maximum Margin Principle}
-Solve:
-\[
-\min_{w,b} \frac{1}{2}\|w\|^2
-\]
-subject to:
-\[
-y_i(w\cdot x_i + b) \ge 1
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Dual Formulation}
-\[
-\max_{\alpha}
-\sum_i \alpha_i
--
-\frac{1}{2}
-\sum_{i,j} \alpha_i \alpha_j y_i y_j K(x_i,x_j)
-\]
-
-with:
-\[
-K(x_i,x_j) = x_i \cdot x_j
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Kernel Trick}
-Replace inner product:
-\[
-x_i \cdot x_j \rightarrow K(x_i,x_j)
-\]
-
-\medskip
-
-Implicit mapping:
-\[
-x \rightarrow \phi(x)
-\]
-
-\[
-K(x,x') = \phi(x) \cdot \phi(x')
-\]
-\end{frame}
 
 %================================================
 \section{Quantum Feature Maps}
@@ -1817,6 +1853,7 @@ U(x) = \prod_i e^{i x_i Z_i} \prod_{i<j} e^{i x_i x_j Z_i Z_j}
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{Quantum Kernel Estimation}
 %================================================
@@ -1837,13 +1874,12 @@ Two main approaches:
 %------------------------------------------------
 
 \begin{frame}{Swap Test Circuit}
-\[
+\centering
 \begin{quantikz}
-\lstick{\ket{0}} & \gate{H} & \ctrl{1} & \gate{H} & \meter{} \\
-\lstick{\ket{\phi(x)}} & \qw & \swap{1} & \qw & \qw \\
-\lstick{\ket{\phi(x')}} & \qw & \targX{} & \qw & \qw
+\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \gate{H} & \meter{} \\
+\lstick{$\ket{\phi(x)}$} & \qw & \swap{1} & \qw & \qw \\
+\lstick{$\ket{\phi(x')}$} & \qw & \targX{}{} & \qw & \qw
 \end{quantikz}
-\]
 
 Probability of measuring $0$:
 \[
@@ -1865,6 +1901,7 @@ K_{ij} = |\braket{\phi(x_i)}{\phi(x_j)}|^2
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{QSVM Algorithm}
 %================================================
@@ -1885,17 +1922,17 @@ f(x) = \sum_i \alpha_i y_i K(x_i,x) + b
 \]
 \end{frame}
 
+
 %================================================
 \section{Example Circuits}
 %================================================
 
 \begin{frame}{Feature Map Circuit}
-\[
+\centering
 \begin{quantikz}
-\lstick{\ket{0}} & \gate{R_z(x_1)} & \ctrl{1} & \qw \\
-\lstick{\ket{0}} & \gate{R_z(x_2)} & \targ{} & \qw
+\lstick{$\ket{0}$} & \gate{R_z(x_1)} & \ctrl{1} & \qw \\
+\lstick{$\ket{0}$} & \gate{R_z(x_2)} & \targ{} & \qw
 \end{quantikz}
-\]
 
 \begin{itemize}
 \item encodes classical data
@@ -1906,16 +1943,16 @@ f(x) = \sum_i \alpha_i y_i K(x_i,x) + b
 %------------------------------------------------
 
 \begin{frame}{Kernel Evaluation Circuit}
-\[
+\centering
 \begin{quantikz}
-\lstick{\ket{0}} & \gate{U(x)} & \gate{U^\dagger(x')} & \meter{}
+\lstick{$\ket{0}$} & \gate{U(x)} & \gate{U^\dagger(x')} & \meter{}
 \end{quantikz}
-\]
 
 \[
 P(0) = |\braket{\phi(x)}{\phi(x')}|^2
 \]
 \end{frame}
+
 
 %================================================
 \section{Physics Interpretation}
@@ -1953,6 +1990,7 @@ P(0) = |\braket{\phi(x)}{\phi(x')}|^2
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{Advantages and Limitations}
 %================================================
@@ -1973,6 +2011,7 @@ P(0) = |\braket{\phi(x)}{\phi(x')}|^2
 \item unclear quantum advantage in practice
 \end{itemize}
 \end{frame}
+
 
 %================================================
 \section{Extensions}
@@ -1995,6 +2034,7 @@ P(0) = |\braket{\phi(x)}{\phi(x')}|^2
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{Summary}
 %================================================
@@ -2010,6 +2050,7 @@ K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2
 \item connects ML with quantum mechanics
 \end{itemize}
 \end{frame}
+
 
 
 %================================================
@@ -2083,6 +2124,7 @@ Interpretation:
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{Kernel Expressivity}
 %================================================
@@ -2137,6 +2179,7 @@ Thus the kernel encodes differences in the effective Hamiltonians.
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{Entanglement and Expressivity}
 %================================================
@@ -2188,6 +2231,7 @@ For highly random states:
 \item analogous to barren plateaus
 \end{itemize}
 \end{frame}
+
 
 %================================================
 \section{Quantum Fisher Information}
@@ -2242,6 +2286,7 @@ Thus:
 \item determines resolution of classification boundary
 \end{itemize}
 \end{frame}
+
 
 %================================================
 \section{Comparison with Classical Kernels}
@@ -2298,6 +2343,7 @@ Potential advantage if:
 \end{itemize}
 \end{frame}
 
+
 %================================================
 \section{Summary of Advanced Concepts}
 %================================================
@@ -2311,9 +2357,5 @@ Potential advantage if:
 \item Quantum kernels can exceed classical ones in structure
 \end{itemize}
 \end{frame}
-
-\end{document}
-
-
 
 \end{document}
