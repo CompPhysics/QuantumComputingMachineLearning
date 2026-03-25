@@ -1,0 +1,1479 @@
+TITLE: Quantum Computing and Quantum Machine Learning
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics, University of Oslo
+DATE: April 16
+
+!split
+===== Plans for the week of April 14-18, 2026 =====
+
+!bblock 
+* Reminder from last week about the QPE andf HHL algorithms
+* The QAOA algorithm 
+#o "Video of lecture at URL:" https://youtu.be/3myI1qFLVN8"
+#o "Whiteboard notes at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril7.pdf"
+!eblock
+
+!split
+===== Reminder on the Quantum Fourier transform =====
+
+The Quantum Fourier Transform (QFT) is a key component in many quantum
+algorithms, notably Shor’s factoring algorithm and quantum phase
+estimation. It serves as the quantum analogue of the classical
+Discrete Fourier Transform (DFT), but operates exponentially faster
+due to the principles of quantum parallelism and entanglement.
+
+!split
+===== Classical Discrete Fourier Transform =====
+
+Given a vector of $N$ complex numbers $\{x_0, x_1, \dots, x_{N-1}\}$, the DFT is defined as:
+!bt
+\[
+X_k = \sum_{n=0}^{N-1} x_n \exp{-(2\pi i kn/N)}, \quad k = 0, 1, \dots, N-1
+\]
+!et
+The inverse transform is:
+!bt
+\[
+x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k \exp{(2\pi i kn/N)}
+\]
+!et
+
+!split
+===== In matrix form =====
+
+This can be expressed in matrix form:
+!bt
+\[
+\bm{X} = F_N \bm{x}, \quad \text{where} \quad (F_N)_{jk} = \frac{1}{\sqrt{N}} \exp{(2\pi i jk/N)}
+\]
+!et
+
+!split
+===== Quantum Fourier Transform =====
+
+Let $N = 2^n$. The QFT acts on the state:
+!bt
+\[
+\vert x\rangle = \vert x_0 x_1 \dots x_{n-1}\rangle
+\]
+!et
+and transforms it into:
+!bt
+\[
+\mathrm{QFT} \vert x\rangle  = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} \exp{(2\pi i xk/N)} \vert k\rangle
+\]
+!et
+
+The QFT is unitary and can be decomposed into a series of Hadamard and
+controlled phase gates, allowing for an efficient $O(n^2)$
+implementation.
+
+!split
+===== Comparison with Classical DFT =====
+
+While the classical FFT runs in $O(N \log N)$ time, the QFT runs in
+$O(n^2) = O(\log^2 N)$ gate operations—an exponential improvement,
+crucial in quantum speedups for specific problems.
+
+!split
+===== Unitary Nature of QFT =====
+
+Last week we showed that the QFT matrix $F_N$ is unitary:
+!bt
+\[
+F_N^\dagger F_N = I
+\]
+!et
+This guarantees that QFT is a valid quantum operation (i.e., norm-preserving and reversible).
+
+!split
+===== PennyLane Setup and Basic Example =====
+
+To experiment with QFT, we can use the PennyLane Python library.
+
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+
+n_qubits = 3
+dev = qml.device("default.qubit", wires=n_qubits)
+
+def apply_qft(wires):
+   qml.templates.QFT(wires=wires)
+
+@qml.qnode(dev)
+def qft_circuit():
+   qml.BasisState(np.array([1, 0, 1]), wires=range(n_qubits))
+   apply_qft(wires=range(n_qubits))
+   return qml.state()
+
+state = qft_circuit()
+print("QFT output state:", state)
+!ec
+
+!split
+===== Quantum Circuit Implementation =====
+
+The Quantum Fourier Transform can be efficiently implemented using a
+combination of Hadamard gates and controlled phase gates. Given an
+$n$-qubit state $\vert x\rangle$, the QFT circuit transforms it into the
+state:
+
+!bt
+\[
+\frac{1}{\sqrt{2^n}} \sum_{k=0}^{2^n - 1} \exp{(2\pi i xk / 2^n)} \vert k\rangle
+\]
+!et
+
+This is achieved through a decomposition into a quantum circuit of $O(n^2)$ gates.
+
+!split
+===== QFT on three  qubits =====
+
+We illustrate the circuit for $n = 3$. The transformation proceeds as follows:
+
+o Apply a Hadamard gate to the first qubit.
+o Apply controlled-$R_k$ gates (phase gates) for $k=2, 3, \dots$ to encode phase interference.
+o Repeat recursively on the remaining qubits.
+o Apply a qubit swap at the end to reverse the order of qubits.
+
+!split
+===== Controlled Phase Rotation =====
+
+The controlled phase rotation gate $R_k$ is defined as:
+!bt
+\[
+R_k = \begin{bmatrix}
+1 & 0 \\
+0 & e^{2\pi i / 2^k}
+\end{bmatrix}
+\]
+!et
+
+This gate introduces the correct phase into the wavefunction based on
+the binary digits of the input number.
+
+!split
+===== Circuit Diagram =====
+
+The QFT circuit for three qubits is shown below (read top to bottom):
+
+FIGURE: [figures/threequbits.png, width=800 frac=1.0]
+
+
+!split
+===== Swap gates =====
+
+In the circuit implementation of the $n$-qubit Quantum Fourier
+Transform (QFT), one finds at the end a cascade of Swap gates
+*crossing* qubit $1$ with qubit $n$, qubit $2$ with qubit $n-1$, and
+so on.  These are not arbitrary extra operations, but arise inevitably
+from the fact that the standard QFT—when written as a matrix—maps
+computational‐basis states into *bit‐reversed* amplitudes.  The Swap
+gates simply undo that bit-reversal so that the output register has
+its qubits in the natural (most‐significant–to–least‐significant)
+order.
+
+!split
+===== Swap gates and step-by-step mathematical derivation =====
+
+On an $n$-qubit register, label the computational basis states by integers
+
+!bt
+\[
+\vert x\rangle \quad,\quad x\in\{0,1,\dots,2^n-1\}\,.
+\]
+!et
+The QFT is the linear map
+!bt
+\[
+\mathrm{QFT}n:\;\vert x \rangle \;\mapsto\;\frac{1}{\sqrt{2^n}}\sum{y=0}^{2^n-1}
+\exp{(2\pi i\,xy / 2^n)}\,\vert y\rangle.
+\]
+!et
+Viewed as a $2^n\times2^n$ unitary matrix $F_{2^n}$, its $(y,x)$–entry is
+!bt
+\[
+[F_{2^n}]_{y,x} \;=\;\frac{1}{\sqrt{2^n}}\,e^{2\pi i\,x y / 2^n}\,.
+\]
+!et
+!split
+===== Circuit‐level decomposition and implicit bit reversal =====
+
+A standard circuit for $\mathrm{QFT}_n$ proceeds qubit by qubit (from
+most significant qubit down to least significant), applying:
+o A Hadamard on qubit $j$;
+o Controlled-$R_2,R_3,\dots,R_{n-j+1}$ phase gates from qubit $k>j$ to qubit $j$, where
+!bt
+\[
+R_m \;=\;\begin{pmatrix}1&0\\0&e^{2\pi i/2^m}\end{pmatrix}.
+\]
+!et
+o Move on to the next qubit $j+1$.
+
+
+!split
+===== Qubit ordering =====
+
+If you label the input qubits as
+$\vert x_{n-1}\rangle\otimes\vert x_{n-2}\rangle\otimes\cdots\otimes\vert x_0\rangle$ (with
+$x_{n-1}$ the most‐significant bit), then the order in which
+phase‐gates tie those bits ends up producing output amplitudes in the
+reverse bit‐order, that is
+!bt
+\[
+\mathrm{QFT}n \;=\; (\text{controlled‐phase and Hadamard layers})\;\times\; \underbrace{\bigl(\mathrm{bit\!-\!reversal}\bigr)}{P},
+\]
+!et
+where $P$ is the permutation matrix that sends
+!bt
+\[
+\vert y_{n-1}y_{n-2}\dots y_0\rangle \longmapsto \vert y_{0}y_{1}\dots y_{n-1}\rangle.
+\]
+!et
+
+!split
+===== Change of basis order =====
+
+Concretely, one finds for each basis vector
+!bt
+\[
+(\text{circuit without swaps})\;\vert x_{n-1}\dots x_0\rangle\;=\;\frac{1}{\sqrt{2^n}}
+\sum_{y} \exp{(2\pi i\,x\,y/2^n)}\;\vert y_{\text{reversed}}\rangle,
+\]
+!et
+where $y_{\text{reversed}} = \sum_j y_j,2^{n-1-j}$ instead of the natural $\sum_j y_j,2^j$.
+
+!split
+===== The bit-reversal permutation and Swap gates =====
+
+
+The bit-reversal permutation $P$ is exactly the unitary that swaps
+qubit $j$ with qubit $(n-1-j)$ for all
+$j=0,\dots,\lfloor(n-1)/2\rfloor$.  In matrix form,
+!bt
+\[
+\Pi \;=\;\prod_{j=0}^{\lfloor(n-1)/2\rfloor}\;\mathrm{SWAP}{j,\;n-1-j},
+\]
+!et
+where each $\mathrm{SWAP}{a,b}$ acts as
+!bt
+\[
+\mathrm{SWAP}:\;\vert  u\rangle_a\!\otimes\!\vert v\rangle_b \;\longmapsto\;\vert v\rangle_a\!\otimes\!\vert u\rangle_b.
+\]
+!et
+
+Since the circuit we built implements $F{2^n},\Pi$ rather than
+$F{2^n}$, appending those swaps at the end yields exactly the matrix
+$F{2^n}$ in the natural qubit ordering.
+
+!split
+===== Can we avoid them? =====
+
+One might ask: *Couldn’t we just re‐label wires?* In principle yes,
+but in a physical device the wiring corresponds to real qubit lines.
+If you want the logical output bit $y_{n-1}$ on the same physical wire
+as the input $x_{n-1}$, you must physically swap the states.  Hence
+the Swap gates are unavoidable whenever you demand that qubit indices
+retain their original semantic meaning.
+
+
+In summary, the Swap gates at the end of the QFT circuit correct the
+inherent bit-reversal that arises from the order in which Hadamard and
+controlled-phase gates entangle the qubits.  Without them, the output
+register would hold the Fourier‐transformed amplitudes in
+reverse‐index order.
+
+!split
+===== Python code with PennyLane =====
+We now implement a full QFT circuit manually for three qubits using PennyLane.
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+import math
+
+dev = qml.device("default.qubit", wires=3)
+
+def qft_rotations(wires):
+   if len(wires) == 0:
+       return
+   head, *tail = wires
+   qml.Hadamard(wires=head)
+   for i, qubit in enumerate(tail):
+       qml.ctrl(qml.PhaseShift, control=qubit)(math.pi / 2**(i+1), wires=head)
+   qft_rotations(tail)
+
+def swap_registers(wires):
+   for i in range(len(wires) // 2):
+       qml.SWAP(wires=[wires[i], wires[-i - 1]])
+
+@qml.qnode(dev)
+def qft_custom():
+   qml.BasisState(np.array([1, 0, 1]), wires=range(3))
+   qft_rotations(wires=[0, 1, 2])
+   swap_registers(wires=[0, 1, 2])
+   return qml.state()
+
+print("Custom QFT state:", qft_custom())
+!ec
+
+!split
+===== Complexity =====
+o The QFT requires $O(n^2)$ gates.
+o Approximate QFT implementations can reduce complexity by omitting small-angle phase gates.
+
+The circuit implementation of QFT is surprisingly efficient, enabling
+its use in several key quantum algorithms. Understanding the
+gate-level construction deepens our understanding of quantum
+information flow during Fourier transformation.
+
+!split
+===== Inverse QFT and the phase estimation algorithm =====
+
+In our discussion of the phase estimation algorithm, we will need the inverse QFT.
+The inverse Quantum Fourier Transform (IQFT) is simply the Hermitian adjoint of the QFT. Since the QFT is unitary, its inverse is:
+!bt
+\[
+\mathrm{QFT}^\dagger = \mathrm{QFT}^{-1}
+\]
+!et
+
+!split
+===== Circuit Construction =====
+
+To reverse the QFT circuit:
+o Swap the order of gates.
+o Replace Hadamard gates with Hadamard gates (self-inverse).
+o Replace each $R_k$ gate with its conjugate transpose $R_k^\dagger$:
+!bt
+\[
+   R_k^\dagger = \begin{bmatrix}
+   1 & 0 \\
+   0 & e^{-2\pi i / 2^k}
+   \end{bmatrix}
+\]
+!et
+
+
+!split
+===== Codes for the QFT =====
+
+Here we present examples on how we can build our own QFT codes, without using software like PennyLane or QisKit.
+The first code is a simple code without the introduction of a class structure.
+Its key features are
+o Inverse QFT (via negative controlled-phase angles and reversed order),
+o Measurement sampling (random draws from the final state’s probability distribution).
+o Forward and inverse QFT logic built in.
+o Uses exact Hadamard and controlled phase gates.
+o Simulates quantum measurement from the QFT result.
+o Bit-reversal swaps ensure correct output basis alignment.
+
+!bc pycod
+import numpy as np
+
+def hadamard():
+    return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+def apply_single_qubit_gate(state, gate, target, n_qubits):
+    """Applies a single-qubit gate to the target qubit."""
+    I = np.eye(2)
+    ops = [I] * n_qubits
+    ops[target] = gate
+    U = ops[0]
+    for op in ops[1:]:
+        U = np.kron(U, op)
+    return U @ state
+
+def apply_controlled_phase(state, control, target, theta, n_qubits):
+    """Applies a controlled phase rotation gate."""
+    size = 2 ** n_qubits
+    U = np.eye(size, dtype=complex)
+    for i in range(size):
+        bin_str = format(i, f'0{n_qubits}b')
+        if bin_str[n_qubits - 1 - control] == '1' and bin_str[n_qubits - 1 - target] == '1':
+            U[i, i] *= np.exp(1j * theta)
+    return U @ state
+
+def swap_registers(state, n_qubits):
+    """Swap qubit order (bit-reversal permutation)."""
+    perm = [int(format(i, f'0{n_qubits}b')[::-1], 2) for i in range(2 ** n_qubits)]
+    return state[perm]
+
+def qft_step_by_step(state, n_qubits, inverse=False):
+    """Performs (inverse) QFT using gate decomposition."""
+    for target in range(n_qubits):
+        idx = n_qubits - 1 - target  # Apply to qubits in reversed order
+        # Controlled phase rotations
+        for control_offset in range(1, n_qubits - target):
+            control = n_qubits - 1 - (target + control_offset)
+            angle = np.pi / (2 ** control_offset)
+            if inverse:
+                angle *= -1
+            state = apply_controlled_phase(state, control, idx, angle, n_qubits)
+        # Hadamard
+        state = apply_single_qubit_gate(state, hadamard(), idx, n_qubits)
+    # Swap qubits unless inverse and user wants to avoid it
+    return swap_registers(state, n_qubits)
+
+def measure_state(state, shots=1024):
+    """Measure the quantum state multiple times to simulate outcomes."""
+    probs = np.abs(state) ** 2
+    outcomes = np.random.choice(len(probs), size=shots, p=probs)
+    counts = {}
+    for o in outcomes:
+        b = format(o, f'0{int(np.log2(len(state)))}b')
+        counts[b] = counts.get(b, 0) + 1
+    return counts
+
+# -------------------------
+# Example: 3 qubits in |5⟩
+# -------------------------
+n_qubits = 3
+N = 2 ** n_qubits
+state = np.zeros(N, dtype=complex)
+state[5] = 1.0  # Start in |5⟩ = |101⟩
+
+# Apply QFT
+qft_state = qft_step_by_step(state.copy(), n_qubits)
+
+# Apply inverse QFT to check if we recover original
+inv_qft_state = qft_step_by_step(qft_state.copy(), n_qubits, inverse=True)
+
+# Measurement sampling from QFT output
+measurement_results = measure_state(qft_state, shots=1024)
+
+# -------------------------
+# Output
+# -------------------------
+print("QFT amplitudes:")
+for i, amp in enumerate(qft_state):
+    print(f"|{i:03b}>: {amp:.4f}")
+
+print("\nInverse QFT applied back (should recover |5⟩):")
+for i, amp in enumerate(inv_qft_state):
+    print(f"|{i:03b}>: {amp:.4f}")
+
+print("\nMeasurement results from QFT output:")
+for bitstring, count in sorted(measurement_results.items()):
+    print(f"{bitstring}: {count}")
+!ec
+
+!split
+===== Adding classes =====
+
+This variant of the same code attempts at making a more structured introduction to classes.
+It introduces  a reusable Python class called QuantumFourierTransform that encapsulates everything:
+It includes the same elements as before but adds also a visualization of the measurements. Here we have
+o Initialization of state
+o QFT and inverse QFT
+o Measurement sampling
+o Easy customization of qubit number and input state
+o Includes state visualization and measurement simulation.
+
+The benefits of the class design is that the code is reusable and
+hopefully clean and makes it easy to switch between QFT and inverse
+QFT.
+
+!bc pycod
+import numpy as np
+class QuantumFourierTransform:
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.state = np.zeros(self.N, dtype=complex)
+
+    def initialize_basis_state(self, index):
+        """Initialize the quantum state to |index⟩"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[index] = 1.0
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_single_qubit_gate(self, gate, target):
+        """Apply a single-qubit gate to the target qubit."""
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+
+    def apply_controlled_phase(self, control, target, theta):
+        """Apply a controlled phase rotation gate."""
+        size = self.N
+        U = np.eye(size, dtype=complex)
+        for i in range(size):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1' and b[self.n_qubits - 1 - target] == '1':
+                U[i, i] *= np.exp(1j * theta)
+        self.state = U @ self.state
+
+    def swap_registers(self):
+        """Swap qubit order (bit-reversal permutation)."""
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+
+    def apply_qft(self, inverse=False):
+        """Apply (inverse) QFT to the current state."""
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for ctrl_offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + ctrl_offset)
+                angle = np.pi / (2 ** ctrl_offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+        self.swap_registers()
+    def measure(self, shots=1024):
+        """Simulate measurement outcomes."""
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=shots, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def print_amplitudes(self, title="Quantum State"):
+        print(f"\n{title}:")
+        for i, amp in enumerate(self.state):
+            print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
+
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+    qft = QuantumFourierTransform(n_qubits=3)
+    qft.initialize_basis_state(5)  # Set initial state to |5⟩
+
+    qft.print_amplitudes("Initial State")
+
+    qft.apply_qft()  # Apply QFT
+    qft.print_amplitudes("After QFT")
+
+    samples = qft.measure(shots=1024)
+    print("\nMeasurement results:")
+    for k, v in sorted(samples.items()):
+        print(f"{k}: {v}")
+
+    qft.apply_qft(inverse=True)  # Apply inverse QFT to recover original
+    qft.print_amplitudes("After Inverse QFT (should be |5⟩)")
+!ec
+
+!split
+===== Plotting the amplitudes =====
+Here we add plots of the amplitudes. The code here add the possibility of making a 
+superposition of the inputs (e.g. Hadamards to create $|+\rangle^{\otimes n}$) and a
+custom state initialization (e.g. any normalized complex vector) as well as the possibility of having
+entangled state preparations (e.g. Bell states, GHZ states, etc.).
+These features are achieved by the following functions
+
+o initialize$\_$superposition() gives $|+\rangle^{\otimes n}$
+o initialize$\_$bell$\_$pair() sets up two-qubit entangled states
+o initialize$\_$ghz$\_$state() creates a GHZ state
+o initialize$\_$custom$\_$state(vec) lets you pass any normalized state
+
+
+!bc pycod
+import numpy as np
+import matplotlib.pyplot as plt
+class QuantumFourierTransform:
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.state = np.zeros(self.N, dtype=complex)
+
+    def initialize_basis_state(self, index):
+        """Set state to basis state |index⟩"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[index] = 1.0
+
+    def initialize_custom_state(self, state_vector):
+        """Set state to custom normalized state vector"""
+        assert len(state_vector) == self.N, "State vector length mismatch."
+        norm = np.linalg.norm(state_vector)
+        assert np.isclose(norm, 1.0), "State vector must be normalized."
+        self.state = np.array(state_vector, dtype=complex)
+
+    def initialize_superposition(self):
+        """Create |+⟩^n superposition state"""
+        self.state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+    def initialize_bell_pair(self):
+        """2-qubit Bell state: (|00⟩ + |11⟩)/√2"""
+        if self.n_qubits != 2:
+            raise ValueError("Bell pair requires exactly 2 qubits.")
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[3] = 1 / np.sqrt(2)
+
+    def initialize_ghz_state(self):
+        """n-qubit GHZ state: (|00...0⟩ + |11...1⟩)/√2"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[-1] = 1 / np.sqrt(2)
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_single_qubit_gate(self, gate, target):
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+    def apply_controlled_phase(self, control, target, theta):
+        U = np.eye(self.N, dtype=complex)
+        for i in range(self.N):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1' and b[self.n_qubits - 1 - target] == '1':
+                U[i, i] *= np.exp(1j * theta)
+        self.state = U @ self.state
+
+    def swap_registers(self):
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+    def apply_qft(self, inverse=False):
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+        self.swap_registers()
+    def measure(self, shots=1024):
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=shots, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def print_amplitudes(self, title="Quantum State"):
+        print(f"\n{title}:")
+        for i, amp in enumerate(self.state):
+            print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
+
+    def plot_amplitudes(self, title="State Vector Amplitudes", save_path=None):
+        labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
+        reals = [self.state[i].real for i in range(self.N)]
+        imags = [self.state[i].imag for i in range(self.N)]
+        x = np.arange(self.N)
+        width = 0.35
+        fig, ax = plt.subplots()
+        ax.bar(x - width/2, reals, width, label='Real')
+        ax.bar(x + width/2, imags, width, label='Imaginary')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=45)
+        ax.set_ylabel('Amplitude')
+        ax.set_title(title)
+        ax.legend()
+        plt.tight_layout()
+
+        if save_path:
+           plt.savefig(save_path)
+           print(f"Plot saved to: {save_path}")
+        else:
+           plt.show()
+
+    def plot_probabilities(self, shots=1024, title="Measurement Probabilities", save_path=None):
+        results = self.measure(shots=shots)
+        bitstrings = sorted(results.keys())
+        counts = [results[b] for b in bitstrings]
+        fig, ax = plt.subplots()
+        ax.bar(bitstrings, counts)
+        ax.set_xlabel("Bitstring")
+        ax.set_ylabel("Counts")
+        ax.set_title(title)
+        ax.set_xticklabels(bitstrings, rotation=45)
+        plt.tight_layout()
+
+        if save_path:
+           plt.savefig(save_path)
+           print(f"Histogram saved to: {save_path}")
+        else:
+           plt.show()
+
+            
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+   qft = QuantumFourierTransform(3)
+   qft.initialize_basis_state(5)
+
+   qft.apply_qft()
+
+# Save amplitude plot
+   qft.plot_amplitudes("QFT Amplitudes", save_path="qft_amplitudes.png")
+
+# Save measurement histogram
+   qft.plot_probabilities(shots=1024, title="QFT Output Distribution", save_path="qft_histogram.png")
+
+!ec
+See next code as well.
+
+!split
+===== Adding animations =====
+
+This code example adds superposition inputs to the previous code (e.g. Hadamards to create $|+\rangle^{\otimes n}$) and
+customs a state initialization (e.g. any normalized complex vector). It includes also the possibility of having
+entangled state preparation (e.g. Bell states, GHZ states, etc.)
+It has the following added feature
+o initialize$\_$superposition() gives $|+\rangle^{\otimes n}$
+o initialize$\_$bell$\_$pair() for two-qubit entangled states
+o initialize$\_$ghz$\_$state() creates a GHZ state
+o initialize$\_$custom$\_$state(vec) allows to pass any normalized state
+
+
+!bc pycod
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import os
+
+class QuantumFourierTransform:
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.state = np.zeros(self.N, dtype=complex)
+
+    def initialize_basis_state(self, index):
+        """Set state to basis state |index⟩"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[index] = 1.0
+
+    def initialize_custom_state(self, state_vector):
+        """Set state to custom normalized state vector"""
+        assert len(state_vector) == self.N, "State vector length mismatch."
+        norm = np.linalg.norm(state_vector)
+        assert np.isclose(norm, 1.0), "State vector must be normalized."
+        self.state = np.array(state_vector, dtype=complex)
+
+    def initialize_superposition(self):
+        """Create |+⟩^n superposition state"""
+        self.state = np.ones(self.N, dtype=complex) / np.sqrt(self.N)
+    def initialize_bell_pair(self):
+        """2-qubit Bell state: (|00⟩ + |11⟩)/√2"""
+        if self.n_qubits != 2:
+            raise ValueError("Bell pair requires exactly 2 qubits.")
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[3] = 1 / np.sqrt(2)
+
+    def initialize_ghz_state(self):
+        """n-qubit GHZ state: (|00...0⟩ + |11...1⟩)/√2"""
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1 / np.sqrt(2)
+        self.state[-1] = 1 / np.sqrt(2)
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_single_qubit_gate(self, gate, target):
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+    def apply_controlled_phase(self, control, target, theta):
+        U = np.eye(self.N, dtype=complex)
+        for i in range(self.N):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1' and b[self.n_qubits - 1 - target] == '1':
+                U[i, i] *= np.exp(1j * theta)
+        self.state = U @ self.state
+
+    def swap_registers(self):
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+    def apply_qft(self, inverse=False):
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+        self.swap_registers()
+    def measure(self, shots=1024):
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=shots, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def print_amplitudes(self, title="Quantum State"):
+        print(f"\n{title}:")
+        for i, amp in enumerate(self.state):
+            print(f"|{i:0{self.n_qubits}b}>: {amp:.4f}")
+
+
+# Inside the class
+    def reset_animation_log(self):
+        self.animation_frames = []
+
+    def record_probability_frame(self):
+        """Store current probabilities for animation."""
+        probs = np.abs(self.state) ** 2
+        self.animation_frames.append(probs.copy())
+
+    def apply_qft_with_recording(self, inverse=False):
+        self.reset_animation_log()
+        self.record_probability_frame()  # Record initial state
+
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_phase(control, idx, angle)
+                self.record_probability_frame()
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+            self.record_probability_frame()
+
+        self.swap_registers()
+        self.record_probability_frame()
+
+    def animate_probability_evolution(self, save_path="qft_animation.gif", interval=600):
+        labels = [format(i, f'0{self.n_qubits}b') for i in range(self.N)]
+        fig, ax = plt.subplots()
+        bar = ax.bar(labels, [0]*self.N)
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("Probability")
+        ax.set_title("QFT Probability Evolution")
+
+        def update(frame_probs):
+            for rect, prob in zip(bar, frame_probs):
+                rect.set_height(prob)
+            return bar
+
+        ani = FuncAnimation(fig, update, frames=self.animation_frames,
+                            interval=interval, blit=False, repeat=False)
+
+        if save_path.endswith(".gif"):
+            ani.save(save_path, writer='pillow')
+        elif save_path.endswith(".mp4"):
+            ani.save(save_path, writer='ffmpeg')
+        else:
+            raise ValueError("Unsupported format. Use .gif or .mp4")
+
+        print(f"Animation saved to {save_path}")
+
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+   qft = QuantumFourierTransform(n_qubits=3)
+   qft.initialize_basis_state(5)
+
+# Apply QFT with intermediate state recording
+   qft.apply_qft_with_recording()
+
+# Animate the probability distribution over steps
+   qft.animate_probability_evolution(save_path="qft_probs.gif", interval=800)
+
+!ec
+
+!split
+===== Introduction to Quantum Phase Estimation (QPE) =====
+
+The QPE is a fundamental quantum algorithm used to estimate the phase
+$\phi$ in eigenvalue equations of unitary operators.  Given a unitary
+operator $U$ and an eigenvector $| \psi \rangle$ such that:
+
+!bt
+\[
+U | \psi \rangle = \exp{(2\pi i \phi)} | \psi \rangle
+\]
+!et
+the goal of QPE is to estimate $\phi$.
+
+The QPE provides an estimate of $\phi$ with high probability. It is a
+crucial subroutine for algorithms like
+o Shor's factoring algorithm and
+o quantum many-body simulations.
+
+
+!split
+===== Algorithm overview =====
+
+Given an eigenvector $\vert u\rangle$ of a unitary $U$, the QPE
+algorithm estimates the phase $\phi$ using:
+
+o Apply Hadamards to an $n$-qubit register.
+o Use controlled-$U^{2^k}$ gates to encode phase.
+o Apply inverse QFT to extract the binary digits of $\phi$.
+
+!split
+===== Circuit diagram (three-qubit QPE) =====
+
+The quantum circuit for QPE consists of two quantum registers:
+o The first register with $n$ qubits is initialized to $\vert 0\rangle^{\otimes n}$.
+o second register is initialized to the eigenstate $\vert\psi\rangle$ of $U$.
+
+FIGURE: [figures/threequbitsqpe.png, width=800 frac=1.0]
+
+!split
+===== Mathematical Background =====
+
+The goal of QPE is to estimate the phase $\phi \in [0,1)$ where:
+!bt
+\[
+    U\vert \psi\rangle = \exp{(2\pi i \phi)} \vert\psi\rangle.
+\]
+!et
+
+The Quantum Fourier Transform on $n$ qubits is defined as (see above):
+!bt
+\[
+    \vert x\rangle \rightarrow \frac{1}{\sqrt{2^n}}\sum_{y=0}^{2^n-1} e^{2\pi i xy / 2^n}\vert y\rangle.
+\]
+!et
+The QFT is essential for extracting phase information in QPE.
+
+
+
+!split
+===== Derivation of the Algorithm, Step 1: Initialization =====
+!bblock 
+The system starts in the state:
+!bt
+\[
+\vert 0 \rangle ^{\otimes n} \otimes \vert\psi\rangle .
+\]
+!et
+Applying Hadamard gates to the first register creates a superposition:
+!bt
+\[
+    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} \vert k \rangle \otimes \vert\psi\rangle .
+\]
+!et
+!eblock
+!split
+===== Step 2: Controlled Unitary Operations =====
+Controlled-$U^{2^j}$ gates apply the operation $U$ with exponential powers:
+!bblock
+!bt
+\[
+    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} \vert k \rangle  \otimes U^k\vert\psi\rangle .
+\]
+!et
+For eigenstate $\vert\psi\rangle $, this becomes:
+!bt
+\[
+    \frac{1}{2^{n/2}}\sum_{k=0}^{2^n -1} e^{2\pi i \phi k}\vert k \rangle  \otimes \vert\psi\rangle .
+\]
+!et
+!eblock
+
+!split
+=====  Step 3: Quantum Fourier Transform (QFT) =====
+
+!bblock 
+Applying QFT to the first register transforms the state to:
+!bt
+\[
+    \sum_{k=0}^{2^n -1} c_k \vert k \rangle ,
+\]
+!et
+where coefficients $c_k$ are peaked near $k \approx 2^n \phi$.
+
+!eblock
+!split
+=====  Step 4: Measurement =====
+!bblock
+Measuring the first register gives an $n$-bit estimate of $\phi$ with high probability.
+!eblock
+
+!split
+===== Simple code which implements the QPE =====
+!bc pycod
+import numpy as np
+def hadamard(n):
+   # Creates an n-qubit Hadamard gate as a matrix.
+   H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+   H_n = H
+   for _ in range(n - 1):
+       H_n = np.kron(H_n, H)  # Tensor product to expand Hadamard gate
+   return H_n
+
+def qft(n):
+   # Creates an n-qubit Quantum Fourier Transform (QFT) matrix.
+   N = 2**n
+   omega = np.exp(2j * np.pi / N)
+   qft_matrix = np.array([[omega**(i * j) for j in range(N)] for i in range(N)]) / np.sqrt(N)
+   return qft_matrix
+
+def inverse_qft(n):
+   # Creates an n-qubit inverse Quantum Fourier Transform (QFT†) matrix.
+   return np.conj(qft(n)).T  # Hermitian transpose of QFT
+
+def controlled_unitary(U, control, target, n):
+   # Creates an n-qubit controlled unitary matrix
+   I = np.eye(2**n)  # Identity matrix
+   CU = np.copy(I)
+   for i in range(2**n):
+       if (i >> control) & 1:  # Check if control qubit is |1⟩
+           CU[i, :] = np.kron(np.eye(2**target), U).dot(I[i, :])
+   return CU
+
+def apply_gate(state, gate):
+   # Applies a gate (matrix) to a quantum state (vector).
+   return gate @ state
+
+def measure(state):
+   # Simulates measurement by computing probability distribution
+   probabilities = np.abs(state) ** 2
+   return np.argmax(probabilities)  # Return the most probable outcome
+
+def qpe(unitary, phi, num_counting_qubits):
+   # Simulates the Quantum Phase Estimation algorithm.
+   n = num_counting_qubits
+   total_qubits = n + 1
+   dim = 2**total_qubits
+
+   # Step 1: Initialize state |0...0⟩ tensor product with psi
+   state = np.zeros(dim, dtype=complex)
+   state[0] = 1  # |00...0⟩
+
+   # Step 2: Apply Hadamard to counting qubits
+   H_n = hadamard(n)
+   state = apply_gate(state.reshape(2**n, 2), H_n).reshape(dim)
+
+   # Step 3: Apply controlled-U^2^j operations
+   for j in range(n):
+       power = 2**j
+       U_power = np.linalg.matrix_power(unitary, power)
+       CU = controlled_unitary(U_power, j, n, total_qubits)
+       state = apply_gate(state, CU)
+
+   # Step 4: Apply inverse QFT
+   IQFT = inverse_qft(n)
+   state = apply_gate(state.reshape(2**n, 2), IQFT).reshape(dim)
+
+   # Step 5: Measure and return estimated phase
+   measurement_result = measure(state)
+   return measurement_result / (2**n)  # Convert binary to decimal
+
+# Define the unitary U with phase phi = 1/3
+phi = 1/3
+U = np.array([[1, 0], [0, np.exp(2j * np.pi * phi)]])  # Phase gate
+
+# Run QPE
+num_counting_qubits = 3  # More qubits give higher precision
+estimated_phi = qpe(U, phi, num_counting_qubits)
+print(f"Estimated phase: {estimated_phi}")
+print(f"Actual phase: {phi}")
+!ec
+
+!split
+===== Code which implements the QPE using Qiskit =====
+!bc pycod
+from qiskit import QuantumCircuit, Aer, transpile, assemble, execute
+from qiskit.visualization import plot_histogram
+import numpy as np
+
+def qpe(unitary, num_counting_qubits):
+   """
+   Quantum Phase Estimation Algorithm.
+   Args:
+       unitary (QuantumCircuit): The unitary operator whose phase we estimate.
+       num_counting_qubits (int): Number of qubits in the counting register.
+
+   Returns:
+       QuantumCircuit: QPE quantum circuit
+   """
+   n = num_counting_qubits
+   qc = QuantumCircuit(n + 1, n)  # n counting qubits + 1 eigenstate qubit
+   # Step 1: Apply Hadamard to counting qubits
+   for qubit in range(n):
+       qc.h(qubit)
+   # Step 2: Apply controlled-U^2^j operations
+   for j in range(n):
+       power = 2**j
+       controlled_U = unitary.control(1).power(power)
+       qc.append(controlled_U, [j] + [n])  # Control: j, Target: n
+   # Step 3: Apply inverse QFT
+   qc.append(qft_dagger(n), range(n))
+   # Step 4: Measure counting qubits
+   qc.measure(range(n), range(n))
+   return qc
+
+def qft_dagger(n):
+   """Creates an inverse Quantum Fourier Transform (QFT†) circuit."""
+   qc = QuantumCircuit(n)
+   for qubit in range(n//2):
+       qc.swap(qubit, n-qubit-1)
+   for j in range(n):
+       for m in range(j):
+           qc.cp(-np.pi / (2**(j-m)), m, j)
+       qc.h(j)
+   return qc
+# Define the unitary U with phase phi = 1/3
+phi = 1/3
+U = QuantumCircuit(1)
+U.p(2 * np.pi * phi, 0)  # Phase gate
+# Number of counting qubits
+num_counting_qubits = 3
+# Generate QPE circuit
+qpe_circuit = qpe(U, num_counting_qubits)
+# Simulate the circuit
+simulator = Aer.get_backend('qasm_simulator')
+compiled_circuit = transpile(qpe_circuit, simulator)
+qobj = assemble(compiled_circuit)
+result = simulator.run(qobj).result()
+# Get measurement results
+counts = result.get_counts()
+# Plot histogram of results
+plot_histogram(counts)
+!ec
+
+
+!split
+===== Code which implements the QPE using PennyLane =====
+
+!bc pycod
+import pennylane as qml
+import numpy as np
+def qft(n):
+   # Applies the inverse Quantum Fourier Transform (QFT†) circuit
+   for i in range(n):
+       qml.Hadamard(wires=i)
+       for j in range(i):
+           qml.CPhase(-np.pi / (2 ** (i - j)), wires=[j, i])
+   for i in range(n // 2):
+       qml.SWAP(wires=[i, n - i - 1])
+
+def controlled_unitary(U, control, target):
+   # Applies a controlled-unitary operation
+   qml.ctrl(U, control=control)(wires=target)
+
+
+def qpe(phi, num_counting_qubits):
+   # Quantum Phase Estimation circuit in PennyLane.
+   total_qubits = num_counting_qubits + 1
+   dev = qml.device("default.qubit", wires=total_qubits, shots=1000)
+   @qml.qnode(dev)
+   def circuit():
+       # Initialize the counting register in |0> and eigenstate register in |1>
+       qml.PauliX(wires=num_counting_qubits)  # Set last qubit to |1>
+       # Apply Hadamard to counting qubits
+       for qubit in range(num_counting_qubits):
+           qml.Hadamard(wires=qubit)
+       # Apply controlled-U^2^j operations
+       for j in range(num_counting_qubits):
+           power = 2**j
+           U = qml.RZ(2 * np.pi * phi, wires=num_counting_qubits)  # Phase shift
+           controlled_unitary(U, control=j, target=num_counting_qubits)
+       # Apply inverse QFT
+       qft(num_counting_qubits)
+       # Measure counting qubits
+       return qml.sample(wires=range(num_counting_qubits))
+   # Run the circuit
+   samples = circuit()
+   # Convert measurement results to decimal phase estimate
+   binary_result = "".join(map(str, samples[0]))  # Take the first sample
+   estimated_phi = int(binary_result, 2) / (2 ** num_counting_qubits)
+   return estimated_phi
+# Define the phase phi
+phi = 1/3
+# Number of counting qubits (higher gives better precision)
+num_counting_qubits = 3
+# Run QPE
+estimated_phi = qpe(phi, num_counting_qubits)
+print(f"Estimated phase: {estimated_phi}")
+print(f"Actual phase: {phi}")
+!ec
+
+
+!split
+===== Applications of QPE =====
+
+The QPE is a foundational algorithm with several key applications:
+o _Factoring and Cryptography:_ Integral to Shor's algorithm for integer factoring.
+o _Quantum Simulations:_ Estimating eigenvalues of Hamiltonians in many-body physics.
+o _Amplitude Estimation:_ Enhances algorithms like Grover's search.
+
+!split
+===== Challenges and Practical Considerations =====
+
+o _Qubit Requirements:_ Requires a large number of qubits for high precision.
+o _Gate Depth:_ Controlled-$U^{2^j}$ operations increase gate complexity.
+o _Noise Sensitivity:_ Errors in QFT or controlled gates impact accuracy.
+
+It is a powerful quantum algorithm for extracting phase information of
+unitary operators. It forms the foundation for many advanced quantum
+algorithms and demonstrates the power of quantum Fourier transforms in
+computational tasks. For many-body simulations it is however not as efficient as the VQE algorithm.
+
+
+!split
+===== QPE code without the usage of explicit quantum libraries =====
+
+!bc pycod
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib import cm
+
+def unitary_operator():
+    # Controlled Phase Gate (CP) with a phase of pi/4
+    return np.array([[1, 0, 0, 0],
+                     [0, 1, 0, 0],
+                     [0, 0, np.exp(1j * np.pi / 4), 0],
+                     [0, 0, 0, np.exp(1j * np.pi / 4)]], dtype=complex)
+
+def eigenstate():
+    # Superposition state |ψ⟩ = (|0⟩ + |1⟩)/√2
+    return np.array([1/np.sqrt(2), 1/np.sqrt(2)], dtype=complex)
+
+class QuantumPhaseEstimation:
+    def __init__(self, n_qubits, unitary, eigenstate, inverse=False):
+        self.n_qubits = n_qubits
+        self.N = 2 ** n_qubits
+        self.unitary = unitary  # Unitary operator U
+        self.eigenstate = eigenstate  # Eigenstate |ψ⟩
+        self.inverse = inverse  # Whether to reverse the QFT
+        self.state = np.zeros(self.N, dtype=complex)
+        self.state[0] = 1.0  # Initialize ancillary qubits to |0...0⟩
+
+    def apply_single_qubit_gate(self, gate, target):
+        I = np.eye(2)
+        ops = [I] * self.n_qubits
+        ops[target] = gate
+        U = ops[0]
+        for op in ops[1:]:
+            U = np.kron(U, op)
+        self.state = U @ self.state
+
+    def hadamard(self):
+        return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+    def apply_controlled_unitary(self, control, target, exp_power):
+        """Apply controlled unitary operation U^(2^j)."""
+        U = np.eye(self.N, dtype=complex)
+        for i in range(self.N):
+            b = format(i, f'0{self.n_qubits}b')
+            if b[self.n_qubits - 1 - control] == '1':
+                U[i, i] = np.exp(1j * (np.pi / (2 ** exp_power)))
+        self.state = U @ self.state
+
+    def apply_qft(self, inverse=False):
+        """Apply Quantum Fourier Transform on ancillary qubits."""
+        for target in range(self.n_qubits):
+            idx = self.n_qubits - 1 - target
+            for offset in range(1, self.n_qubits - target):
+                control = self.n_qubits - 1 - (target + offset)
+                angle = np.pi / (2 ** offset)
+                if inverse:
+                    angle *= -1
+                self.apply_controlled_unitary(control, idx, angle)
+            self.apply_single_qubit_gate(self.hadamard(), idx)
+
+        self.swap_registers()
+
+    def swap_registers(self):
+        perm = [int(format(i, f'0{self.n_qubits}b')[::-1], 2) for i in range(self.N)]
+        self.state = self.state[perm]
+
+    def measure(self):
+        """Measure the ancillary qubits."""
+        probs = np.abs(self.state) ** 2
+        outcomes = np.random.choice(self.N, size=1024, p=probs)
+        counts = {}
+        for o in outcomes:
+            bitstring = format(o, f'0{self.n_qubits}b')
+            counts[bitstring] = counts.get(bitstring, 0) + 1
+        return counts
+
+    def plot_probability_distribution(self, results):
+        bitstrings = sorted(results.keys())
+        counts = [results[b] for b in bitstrings]
+        plt.bar(bitstrings, counts)
+        plt.xlabel("Bitstring")
+        plt.ylabel("Counts")
+        plt.title("QPE Measurement Results")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+    def apply_phase_estimation(self):
+        """Perform Quantum Phase Estimation (QPE)."""
+        # Apply Hadamard to all ancillary qubits
+        for target in range(self.n_qubits):
+            self.apply_single_qubit_gate(self.hadamard(), target)
+
+        # Apply controlled unitaries (U^(2^j))
+        for j in range(self.n_qubits):
+            self.apply_controlled_unitary(j, self.n_qubits, j)
+
+        # Apply QFT
+        self.apply_qft(inverse=True)
+
+        # Measure the ancillary qubits
+        results = self.measure()
+        self.plot_probability_distribution(results)
+
+# ---------------------------
+# Example usage
+# ---------------------------
+if __name__ == "__main__":
+    n_qubits = 3  # Number of ancillary qubits
+    qpe = QuantumPhaseEstimation(n_qubits, unitary_operator(), eigenstate())
+    qpe.apply_phase_estimation()
+
+!ec
+
+
+
+!split
+===== Brief overview of Shor's algorithm =====
+
+o Shor's algorithm is a quantum algorithm for integer factorization.
+o It efficiently factors large integers by leveraging quantum period finding.
+o Exponential speedup over the best-known classical algorithms.
+o Breaks RSA encryption, which relies on the difficulty of factoring.
+
+!split
+===== Some history =====
+
+Shor's algorithm, introduced by Peter Shor in 1994, revolutionized the
+field of cryptography. It demonstrated that a quantum computer could
+solve integer factorization and the discrete logarithm problem
+efficiently, posing a significant threat to classical cryptosystems
+such as RSA.
+
+!split
+===== Problem Statement =====
+
+The objective of Shor's algorithm is to factorize a large composite
+integer $N$ into its prime factors. Given $N = p \times q$,
+where $p$ and $q$ are unknown distinct primes, the problem of
+factorization can be reduced to finding an integer $a$ such that
+$1 < a < N$ and $\gcd(a, N) = 1$.
+
+!split
+===== Reduction to Order-Finding =====
+
+The key reduction in Shor's algorithm lies in transforming
+factorization into an order-finding problem:
+
+o Choose a random integer $a$ such that $1 < a < N$ and $\gcd(a, N) = 1$.
+o Determine the smallest positive integer $r$ such that $a^r \equiv 1 \pmod{N}$.
+
+The integer $r$ is known as the *order* of $a$ modulo
+$N$, and it helps in discovering the factors of $N$.
+
+!split
+===== Continued Fraction Expansion =====
+
+After obtaining the rational approximation from the quantum algorithm,
+classical computation using continued fraction expansion aids in
+deducing the correct order $r$.
+
+
+
+!split
+===== Basics of number theory =====
+
+o The problem: Factor an integer $N$ into its prime factors.
+o Reduce factoring to period finding $f(x) = a^x \mod N$, where $a$ is randomly chosen such that $\gcd(a, N) = 1$.
+o The period $r$ satisfies $a^r \equiv 1 \mod N$.
+o Once $r$ is known, factors are given by $\gcd(a^{r/2} \pm 1, N)$.
+
+!split
+===== QFTs again =====
+
+The Quantum Fourier Transform is crucial to Shor's algorithm. It
+leverages quantum parallelism and interference to efficiently estimate
+the periodicity of a function.
+!bt
+\[
+\text{QFT}: \vert x\rangle \mapsto \frac{1}{\sqrt{2^n}} \sum_{y=0}^{2^n-1} e^{2\pi ixy/2^n} \vert y\rangle
+\]
+!et
+
+The quantum part of Shor's algorithm is designed to find the period
+$r$ of the modular exponentiation function $f(x) = a^x \bmod N$:
+
+
+!split
+===== Quantum Period Finding =====
+Quantum Period Finding: Key to Shor's Algorithm
+
+o Quantum subroutine for finding the period $r$ of $f(x)$.
+o Similar to Quantum Phase Estimation (QPE).
+o Uses two quantum registers:
+  * First register: Superposition of all possible inputs $x$.
+  * Second register: Computes $f(x) = a^x \mod N$.
+
+!split
+===== Applying Quantum Fourier Transform (QFT) =====
+
+o The QFT is applied to the first register after the controlled unitary operations.
+o Peaks in the measurement correspond to multiples of $1/r$.
+o Post-processing classically determines $r$ by continued fractions.
+
+
+
+!split
+===== Classical Post-Processing =====
+
+o Once $r$ is found, factors of $N$ are computed by $\gcd(a^{r/2} \pm 1, N)$.
+o If $r$ is odd or $a^{r/2} \equiv -1 \mod N$, try a different $a$.
+o With high probability, this yields a non-trivial factor of $N$.
+
+!split
+=====  Complexity and Practical Considerations =====
+
+o Quantum Complexity: Polynomial in $\log N$.
+o Classical Best Known: Sub-exponential (Number Field Sieve).
+o Quantum Advantage: Exponential speedup over classical algorithms.
+o Practical Challenges: Quantum error correction, large qubit counts.
+
+
+!split
+===== Error Analysis and Success Probability =====
+
+The probability that a randomly chosen $a$ leads to successful
+factoring is generally greater than 50\%. The quantum component
+requires carefully managed resources for high precision.
+
+
+Error correction is crucial, as any errors in operations or QFT can
+significantly impact the accuracy of period estimation and the
+eventual factorization.
+
+
+!split
+===== Summarizing Shor's algorithm =====
+
+Shor's algorithm is a central  quantum algorithm demonstrating
+exponential speedup over classical counterparts. It brought both
+excitement for potential quantum advancements and a reconsideration of
+current cryptographic standards.
+
+o Shor's algorithm is a groundbreaking quantum algorithm for factoring.
+o Combines quantum period finding with classical number theory.
+o Highlights the potential of quantum computing to break RSA.
+
+
+
+
+

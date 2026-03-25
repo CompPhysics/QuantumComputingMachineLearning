@@ -1,0 +1,453 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{physics}
+\usepackage{mathtools}
+
+\title{Summary of Five QAOA Gradient Methods}
+\subtitle{Beamer Slides Adapted from the Uploaded Summary}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}{Purpose of the document}
+These slides summarize five methods for computing gradients in the
+Quantum Approximate Optimization Algorithm (QAOA).
+
+\medskip
+
+Main goals:
+\begin{itemize}
+\item compare the formulas behind the different gradient estimators,
+\item explain their implementation strategies,
+\item analyze computational cost,
+\item discuss practical tradeoffs between accuracy and hardware compatibility.
+\end{itemize}
+
+The motivating example is an XXZ Hamiltonian with
+\[
+L=6,\qquad p=2,\qquad N=2p=4
+\]
+variational parameters.
+\end{frame}
+
+\section{The QAOA Gradient Problem}
+
+\begin{frame}{QAOA overview}
+QAOA prepares a variational state of the form
+\[
+\ket{\psi(\bm{\gamma},\bm{\beta})}
+=
+U_M(\beta_p)U_C(\gamma_p)\cdots U_M(\beta_1)U_C(\gamma_1)\ket{+}^{\otimes n},
+\]
+where
+\[
+U_C(\gamma)=e^{-i\gamma H_C},
+\qquad
+U_M(\beta)=e^{-i\beta H_M}.
+\]
+
+Here:
+\begin{itemize}
+\item \(H_C\) is the cost Hamiltonian,
+\item \(H_M\) is the mixer Hamiltonian,
+\item \(p\) is the circuit depth,
+\item \(\bm{\gamma},\bm{\beta}\) are variational parameters.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Energy objective}
+The variational objective is the energy expectation value
+\[
+E(\bm{\gamma},\bm{\beta})
+=
+\bra{\psi(\bm{\gamma},\bm{\beta})}H_C\ket{\psi(\bm{\gamma},\bm{\beta})}.
+\]
+
+If the cost Hamiltonian has a Pauli decomposition
+\[
+H_C = \sum_{\alpha=1}^{K} h_\alpha P_\alpha,
+\]
+then
+\[
+E(\bm{\gamma},\bm{\beta})
+=
+\sum_{\alpha=1}^{K} h_\alpha
+\bra{\psi(\bm{\gamma},\bm{\beta})}P_\alpha\ket{\psi(\bm{\gamma},\bm{\beta})}.
+\]
+Thus the energy is a weighted sum of Pauli-string expectation values.
+\end{frame}
+
+\begin{frame}{Gradient challenge}
+Optimization of the \(2p\) parameters requires the gradient
+\[
+\nabla E
+=
+\left(
+\frac{\partial E}{\partial \gamma_1},
+\frac{\partial E}{\partial \beta_1},
+\dots,
+\frac{\partial E}{\partial \gamma_p},
+\frac{\partial E}{\partial \beta_p}
+\right).
+\]
+
+For each parameter \(\theta_k\in\{\gamma_i,\beta_i\}\),
+\[
+\frac{\partial E}{\partial \theta_k}
+=
+\frac{\partial}{\partial \theta_k}
+\bra{\psi(\bm{\theta})}H_C\ket{\psi(\bm{\theta})}
+=
+\sum_{\alpha=1}^{K} h_\alpha
+\frac{\partial}{\partial \theta_k}\expval{P_\alpha}.
+\]
+
+The computational question is therefore:
+\begin{quote}
+How can one evaluate \(\partial_{\theta_k}\expval{P_\alpha}\) efficiently on quantum hardware?
+\end{quote}
+\end{frame}
+
+\begin{frame}{General derivative structure}
+Let \(\ket{\psi_0}=\ket{+}^{\otimes n}\) and let \(U(\bm{\theta})\) denote the full QAOA unitary.
+Then
+\[
+E(\bm{\theta})
+=
+\bra{\psi_0}U^\dagger(\bm{\theta})H_CU(\bm{\theta})\ket{\psi_0}.
+\]
+
+Therefore
+\[
+\frac{\partial E}{\partial \theta_k}
+=
+\frac{\partial}{\partial \theta_k}
+\bra{\psi_0}U^\dagger(\bm{\theta})H_CU(\bm{\theta})\ket{\psi_0}.
+\]
+
+If \(\theta_k\) parameterizes a gate
+\[
+U_k(\theta_k)=e^{-i\theta_k B_k},
+\]
+with generator \(B_k\in\{H_C,H_M\}\), and
+\[
+U = U_{\text{after}}\, U_k(\theta_k)\, U_{\text{before}},
+\]
+then all gradient methods reduce to evaluating derivatives of expectation values of the form
+\[
+\expval{U^\dagger B U}.
+\]
+\end{frame}
+
+\begin{frame}{Why the problem is nontrivial}
+The summary emphasizes several sources of difficulty:
+\begin{enumerate}
+\item Quantum hardware cannot directly apply \(H\ket{\psi}\) as a primitive operation.
+\item Standard parameter-shift or finite-difference approaches require \(O(p)\) circuit evaluations per gradient.
+\item Realistic Hamiltonians decompose into many Pauli terms
+\[
+H=\sum_\alpha h_\alpha P_\alpha,
+\]
+often with \(K\gg p\).
+\item Non-uniform coefficients \(h_\alpha\) can degrade uniform-shift approximations.
+\end{enumerate}
+So the practical tradeoff is accuracy versus measurement/circuit cost.
+\end{frame}
+
+\begin{frame}{Test case: XXZ spin chain}
+The summary uses the XXZ Hamiltonian
+\[
+H_{\mathrm{XXZ}}
+=
+\sum_{i=1}^{L-1}
+\Big[
+J_{xx}(\sigma_i^x\sigma_{i+1}^x+\sigma_i^y\sigma_{i+1}^y)
++J_z \sigma_i^z\sigma_{i+1}^z
+\Big]
++
+\sum_{i=1}^{L} h_z \sigma_i^z.
+\]
+
+For the example:
+\[
+J_{xx}=1.0,\qquad J_z=1.5,\qquad h_z=0.2,
+\]
+with
+\[
+L=6,\qquad p=2,\qquad N=4.
+\]
+
+This gives moderately non-uniform couplings with ratio
+\[
+h_{\max}/h_{\min}=1.5/0.2=7.5.
+\]
+\end{frame}
+
+\section{Method 1: Exact Gradient}
+
+\begin{frame}{Method 1: Exact gradient from Schr\"odinger-equation structure}
+The exact gradient formula is given as
+\[
+\frac{\partial E}{\partial \theta_k}
+=
+i\bra{\psi}H_{\text{cost}}U^\dagger B_k U\ket{\psi}
+-
+i\bra{\psi}U^\dagger B_k U H_{\text{cost}}\ket{\psi}.
+\]
+
+Here:
+\begin{itemize}
+\item \(\ket{\psi}\) is the final QAOA state,
+\item \(U\) is the full circuit unitary,
+\item \(B_k\) is the generator corresponding to parameter \(\theta_k\).
+\end{itemize}
+
+This expression is exact and arises from differentiating the unitary evolution directly.
+\end{frame}
+
+\begin{frame}{Method 1: implementation and cost}
+Implementation idea:
+\begin{itemize}
+\item apply the Hamiltonian MPO to intermediate states,
+\item compute overlaps explicitly.
+\end{itemize}
+
+Computational cost:
+\[
+N \text{ circuit evaluations} + N \text{ Hamiltonian applications}.
+\]
+
+Assessment:
+\begin{itemize}
+\item \textbf{Pros:} exact gradient, minimal approximation error.
+\item \textbf{Cons:} requires direct application of \(H\ket{\psi}\), which is generally not implementable on standard quantum hardware.
+\end{itemize}
+\end{frame}
+
+\section{Method 2: Standard Parameter Shift}
+
+\begin{frame}{Method 2: standard parameter-shift rule}
+The standard parameter-shift philosophy is to evaluate
+\[
+\frac{\partial E}{\partial \theta_k}
+\]
+through shifted circuit parameters rather than direct differentiation.
+
+For generators with suitable spectra, one obtains a formula of the general form
+\[
+\frac{\partial E}{\partial \theta_k}
+=
+c\Big(E(\theta_k+s)-E(\theta_k-s)\Big),
+\]
+for an appropriate shift \(s\) and prefactor \(c\).
+
+This is the most common practical gradient method in variational quantum algorithms.
+\end{frame}
+
+\begin{frame}{Method 2: practical interpretation}
+Method 2 is attractive because:
+\begin{itemize}
+\item it is hardware compatible,
+\item it requires only expectation-value measurements of shifted circuits,
+\item it avoids direct Hamiltonian-vector products.
+\end{itemize}
+
+However:
+\begin{itemize}
+\item it treats the generator more uniformly,
+\item it may not exploit Hamiltonian structure,
+\item it can become inaccurate or expensive when the Pauli decomposition is highly non-uniform.
+\end{itemize}
+
+The summary identifies this as the standard baseline method.
+\end{frame}
+
+\section{Method 3: Per-Pauli Parameter Shift}
+
+\begin{frame}{Method 3: per-Pauli parameter shifts}
+Instead of shifting the whole Hamiltonian generator uniformly, Method 3 decomposes
+\[
+B = \sum_\alpha h_\alpha P_\alpha
+\]
+and applies shifts at the level of the individual Pauli terms.
+
+The idea is that different coefficients \(h_\alpha\) suggest different effective shifts, so one can adapt the parameter-shift rule to the structure of the Hamiltonian term by term.
+\end{frame}
+
+\begin{frame}{Method 3: advantages and drawbacks}
+Potential advantages:
+\begin{itemize}
+\item improved accuracy for Hamiltonians with non-uniform coefficients,
+\item finer control over gradient estimation,
+\item more faithful treatment of heterogeneous Pauli decompositions.
+\end{itemize}
+
+Potential drawbacks:
+\begin{itemize}
+\item more circuit evaluations than uniform shifting,
+\item higher implementation complexity,
+\item more demanding bookkeeping at the Pauli-term level.
+\end{itemize}
+\end{frame}
+
+\section{Method 4: Commuting-Group Optimization}
+
+\begin{frame}{Method 4: commuting-group optimization}
+Method 4 improves on Method 3 by grouping commuting Pauli terms together.
+
+If a set of Pauli operators commute, then they can often be measured in a shared basis or shifted collectively.
+This reduces redundant evaluations while retaining some of the accuracy advantages of per-term methods.
+\end{frame}
+
+\begin{frame}{Method 4: why commuting groups help}
+Grouping commuting terms provides:
+\begin{itemize}
+\item reduced measurement overhead,
+\item fewer effective shifted evaluations,
+\item a more scalable route to per-Pauli methods.
+\end{itemize}
+
+The summary emphasizes that this can reduce cost significantly---often by about \(60\%\) to \(80\%\) compared with na\"ive per-Pauli strategies.
+\end{frame}
+
+\section{Method 5: Adaptive Hybrid Strategy}
+
+\begin{frame}{Method 5: adaptive hybrid gradient strategy}
+Method 5 combines ideas from the previous methods:
+\begin{itemize}
+\item use exact or refined shifts where Hamiltonian structure matters most,
+\item use cheaper approximations where the effect of individual terms is small,
+\item balance accuracy and circuit cost adaptively.
+\end{itemize}
+
+Thus Method 5 is intended as a practical middle ground between exactness and hardware efficiency.
+\end{frame}
+
+\begin{frame}{Method 5: motivation}
+The motivation is clear:
+\begin{itemize}
+\item Method 1 is exact but impractical,
+\item Method 2 is practical but may miss Hamiltonian-specific structure,
+\item Methods 3 and 4 are more accurate but can be costly,
+\item Method 5 seeks the best accuracy-cost compromise.
+\end{itemize}
+
+This makes it especially relevant when some Pauli terms dominate the gradient contribution more strongly than others.
+\end{frame}
+
+\section{Comparison and Tradeoffs}
+
+\begin{frame}{Comparative questions posed by the summary}
+The document frames the comparison through three main questions:
+\begin{enumerate}
+\item When does Hamiltonian structure matter?
+\item What is the accuracy--cost tradeoff?
+\item Can hybrid methods bridge the gap between theory and practice?
+\end{enumerate}
+
+These are exactly the right questions when deciding which QAOA gradient method to use in an implementation.
+\end{frame}
+
+\begin{frame}{Accuracy--cost picture}
+The five methods fall into a rough hierarchy:
+
+\begin{itemize}
+\item \textbf{Method 1:} exact, low circuit count, but not hardware realizable.
+\item \textbf{Method 2:} standard, simple, hardware compatible.
+\item \textbf{Method 3:} more accurate for non-uniform Hamiltonians, but more expensive.
+\item \textbf{Method 4:} recovers much of Method 3's benefit at reduced cost.
+\item \textbf{Method 5:} adaptive compromise between accuracy and overhead.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Concrete XXZ example}
+For the XXZ chain with
+\[
+L=6,\qquad p=2,\qquad N=4,
+\]
+and approximately
+\[
+K \approx 14
+\]
+Pauli terms per Hamiltonian, the summary finds:
+
+\begin{itemize}
+\item non-uniform couplings make Methods 3--5 potentially more accurate than Method 2,
+\item commuting-group and adaptive optimizations reduce cost substantially,
+\item Method 2 remains the easiest standard implementation,
+\item Methods 3--5 become attractive when the Hamiltonian coefficients vary strongly.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Key insights from the summary}
+The final conclusions highlight:
+
+\begin{itemize}
+\item For non-uniform coupling strengths, Methods 3--5 can outperform the standard parameter-shift approach in accuracy.
+\item Methods 4 and 5 reduce the cost of per-Pauli approaches by roughly \(60\%\) to \(80\%\).
+\item Method 2 remains the most common baseline because of simplicity and hardware compatibility.
+\item The main novelty lies in synthesizing known shift and grouping ideas into QAOA-specific gradient strategies.
+\end{itemize}
+\end{frame}
+
+\section{Novel Contributions}
+
+\begin{frame}{Novel contributions claimed in the summary}
+The document identifies four main contributions:
+\begin{enumerate}
+\item systematic application of per-Pauli parameter shifts with coefficient-dependent shifts to QAOA gradients,
+\item a commuting-group optimization strategy,
+\item an adaptive hybrid strategy balancing term importance and cost,
+\item an empirical comparison showing when these methods improve on the standard approach.
+\end{enumerate}
+
+So the work is positioned as a novel synthesis rather than a completely new underlying gradient formalism.
+\end{frame}
+
+\section{Conclusions}
+
+\begin{frame}{Overall conclusion}
+The essential message is:
+\begin{quote}
+There is no single best QAOA gradient method for all Hamiltonians.
+\end{quote}
+
+Instead:
+\begin{itemize}
+\item hardware constraints favor simple parameter-shift methods,
+\item structured Hamiltonians can justify more refined per-Pauli or grouped strategies,
+\item adaptive hybrids may offer the best practical compromise.
+\end{itemize}
+
+Thus the ``best'' method depends on the geometry and decomposition of the Hamiltonian as well as the implementation platform.
+\end{frame}
+
+\begin{frame}{Possible extensions}
+Natural follow-up topics include:
+\begin{itemize}
+\item explicit derivation of the standard parameter-shift rule for QAOA generators,
+\item measurement grouping for larger Pauli decompositions,
+\item shot-noise analysis for each method,
+\item tensor-network or MPO simulation costs,
+\item application to larger spin models and combinatorial optimization Hamiltonians.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{End}
+\centering
+{\Large Questions?}
+\end{frame}
+
+\end{document}
