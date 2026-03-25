@@ -1,0 +1,665 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+
+\usetheme{Madrid}
+
+\title{HHL as Spectral Filtering}
+\subtitle{Quantum Phase Estimation, Green's Functions, and TDHF Connections}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{Linear Systems in Physics}
+Many problems in physics reduce to solving
+\[
+A x = b.
+\]
+
+Examples:
+\begin{itemize}
+\item discretized differential equations,
+\item response theory,
+\item Green's function methods,
+\item time-dependent Hartree--Fock (TDHF),
+\item random phase approximation (RPA).
+\end{itemize}
+
+The HHL algorithm aims to prepare a quantum state proportional to
+\[
+|x\rangle \propto A^{-1}|b\rangle.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{The Core Question}
+Suppose
+\[
+A|u_j\rangle = \lambda_j |u_j\rangle,
+\qquad
+|b\rangle = \sum_j \beta_j |u_j\rangle.
+\]
+Then
+\[
+A^{-1}|b\rangle
+=
+\sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle.
+\]
+
+Thus HHL is fundamentally about implementing the spectral map
+\[
+\lambda_j \mapsto \frac{1}{\lambda_j}.
+\]
+
+This is why HHL is best viewed as a \emph{spectral filtering algorithm}.
+\end{frame}
+
+%================================================
+\section{Spectral Decomposition}
+%================================================
+
+\begin{frame}{Spectral Representation of the Solution}
+Let
+\[
+A = \sum_j \lambda_j |u_j\rangle \langle u_j|.
+\]
+Then
+\[
+A^{-1} = \sum_j \frac{1}{\lambda_j} |u_j\rangle \langle u_j|.
+\]
+Applying this to the source state gives
+\[
+|x\rangle \propto A^{-1}|b\rangle
+=
+\sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle.
+\]
+
+The whole algorithm reduces to:
+\begin{enumerate}
+\item resolve the eigenvalues,
+\item invert them,
+\item reconstruct the filtered state.
+\end{enumerate}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Why Quantum Phase Estimation Appears}
+Quantum phase estimation (QPE) is needed in the original HHL algorithm because it allows us to attach eigenvalue information to the eigenvectors:
+\[
+|u_j\rangle |0\rangle
+\longrightarrow
+|u_j\rangle |\lambda_j\rangle.
+\]
+
+After QPE, the state becomes
+\[
+\sum_j \beta_j |u_j\rangle |\lambda_j\rangle,
+\]
+so that a controlled operation can implement the map
+\[
+\lambda_j \mapsto \frac{1}{\lambda_j}.
+\]
+\end{frame}
+
+%================================================
+\section{The HHL Circuit}
+%================================================
+
+\begin{frame}{Overall Structure of HHL}
+The original HHL algorithm has four main ingredients:
+\begin{enumerate}
+\item state preparation,
+\item quantum phase estimation,
+\item controlled eigenvalue inversion,
+\item inverse phase estimation.
+\end{enumerate}
+
+The key spectral information enters through the QPE block.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{HHL Circuit: High-Level View}
+\[
+\begin{quantikz}[row sep=0.35cm, column sep=0.45cm]
+\lstick{$|b\rangle$} & \qw & \qw & \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}} & \qw & \qw & \gate[wires=2,style={fill=yellow!20,draw=orange}]{\text{Controlled } \lambda^{-1}} & \qw & \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}^\dagger} & \qw & \qw \\
+\lstick{$|0\rangle^{\otimes m}$} & \qw & \qw & & \qw & \qw & & \qw & & \qw & \qw \\
+\lstick{$|0\rangle_a$} & \qw & \qw & \qw & \qw & \qw & \gate{R_y(\lambda^{-1})} & \qw & \qw & \meter{} & \qw
+\end{quantikz}
+\]
+
+\begin{itemize}
+\item Blue block: \textbf{QPE} extracts eigenvalues.
+\item Yellow block: controlled rotation implements inversion.
+\item Final measurement post-selects the desired branch.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Where the QPE Sits}
+The essential block is
+\[
+\begin{quantikz}[row sep=0.4cm, column sep=0.5cm]
+\lstick{$|u_j\rangle$} & \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}} & \qw \\
+\lstick{$|0\rangle^{\otimes m}$} & & \rstick{$|\lambda_j\rangle$}
+\end{quantikz}
+\]
+which performs
+\[
+|u_j\rangle |0\rangle^{\otimes m}
+\longrightarrow
+|u_j\rangle |\lambda_j\rangle.
+\]
+
+Without this step, the algorithm does not know which spectral component to invert.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Detailed HHL Circuit}
+\[
+\begin{quantikz}[row sep=0.35cm, column sep=0.38cm]
+\lstick{$|b\rangle$} 
+& \qw 
+& \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}} 
+& \qw 
+& \qw 
+& \gate[wires=2,style={fill=yellow!20,draw=orange}]{\text{Controlled Rotation}} 
+& \qw
+& \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}^\dagger} 
+& \qw 
+& \qw \\
+\lstick{$|0\rangle^{\otimes m}$} 
+& \qw 
+& 
+& \qw 
+& \qw 
+& 
+& \qw
+& 
+& \qw 
+& \qw \\
+\lstick{$|0\rangle_a$} 
+& \qw 
+& \qw 
+& \qw 
+& \qw 
+& \gate{R_y(\theta(\lambda))} 
+& \qw
+& \qw 
+& \meter{} 
+& \qw
+\end{quantikz}
+\]
+
+Here the angle is chosen so that
+\[
+\sin\frac{\theta(\lambda_j)}{2} \propto \frac{C}{\lambda_j}.
+\]
+\end{frame}
+
+%================================================
+\section{Step-by-Step State Evolution}
+%================================================
+
+\begin{frame}{Step 1: Prepare the Input State}
+Start with
+\[
+|b\rangle = \sum_j \beta_j |u_j\rangle.
+\]
+
+The ancilla and clock/eigenvalue registers are initialized as
+\[
+|b\rangle |0\rangle^{\otimes m} |0\rangle_a.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 2: Apply QPE}
+After QPE:
+\[
+|b\rangle |0\rangle^{\otimes m}|0\rangle_a
+\longrightarrow
+\sum_j \beta_j |u_j\rangle |\lambda_j\rangle |0\rangle_a.
+\]
+
+This is the crucial spectral decomposition stage.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 3: Controlled Rotation}
+Apply a controlled rotation on the ancilla:
+\[
+|\lambda_j\rangle |0\rangle_a
+\longrightarrow
+|\lambda_j\rangle
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\,|0\rangle_a
++
+\frac{C}{\lambda_j}|1\rangle_a
+\right).
+\]
+
+Hence the global state becomes
+\[
+\sum_j \beta_j |u_j\rangle |\lambda_j\rangle
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\,|0\rangle_a
++
+\frac{C}{\lambda_j}|1\rangle_a
+\right).
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 4: Uncompute the Eigenvalue Register}
+Apply inverse QPE:
+\[
+\sum_j \beta_j |u_j\rangle |\lambda_j\rangle
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\,|0\rangle_a
++
+\frac{C}{\lambda_j}|1\rangle_a
+\right)
+\]
+\[
+\longrightarrow
+\sum_j \beta_j |u_j\rangle
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\,|0\rangle_a
++
+\frac{C}{\lambda_j}|1\rangle_a
+\right).
+\]
+
+Now the spectral information has been transferred into the ancilla amplitudes.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Step 5: Postselection}
+Conditioning on measuring the ancilla in the state \(|1\rangle_a\), the system register collapses to
+\[
+|x\rangle \propto \sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle
+= A^{-1}|b\rangle.
+\]
+
+Thus HHL realizes the inverse operator spectrally.
+\end{frame}
+
+%================================================
+\section{HHL as Spectral Filtering}
+%================================================
+
+\begin{frame}{HHL as an Operator Filter}
+The central transformation is
+\[
+A = \sum_j \lambda_j |u_j\rangle\langle u_j|
+\quad \longrightarrow \quad
+A^{-1} = \sum_j \frac{1}{\lambda_j}|u_j\rangle\langle u_j|.
+\]
+
+This is a spectral filter:
+\[
+f(\lambda) = \frac{1}{\lambda}.
+\]
+
+Therefore HHL is not merely a solver of linear equations. It is a quantum method for applying a function of an operator to a state.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Comparison with Time Evolution}
+Compare:
+\[
+e^{-iAt} = \sum_j e^{-i\lambda_j t}|u_j\rangle\langle u_j|
+\]
+with
+\[
+A^{-1} = \sum_j \frac{1}{\lambda_j}|u_j\rangle\langle u_j|.
+\]
+
+Time evolution multiplies each eigenmode by a phase.
+HHL multiplies each eigenmode by an inverse eigenvalue.
+
+So HHL is closer in spirit to:
+\begin{itemize}
+\item Green's functions,
+\item resolvents,
+\item response theory,
+\item inverse-operator methods.
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Green's Functions and Resolvents}
+%================================================
+
+\begin{frame}{Resolvent Formulation}
+In many-body physics, one often studies the resolvent
+\[
+G(z) = (zI - H)^{-1}.
+\]
+
+If
+\[
+H|u_j\rangle = E_j |u_j\rangle,
+\]
+then
+\[
+G(z) = \sum_j \frac{1}{z-E_j}|u_j\rangle\langle u_j|.
+\]
+
+This has exactly the same spectral structure as HHL.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Applying a Green's Function to a Source State}
+Let
+\[
+|b\rangle = \sum_j \beta_j |u_j\rangle.
+\]
+Then
+\[
+G(z)|b\rangle
+=
+\sum_j \frac{\beta_j}{z-E_j}|u_j\rangle.
+\]
+
+This is identical in form to the HHL output
+\[
+A^{-1}|b\rangle
+=
+\sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle.
+\]
+
+Thus HHL can be viewed as a Green's-function-style spectral inverse algorithm.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Retarded Green's Function}
+In response theory one often uses
+\[
+G^R(\omega) = \frac{1}{\omega + i\eta - H}.
+\]
+
+Spectrally,
+\[
+G^R(\omega)
+=
+\sum_j
+\frac{1}{\omega + i\eta - E_j}
+|u_j\rangle\langle u_j|.
+\]
+
+This shows that the inverse operator acts as a frequency-dependent filter:
+\begin{itemize}
+\item states near resonance are enhanced,
+\item off-resonant states are suppressed.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Dynamical Susceptibility}
+A typical response function has the form
+\[
+\chi(\omega)
+=
+\langle \psi_0 |
+\hat{O}^\dagger
+\frac{1}{\omega + i\eta - (H-E_0)}
+\hat{O}
+|\psi_0\rangle.
+\]
+
+Defining
+\[
+|b\rangle = \hat{O}|\psi_0\rangle,
+\]
+we obtain
+\[
+\chi(\omega)
+=
+\langle b|
+\frac{1}{\omega + i\eta - (H-E_0)}
+|b\rangle.
+\]
+
+Hence HHL is naturally related to the computation of response states and susceptibilities.
+\end{frame}
+
+%================================================
+\section{Connection to TDHF and Linear Response}
+%================================================
+
+\begin{frame}{TDHF Equation}
+Time-dependent Hartree--Fock is governed by
+\[
+i \frac{d\rho}{dt} = [h[\rho],\rho].
+\]
+
+Linearizing around a stationary state \(\rho_0\),
+\[
+\rho(t) = \rho_0 + \delta\rho(t),
+\]
+one obtains an equation for the fluctuation \(\delta \rho\).
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Linearized TDHF in Frequency Space}
+After linearization and Fourier transform, one gets a linear-response equation of the form
+\[
+(\omega I - \mathcal{L}) \delta \rho(\omega) = s(\omega),
+\]
+where
+\begin{itemize}
+\item \(\mathcal{L}\) is the linearized Liouvillian,
+\item \(s(\omega)\) is the external driving term.
+\end{itemize}
+
+This is exactly a linear system:
+\[
+A x = b
+\]
+with
+\[
+A = \omega I - \mathcal{L}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{TDHF as an HHL-Type Problem}
+The formal correspondence is
+\[
+A x = b
+\qquad \Longleftrightarrow \qquad
+(\omega I - \mathcal{L}) \delta \rho(\omega) = s(\omega).
+\]
+
+Thus
+\[
+\delta \rho(\omega)
+=
+(\omega I - \mathcal{L})^{-1} s(\omega).
+\]
+
+This is precisely the same inverse-operator structure implemented by HHL.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to RPA}
+In the small-amplitude limit, TDHF is closely related to the random phase approximation (RPA), often written as
+\[
+\begin{pmatrix}
+A & B \\
+-B^* & -A^*
+\end{pmatrix}
+\begin{pmatrix}
+X \\ Y
+\end{pmatrix}
+=
+\omega
+\begin{pmatrix}
+X \\ Y
+\end{pmatrix}.
+\]
+
+Equivalently, one may formulate a driven response equation
+\[
+(\omega I - M) v = s.
+\]
+
+Again, the physical problem becomes spectral inversion.
+\end{frame}
+
+%================================================
+\section{Why QPE is Essential in Original HHL}
+%================================================
+
+\begin{frame}{Why QPE is Needed}
+In the original HHL algorithm, QPE is the mechanism that resolves the operator spectrally:
+\[
+|u_j\rangle \mapsto |u_j\rangle |\lambda_j\rangle.
+\]
+
+Only then can the ancilla rotation implement
+\[
+\frac{1}{\lambda_j}.
+\]
+
+So the logical structure is:
+\begin{enumerate}
+\item diagonalize in the eigenbasis,
+\item apply the spectral filter,
+\item reconstruct the filtered state.
+\end{enumerate}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physical Interpretation of QPE in HHL}
+From a physics viewpoint:
+\begin{itemize}
+\item QPE plays the role of spectral analysis,
+\item controlled rotation applies the resolvent-like weight,
+\item inverse QPE recombines the filtered modes.
+\end{itemize}
+
+Therefore:
+\[
+\text{HHL} = \text{spectral decomposition} + \text{inverse weighting} + \text{recombination}.
+\]
+
+This is why HHL is naturally understood through Green's functions and linear response.
+\end{frame}
+
+%================================================
+\section{Caveats and Remarks}
+%================================================
+
+\begin{frame}{Important Caveats}
+The connection is mathematically deep, but practical implementation faces challenges:
+\begin{itemize}
+\item efficient Hamiltonian simulation or block encoding,
+\item conditioning of the matrix,
+\item non-Hermitian response matrices in some TDHF/RPA settings,
+\item state preparation and measurement costs.
+\end{itemize}
+
+Still, the conceptual bridge is very strong:
+\[
+\text{linear systems} \leftrightarrow \text{resolvents} \leftrightarrow \text{response theory}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Hermitian Embedding for Non-Hermitian Problems}
+If the response matrix is non-Hermitian, one may embed it into a Hermitian operator:
+\[
+\mathcal{H}
+=
+\begin{pmatrix}
+0 & M \\
+M^\dagger & 0
+\end{pmatrix}.
+\]
+
+This allows one to reformulate a non-Hermitian inversion problem in a larger Hermitian space, which is often the natural entry point for HHL-like methods.
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item In original HHL, \textbf{QPE is essential}.
+\item It is the block that extracts the eigenvalues \(\lambda_j\).
+\item HHL implements the spectral filter
+\[
+\lambda_j \mapsto \frac{1}{\lambda_j}.
+\]
+\item This makes HHL naturally connected to
+\begin{itemize}
+\item Green's functions,
+\item resolvents,
+\item TDHF,
+\item RPA,
+\item linear response theory.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Final Conceptual Picture}
+\[
+\boxed{
+\text{HHL}
+=
+\text{Quantum Phase Estimation}
++
+\text{Spectral Inversion}
++
+\text{State Reconstruction}
+}
+\]
+
+\[
+\boxed{
+A^{-1}|b\rangle
+\sim
+(zI-H)^{-1}|b\rangle
+\sim
+(\omega I-\mathcal{L})^{-1} s
+}
+\]
+
+So HHL is best understood as a quantum inverse-operator method.
+\end{frame}
+
+\end{document}
