@@ -1,0 +1,377 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{graphicx}
+
+\usetheme{Madrid}
+
+\title{Analog and Digital Quantum Computing}
+\subtitle{From Hamiltonian Dynamics to Variational Algorithms}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{Quantum Computing as Physics}
+\[
+i\hbar \frac{d}{dt} |\psi\rangle = H |\psi\rangle
+\]
+\[
+|\psi(t)\rangle = e^{-iHt}|\psi(0)\rangle
+\]
+
+\begin{itemize}
+\item Computation = control of quantum dynamics
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Two Paradigms}
+\begin{itemize}
+\item Digital quantum computing
+\item Analog quantum computing
+\end{itemize}
+
+\begin{block}{Key distinction}
+Discrete gate decomposition vs continuous evolution
+\end{block}
+\end{frame}
+
+%================================================
+\section{Digital Quantum Computing}
+%================================================
+
+\begin{frame}{Gate-Based Model}
+\[
+U = \prod_i U_i
+\]
+\begin{itemize}
+\item Universal computation
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Quantum Circuit Example}
+\[
+\begin{quantikz}
+\lstick{|0\rangle} & \gate{H} & \ctrl{1} & \meter{} \\
+\lstick{|0\rangle} & \qw & \targ{} & \meter{}
+\end{quantikz}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Trotterization}
+\[
+e^{-i(H_1+H_2)t} \approx
+\left(e^{-iH_1\Delta t}e^{-iH_2\Delta t}\right)^n
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example: QAOA}
+\[
+|\psi\rangle =
+\prod_k e^{-i\beta_k H_M} e^{-i\gamma_k H_C}|+\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example: HHL}
+\begin{itemize}
+\item Spectral decomposition
+\item Implements $A^{-1}$
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Advantages}
+\begin{itemize}
+\item Universal
+\item Programmable
+\item Error correction possible
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Limitations}
+\begin{itemize}
+\item Deep circuits
+\item Noise
+\item Trotter errors
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Analog Quantum Computing}
+%================================================
+
+\begin{frame}{Analog Model}
+\[
+|\psi(t)\rangle = e^{-iH_{\text{sim}}t}|\psi(0)\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Simulation Principle}
+\[
+H_{\text{sim}} \approx H_{\text{target}}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Physical Platforms}
+\begin{itemize}
+\item Cold atoms
+\item Trapped ions
+\item Rydberg atoms
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Quantum Annealing}
+\[
+H(t) = (1-s)H_M + sH_C
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Advantages}
+\begin{itemize}
+\item Natural dynamics
+\item Efficient for many-body systems
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Limitations}
+\begin{itemize}
+\item Not universal
+\item Limited control
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Analog Simulation of Many-Body Models}
+%================================================
+
+\begin{frame}{Ising Model}
+\[
+H = -J \sum_{ij} Z_i Z_j - h \sum_i X_i
+\]
+\begin{itemize}
+\item Implemented in trapped ions, Rydberg systems
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Hubbard Model}
+\[
+H = -t \sum_{\langle ij\rangle} c_i^\dagger c_j
++ U \sum_i n_{i\uparrow} n_{i\downarrow}
+\]
+\begin{itemize}
+\item Realized in optical lattices
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Why Analog is Powerful}
+\begin{itemize}
+\item Direct access to many-body dynamics
+\item No exponential classical cost
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Connections to Linear Response and TDHF}
+%================================================
+
+\begin{frame}{Linear Response Equation}
+\[
+(\omega I - M)x = b
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{TDHF Equation}
+\[
+i \frac{d\rho}{dt} = [h[\rho],\rho]
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Linearized TDHF}
+\[
+(\omega I - \mathcal{L})\delta\rho = s
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to HHL}
+\begin{itemize}
+\item Same mathematical structure:
+\[
+A x = b
+\]
+\item Inverse operator = response function
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Variational Algorithms}
+%================================================
+
+\begin{frame}{Variational Principle}
+\[
+E = \langle \psi(\theta)|H|\psi(\theta)\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{ADAPT-VQE}
+\begin{itemize}
+\item Adaptive ansatz construction
+\item Gradient selection:
+\[
+\langle [H,A_k] \rangle
+\]
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Coupled Cluster}
+\begin{itemize}
+\item BCH expansion
+\item Many-body correlations
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Variational Dynamics}
+\begin{itemize}
+\item McLachlan principle
+\[
+\delta \| (i\partial_t - H)|\psi\rangle \| = 0
+\]
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Quantum Control Theory}
+%================================================
+
+\begin{frame}{Control Hamiltonian}
+\[
+H(t) = \sum_k u_k(t) H_k
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Optimal Control}
+\begin{itemize}
+\item Find $u_k(t)$ to achieve target state
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Digital vs Analog Control}
+\begin{itemize}
+\item Digital: discrete pulses
+\item Analog: continuous control
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{QAOA as Control}
+\begin{itemize}
+\item Piecewise constant control protocol
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Unified View}
+%================================================
+
+\begin{frame}{Unified Framework}
+\begin{itemize}
+\item Analog: continuous evolution
+\item Digital: discretized evolution
+\item Variational: optimized evolution
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Core Mathematical Object}
+\[
+e^{-iHt}
+\]
+\begin{itemize}
+\item Everything reduces to controlling this operator
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Conceptual Chain}
+\begin{itemize}
+\item Analog simulation → real dynamics
+\item Digital circuits → approximated dynamics
+\item Variational methods → optimized dynamics
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Outlook}
+%================================================
+
+\begin{frame}{Future Directions}
+\begin{itemize}
+\item Hybrid analog-digital systems
+\item Quantum simulation of materials
+\item Quantum-enhanced many-body theory
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item Digital: universal and programmable
+\item Analog: efficient and physics-driven
+\item Variational: bridge between both
+\end{itemize}
+\end{frame}
+
+\end{document}
