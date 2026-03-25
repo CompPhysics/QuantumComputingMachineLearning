@@ -82,8 +82,6 @@ themes can be covered:
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek6.pdf
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week6
 
-
-
 ##  March 2-6, 2026. VQE for two-qubit systems and the Lipkin model
   - Implementing the VQE algorithm for the two-qubit and Lipkin-model Hamiltonians.
   - Video of lecture at https://youtu.be/g-hKlUYxfcw
@@ -114,33 +112,31 @@ themes can be covered:
   - Quantum phase estimation (QPE) algorithm
   - Setting up circuits for QFTs and the QPE  and discussion of codes
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week10
-  - Video of lecture at https://youtu.be/N9AXHW72qwI
   - Video of lecture at https://drive.google.com/drive/folders/1wxXJs0VIUsGxsMrRG_-YgYVFO-ZN45XL
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek10.pdf
 
 ## March 30 - April 3, 2026, Public holiday in Norway no classes
 
 ## April 6-10, 2026
-  - The QAOA algorithm
+  - Finalizing the QPE discussions, with codes and formalism
   - The HHL algorithm for solving linear algebra problems
 
 ## April 13-17, 2026
+  - Summing up the HHL discussions, codes and algorithms
+  - The QAOA algorithm
+
+## April 20-24, 2026 Quantum Machine Learning
   - Basics of quantum machine learning (QML) 
   - Support vector machines
 
-##  Note that the topics for the coming weeks may change. The focus will be on quantum machine learning, but we may add discussions of other algorithms
-
-## April 20-24, 2026 Quantum Machine Learning
-  - Quantum machine learning
-
 ## April 27-May 1, 2026 Quantum machine learning
-  - QML
+  - Quantum neural networks
 
 ## May 4-8, 2026 Quantum Machine Learning
-  - QML
+  - Quantum neural etworks
 
 ## May 11-15, 2026
-  - QML, last lecture and summary of course
+  - Quantum neural networks and quantum Boltzmann machines
 
 ## May 18-22, 2026
-  - Discussion of and work on project 2
+  - Summary of course and discussion of and work on project 2
