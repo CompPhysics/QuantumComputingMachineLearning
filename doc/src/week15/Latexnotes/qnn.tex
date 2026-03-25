@@ -1,0 +1,271 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{graphicx}
+
+\usetheme{Madrid}
+
+\title{Quantum Neural Networks}
+\subtitle{Variational Circuits, Geometry, and Many-Body Connections}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Overview}
+%================================================
+
+\begin{frame}{What is a Quantum Neural Network?}
+A QNN is a parameterized quantum circuit:
+\[
+\ket{\psi(x,\theta)} = U(\theta)U(x)\ket{0}
+\]
+
+Output:
+\[
+f(x,\theta) = \bra{\psi(x,\theta)} O \ket{\psi(x,\theta)}
+\]
+
+\begin{itemize}
+\item $U(x)$: feature map
+\item $U(\theta)$: trainable ansatz
+\item $O$: observable
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Circuit Model}
+%================================================
+
+\begin{frame}{Basic QNN Circuit}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{U(x)} & \gate{U(\theta)} & \meter{} \\
+\lstick{\ket{0}} & \gate{U(x)} & \gate{U(\theta)} & \meter{}
+\end{quantikz}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Ansatz}
+\[
+U(\theta) = \prod_i R_y(\theta_i)\prod_{i<j}\mathrm{CNOT}_{ij}
+\]
+
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{R_y(\theta_1)} & \ctrl{1} & \qw \\
+\lstick{\ket{0}} & \gate{R_y(\theta_2)} & \targ{} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Pauli Expansion}
+%================================================
+
+\begin{frame}{Pauli Expansion of Ansatz}
+\[
+U(\theta) = e^{iH(\theta)}
+\]
+
+\[
+H(\theta) = \sum_\alpha \theta_\alpha P_\alpha
+\]
+
+\begin{itemize}
+\item $P_\alpha$: Pauli strings
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example}
+\[
+H = \theta_1 Z_1 + \theta_2 Z_2 + \theta_3 Z_1Z_2
+\]
+
+\begin{itemize}
+\item resembles spin Hamiltonian
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{BCH Expansion}
+%================================================
+
+\begin{frame}{Effective Hamiltonian}
+\[
+U^\dagger O U = O + i[H,O] + \frac{i^2}{2}[H,[H,O]] + \cdots
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation}
+\begin{itemize}
+\item nested commutators generate correlations
+\item analogous to many-body expansions
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Expressivity and Entanglement}
+%================================================
+
+\begin{frame}{Entanglement}
+\[
+S(\rho_A) = -\mathrm{Tr}(\rho_A \log \rho_A)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Expressivity}
+\begin{itemize}
+\item low entanglement $\rightarrow$ simple functions
+\item high entanglement $\rightarrow$ complex features
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Barren Plateaus}
+\[
+\mathrm{Var}(\nabla C) \sim e^{-n}
+\]
+\end{frame}
+
+%================================================
+\section{Quantum Fisher Information}
+%================================================
+
+\begin{frame}{QFI}
+\[
+F_{ij} = 4\,\mathrm{Re}(\langle \partial_i \psi | \partial_j \psi\rangle)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Natural Gradient}
+\[
+\dot{\theta} = F^{-1} \nabla C
+\]
+\end{frame}
+
+%================================================
+\section{Time-Dependent Variational Principle}
+%================================================
+
+\begin{frame}{TDVP}
+\[
+\delta \| (i\partial_t - H)|\psi\rangle \| = 0
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Equation of Motion}
+\[
+\sum_j F_{ij} \dot{\theta}_j = C_i
+\]
+
+\[
+C_i = \mathrm{Im}\langle \partial_i \psi | H | \psi\rangle
+\]
+\end{frame}
+
+%================================================
+\section{Connection to ADAPT-VQE}
+%================================================
+
+\begin{frame}{ADAPT-VQE}
+\[
+\langle [H,A_k]\rangle
+\]
+
+\begin{itemize}
+\item selects operators dynamically
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Relation to QNN}
+\begin{itemize}
+\item QNN: fixed ansatz
+\item ADAPT: growing ansatz
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Training}
+%================================================
+
+\begin{frame}{Parameter Shift}
+\[
+\frac{\partial f}{\partial \theta}
+=
+\frac{1}{2}(f(\theta+\frac{\pi}{2})-f(\theta-\frac{\pi}{2}))
+\]
+\end{frame}
+
+%================================================
+\section{Example Circuit}
+%================================================
+
+\begin{frame}{QNN Example}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{R_z(x_1)} & \gate{R_y(\theta_1)} & \ctrl{1} & \qw \\
+\lstick{\ket{0}} & \gate{R_z(x_2)} & \gate{R_y(\theta_2)} & \targ{} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Physics Interpretation}
+%================================================
+
+\begin{frame}{QNN as Quantum Dynamics}
+\[
+|\psi\rangle = e^{-iH(\theta)}|\psi(x)\rangle
+\]
+
+\begin{itemize}
+\item learning = tuning Hamiltonian
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Many-Body Theory}
+\begin{itemize}
+\item BCH $\leftrightarrow$ perturbation theory
+\item QFI $\leftrightarrow$ metric tensor
+\item TDVP $\leftrightarrow$ classical dynamics
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item QNN = variational quantum circuit
+\item learning = optimization in Hilbert space
+\item geometry governed by QFI
+\item strong connection to many-body physics
+\end{itemize}
+\end{frame}
+
+\end{document}

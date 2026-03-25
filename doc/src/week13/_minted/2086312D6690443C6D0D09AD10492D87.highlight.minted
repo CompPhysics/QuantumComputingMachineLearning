@@ -1,0 +1,72 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{datasets}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{svm}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{SVC}\PYG{p}{,} \PYG{n}{LinearSVC}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{linear\PYGZus{}model}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{SGDClassifier}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{preprocessing}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{StandardScaler}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib}\PYG{n+nn}{.}\PYG{n+nn}{pyplot}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{plt}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{rcParams}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{axes.labelsize}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{14}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{rcParams}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{xtick.labelsize}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{12}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{rcParams}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{ytick.labelsize}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{12}
+
+
+\PYG{n}{iris} \PYG{o}{=} \PYG{n}{datasets}\PYG{o}{.}\PYG{n}{load\PYGZus{}iris}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{X} \PYG{o}{=} \PYG{n}{iris}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{data}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{]}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{]}  \PYG{c+c1}{\PYGZsh{} petal length, petal width}
+\PYG{n}{y} \PYG{o}{=} \PYG{n}{iris}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{target}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{]}
+
+\PYG{n}{setosa\PYGZus{}or\PYGZus{}versicolor} \PYG{o}{=} \PYG{p}{(}\PYG{n}{y} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{|} \PYG{p}{(}\PYG{n}{y} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{X} \PYG{o}{=} \PYG{n}{X}\PYG{p}{[}\PYG{n}{setosa\PYGZus{}or\PYGZus{}versicolor}\PYG{p}{]}
+\PYG{n}{y} \PYG{o}{=} \PYG{n}{y}\PYG{p}{[}\PYG{n}{setosa\PYGZus{}or\PYGZus{}versicolor}\PYG{p}{]}
+
+
+
+\PYG{n}{C} \PYG{o}{=} \PYG{l+m+mi}{5}
+\PYG{n}{alpha} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{o}{/} \PYG{p}{(}\PYG{n}{C} \PYG{o}{*} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{X}\PYG{p}{)}\PYG{p}{)}
+
+\PYG{n}{lin\PYGZus{}clf} \PYG{o}{=} \PYG{n}{LinearSVC}\PYG{p}{(}\PYG{n}{loss}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{hinge}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{C}\PYG{o}{=}\PYG{n}{C}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{svm\PYGZus{}clf} \PYG{o}{=} \PYG{n}{SVC}\PYG{p}{(}\PYG{n}{kernel}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{linear}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{C}\PYG{o}{=}\PYG{n}{C}\PYG{p}{)}
+\PYG{n}{sgd\PYGZus{}clf} \PYG{o}{=} \PYG{n}{SGDClassifier}\PYG{p}{(}\PYG{n}{loss}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{hinge}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{learning\PYGZus{}rate}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{constant}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{eta0}\PYG{o}{=}\PYG{l+m+mf}{0.001}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{n}{alpha}\PYG{p}{,}
+                        \PYG{n}{max\PYGZus{}iter}\PYG{o}{=}\PYG{l+m+mi}{100000}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{l+m+mi}{42}\PYG{p}{)}
+
+\PYG{n}{scaler} \PYG{o}{=} \PYG{n}{StandardScaler}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{X\PYGZus{}scaled} \PYG{o}{=} \PYG{n}{scaler}\PYG{o}{.}\PYG{n}{fit\PYGZus{}transform}\PYG{p}{(}\PYG{n}{X}\PYG{p}{)}
+
+\PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X\PYGZus{}scaled}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}
+\PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X\PYGZus{}scaled}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}
+\PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X\PYGZus{}scaled}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{LinearSVC:                   }\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{intercept\PYGZus{}}\PYG{p}{,} \PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{SVC:                         }\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{intercept\PYGZus{}}\PYG{p}{,} \PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{SGDClassifier(alpha=}\PYG{l+s+si}{\PYGZob{}:.5f\PYGZcb{}}\PYG{l+s+s2}{):}\PYG{l+s+s2}{\PYGZdq{}}\PYG{o}{.}\PYG{n}{format}\PYG{p}{(}\PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{alpha}\PYG{p}{)}\PYG{p}{,} \PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{intercept\PYGZus{}}\PYG{p}{,} \PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Compute the slope and bias of each decision boundary}
+\PYG{n}{w1} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{/}\PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{b1} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{intercept\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{/}\PYG{n}{lin\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{w2} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{/}\PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{b2} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{intercept\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{/}\PYG{n}{svm\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{w3} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{/}\PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}
+\PYG{n}{b3} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{intercept\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{/}\PYG{n}{sgd\PYGZus{}clf}\PYG{o}{.}\PYG{n}{coef\PYGZus{}}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}
+
+\PYG{c+c1}{\PYGZsh{} Transform the decision boundary lines back to the original scale}
+\PYG{n}{line1} \PYG{o}{=} \PYG{n}{scaler}\PYG{o}{.}\PYG{n}{inverse\PYGZus{}transform}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10} \PYG{o}{*} \PYG{n}{w1} \PYG{o}{+} \PYG{n}{b1}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{10} \PYG{o}{*} \PYG{n}{w1} \PYG{o}{+} \PYG{n}{b1}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{line2} \PYG{o}{=} \PYG{n}{scaler}\PYG{o}{.}\PYG{n}{inverse\PYGZus{}transform}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10} \PYG{o}{*} \PYG{n}{w2} \PYG{o}{+} \PYG{n}{b2}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{10} \PYG{o}{*} \PYG{n}{w2} \PYG{o}{+} \PYG{n}{b2}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{line3} \PYG{o}{=} \PYG{n}{scaler}\PYG{o}{.}\PYG{n}{inverse\PYGZus{}transform}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10} \PYG{o}{*} \PYG{n}{w3} \PYG{o}{+} \PYG{n}{b3}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{10} \PYG{o}{*} \PYG{n}{w3} \PYG{o}{+} \PYG{n}{b3}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Plot all three decision boundaries}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{figure}\PYG{p}{(}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{11}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{line1}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{line1}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{k:}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{LinearSVC}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{line2}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{line2}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{b\PYGZhy{}\PYGZhy{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{SVC}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{line3}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{line3}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{r\PYGZhy{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{SGDClassifier}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{[}\PYG{n}{y}\PYG{o}{==}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{[}\PYG{n}{y}\PYG{o}{==}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{bs}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} label=\PYGZdq{}Iris\PYGZhy{}Versicolor\PYGZdq{}}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{[}\PYG{n}{y}\PYG{o}{==}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{[}\PYG{n}{y}\PYG{o}{==}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{yo}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} label=\PYGZdq{}Iris\PYGZhy{}Setosa\PYGZdq{}}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{xlabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Petal length}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{14}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{ylabel}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Petal width}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{14}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{legend}\PYG{p}{(}\PYG{n}{loc}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{upper center}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{14}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{axis}\PYG{p}{(}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mf}{5.5}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}
+
+
+
+
+\end{MintedVerbatim}
