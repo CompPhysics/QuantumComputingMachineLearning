@@ -1,0 +1,281 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{braket}
+\usepackage{physics}
+
+\usetheme{Madrid}
+
+\title{How the HHL Algorithm is Used in Quantum Machine Learning}
+\subtitle{Linear Systems, Kernels, and Spectral Filtering}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Motivation}
+%================================================
+
+\begin{frame}{The Core Idea}
+The HHL algorithm solves a linear system
+\[
+A x = b
+\]
+by preparing a quantum state proportional to
+\[
+\ket{x} \propto A^{-1}\ket{b}.
+\]
+
+In quantum machine learning, this is important because many learning tasks reduce to
+\begin{itemize}
+\item linear systems,
+\item matrix inversion,
+\item least-squares problems,
+\item kernel methods.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Why HHL Appears in Machine Learning}
+Many machine learning algorithms can be reformulated as
+\[
+A x = b
+\]
+for a suitable matrix \(A\) and vector \(b\).
+
+Examples include:
+\begin{itemize}
+\item linear regression,
+\item ridge regression,
+\item kernel methods,
+\item Gaussian processes,
+\item linearized neural networks.
+\end{itemize}
+
+Thus HHL serves as a quantum subroutine for solving the underlying learning problem.
+\end{frame}
+
+%================================================
+\section{Quantum Linear Regression}
+%================================================
+
+\begin{frame}{Ordinary Least Squares}
+In linear regression, one minimizes
+\[
+\min_w \norm{Xw - y}^2.
+\]
+
+The formal solution is
+\[
+w = (X^T X)^{-1} X^T y.
+\]
+
+This can be written as a linear system:
+\[
+A w = b,
+\qquad
+A = X^T X,
+\qquad
+b = X^T y.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{How HHL Enters}
+Instead of returning the vector \(w\) explicitly, HHL prepares a quantum state proportional to
+\[
+\ket{w} \propto (X^T X)^{-1} X^T \ket{y}.
+\]
+
+This means:
+\begin{itemize}
+\item HHL does not directly output all regression coefficients,
+\item but it gives quantum access to the solution state,
+\item which can be used to estimate global properties or predictions.
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Kernel Methods and QSVMs}
+%================================================
+
+\begin{frame}{Kernel Ridge Regression and Related Methods}
+Kernel methods often require solving
+\[
+(K + \lambda I)\alpha = y,
+\]
+where:
+\begin{itemize}
+\item \(K\) is the kernel matrix,
+\item \(\lambda\) is a regularization parameter,
+\item \(\alpha\) determines the classifier or regressor.
+\end{itemize}
+
+This is again a linear system, so HHL can in principle be applied.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Quantum Support Vector Machines}
+In a quantum kernel method, one defines
+\[
+K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2,
+\]
+where \(\ket{\phi(x)}\) is a quantum feature state.
+
+A more fully quantum workflow would:
+\begin{enumerate}
+\item compute the quantum kernel entries on a quantum computer,
+\item use HHL to solve the linear system involving \(K\),
+\item use the resulting coefficients for classification or regression.
+\end{enumerate}
+\end{frame}
+
+%================================================
+\section{Gaussian Processes}
+%================================================
+
+\begin{frame}{Gaussian Process Regression}
+Gaussian process regression requires solving systems of the form
+\[
+(K + \sigma^2 I)^{-1} y,
+\]
+where:
+\begin{itemize}
+\item \(K\) is the covariance or kernel matrix,
+\item \(\sigma^2\) is the noise variance.
+\end{itemize}
+
+The predictive mean is typically
+\[
+\mu(x_*) = k_*^T (K + \sigma^2 I)^{-1} y.
+\]
+
+This again fits naturally into the HHL framework.
+\end{frame}
+
+%================================================
+\section{Quantum Neural Networks in the Linearized Regime}
+%================================================
+
+\begin{frame}{Neural Tangent Kernel Perspective}
+In the linearized regime of neural network training, one approximates
+\[
+f(x) \approx f(x_0) + \nabla_\theta f \cdot (\theta - \theta_0).
+\]
+
+Training then reduces to solving a linear system involving the neural tangent kernel (NTK).
+
+Therefore, HHL could in principle be used as a quantum linear solver in this regime.
+\end{frame}
+
+%================================================
+\section{Physics Interpretation}
+%================================================
+
+\begin{frame}{HHL as a Spectral Inverse}
+From a physics perspective, HHL implements
+\[
+A^{-1}.
+\]
+
+If
+\[
+A = \sum_j \lambda_j \ket{u_j}\bra{u_j},
+\]
+then
+\[
+A^{-1} = \sum_j \frac{1}{\lambda_j}\ket{u_j}\bra{u_j}.
+\]
+
+So HHL acts as a spectral filter:
+\[
+\lambda_j \mapsto \frac{1}{\lambda_j}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Connection to Green's Functions}
+In many-body physics, inverse operators appear as resolvents or Green's functions:
+\[
+G(z) = (zI - H)^{-1}.
+\]
+
+This means that HHL can be understood as applying a Green's-function-like operator to data.
+
+From this viewpoint:
+\begin{itemize}
+\item regression corresponds to a response problem,
+\item kernels resemble propagators,
+\item learning becomes spectral filtering.
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Advantages and Caveats}
+%================================================
+
+\begin{frame}{When HHL Can Help}
+In principle, HHL can offer strong speedups if:
+\begin{itemize}
+\item the matrix is sparse or efficiently block-encoded,
+\item the condition number is not too large,
+\item the input state can be prepared efficiently,
+\item one only needs global properties of the solution.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Important Caveats}
+There are important limitations:
+\begin{itemize}
+\item HHL outputs a quantum state, not the full classical vector,
+\item reading out all coefficients may destroy the speedup,
+\item data loading can be costly,
+\item conditioning and noise may limit practical use.
+\end{itemize}
+
+Thus HHL is most useful when one wants
+\begin{itemize}
+\item expectation values,
+\item overlaps,
+\item predictions,
+\item or other global observables.
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+HHL enters quantum machine learning as a quantum linear solver for problems such as:
+\begin{itemize}
+\item linear regression,
+\item kernel methods,
+\item Gaussian processes,
+\item linearized neural networks.
+\end{itemize}
+
+Conceptually, one may summarize the structure as
+\[
+\text{machine learning}
+\longleftrightarrow
+\text{linear systems}
+\longleftrightarrow
+\text{resolvents}
+\longleftrightarrow
+\text{HHL}.
+\]
+
+Thus HHL is best viewed as a foundational inverse-operator subroutine in quantum machine learning.
+\end{frame}
+
+\end{document}
