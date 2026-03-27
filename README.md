@@ -127,13 +127,13 @@ themes can be covered:
 
 ## April 20-24, 2026 Quantum Machine Learning
   - Basics of quantum machine learning (QML) 
-  - Support vector machines
+  - Quantum Support vector machines (SVM) and classical SVMs
 
 ## April 27-May 1, 2026 Quantum machine learning
   - Quantum neural networks
 
 ## May 4-8, 2026 Quantum Machine Learning
-  - Quantum neural etworks
+  - Quantum neural networks
 
 ## May 11-15, 2026
   - Quantum neural networks and quantum Boltzmann machines
