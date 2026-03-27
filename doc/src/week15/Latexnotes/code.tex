@@ -1,0 +1,670 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{graphicx}
+
+\usetheme{Madrid}
+
+\title{Quantum Neural Networks vs Classical Neural Networks}
+\subtitle{A Physics-Oriented Graduate Lecture}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Introduction}
+%================================================
+
+\begin{frame}{Motivation}
+\begin{itemize}
+\item Classical neural networks are powerful function approximators
+\item Quantum systems naturally live in exponentially large Hilbert spaces
+\item Question: Can quantum systems enhance learning?
+\end{itemize}
+
+\medskip
+
+\begin{block}{Core Idea}
+Quantum neural networks (QNNs) use parameterized quantum circuits to perform learning tasks.
+\end{block}
+\end{frame}
+
+%================================================
+\section{Classical Neural Networks}
+%================================================
+
+\begin{frame}{Structure of a Neural Network}
+\[
+h^{(l+1)} = \sigma(W^{(l)} h^{(l)} + b^{(l)})
+\]
+
+\begin{itemize}
+\item $W^{(l)}$: weights
+\item $\sigma$: nonlinear activation
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Learning Problem}
+Given data $(x_i,y_i)$:
+\[
+\min_\theta \sum_i (f(x_i;\theta) - y_i)^2
+\]
+
+Training via gradient descent:
+\[
+\theta \leftarrow \theta - \eta \nabla_\theta C
+\]
+\end{frame}
+
+%================================================
+\section{Quantum Neural Networks}
+%================================================
+
+\begin{frame}{Definition of a QNN}
+\[
+\ket{\psi(x,\theta)} = U(\theta)U(x)\ket{0}
+\]
+
+\[
+f(x,\theta) = \bra{\psi} O \ket{\psi}
+\]
+
+\begin{itemize}
+\item $U(x)$: data encoding
+\item $U(\theta)$: trainable unitary
+\item $O$: observable
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Basic QNN Circuit}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{U(x)} & \gate{U(\theta)} & \meter{} \\
+\lstick{\ket{0}} & \gate{U(x)} & \gate{U(\theta)} & \meter{}
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Feature Encoding}
+%================================================
+
+\begin{frame}{Data Encoding}
+\[
+U(x) = \exp\left(i \sum_i x_i Z_i\right)
+\]
+
+\begin{itemize}
+\item maps classical data into quantum states
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Encoding Circuit}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{R_z(x_1)} & \qw \\
+\lstick{\ket{0}} & \gate{R_z(x_2)} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Variational Ansatz}
+%================================================
+
+\begin{frame}{Parameterized Circuit}
+\[
+U(\theta) = \prod_i R_y(\theta_i)\prod_{i<j}\mathrm{CNOT}_{ij}
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Ansatz Circuit}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{R_y(\theta_1)} & \ctrl{1} & \qw \\
+\lstick{\ket{0}} & \gate{R_y(\theta_2)} & \targ{} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Measurement and Output}
+%================================================
+
+\begin{frame}{Observable Output}
+\[
+f(x,\theta) = \langle Z_1 \rangle
+\]
+
+\begin{itemize}
+\item measurement introduces nonlinearity
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Training}
+%================================================
+
+\begin{frame}{Cost Function}
+\[
+C(\theta) = \sum_i (f(x_i,\theta) - y_i)^2
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Parameter Shift Rule}
+\[
+\frac{\partial f}{\partial \theta}
+=
+\frac{1}{2}\left[f(\theta+\frac{\pi}{2}) - f(\theta-\frac{\pi}{2})\right]
+\]
+
+\begin{itemize}
+\item exact gradient evaluation
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Comparison: Classical vs Quantum}
+%================================================
+
+\begin{frame}{Key Differences}
+\begin{tabular}{l|l|l}
+ & Classical NN & QNN \\
+\hline
+State space & $\mathbb{R}^d$ & Hilbert space \\
+Nonlinearity & activation & measurement \\
+Parameters & weights & gate angles \\
+\end{tabular}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Conceptual Mapping}
+\begin{itemize}
+\item weights $\leftrightarrow$ Hamiltonian parameters
+\item activations $\leftrightarrow$ measurement
+\item forward pass $\leftrightarrow$ unitary evolution
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Physics Interpretation}
+%================================================
+
+\begin{frame}{QNN as Quantum Dynamics}
+\[
+|\psi\rangle = e^{-iH(\theta)}|\psi(x)\rangle
+\]
+
+\begin{itemize}
+\item learning = tuning Hamiltonian
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Pauli Expansion}
+\[
+H(\theta) = \sum_\alpha \theta_\alpha P_\alpha
+\]
+
+\begin{itemize}
+\item $P_\alpha$: Pauli strings
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{BCH Expansion}
+\[
+U^\dagger O U = O + i[H,O] + \cdots
+\]
+
+\begin{itemize}
+\item generates correlations
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Expressivity}
+%================================================
+
+\begin{frame}{Entanglement}
+\[
+S(\rho_A) = -\mathrm{Tr}(\rho_A \log \rho_A)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Expressivity}
+\begin{itemize}
+\item entanglement increases model capacity
+\item too much $\rightarrow$ barren plateaus
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Barren Plateaus}
+\[
+\mathrm{Var}(\nabla C) \sim e^{-n}
+\]
+\end{frame}
+
+%================================================
+\section{Quantum Fisher Information}
+%================================================
+
+\begin{frame}{Quantum Fisher Information}
+\[
+F_{ij} = 4\mathrm{Re}(\langle \partial_i \psi | \partial_j \psi\rangle)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Natural Gradient}
+\[
+\dot{\theta} = F^{-1}\nabla C
+\]
+\end{frame}
+
+%================================================
+\section{Example}
+%================================================
+
+\begin{frame}{Two-Qubit QNN Example}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{R_z(x_1)} & \gate{R_y(\theta_1)} & \ctrl{1} & \qw \\
+\lstick{\ket{0}} & \gate{R_z(x_2)} & \gate{R_y(\theta_2)} & \targ{} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item QNN = parameterized quantum circuit
+\item combines quantum mechanics and machine learning
+\item learning = optimization in Hilbert space
+\item strong connections to many-body physics
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{quantikz}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{graphicx}
+
+\usetheme{Madrid}
+
+\title{Quantum Neural Networks}
+\subtitle{Variational Circuits, Geometry, and Many-Body Physics}
+\author{}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Overview}
+%================================================
+
+\begin{frame}{Conceptual Structure}
+A quantum neural network is defined by
+\[
+\ket{\psi(x,\theta)} = U(\theta)U(x)\ket{0}
+\]
+
+Output:
+\[
+f(x,\theta) = \bra{\psi} O \ket{\psi}
+\]
+
+\medskip
+
+Interpretation:
+\begin{itemize}
+\item feature map $U(x)$ prepares state
+\item ansatz $U(\theta)$ evolves system
+\item observable extracts information
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{QNN as Many-Body Wavefunction}
+%================================================
+
+\begin{frame}{Wavefunction Interpretation}
+\[
+\ket{\psi(x,\theta)} = e^{-iH(\theta)}\ket{\psi(x)}
+\]
+
+\begin{itemize}
+\item QNN = parameterized many-body state
+\item learning = tuning Hamiltonian parameters
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Pauli Expansion}
+\[
+H(\theta) = \sum_\alpha \theta_\alpha P_\alpha
+\]
+
+\begin{itemize}
+\item $P_\alpha$: Pauli strings
+\item structure resembles spin Hamiltonians
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Example Ansatz Circuit}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{R_y(\theta_1)} & \ctrl{1} & \qw \\
+\lstick{\ket{0}} & \gate{R_y(\theta_2)} & \targ{} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{BCH Expansion and Effective Operators}
+%================================================
+
+\begin{frame}{Baker-Campbell-Hausdorff Expansion}
+\[
+U^\dagger O U = O + i[H,O] + \frac{i^2}{2}[H,[H,O]] + \cdots
+\]
+
+\medskip
+
+This shows:
+\begin{itemize}
+\item QNN generates nested commutators
+\item increasing circuit depth $\rightarrow$ higher-order correlations
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation}
+\begin{itemize}
+\item equivalent to many-body perturbation expansion
+\item similar structure as coupled cluster theory
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Loss Landscape}
+%================================================
+
+\begin{frame}{Cost Function}
+\[
+C(\theta) = \sum_i (f(x_i,\theta) - y_i)^2
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Gradient Structure}
+\[
+\partial_\theta f = i\bra{\psi}[H_\theta,O]\ket{\psi}
+\]
+
+\begin{itemize}
+\item gradients determined by commutators
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Landscape Geometry}
+\begin{itemize}
+\item highly non-convex
+\item many local minima
+\item flat regions possible
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Barren Plateaus}
+%================================================
+
+\begin{frame}{Definition}
+Barren plateaus occur when
+\[
+\mathrm{Var}(\nabla C) \sim e^{-n}
+\]
+
+\begin{itemize}
+\item gradients vanish exponentially
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Origin}
+\begin{itemize}
+\item random circuits approximate unitary 2-designs
+\item expectation values concentrate
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Avoiding Plateaus}
+\begin{itemize}
+\item shallow circuits
+\item problem-inspired ansätze
+\item local cost functions
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Quantum Fisher Information}
+%================================================
+
+\begin{frame}{Definition}
+\[
+F_{ij} = 4\,\mathrm{Re}(\langle \partial_i \psi | \partial_j \psi\rangle)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Metric Interpretation}
+\[
+ds^2 = \sum_{ij} F_{ij} d\theta_i d\theta_j
+\]
+
+\begin{itemize}
+\item defines geometry of parameter space
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Natural Gradient}
+\[
+\dot{\theta} = F^{-1}\nabla C
+\]
+
+\begin{itemize}
+\item accounts for curvature of state space
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Time-Dependent Variational Principle}
+%================================================
+
+\begin{frame}{TDVP Principle}
+\[
+\delta \| (i\partial_t - H)|\psi\rangle \| = 0
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Equations of Motion}
+\[
+\sum_j F_{ij}\dot{\theta}_j = C_i
+\]
+
+\[
+C_i = \mathrm{Im}\langle \partial_i \psi | H | \psi\rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Interpretation}
+\begin{itemize}
+\item QNN training resembles classical dynamics
+\item parameters evolve according to effective equations
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Quantum Control Perspective}
+%================================================
+
+\begin{frame}{QNN as Control Problem}
+\[
+U(\theta) = \mathcal{T} \exp\left(-i \int H(t) dt\right)
+\]
+
+\begin{itemize}
+\item parameters $\theta$ correspond to control fields
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Learning as Control}
+\begin{itemize}
+\item optimize control parameters
+\item achieve desired observable expectation
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Connection to Kernel Methods}
+%================================================
+
+\begin{frame}{Induced Kernel}
+\[
+K(x,x') = \langle \psi(x) | \psi(x') \rangle
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Neural Tangent Kernel}
+\[
+K_{ij} = \frac{\partial f}{\partial \theta_i}
+\frac{\partial f}{\partial \theta_j}
+\]
+\end{frame}
+
+%================================================
+\section{Expressivity}
+%================================================
+
+\begin{frame}{Entanglement}
+\[
+S(\rho_A) = -\mathrm{Tr}(\rho_A \log \rho_A)
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Role of Entanglement}
+\begin{itemize}
+\item necessary for complex correlations
+\item excessive entanglement leads to loss of structure
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Comparison with Classical Neural Networks}
+%================================================
+
+\begin{frame}{Comparison}
+\begin{tabular}{l|l|l}
+ & Classical NN & QNN \\
+\hline
+Dynamics & linear + nonlinear & unitary \\
+Parameters & weights & Hamiltonian parameters \\
+Geometry & Euclidean & Riemannian (QFI) \\
+\end{tabular}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Key Differences}
+\begin{itemize}
+\item classical networks rely on explicit nonlinearities
+\item QNNs rely on measurement-induced nonlinearity
+\item optimization geometry fundamentally different
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Circuits}
+%================================================
+
+\begin{frame}{Full QNN Circuit}
+\[
+\begin{quantikz}
+\lstick{\ket{0}} & \gate{U(x)} & \gate{R_y(\theta_1)} & \ctrl{1} & \qw \\
+\lstick{\ket{0}} & \gate{U(x)} & \gate{R_y(\theta_2)} & \targ{} & \qw
+\end{quantikz}
+\]
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Summary}
+\begin{itemize}
+\item QNN = variational quantum state
+\item training = geometric optimization
+\item strong connection to many-body physics
+\item challenges: barren plateaus and noise
+\end{itemize}
+\end{frame}
+
+\end{document}
