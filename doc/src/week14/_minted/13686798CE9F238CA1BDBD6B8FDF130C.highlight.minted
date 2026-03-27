@@ -1,0 +1,32 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{qml}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{numpy} \PYG{k}{as} \PYG{n}{np}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{svm}
+
+\PYG{c+c1}{\PYGZsh{} Example dataset}
+\PYG{n}{X\PYGZus{}train} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mf}{0.1}\PYG{p}{,} \PYG{l+m+mf}{0.2}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{1.1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.4}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.9}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{0.5}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{Y\PYGZus{}train} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{X\PYGZus{}test} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{l+m+mf}{0.1}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{0.9}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Define device and feature map}
+\PYG{n}{dev} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{device}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{default.qubit}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+\PYG{n+nd}{@qml}\PYG{o}{.}\PYG{n}{qnode}\PYG{p}{(}\PYG{n}{dev}\PYG{p}{)}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{kernel\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{templates}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{(}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{adjoint}\PYG{p}{(}\PYG{n}{qml}\PYG{o}{.}\PYG{n}{templates}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{)}\PYG{p}{(}\PYG{n}{x2}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{probs}\PYG{p}{(}\PYG{n}{wires}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+
+\PYG{n}{kernel} \PYG{o}{=} \PYG{k}{lambda} \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{:} \PYG{n}{kernel\PYGZus{}circuit}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Compute kernel matrices}
+\PYG{n}{K\PYGZus{}train} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{kernels}\PYG{o}{.}\PYG{n}{kernel\PYGZus{}matrix}\PYG{p}{(}\PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{kernel\PYGZus{}function}\PYG{o}{=}\PYG{n}{kernel}\PYG{p}{)}
+\PYG{n}{K\PYGZus{}test} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{kernels}\PYG{o}{.}\PYG{n}{kernel\PYGZus{}matrix}\PYG{p}{(}\PYG{n}{X\PYGZus{}test}\PYG{p}{,} \PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{kernel\PYGZus{}function}\PYG{o}{=}\PYG{n}{kernel}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Train SVM}
+\PYG{n}{clf} \PYG{o}{=} \PYG{n}{svm}\PYG{o}{.}\PYG{n}{SVC}\PYG{p}{(}\PYG{n}{kernel}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{precomputed}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{clf}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{K\PYGZus{}train}\PYG{p}{,} \PYG{n}{Y\PYGZus{}train}\PYG{p}{)}
+\PYG{n}{predictions} \PYG{o}{=} \PYG{n}{clf}\PYG{o}{.}\PYG{n}{predict}\PYG{p}{(}\PYG{n}{K\PYGZus{}test}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Predicted labels:}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{predictions}\PYG{p}{)}
+
+\end{MintedVerbatim}

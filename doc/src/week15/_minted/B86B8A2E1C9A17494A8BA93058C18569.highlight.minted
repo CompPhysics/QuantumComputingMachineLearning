@@ -1,0 +1,31 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{qml}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{numpy} \PYG{k}{as} \PYG{n}{np}
+
+\PYG{c+c1}{\PYGZsh{} Create a 2\PYGZhy{}qubit simulator device}
+\PYG{n}{dev} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{device}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{default.qubit}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Define a feature map (state preparation) circuit}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{feature\PYGZus{}map}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{RX}\PYG{p}{(}\PYG{n}{x}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{RX}\PYG{p}{(}\PYG{n}{x}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Define a variational (trainable) layer}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{variational\PYGZus{}layer}\PYG{p}{(}\PYG{n}{params}\PYG{p}{)}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} params is a list of 4 angles for 2 qubits}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{Rot}\PYG{p}{(}\PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{Rot}\PYG{p}{(}\PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{p}{,} \PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{CNOT}\PYG{p}{(}\PYG{n}{wires}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Define the QNode: quantum classifier circuit}
+\PYG{n+nd}{@qml}\PYG{o}{.}\PYG{n}{qnode}\PYG{p}{(}\PYG{n}{dev}\PYG{p}{)}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{qclassifier}\PYG{p}{(}\PYG{n}{params}\PYG{p}{,} \PYG{n}{x}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{)}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} encode data into quantum state}
+    \PYG{n}{feature\PYGZus{}map}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} apply two variational layers}
+    \PYG{n}{variational\PYGZus{}layer}\PYG{p}{(}\PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{:}\PYG{l+m+mi}{4}\PYG{p}{]}\PYG{p}{)}
+    \PYG{n}{variational\PYGZus{}layer}\PYG{p}{(}\PYG{n}{params}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{:}\PYG{l+m+mi}{8}\PYG{p}{]}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} measure expectation of Z on qubit 0}
+    \PYG{k}{return} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{expval}\PYG{p}{(}\PYG{n}{qml}\PYG{o}{.}\PYG{n}{PauliZ}\PYG{p}{(}\PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{)}
+
+\end{MintedVerbatim}

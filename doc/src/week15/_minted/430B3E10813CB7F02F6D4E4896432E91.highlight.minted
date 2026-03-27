@@ -1,0 +1,26 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{c+c1}{\PYGZsh{} Example training data (X: inputs, Y: binary labels \PYGZob{}+1,\PYGZhy{}1\PYGZcb{})}
+\PYG{n}{X} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{l+m+mf}{0.1}\PYG{p}{,} \PYG{l+m+mf}{0.2}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{1.5}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.7}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{0.3}\PYG{p}{,} \PYG{l+m+mf}{0.8}\PYG{p}{]}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mf}{0.9}\PYG{p}{,} \PYG{l+m+mf}{0.4}\PYG{p}{]}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{Y} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Mean squared error cost}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{cost\PYGZus{}fn}\PYG{p}{(}\PYG{n}{params}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{preds} \PYG{o}{=} \PYG{p}{[}\PYG{n}{qclassifier}\PYG{p}{(}\PYG{n}{params}\PYG{p}{,} \PYG{n}{x}\PYG{o}{=}\PYG{n}{x}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{X}\PYG{p}{]}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{(}\PYG{n}{preds} \PYG{o}{\PYGZhy{}} \PYG{n}{Y}\PYG{p}{)}\PYG{o}{*}\PYG{o}{*}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Initialize parameters (8 angles) randomly}
+\PYG{n}{init\PYGZus{}params} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{randn}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{,} \PYG{n}{requires\PYGZus{}grad}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Choose an optimizer}
+\PYG{n}{opt} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{GradientDescentOptimizer}\PYG{p}{(}\PYG{n}{stepsize}\PYG{o}{=}\PYG{l+m+mf}{0.1}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Training loop}
+\PYG{n}{params} \PYG{o}{=} \PYG{n}{init\PYGZus{}params}
+\PYG{k}{for} \PYG{n}{epoch} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{30}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{params} \PYG{o}{=} \PYG{n}{opt}\PYG{o}{.}\PYG{n}{step}\PYG{p}{(}\PYG{n}{cost\PYGZus{}fn}\PYG{p}{,} \PYG{n}{params}\PYG{p}{)}
+    \PYG{k}{if} \PYG{n}{epoch} \PYG{o}{\PYGZpc{}} \PYG{l+m+mi}{5} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+        \PYG{n}{loss} \PYG{o}{=} \PYG{n}{cost\PYGZus{}fn}\PYG{p}{(}\PYG{n}{params}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Epoch }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{epoch}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, loss = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{loss}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+
+\end{MintedVerbatim}

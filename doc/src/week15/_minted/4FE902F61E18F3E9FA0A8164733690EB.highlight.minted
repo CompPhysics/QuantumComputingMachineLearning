@@ -1,0 +1,116 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{qml}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{numpy} \PYG{k}{as} \PYG{n}{pnp}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{model\PYGZus{}selection}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{train\PYGZus{}test\PYGZus{}split}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{metrics}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{accuracy\PYGZus{}score}\PYG{p}{,} \PYG{n}{precision\PYGZus{}score}\PYG{p}{,} \PYG{n}{recall\PYGZus{}score}
+
+\PYG{c+c1}{\PYGZsh{} Step 1: Generate synthetic credit data}
+\PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{seed}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+\PYG{n}{N} \PYG{o}{=} \PYG{l+m+mi}{100}
+\PYG{c+c1}{\PYGZsh{} Features: income (in thousands), debt\PYGZus{}ratio (percent), age (years)}
+\PYG{n}{income} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{normal}\PYG{p}{(}\PYG{l+m+mi}{50}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{n}{N}\PYG{p}{)}         \PYG{c+c1}{\PYGZsh{} mean 50, std 15}
+\PYG{n}{debt\PYGZus{}ratio} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{uniform}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{100}\PYG{p}{,} \PYG{n}{N}\PYG{p}{)}    \PYG{c+c1}{\PYGZsh{} between 0 and 100\PYGZpc{}}
+\PYG{n}{age} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{randint}\PYG{p}{(}\PYG{l+m+mi}{18}\PYG{p}{,} \PYG{l+m+mi}{70}\PYG{p}{,} \PYG{n}{N}\PYG{p}{)}           \PYG{c+c1}{\PYGZsh{} ages 18 to 69}
+\PYG{n}{X} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{column\PYGZus{}stack}\PYG{p}{(}\PYG{p}{(}\PYG{n}{income}\PYG{p}{,} \PYG{n}{debt\PYGZus{}ratio}\PYG{p}{,} \PYG{n}{age}\PYG{p}{)}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Label: simple linear rule with noise =\PYGZgt{} 1 = good credit, 0 = bad}
+\PYG{n}{score} \PYG{o}{=} \PYG{l+m+mf}{0.3} \PYG{o}{*} \PYG{n}{income} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{0.2} \PYG{o}{*} \PYG{n}{debt\PYGZus{}ratio} \PYG{o}{+} \PYG{l+m+mf}{0.1} \PYG{o}{*} \PYG{n}{age}
+\PYG{n}{y} \PYG{o}{=} \PYG{p}{(}\PYG{n}{score} \PYG{o}{\PYGZgt{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{median}\PYG{p}{(}\PYG{n}{score}\PYG{p}{)}\PYG{p}{)}\PYG{o}{.}\PYG{n}{astype}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{)}   \PYG{c+c1}{\PYGZsh{} threshold at median}
+
+\PYG{c+c1}{\PYGZsh{} Split into train/test (80/20 split)}
+\PYG{n}{X\PYGZus{}train\PYGZus{}np}\PYG{p}{,} \PYG{n}{X\PYGZus{}test\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}train\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}test\PYGZus{}np} \PYG{o}{=} \PYG{n}{train\PYGZus{}test\PYGZus{}split}\PYG{p}{(}\PYG{n}{X}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{test\PYGZus{}size}\PYG{o}{=}\PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{n}{random\PYGZus{}state}\PYG{o}{=}\PYG{l+m+mi}{42}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Step 2: Feature scaling for angle embedding}
+\PYG{c+c1}{\PYGZsh{} Scale each feature to [0, pi] so they can serve as rotation angles}
+\PYG{n}{max\PYGZus{}income} \PYG{o}{=} \PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{max\PYGZus{}debt} \PYG{o}{=} \PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{min\PYGZus{}age}\PYG{p}{,} \PYG{n}{max\PYGZus{}age} \PYG{o}{=} \PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.}\PYG{n}{min}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{n}{X}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.}\PYG{n}{max}\PYG{p}{(}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Scale training data}
+\PYG{n}{X\PYGZus{}train\PYGZus{}scaled} \PYG{o}{=} \PYG{n}{X\PYGZus{}train\PYGZus{}np}\PYG{o}{.}\PYG{n}{copy}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{/} \PYG{n}{max\PYGZus{}income} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+\PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{/} \PYG{n}{max\PYGZus{}debt} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+\PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{min\PYGZus{}age}\PYG{p}{)} \PYG{o}{/} \PYG{p}{(}\PYG{n}{max\PYGZus{}age} \PYG{o}{\PYGZhy{}} \PYG{n}{min\PYGZus{}age}\PYG{p}{)} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+
+\PYG{c+c1}{\PYGZsh{} Scale test data}
+\PYG{n}{X\PYGZus{}test\PYGZus{}scaled} \PYG{o}{=} \PYG{n}{X\PYGZus{}test\PYGZus{}np}\PYG{o}{.}\PYG{n}{copy}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{/} \PYG{n}{max\PYGZus{}income} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+\PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{/} \PYG{n}{max\PYGZus{}debt} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+\PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{[}\PYG{p}{:}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{min\PYGZus{}age}\PYG{p}{)} \PYG{o}{/} \PYG{p}{(}\PYG{n}{max\PYGZus{}age} \PYG{o}{\PYGZhy{}} \PYG{n}{min\PYGZus{}age}\PYG{p}{)} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}
+
+\PYG{c+c1}{\PYGZsh{} Convert data to PennyLane numpy arrays for differentiation}
+\PYG{n}{X\PYGZus{}train} \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{X\PYGZus{}train\PYGZus{}scaled}\PYG{p}{)}
+\PYG{n}{X\PYGZus{}test}  \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{X\PYGZus{}test\PYGZus{}scaled}\PYG{p}{)}
+\PYG{n}{y\PYGZus{}train} \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{y\PYGZus{}train\PYGZus{}np}\PYG{p}{)}
+\PYG{n}{y\PYGZus{}test}  \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{y\PYGZus{}test\PYGZus{}np}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Step 3: Define the variational quantum circuit}
+\PYG{n}{n\PYGZus{}qubits} \PYG{o}{=} \PYG{l+m+mi}{3}
+\PYG{n}{dev} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{device}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{default.qubit}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{n}{n\PYGZus{}qubits}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Parameterized quantum neural network (variational circuit)}
+\PYG{n+nd}{@qml}\PYG{o}{.}\PYG{n}{qnode}\PYG{p}{(}\PYG{n}{dev}\PYG{p}{)}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{circuit}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{x}\PYG{p}{)}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} Feature map: encode features by rotation angles on each qubit}
+    \PYG{c+c1}{\PYGZsh{} Uses RY rotations (AngleEmbedding by default uses RX or can specify RY)}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{(}\PYG{n}{features}\PYG{o}{=}\PYG{n}{x}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n\PYGZus{}qubits}\PYG{p}{)}\PYG{p}{,} \PYG{n}{rotation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{Y}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Variational (trainable) layers: strong entangling rotations}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{templates}\PYG{o}{.}\PYG{n}{StronglyEntanglingLayers}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n\PYGZus{}qubits}\PYG{p}{)}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Measure expectation of Pauli\PYGZhy{}Z on the first qubit}
+    \PYG{k}{return} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{expval}\PYG{p}{(}\PYG{n}{qml}\PYG{o}{.}\PYG{n}{PauliZ}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Initialize trainable weights for the variational layers}
+\PYG{n}{num\PYGZus{}layers} \PYG{o}{=} \PYG{l+m+mi}{1}
+\PYG{c+c1}{\PYGZsh{} Shape for StronglyEntanglingLayers: (num\PYGZus{}layers, n\PYGZus{}qubits, 3)}
+\PYG{n}{init\PYGZus{}weights} \PYG{o}{=} \PYG{l+m+mf}{0.01} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{randn}\PYG{p}{(}\PYG{n}{num\PYGZus{}layers}\PYG{p}{,} \PYG{n}{n\PYGZus{}qubits}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)}
+\PYG{n}{weights} \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{init\PYGZus{}weights}\PYG{p}{,} \PYG{n}{requires\PYGZus{}grad}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Step 4: Define cost (binary cross\PYGZhy{}entropy) and train the QNN}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{cross\PYGZus{}entropy\PYGZus{}loss}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{X}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} Run circuit on each sample to get expectation values}
+    \PYG{n}{expvals} \PYG{o}{=} \PYG{p}{[}\PYG{n}{circuit}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{x}\PYG{o}{=}\PYG{n}{x}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{X}\PYG{p}{]}
+    \PYG{n}{expvals} \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{stack}\PYG{p}{(}\PYG{n}{expvals}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Convert expectation ⟨Z⟩ to probability for label=1: P(1) = (1 \PYGZhy{} ⟨Z⟩)/2}
+    \PYG{n}{probs} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{expvals}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+    \PYG{c+c1}{\PYGZsh{} Clip probabilities to avoid log(0)}
+    \PYG{n}{probs} \PYG{o}{=} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{clip}\PYG{p}{(}\PYG{n}{probs}\PYG{p}{,} \PYG{l+m+mf}{1e\PYGZhy{}6}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{1e\PYGZhy{}6}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Binary cross\PYGZhy{}entropy loss}
+    \PYG{n}{loss} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{pnp}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{n}{y} \PYG{o}{*} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{n}{probs}\PYG{p}{)} \PYG{o}{+} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{y}\PYG{p}{)} \PYG{o}{*} \PYG{n}{pnp}\PYG{o}{.}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{probs}\PYG{p}{)}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{loss}
+
+\PYG{c+c1}{\PYGZsh{} Choose an optimizer (gradient descent)}
+\PYG{n}{opt} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{GradientDescentOptimizer}\PYG{p}{(}\PYG{n}{stepsize}\PYG{o}{=}\PYG{l+m+mf}{0.5}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Training loop}
+\PYG{n}{epochs} \PYG{o}{=} \PYG{l+m+mi}{20}
+\PYG{k}{for} \PYG{n}{it} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{epochs}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{weights}\PYG{p}{,} \PYG{n}{cost\PYGZus{}val} \PYG{o}{=} \PYG{n}{opt}\PYG{o}{.}\PYG{n}{step\PYGZus{}and\PYGZus{}cost}\PYG{p}{(}\PYG{k}{lambda} \PYG{n}{w}\PYG{p}{:} \PYG{n}{cross\PYGZus{}entropy\PYGZus{}loss}\PYG{p}{(}\PYG{n}{w}\PYG{p}{,} \PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{y\PYGZus{}train}\PYG{p}{)}\PYG{p}{,} \PYG{n}{weights}\PYG{p}{)}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{it} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{\PYGZpc{}} \PYG{l+m+mi}{5} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Iteration }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{it}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZgt{}2}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{: loss = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{cost\PYGZus{}val}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Step 5: Evaluate performance on training and test sets}
+\PYG{c+c1}{\PYGZsh{} Predict by evaluating circuit and thresholding at 0.5}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{predict}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{X}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{preds} \PYG{o}{=} \PYG{p}{[}\PYG{p}{]}
+    \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{X}\PYG{p}{:}
+        \PYG{n}{z} \PYG{o}{=} \PYG{n}{circuit}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{x}\PYG{o}{=}\PYG{n}{x}\PYG{p}{)}
+        \PYG{n}{prob} \PYG{o}{=} \PYG{n+nb}{float}\PYG{p}{(}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{z}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} probability of class=1}
+        \PYG{n}{preds}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{prob} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{0.5}\PYG{p}{)}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{preds}\PYG{p}{)}
+
+\PYG{n}{y\PYGZus{}train\PYGZus{}pred} \PYG{o}{=} \PYG{n}{predict}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{X\PYGZus{}train}\PYG{p}{)}
+\PYG{n}{y\PYGZus{}test\PYGZus{}pred}  \PYG{o}{=} \PYG{n}{predict}\PYG{p}{(}\PYG{n}{weights}\PYG{p}{,} \PYG{n}{X\PYGZus{}test}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Compute accuracy, precision, recall}
+\PYG{n}{train\PYGZus{}acc} \PYG{o}{=} \PYG{n}{accuracy\PYGZus{}score}\PYG{p}{(}\PYG{n}{y\PYGZus{}train\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}train\PYGZus{}pred}\PYG{p}{)}
+\PYG{n}{test\PYGZus{}acc}  \PYG{o}{=} \PYG{n}{accuracy\PYGZus{}score}\PYG{p}{(}\PYG{n}{y\PYGZus{}test\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}test\PYGZus{}pred}\PYG{p}{)}
+\PYG{n}{train\PYGZus{}prec} \PYG{o}{=} \PYG{n}{precision\PYGZus{}score}\PYG{p}{(}\PYG{n}{y\PYGZus{}train\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}train\PYGZus{}pred}\PYG{p}{)}
+\PYG{n}{test\PYGZus{}prec}  \PYG{o}{=} \PYG{n}{precision\PYGZus{}score}\PYG{p}{(}\PYG{n}{y\PYGZus{}test\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}test\PYGZus{}pred}\PYG{p}{)}
+\PYG{n}{train\PYGZus{}rec}  \PYG{o}{=} \PYG{n}{recall\PYGZus{}score}\PYG{p}{(}\PYG{n}{y\PYGZus{}train\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}train\PYGZus{}pred}\PYG{p}{)}
+\PYG{n}{test\PYGZus{}rec}   \PYG{o}{=} \PYG{n}{recall\PYGZus{}score}\PYG{p}{(}\PYG{n}{y\PYGZus{}test\PYGZus{}np}\PYG{p}{,} \PYG{n}{y\PYGZus{}test\PYGZus{}pred}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Train Accuracy:  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{train\PYGZus{}acc}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, Precision: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{train\PYGZus{}prec}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, Recall: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{train\PYGZus{}rec}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Test  Accuracy:  }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{test\PYGZus{}acc}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, Precision: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{test\PYGZus{}prec}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, Recall: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{test\PYGZus{}rec}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\end{MintedVerbatim}

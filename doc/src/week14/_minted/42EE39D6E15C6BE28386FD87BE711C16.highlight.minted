@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{qml}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{numpy} \PYG{k}{as} \PYG{n}{np}
+\PYG{n}{dev} \PYG{o}{=} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{device}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{default.qubit}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+\PYG{n+nd}{@qml}\PYG{o}{.}\PYG{n}{qnode}\PYG{p}{(}\PYG{n}{dev}\PYG{p}{)}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{circuit}\PYG{p}{(}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{templates}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{(}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{n}{dev}\PYG{o}{.}\PYG{n}{wires}\PYG{p}{)}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{adjoint}\PYG{p}{(}\PYG{n}{qml}\PYG{o}{.}\PYG{n}{templates}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{)}\PYG{p}{(}\PYG{n}{x2}\PYG{p}{,} \PYG{n}{wires}\PYG{o}{=}\PYG{n}{dev}\PYG{o}{.}\PYG{n}{wires}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{probs}\PYG{p}{(}\PYG{n}{wires}\PYG{o}{=}\PYG{n}{dev}\PYG{o}{.}\PYG{n}{wires}\PYG{p}{)}
+
+\PYG{n}{kernel} \PYG{o}{=} \PYG{k}{lambda} \PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2}\PYG{p}{:} \PYG{n}{circuit}\PYG{p}{(}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2}\PYG{p}{)}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+\PYG{n}{X\PYGZus{}train} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{random}\PYG{p}{(}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{)}
+\PYG{n}{X\PYGZus{}test} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{random}\PYG{p}{(}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{)}
+\PYG{n}{qml}\PYG{o}{.}\PYG{n}{kernels}\PYG{o}{.}\PYG{n}{kernel\PYGZus{}matrix}\PYG{p}{(}\PYG{n}{X\PYGZus{}train}\PYG{p}{,} \PYG{n}{X\PYGZus{}test}\PYG{p}{,} \PYG{n}{kernel}\PYG{p}{)}
+
+\end{MintedVerbatim}

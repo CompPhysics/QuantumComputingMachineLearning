@@ -1,0 +1,46 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{qml}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pennylane}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{numpy} \PYG{k}{as} \PYG{n}{np}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{datasets}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{preprocessing}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{StandardScaler}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{decomposition}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{PCA}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{model\PYGZus{}selection}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{train\PYGZus{}test\PYGZus{}split}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{svm}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{SVC}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{sklearn}\PYG{n+nn}{.}\PYG{n+nn}{metrics}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{accuracy\PYGZus{}score}\PYG{p}{,} \PYG{n}{classification\PYGZus{}report}
+\PYG{n}{num\PYGZus{}qubits}\PYG{o}{=}\PYG{l+m+mi}{4}
+\PYG{n}{device}\PYG{o}{=}\PYG{n}{qml}\PYG{o}{.}\PYG{n}{device}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{default.qubit}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,}\PYG{n}{wires}\PYG{o}{=}\PYG{n}{num\PYGZus{}qubits}\PYG{p}{)}
+
+
+\PYG{n+nd}{@qml}\PYG{o}{.}\PYG{n}{qnode}\PYG{p}{(}\PYG{n}{device}\PYG{p}{)}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{qnode}\PYG{p}{(}\PYG{n}{inputs}\PYG{p}{,}\PYG{n}{weights}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{templates}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{(}\PYG{n}{inputs}\PYG{p}{,}
+                                 \PYG{n}{wires}\PYG{o}{=}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{num\PYGZus{}qubits}\PYG{p}{)}\PYG{p}{,}
+                                 \PYG{n}{rotation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{Y}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} encode the inputs into the quantum state by rotating each qubit along the Y\PYGZhy{}axis.}
+    \PYG{n}{qml}\PYG{o}{.}\PYG{n}{adjoint}\PYG{p}{(}\PYG{n}{qml}\PYG{o}{.}\PYG{n}{AngleEmbedding}\PYG{p}{(}\PYG{n}{features}\PYG{o}{=}\PYG{n}{weights}\PYG{p}{,}
+                                   \PYG{n}{wires}\PYG{o}{=}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{num\PYGZus{}qubits}\PYG{p}{)}\PYG{p}{,}
+                                    \PYG{n}{rotation}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{Y}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} applies the inverse transformation using the weights parameter.}
+    \PYG{k}{return} \PYG{n}{qml}\PYG{o}{.}\PYG{n}{probs}\PYG{p}{(}\PYG{n}{wires}\PYG{o}{=}\PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{num\PYGZus{}qubits}\PYG{p}{)}\PYG{p}{)}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{qkernel}\PYG{p}{(}\PYG{n}{inputs}\PYG{p}{,}\PYG{n}{weights}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{p}{[}\PYG{p}{[}\PYG{n}{qnode}\PYG{p}{(}\PYG{n+nb}{input}\PYG{p}{,}\PYG{n}{weight}\PYG{p}{)}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{weight} \PYG{o+ow}{in} \PYG{n}{weights}\PYG{p}{]} \PYG{k}{for} \PYG{n+nb}{input} \PYG{o+ow}{in} \PYG{n}{inputs} \PYG{p}{]}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} compute the quantum kernel}
+
+
+\PYG{c+c1}{\PYGZsh{} Fit the model}
+\PYG{n}{start\PYGZus{}time}\PYG{o}{=}\PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{qsvm}\PYG{o}{=}\PYG{n}{SVC}\PYG{p}{(}\PYG{n}{kernel}\PYG{o}{=}\PYG{n}{qkernel}\PYG{p}{)}
+\PYG{n}{qsvm}\PYG{o}{.}\PYG{n}{fit}\PYG{p}{(}\PYG{n}{X\PYGZus{}train}\PYG{p}{,}\PYG{n}{Y\PYGZus{}train}\PYG{p}{)}
+\PYG{n}{end\PYGZus{}time}\PYG{o}{=}\PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{(}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{end\PYGZus{}time}\PYG{o}{\PYGZhy{}}\PYG{n}{start\PYGZus{}time}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Make predictions and calculate the accuracy}
+\PYG{n}{predictions}\PYG{o}{=}\PYG{n}{qsvm}\PYG{o}{.}\PYG{n}{predict}\PYG{p}{(}\PYG{n}{X\PYGZus{}test}\PYG{p}{)}
+\PYG{n}{accuracy}\PYG{o}{=}\PYG{n}{accuracy\PYGZus{}score}\PYG{p}{(}\PYG{n}{Y\PYGZus{}test}\PYG{p}{,}\PYG{n}{predictions}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{the accuracy is: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{accuracy}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ \PYGZpc{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{f1score}\PYG{o}{=}\PYG{n}{f1\PYGZus{}score}\PYG{p}{(}\PYG{n}{Y\PYGZus{}test}\PYG{p}{,}\PYG{n}{predictions}\PYG{p}{,}\PYG{n}{average}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{macro}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{the f1\PYGZhy{}score is: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{f1score}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{classification\PYGZus{}report}\PYG{p}{(}\PYG{n}{Y\PYGZus{}test}\PYG{p}{,}\PYG{n}{predictions}\PYG{p}{)}\PYG{p}{)}
+
+
+
+\end{MintedVerbatim}
