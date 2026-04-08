@@ -120,12 +120,16 @@ themes can be covered:
 ## April 6-10, 2026
   - Finalizing the QPE discussions, with codes and formalism
   - The HHL algorithm for solving linear algebra problems
+  - Video of lecture at https://youtu.be/Rsn2INejK7o
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek11.pdf
+
 
 ## April 13-17, 2026
-  - Summing up the HHL discussions, codes and algorithms
-  - The QAOA algorithm
+  - the HHL algorithm, codes and algorithms
+  - Start discussing The QAOA algorithm
 
 ## April 20-24, 2026 Quantum Machine Learning
+  - QAOA algorithm and implementation
   - Basics of quantum machine learning (QML) 
   - Quantum Support vector machines (SVM) and classical SVMs
 
