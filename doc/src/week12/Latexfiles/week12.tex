@@ -2,12 +2,13 @@
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern}
+
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{physics}
 \usepackage{bm}
 \usepackage{mathtools}
-\usepackage{quantikz}
+\usepackage{tikz}
+\usetikzlibrary{quantikz,arrows.meta,positioning}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{hyperref}
@@ -173,12 +174,16 @@ So the control register stores the exact \(n\)-bit binary expansion of \(\phi\).
 
 \begin{frame}{QPE Circuit}
 \centering
+\begin{tikzpicture}
+\node[scale=0.9] {
 \begin{quantikz}
 \lstick{$\ket{0}$}    & \gate{H} & \ctrl{3} & \qw      & \qw      & \gate[3]{\mathrm{QFT}^\dagger} & \meter{} \\
 \lstick{$\ket{0}$}    & \gate{H} & \qw      & \ctrl{2} & \qw      & \ghost{\mathrm{QFT}^\dagger}   & \meter{} \\
 \lstick{$\ket{0}$}    & \gate{H} & \qw      & \qw      & \ctrl{1} & \ghost{\mathrm{QFT}^\dagger}   & \meter{} \\
 \lstick{$\ket{\psi}$} & \qw      & \gate{U^4} & \gate{U^2} & \gate{U} & \qw                          & \qw
 \end{quantikz}
+};
+\end{tikzpicture}
 
 \vspace{0.5em}
 
@@ -375,12 +380,16 @@ Quantum phase estimation estimates \(\phi\) using:
 \end{frame}
 
 \begin{frame}{Phase Estimation Circuit}
+\begin{tikzpicture}
+\node[scale=0.85] {
 \begin{quantikz}[row sep=0.35cm, column sep=0.45cm]
 \lstick{$|0\rangle$} & \gate{H} & \ctrl{3} & \qw      & \qw      & \gate[wires=3]{\mathrm{QFT}^\dagger} & \meter{} \\
 \lstick{$|0\rangle$} & \gate{H} & \qw      & \ctrl{2} & \qw      &                              & \meter{} \\
 \lstick{$|0\rangle$} & \gate{H} & \qw      & \qw      & \ctrl{1} &                              & \meter{} \\
 \lstick{$|u\rangle$} & \qw      & \gate{U} & \gate{U^2} & \gate{U^4} & \qw                        & \qw
 \end{quantikz}
+};
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{How the Phases Accumulate}
@@ -441,11 +450,15 @@ Since this is not unitary, HHL proceeds indirectly:
 \end{frame}
 
 \begin{frame}{Full HHL Circuit Schematic}
+\begin{tikzpicture}
+\node[scale=0.85] {
 \begin{quantikz}[row sep=0.35cm, column sep=0.38cm]
 \lstick{$|0\rangle$} & \qw & \gate[style={fill=blue!10}]{R(\lambda^{-1})} & \qw & \meter{} \\
 \lstick{$|0\rangle^{\otimes m}$} & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}(e^{iAt})} & \qw & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}^\dagger} & \qw \\
 \lstick{$|b\rangle$} & \qw & \qw & \qw & \rstick{$|x\rangle\propto A^{-1}|b\rangle$}
 \end{quantikz}
+};
+\end{tikzpicture}
 \end{frame}
 
 
@@ -692,13 +705,15 @@ Hence poor conditioning directly hurts the probability of successful postselecti
 
 
 \begin{frame}{High-Level HHL Circuit}
-\[
+\begin{tikzpicture}
+\node[scale=0.85] {
 \begin{quantikz}[row sep=0.35cm, column sep=0.42cm]
-\lstick{\ket{0}_a} & \qw & \gate[style={fill=blue!10}]{R(\lambda^{-1})} & \qw & \meter{} \\
-\lstick{\ket{0}^{\otimes m}_p} & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}(e^{iAt})} & \qw & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}^\dagger} & \qw \\
-\lstick{\ket{b}_s} & \qw & \qw & \qw & \rstick{\ket{x}\propto A^{-1}\ket{b}}
+\lstick{$|0\rangle_a$} & \qw & \gate[style={fill=blue!10}]{R(\lambda^{-1})} & \qw & \meter{} \\
+\lstick{$|0\rangle^{\otimes m}_p$} & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}(e^{iAt})} & \qw & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}^\dagger} & \qw \\
+\lstick{$|b\rangle_s$} & \qw & \qw & \qw & \rstick{$|x\rangle\propto A^{-1}|b\rangle$}
 \end{quantikz}
-\]
+};
+\end{tikzpicture}
 
 \medskip
 
@@ -1990,12 +2005,16 @@ QPE yields
 
 \begin{frame}{QPE Circuit Block}
 \centering
+\begin{tikzpicture}
+\node[scale=0.85] {
 \begin{quantikz}[row sep=0.35cm, column sep=0.3cm]
 \lstick{$|u_j\rangle$}  & \qw      & \qw       & \qw       & \qw       & \qw \\
 \lstick{$|0\rangle$}    & \gate{H} & \ctrl{-1} & \qw       & \qw       & \gate[wires=3]{\text{QFT}^{-1}} & \qw \\
 \lstick{$|0\rangle$}    & \gate{H} & \qw       & \ctrl{-2} & \qw       & \qw & \qw \\
 \lstick{$|0\rangle$}    & \gate{H} & \qw       & \qw       & \ctrl{-3} & \qw & \qw
 \end{quantikz}
+};
+\end{tikzpicture}
 
 Here the controlled gates are
 \[
@@ -2021,11 +2040,15 @@ Hence QPE acts as a quantum spectral analyzer.
 
 \begin{frame}{High-Level HHL Circuit}
 \centering
+\begin{tikzpicture}
+\node[scale=0.75] {
 \begin{quantikz}[row sep=0.35cm, column sep=0.42cm]
 \lstick{$|b\rangle$}             & \qw & \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}} & \qw & \gate[wires=2,style={fill=yellow!20,draw=orange}]{\text{Controlled } \lambda^{-1}} & \qw & \gate[wires=2,style={fill=blue!15,draw=blue}]{\text{QPE}^{\dagger}} & \qw & \qw \\
 \lstick{$|0\rangle^{\otimes m}$} & \qw & \ghost{\text{QPE}}                                       & \qw & \ghost{\text{Controlled } \lambda^{-1}}                                           & \qw & \ghost{\text{QPE}^{\dagger}}                                        & \qw & \qw \\
 \lstick{$|0\rangle_a$}           & \qw & \qw                                                      & \qw & \gate{R_y(\theta(\lambda))}                                                       & \qw & \qw                                                                 & \meter{} & \qw
 \end{quantikz}
+};
+\end{tikzpicture}
 
 \begin{itemize}
 \item Blue block: spectral decomposition and recombination.
@@ -2464,10 +2487,6 @@ A^{-1}|b\rangle
 
 HHL is therefore best interpreted as a quantum inverse-operator method.
 \end{frame}
-
-\end{document}
-
-
 
 \end{document}
 
