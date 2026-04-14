@@ -448,37 +448,640 @@ Since this is not unitary, HHL proceeds indirectly:
 \end{quantikz}
 \end{frame}
 
-\begin{frame}{HHL State Evolution}
-Start with
+
+\begin{frame}{The Linear-System Problem}
+We want to solve
 \[
-\ket{0}\ket{0}^{\otimes m}\ket{b}
-=
-\ket{0}\ket{0}^{\otimes m}\sum_j \beta_j \ket{u_j}.
+A\ket{x}=\ket{b},
+\]
+where \(A\) is Hermitian and invertible.
+
+Because \(A\) is Hermitian, it has an orthonormal eigenbasis:
+\[
+A\ket{u_j}=\lambda_j \ket{u_j},
+\qquad
+A=\sum_j \lambda_j \ket{u_j}\bra{u_j}.
 \]
 
-After phase estimation:
+Expand the right-hand side as
 \[
-\ket{0}\sum_j \beta_j \ket{\widetilde{\lambda_j}}\ket{u_j}.
+\ket{b}=\sum_j \beta_j \ket{u_j},
+\qquad
+\beta_j=\braket{u_j|b}.
 \]
 
-After controlled rotation:
+Formally,
 \[
-\sum_j \beta_j
-\left(
-\sqrt{1-\frac{C^2}{\lambda_j^2}}\ket{0}
-+
-\frac{C}{\lambda_j}\ket{1}
-\right)
-\ket{\widetilde{\lambda_j}}\ket{u_j}.
-\]
-
-After uncomputation and postselection on ancilla \(\ket{1}\):
-\[
-\ket{x}\propto \sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}.
+A^{-1}\ket{b}=\sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}.
 \]
 \end{frame}
 
-\section{Worked Example: 1D Poisson Equation}
+\begin{frame}{Why This is the Correct Formal Solution}
+Since
+\[
+A=\sum_j \lambda_j \ket{u_j}\bra{u_j},
+\]
+the inverse is
+\[
+A^{-1}=\sum_j \frac{1}{\lambda_j}\ket{u_j}\bra{u_j},
+\]
+provided all \(\lambda_j\neq 0\).
+
+Applying this to \(\ket{b}\) gives
+\[
+A^{-1}\ket{b}
+=
+\sum_j \frac{1}{\lambda_j}\ket{u_j}\bra{u_j}
+\sum_k \beta_k \ket{u_k}.
+\]
+
+Using orthonormality,
+\[
+\braket{u_j|u_k}=\delta_{jk},
+\]
+we get
+\[
+A^{-1}\ket{b}
+=
+\sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}.
+\]
+
+So HHL must implement the spectral map
+\[
+\lambda_j \longmapsto \frac{1}{\lambda_j}.
+\]
+\end{frame}
+
+\begin{frame}{Initial State of the Algorithm}
+HHL uses three logical pieces:
+\begin{itemize}
+    \item the \emph{system register}, initially in \(\ket{b}\),
+    \item the \emph{phase register}, initially in \(\ket{0}^{\otimes m}\),
+    \item one \emph{ancilla qubit}, initially in \(\ket{0}\).
+\end{itemize}
+
+So the full initial state is
+\[
+\ket{\Psi_0}
+=
+\ket{0}_{a}\ket{0}^{\otimes m}_{p}\ket{b}_{s}
+=
+\ket{0}_{a}\ket{0}^{\otimes m}_{p}\sum_j \beta_j \ket{u_j}_{s}.
+\]
+
+By linearity, the algorithm can be analyzed on each eigencomponent \(\ket{u_j}\) separately.
+\end{frame}
+
+\begin{frame}{Why Phase Estimation is Used}
+The inverse \(A^{-1}\) is not unitary in general, so we cannot apply it directly as a quantum gate.
+
+Instead, define the unitary
+\[
+U=e^{iAt}.
+\]
+
+If
+\[
+A\ket{u_j}=\lambda_j \ket{u_j},
+\]
+then
+\[
+U\ket{u_j}=e^{i\lambda_j t}\ket{u_j}.
+\]
+
+Comparing with the phase-estimation form
+\[
+U\ket{u_j}=e^{2\pi i \phi_j}\ket{u_j},
+\]
+we identify
+\[
+\phi_j = \frac{\lambda_j t}{2\pi}.
+\]
+
+Thus quantum phase estimation converts eigenvalue information into a register that can control later operations.
+\end{frame}
+
+\begin{frame}{State After QPE}
+Apply phase estimation to the phase register and system register:
+\[
+\ket{0}^{\otimes m}\ket{u_j}
+\longrightarrow
+\ket{\widetilde{\lambda_j}}\ket{u_j},
+\]
+where \(\ket{\widetilde{\lambda_j}}\) is a binary approximation to the eigenvalue.
+
+Therefore, by linearity,
+\[
+\ket{\Psi_1}
+=
+\ket{0}_{a}
+\sum_j \beta_j \ket{\widetilde{\lambda_j}}_{p}\ket{u_j}_{s}.
+\]
+
+Each eigenvector \(\ket{u_j}\) is now entangled with its corresponding eigenvalue register.
+\end{frame}
+
+\begin{frame}{Controlled Rotation}
+We now want an ancilla amplitude proportional to \(1/\lambda_j\).
+
+Choose a constant \(C\) such that
+\[
+\left|\frac{C}{\lambda_j}\right|\le 1
+\qquad
+\text{for all } j.
+\]
+
+Define the controlled ancilla rotation so that
+\[
+\ket{\widetilde{\lambda_j}}\ket{0}_{a}
+\longrightarrow
+\ket{\widetilde{\lambda_j}}
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\ket{0}_{a}
++
+\frac{C}{\lambda_j}\ket{1}_{a}
+\right).
+\]
+
+Applying this to the entire superposition gives
+\[
+\ket{\Psi_2}
+=
+\sum_j \beta_j
+\ket{\widetilde{\lambda_j}}\ket{u_j}
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\ket{0}_{a}
++
+\frac{C}{\lambda_j}\ket{1}_{a}
+\right).
+\]
+\end{frame}
+
+\begin{frame}{Rewrite by Ancilla Branches}
+It is useful to regroup \(\ket{\Psi_2}\) according to the ancilla state:
+\[
+\ket{\Psi_2}
+=
+\ket{0}_{a}
+\sum_j \beta_j \sqrt{1-\frac{C^2}{\lambda_j^2}}
+\ket{\widetilde{\lambda_j}}\ket{u_j}
++
+\ket{1}_{a}
+\sum_j \beta_j \frac{C}{\lambda_j}
+\ket{\widetilde{\lambda_j}}\ket{u_j}.
+\]
+
+This shows explicitly:
+\begin{itemize}
+    \item the undesired branch attached to \(\ket{0}_a\),
+    \item the desired inverse-weighted branch attached to \(\ket{1}_a\).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Inverse QPE and Postselection}
+Apply the inverse QPE circuit:
+\[
+\ket{\widetilde{\lambda_j}}\ket{u_j}\mapsto \ket{0}^{\otimes m}\ket{u_j}.
+\]
+
+Hence
+\[
+\ket{\Psi_3}
+=
+\ket{0}_{a}\ket{0}^{\otimes m}
+\sum_j \beta_j \sqrt{1-\frac{C^2}{\lambda_j^2}} \ket{u_j}
++
+\ket{1}_{a}\ket{0}^{\otimes m}
+\sum_j \beta_j \frac{C}{\lambda_j} \ket{u_j}.
+\]
+
+Conditioning on ancilla outcome \(\ket{1}\), the remaining system state is
+\[
+\ket{\widetilde{x}} = C \sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}=C\,A^{-1}\ket{b}.
+\]
+
+After normalization,
+\[
+\ket{x}
+=
+\frac{A^{-1}\ket{b}}{\norm{A^{-1}\ket{b}}}.
+\]
+\end{frame}
+
+\begin{frame}{Success Probability}
+The success probability is the norm squared of the ancilla-\(\ket{1}\) branch:
+\[
+p_{\mathrm{succ}}
+=
+\left\| C \sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}\right\|^2
+=
+C^2 \sum_j \frac{|\beta_j|^2}{\lambda_j^2}.
+\]
+
+If the eigenvalues lie in
+\[
+\lambda_j \in \left[\frac{1}{\kappa},1\right],
+\]
+and we choose \(C\sim 1/\kappa\), then one typically obtains
+\[
+p_{\mathrm{succ}} \gtrsim \frac{1}{\kappa^2}.
+\]
+
+Hence poor conditioning directly hurts the probability of successful postselection.
+\end{frame}
+
+
+\begin{frame}{High-Level HHL Circuit}
+\[
+\begin{quantikz}[row sep=0.35cm, column sep=0.42cm]
+\lstick{\ket{0}_a} & \qw & \gate[style={fill=blue!10}]{R(\lambda^{-1})} & \qw & \meter{} \\
+\lstick{\ket{0}^{\otimes m}_p} & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}(e^{iAt})} & \qw & \gate[wires=2, style={fill=green!10}]{\mathrm{QPE}^\dagger} & \qw \\
+\lstick{\ket{b}_s} & \qw & \qw & \qw & \rstick{\ket{x}\propto A^{-1}\ket{b}}
+\end{quantikz}
+\]
+
+\medskip
+
+The three blocks correspond to:
+\begin{enumerate}
+    \item spectral decomposition,
+    \item inverse weighting through amplitudes,
+    \item spectral recombination.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Circuit Step 1: QPE Block}
+Input:
+\[
+\ket{0}_a \ket{0}^{\otimes m}_p \sum_j \beta_j \ket{u_j}_s.
+\]
+
+After the green QPE block:
+\[
+\ket{0}_a \sum_j \beta_j \ket{\widetilde{\lambda_j}}_p \ket{u_j}_s.
+\]
+
+This is the moment where the hidden spectral decomposition of \(\ket{b}\) becomes explicit.
+\end{frame}
+
+\begin{frame}{Circuit Step 2: Controlled Rotation Block}
+The blue block acts conditionally on the eigenvalue register:
+\[
+\ket{\widetilde{\lambda_j}}_p \ket{0}_a
+\mapsto
+\ket{\widetilde{\lambda_j}}_p
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\ket{0}_a
++
+\frac{C}{\lambda_j}\ket{1}_a
+\right).
+\]
+
+Hence the full state becomes
+\[
+\sum_j \beta_j \ket{\widetilde{\lambda_j}}_p \ket{u_j}_s
+\left(
+\sqrt{1-\frac{C^2}{\lambda_j^2}}\ket{0}_a
++
+\frac{C}{\lambda_j}\ket{1}_a
+\right).
+\]
+
+The inverse eigenvalue weights are now encoded in ancilla amplitudes.
+\end{frame}
+
+\begin{frame}{Circuit Step 3: Inverse-QPE Block}
+The inverse green block removes the eigenvalue label:
+\[
+\ket{\widetilde{\lambda_j}}_p \ket{u_j}_s
+\mapsto
+\ket{0}^{\otimes m}_p \ket{u_j}_s.
+\]
+
+So after the inverse-QPE block:
+\[
+\ket{0}^{\otimes m}_p
+\left[
+\ket{0}_a \sum_j \beta_j \sqrt{1-\frac{C^2}{\lambda_j^2}} \ket{u_j}_s
++
+\ket{1}_a \sum_j \beta_j \frac{C}{\lambda_j}\ket{u_j}_s
+\right].
+\]
+
+This is why uncomputation is so important: it disentangles the phase register from the system.
+\end{frame}
+
+\begin{frame}{Circuit Step 4: Measurement}
+Measure the ancilla.
+
+\medskip
+
+If the outcome is \(\ket{1}_a\), then the system is left in
+\[
+\ket{\widetilde{x}} = C\sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}.
+\]
+
+Normalization gives the final HHL output:
+\[
+\ket{x}=\frac{A^{-1}\ket{b}}{\norm{A^{-1}\ket{b}}}.
+\]
+
+So the ancilla measurement selects the branch carrying the desired inverse spectral weights.
+\end{frame}
+
+
+
+\begin{frame}{A Minimal Worked Example}
+Take
+\[
+A=
+\begin{pmatrix}
+3 & 1\\
+1 & 3
+\end{pmatrix}.
+\]
+
+We choose this matrix because it is:
+\begin{itemize}
+    \item Hermitian,
+    \item positive definite,
+    \item simple enough to diagonalize by hand.
+\end{itemize}
+
+Let the source state be
+\[
+\ket{b}=\ket{0}
+=
+\begin{pmatrix}
+1\\
+0
+\end{pmatrix}.
+\]
+\end{frame}
+
+\begin{frame}{Diagonalizing the Matrix}
+The eigenpairs of
+\[
+A=
+\begin{pmatrix}
+3 & 1\\
+1 & 3
+\end{pmatrix}
+\]
+are
+\[
+\lambda_1=4,
+\qquad
+\ket{u_1}=\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+1\\
+1
+\end{pmatrix},
+\]
+\[
+\lambda_2=2,
+\qquad
+\ket{u_2}=\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+1\\
+-1
+\end{pmatrix}.
+\]
+
+Indeed,
+\[
+A\ket{u_1}=4\ket{u_1},
+\qquad
+A\ket{u_2}=2\ket{u_2}.
+\]
+\end{frame}
+
+\begin{frame}{Expand the Source State}
+We now write \(\ket{b}=\ket{0}\) in the eigenbasis:
+\[
+\ket{0}
+=
+\frac{1}{\sqrt{2}}\ket{u_1}
++
+\frac{1}{\sqrt{2}}\ket{u_2}.
+\]
+
+So the coefficients are
+\[
+\beta_1=\beta_2=\frac{1}{\sqrt{2}}.
+\]
+
+Therefore
+\[
+A^{-1}\ket{b}
+=
+\frac{1}{\sqrt{2}}\frac{1}{4}\ket{u_1}
++
+\frac{1}{\sqrt{2}}\frac{1}{2}\ket{u_2}.
+\]
+
+Already we see the key HHL effect: the smaller eigenvalue \(2\) receives the larger inverse weight \(1/2\).
+\end{frame}
+
+\begin{frame}{Exact Classical Solution in the Computational Basis}
+Convert back to the computational basis:
+\[
+A^{-1}
+=
+\frac{1}{8}
+\begin{pmatrix}
+3 & -1\\
+-1 & 3
+\end{pmatrix}.
+\]
+
+Hence
+\[
+A^{-1}\ket{b}
+=
+\frac{1}{8}
+\begin{pmatrix}
+3\\
+-1
+\end{pmatrix}.
+\]
+
+The normalized solution state is therefore
+\[
+\ket{x}
+=
+\frac{1}{\sqrt{10}}
+\begin{pmatrix}
+3\\
+-1
+\end{pmatrix}.
+\]
+
+That is the state HHL should output after successful postselection.
+\end{frame}
+
+\begin{frame}{How QPE Acts in This Example}
+Using
+\[
+U=e^{iAt},
+\]
+we have
+\[
+U\ket{u_1}=e^{i4t}\ket{u_1},
+\qquad
+U\ket{u_2}=e^{i2t}\ket{u_2}.
+\]
+
+Starting with
+\[
+\ket{0}_a\ket{0}^{\otimes m}_p
+\left(
+\frac{1}{\sqrt{2}}\ket{u_1}
++
+\frac{1}{\sqrt{2}}\ket{u_2}
+\right),
+\]
+QPE yields
+\[
+\ket{0}_a
+\left(
+\frac{1}{\sqrt{2}}\ket{\widetilde{4}}_p\ket{u_1}
++
+\frac{1}{\sqrt{2}}\ket{\widetilde{2}}_p\ket{u_2}
+\right).
+\]
+
+So the phase register now distinguishes the two eigenspaces.
+\end{frame}
+
+\begin{frame}{How the Controlled Rotation Acts}
+Choose a constant \(C\le 2\), for example \(C=1\). Then
+\[
+\ket{\widetilde{4}}\ket{0}_a
+\mapsto
+\ket{\widetilde{4}}
+\left(
+\sqrt{1-\frac{1}{16}}\ket{0}_a+\frac{1}{4}\ket{1}_a
+\right),
+\]
+\[
+\ket{\widetilde{2}}\ket{0}_a
+\mapsto
+\ket{\widetilde{2}}
+\left(
+\sqrt{1-\frac{1}{4}}\ket{0}_a+\frac{1}{2}\ket{1}_a
+\right).
+\]
+
+Thus the ancilla-\(\ket{1}\) amplitudes become
+\[
+\frac{1}{4}
+\quad \text{and} \quad
+\frac{1}{2},
+\]
+which are precisely proportional to \(1/\lambda_1\) and \(1/\lambda_2\).
+\end{frame}
+
+\begin{frame}{State Before and After Postselection}
+After rotation and inverse QPE, the ancilla-\(\ket{1}\) branch is
+\[
+\ket{1}_a
+\left(
+\frac{1}{\sqrt{2}}\frac{1}{4}\ket{u_1}
++
+\frac{1}{\sqrt{2}}\frac{1}{2}\ket{u_2}
+\right).
+\]
+
+So postselection gives the unnormalized system state
+\[
+\ket{\widetilde{x}}
+=
+\frac{1}{4\sqrt{2}}\ket{u_1}
++
+\frac{1}{2\sqrt{2}}\ket{u_2}.
+\]
+
+This is exactly proportional to
+\[
+A^{-1}\ket{b}.
+\]
+\end{frame}
+
+\begin{frame}{Back to the Computational Basis}
+Using
+\[
+\ket{u_1}=\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+1\\
+1
+\end{pmatrix},
+\qquad
+\ket{u_2}=\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+1\\
+-1
+\end{pmatrix},
+\]
+we obtain
+\[
+\ket{\widetilde{x}}
+=
+\frac{1}{8}
+\begin{pmatrix}
+3\\
+-1
+\end{pmatrix}.
+\]
+
+After normalization,
+\[
+\ket{x}=\frac{1}{\sqrt{10}}
+\begin{pmatrix}
+3\\
+-1
+\end{pmatrix}.
+\]
+
+So the whole HHL evolution reproduces the exact inverse-action of \(A^{-1}\) on \(\ket{b}\).
+\end{frame}
+
+\begin{frame}{What This Example Shows}
+This \(2\times 2\) example makes the logic completely explicit:
+
+\begin{enumerate}
+    \item diagonalize \(A\),
+    \item expand \(\ket{b}\) in the eigenbasis,
+    \item let QPE attach eigenvalue labels,
+    \item let the ancilla rotation multiply each eigensector by \(1/\lambda_j\),
+    \item erase the labels with inverse QPE,
+    \item keep the correct branch by postselection.
+\end{enumerate}
+
+That is all HHL really is: a controlled spectral inversion procedure.
+\end{frame}
+
+\begin{frame}{Summary}
+The extra details added here are:
+\begin{itemize}
+    \item a circuit-aligned explanation of each HHL block,
+    \item a full derivation of the ancilla-weighting mechanism,
+    \item a concrete \(2\times 2\) matrix example worked out from start to finish.
+\end{itemize}
+
+The essential formula remains
+\[
+\ket{x}\propto \sum_j \frac{\beta_j}{\lambda_j}\ket{u_j}=A^{-1}\ket{b},
+\]
+but now each algebraic step has a direct circuit interpretation.
+\end{frame}
+
+
+\section{Second Example: 1D Poisson Equation}
+
+
+
+
 
 \begin{frame}{Poisson Equation in One Dimension}
 Consider
