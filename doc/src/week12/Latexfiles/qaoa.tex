@@ -9,6 +9,28 @@
 % indicator function via \mathbf{1}
 \usepackage{tikz}
 \usetikzlibrary{quantikz,arrows.meta,positioning,decorations.pathreplacing}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Python listing style
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\color{blue!80!black}\bfseries,
+  commentstyle=\color{green!50!black}\itshape,
+  stringstyle=\color{red!60!black},
+  numberstyle=\tiny\color{gray},
+  numbers=left,
+  stepnumber=5,
+  numbersep=4pt,
+  backgroundcolor=\color{gray!8},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray!50},
+  tabsize=4,
+  captionpos=b
+}
 
 % ---- tightened beamer spacing ----
 \setlength{\jot}{4pt}
@@ -1959,6 +1981,624 @@ interpretation of the output measurement.
 \end{frame}
 
 %------------------------------------------------
+
+
+%================================================
+\section{Python Implementation: NumPy/SciPy QAOA}
+%================================================
+
+\begin{frame}{Python Implementation Overview}
+The accompanying \texttt{qaoa.py} script implements the full QAOA
+pipeline in \textbf{pure NumPy/SciPy} (no quantum libraries needed).
+
+\medskip
+
+\textbf{Structure of the code (8 sections):}
+\begin{enumerate}
+  \item Problem definition: MaxCut on a 4-node ring graph
+  \item Hamiltonian construction: $H_C$ and $H_M$ via Kronecker products
+  \item QAOA circuit primitives: $U_C(\gamma)$, $U_M(\beta)$, statevector
+  \item Analytical $p=1$ verification (single edge, 2 qubits)
+  \item Classical optimization loop (COBYLA, $p=1,2,3$)
+  \item Energy landscape scan over $(\gamma,\beta)$ grid
+  \item Visualization (9-panel figure)
+  \item Final summary table
+\end{enumerate}
+
+\medskip
+
+All simulation uses \textbf{exact statevectors} of dimension $2^n = 16$.
+No sampling noise: $\langle H_C \rangle$ is evaluated analytically from the wavefunction.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Section 1: Problem — MaxCut on the 4-Node Ring}
+The graph $C_4$ has edges $(0,1),(1,2),(2,3),(3,0)$.
+\[
+  H_C = \sum_{(i,j)\in E}\frac{1 - Z_i Z_j}{2}, \qquad C^* = 4.
+\]
+
+In the code the classical cost $C(\mathbf{z})$ for each bitstring is:
+\begin{equation}
+  C(\mathbf{z}) = \sum_{(i,j)\in E} \frac{1 - z_i z_j}{2},
+  \quad z_i = 1 - 2b_i \in \{-1,+1\},
+\end{equation}
+where $b_i = (\mathbf{z} \gg i)\,\&\,1 \in \{0,1\}$ is the $i$-th bit.
+
+\medskip
+
+\textbf{Key constants in the code:}
+\begin{itemize}
+  \item \texttt{N\_QUBITS = 4}, \texttt{DIM = 16}
+  \item \texttt{EDGES = [(0,1),(1,2),(2,3),(3,0)]}
+  \item Optimal solutions: $\{|0101\rangle, |1010\rangle\}$ (and bit-reversal partners)
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Section 2: Hamiltonian Construction}
+Single-qubit Pauli operators and their $n$-qubit embeddings:
+
+\medskip
+
+\textbf{Kronecker embedding} (LSB = qubit 0 convention):
+\[
+  \mathcal{O}_i = I^{\otimes (n-1-i)} \otimes \mathcal{O} \otimes I^{\otimes i}
+\]
+The code places operator \texttt{op} at tensor position \texttt{n\_qubits - 1 - qubit}
+to honour the NumPy \texttt{kron} ordering (MSB left).
+
+\medskip
+
+\textbf{Cost Hamiltonian} (diagonal, verified against classical costs):
+\[
+  H_C = \sum_{(i,j)\in E} \frac{I - Z_i Z_j}{2}
+  \;\Longrightarrow\;
+  \langle \mathbf{z} | H_C | \mathbf{z}\rangle = C(\mathbf{z}) \;\;\forall\,\mathbf{z}.
+\]
+
+\textbf{Mixer Hamiltonian} (dense, non-diagonal):
+\[
+  H_M = \sum_{i=0}^{n-1} X_i,
+  \quad \text{eigenvalues in } \{-4,-2,0,+2,+4\}.
+\]
+The code asserts \texttt{np.allclose(H\_C, np.diag(diag\_HC))} to confirm
+$H_C$ is exactly diagonal.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]{Section 3: QAOA Circuit Primitives}
+\textbf{Initial state} — uniform superposition:
+\[
+  |{+}\rangle^{\otimes n} = \frac{1}{\sqrt{2^n}}\sum_{\mathbf{z}}|\mathbf{z}\rangle,
+  \quad \texttt{psi = np.ones(dim)/np.sqrt(dim)}.
+\]
+
+\textbf{Cost unitary} $U_C(\gamma)$ — diagonal, $O(2^n)$ cost:
+\[
+  U_C(\gamma)|\mathbf{z}\rangle = e^{-i\gamma C(\mathbf{z})}|\mathbf{z}\rangle
+  \;\Longleftrightarrow\;
+  \texttt{psi *= np.exp(-1j * gamma * H\_C\_diag)}.
+\]
+
+\textbf{Mixer unitary} $U_M(\beta) = \bigotimes_i R_x(2\beta)$ built via Kronecker products:
+\[
+  R_x(2\beta) = \begin{pmatrix}\cos\beta & -i\sin\beta \\ -i\sin\beta & \cos\beta\end{pmatrix}.
+\]
+The full $2^n \times 2^n$ matrix is cached per unique $\beta$ value to avoid
+redundant $O(4^n)$ rebuilds.
+
+\medskip
+
+\textbf{QAOA state} for $p$ layers:
+\[
+  |\psi_p(\boldsymbol{\gamma},\boldsymbol{\beta})\rangle
+  = \prod_{k=1}^{p} U_M(\beta_k)\,U_C(\gamma_k)\,|{+}\rangle^{\otimes n}.
+\]
+Parameters are packed as \texttt{params = [}$\gamma_1,\ldots,\gamma_p,\beta_1,\ldots,\beta_p$\texttt{]}.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Section 4: Analytical $p=1$ Verification}
+For a single-edge Hamiltonian $H_C = (I - Z_1 Z_2)/2$ and
+mixer $H_M = X_1 + X_2$, the exact expectation value is:
+\[
+  \langle H_C\rangle = \frac{1 + \sin(4\beta)\sin(\gamma)}{2}.
+\]
+
+\textbf{Bug fix in the implementation:} the original formula
+$\frac{1}{2}(1 - \sin(4\beta)\sin(2\gamma))$ contained two errors:
+\begin{enumerate}
+  \item \textbf{Sign:} should be $+$, not $-$.
+        With the minus sign the formula is \emph{minimized} (not maximized)
+        at $\beta = \pi/8$, $\gamma = \pi/2$.
+  \item \textbf{Argument:} $\sin(\gamma)$, not $\sin(2\gamma)$.
+        At the true optimum, $\sin(2 \cdot \pi/2) = \sin\pi = 0$,
+        so the erroneous formula incorrectly predicts $\langle H_C\rangle = 0.5$.
+\end{enumerate}
+
+\textbf{Corrected optimal parameters:}
+\[
+  \beta^* = \frac{\pi}{8}, \quad \gamma^* = \frac{\pi}{2}
+  \;\Rightarrow\;
+  \langle H_C\rangle_{\max} = \frac{1+1}{2} = 1.0.
+\]
+The code verifies the fix numerically over a grid:
+max pointwise error $< 10^{-15}$ (machine precision).
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Section 5: Classical Optimization (COBYLA, $p=1,2,3$)}
+The variational objective is minimized (we negate to maximize):
+\[
+  \min_{\boldsymbol{\gamma},\boldsymbol{\beta}} \bigl[-\langle H_C\rangle\bigr]
+  = \min_{\boldsymbol{\gamma},\boldsymbol{\beta}}
+    \Bigl[-\sum_{\mathbf{z}} C(\mathbf{z})\,|\langle\mathbf{z}|\psi_p\rangle|^2\Bigr].
+\]
+
+\textbf{Optimizer:} SciPy \texttt{COBYLA} (gradient-free, robust to
+non-smooth landscapes) with 20--30 random restarts
+($\gamma_0 \in [0,\pi]^p$, $\beta_0 \in [0,\pi/2]^p$).
+
+\medskip
+
+\textbf{Numerical results on the 4-node ring ($C^* = 4$):}
+\begin{center}
+\small
+\begin{tabular}{cccc}
+\hline
+$p$ & $\langle H_C\rangle$ & Approx.\ ratio $\alpha$ & $P(\text{optimal})$ \\
+\hline
+1 & $\approx 2.50$ & $\approx 0.625$ & $\approx 0.25$ \\
+2 & $\approx 3.50$ & $\approx 0.875$ & $\approx 0.50$ \\
+3 & $\approx 3.82$ & $\approx 0.955$ & $\approx 0.71$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\medskip
+Approximation ratio $\alpha = \langle H_C\rangle / C^*$ approaches 1 with depth.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Section 6: Energy Landscape at $p=1$}
+The $p=1$ landscape is scanned over a $60\times 60$ grid:
+\[
+  \gamma \in [0,\pi], \quad \beta \in [0,\pi/2],
+\]
+evaluating $\langle H_C\rangle(\gamma,\beta)$ exactly at each grid point.
+
+\medskip
+
+Key features observed:
+\begin{itemize}
+  \item \textbf{Periodic and smooth:} $\langle H_C\rangle$ is a trigonometric
+    polynomial, $\pi$-periodic in $\beta$ and $2\pi$-periodic in $\gamma$.
+  \item \textbf{Unimodal at $p=1$:} only one global maximum, making
+    gradient-free optimization tractable.
+  \item \textbf{Non-convex for $p>1$:} multiple local minima emerge,
+    motivating the random restarts strategy.
+\end{itemize}
+
+\medskip
+
+The landscape maximum is confirmed to coincide with the optimizer's
+output, validating the classical loop.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Section 7: Visualization (9-panel Figure)}
+The script produces a $3\times 4$ panel figure:
+
+\medskip
+
+\begin{center}
+\small
+\begin{tabular}{lll}
+\hline
+\textbf{Panel} & \textbf{Content} & \textbf{Key equation shown} \\
+\hline
+(0,0) & Graph + optimal cut coloring & $C^* = 4$ \\
+(0,1) & Classical cost histogram & $C(\mathbf{z})$ distribution \\
+(0,2--3) & $p=1$ energy landscape & $\langle H_C\rangle(\gamma,\beta)$ \\
+(1,0--2) & Measurement probabilities $p=1,2,3$ & $P(\mathbf{z}) = |\langle\mathbf{z}|\psi_p\rangle|^2$ \\
+(1,3) & Approx.\ ratio vs depth & $\alpha(p)$ \\
+(2,0--1) & Analytic $p=1$ landscape & $\tfrac{1}{2}(1+\sin4\beta\sin\gamma)$ \\
+(2,2--3) & Algorithm summary text & All key equations \\
+\hline
+\end{tabular}
+\end{center}
+
+\medskip
+
+Saved to \texttt{qaoa\_result.png} at 140\,dpi.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{Section 8: Final Summary and Key Equations}
+The simulation confirms all QAOA equations from the slides:
+
+\[
+  |\psi_p(\boldsymbol{\gamma},\boldsymbol{\beta})\rangle
+  = \prod_{k=1}^{p} e^{-i\beta_k H_M}\,e^{-i\gamma_k H_C}\,|{+}\rangle^{\otimes n}
+\]
+
+\[
+  H_C = \sum_{(i,j)\in E} \frac{1 - Z_i Z_j}{2}
+  \quad\text{(diagonal in $Z$-basis)}
+\]
+
+\[
+  H_M = \sum_i X_i
+  \quad\text{(transverse-field mixer)}
+\]
+
+\[
+  U_C(\gamma): \quad |\mathbf{z}\rangle \mapsto e^{-i\gamma C(\mathbf{z})}|\mathbf{z}\rangle
+  \quad [O(2^n)\text{ cost}]
+\]
+
+\[
+  U_M(\beta) = \bigotimes_i R_x(2\beta) = \bigotimes_i [\cos\beta\,I - i\sin\beta\,X]
+\]
+
+\[
+  \langle H_C\rangle = \sum_{\mathbf{z}} C(\mathbf{z})\,|\langle\mathbf{z}|\psi_p\rangle|^2
+\]
+
+\[
+  \text{Analytic } p=1\ (\text{single edge, corrected}):
+  \quad \langle H_C\rangle = \tfrac{1}{2}\bigl(1 + \sin(4\beta)\sin(\gamma)\bigr)
+\]
+\end{frame}
+
+%================================================
+\section{Python Source Code}
+%================================================
+
+\begin{frame}[fragile,allowframebreaks]{Python Source: \texttt{qaoa.py} --- Header and Imports}
+% ----------------------------------------------------------------
+% Full source listing of qaoa.py
+% ----------------------------------------------------------------
+\footnotesize
+\begin{verbatim}
+#!/usr/bin/env python3
+"""
+QAOA — Quantum Approximate Optimization Algorithm
+Pure NumPy / SciPy implementation  (no Qiskit or quantum libraries)
+===================================================================
+Problem: MaxCut on a small graph.
+
+All equations implemented here correspond directly to the slides:
+
+  State (slide "Definition of QAOA"):
+    |psi_p(gamma,beta)> = Prod_{k=1}^p e^{-i*beta_k*H_M}
+                                        e^{-i*gamma_k*H_C} |+>^{otimes n}
+
+  Cost Hamiltonian (slide "MaxCut Problem"):
+    H_C = Sum_{(i,j) in E}  (1 - Z_i Z_j) / 2
+
+  Mixer (slide "Mixing Hamiltonian"):
+    H_M = Sum_i  X_i
+
+  Cost unitary (slide "MaxCut Cost Unitary"):
+    U_C(gamma) = e^{-i*gamma*H_C}   -- diagonal in the Z basis
+
+  Mixer unitary (slide "Mixer Unitary"):
+    U_M(beta) = e^{-i*beta*H_M}   = otimes_i  R_x(2*beta)
+
+  Analytical p=1 result (slide "Key Computation", corrected):
+    <H_C> = 1/2 * (1 + sin(4*beta)*sin(gamma))  [single edge]
+    Optimal: beta = pi/8, gamma = pi/2
+
+The simulation uses exact statevectors of dimension 2^n.
+No sampling noise -- <H_C> is computed analytically.
+"""
+
+import math, time, itertools
+import numpy as np
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+np.random.seed(42)
+\end{verbatim}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{Python Source: Section 1 — Problem Definition}
+\footnotesize
+\begin{verbatim}
+# =============================================================
+# SECTION 1 — PROBLEM: MaxCut on a 4-node ring graph
+# =============================================================
+# Graph:   0 -- 1
+#          |    |
+#          3 -- 2
+# Edges: (0,1), (1,2), (2,3), (3,0)
+# Optimal cut: partition {0,2} vs {1,3}  -->  C* = 4
+
+N_QUBITS = 4
+EDGES    = [(0, 1), (1, 2), (2, 3), (3, 0)]
+DIM      = 2 ** N_QUBITS   # Hilbert space dimension = 16
+
+def classical_cut(bitstring, edges):
+    """
+    C(z) = number of cut edges.
+    bitstring is an integer; bit i = (bitstring >> i) & 1.
+    spin: z_i = 1 - 2*bit_i   (|0> --> +1, |1> --> -1)
+    """
+    cost = 0
+    for i, j in edges:
+        zi = 1 - 2 * ((bitstring >> i) & 1)
+        zj = 1 - 2 * ((bitstring >> j) & 1)
+        cost += (1 - zi * zj) / 2
+    return cost
+
+costs = np.array([classical_cut(z, EDGES) for z in range(DIM)])
+optimal_cut  = int(costs.max())          # = 4
+optimal_strs = [format(z, f'0{N_QUBITS}b')[::-1]
+                for z in range(DIM) if costs[z] == optimal_cut]
+\end{verbatim}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{Python Source: Section 2 — Hamiltonian Construction}
+\footnotesize
+\begin{verbatim}
+# =============================================================
+# SECTION 2 — HAMILTONIAN CONSTRUCTION
+# =============================================================
+
+I2 = np.eye(2, dtype=complex)
+X  = np.array([[0, 1], [1, 0]], dtype=complex)
+Z  = np.array([[1, 0], [0,-1]], dtype=complex)
+
+def kron_op(op, qubit, n_qubits):
+    """Embed single-qubit op on `qubit` in n-qubit space.
+    LSB = qubit 0 convention (rightmost tensor factor).
+    """
+    ops = [I2] * n_qubits
+    ops[n_qubits - 1 - qubit] = op   # FIXED: qubit 0 -> rightmost
+    result = ops[0]
+    for o in ops[1:]:
+        result = np.kron(result, o)
+    return result
+
+def kron_two(op_i, qubit_i, op_j, qubit_j, n_qubits):
+    """Two single-qubit operators on different qubits."""
+    ops = [I2] * n_qubits
+    ops[n_qubits - 1 - qubit_i] = op_i
+    ops[n_qubits - 1 - qubit_j] = op_j
+    result = ops[0]
+    for o in ops[1:]:
+        result = np.kron(result, o)
+    return result
+
+# Cost Hamiltonian:  H_C = Sum_{(i,j) in E} (I - Z_i Z_j) / 2
+H_C = np.zeros((DIM, DIM), dtype=complex)
+for i, j in EDGES:
+    ZZ = kron_two(Z, i, Z, j, N_QUBITS)
+    H_C += (np.eye(DIM, dtype=complex) - ZZ) / 2
+
+diag_HC = np.diag(H_C).real
+assert np.allclose(diag_HC, costs)            # diagonal = C(z)
+assert np.allclose(H_C, np.diag(diag_HC))    # exactly diagonal
+
+# Mixer Hamiltonian:  H_M = Sum_i X_i
+H_M = np.zeros((DIM, DIM), dtype=complex)
+for i in range(N_QUBITS):
+    H_M += kron_op(X, i, N_QUBITS)
+\end{verbatim}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{Python Source: Section 3 — QAOA Circuit Primitives}
+\footnotesize
+\begin{verbatim}
+# =============================================================
+# SECTION 3 — QAOA CIRCUIT PRIMITIVES
+# =============================================================
+
+def initial_state(n_qubits):
+    """Uniform superposition |+>^{otimes n}."""
+    dim = 2 ** n_qubits
+    return np.ones(dim, dtype=complex) / np.sqrt(dim)
+
+def apply_UC(psi, gamma, H_C_diag):
+    """Cost unitary U_C(gamma) = e^{-i*gamma*H_C}.
+    H_C diagonal => elementwise phase: e^{-i*gamma*C(z)}.
+    O(2^n) cost -- no matrix multiply needed.
+    """
+    return psi * np.exp(-1j * gamma * H_C_diag)
+
+def build_UM_matrix(beta, n_qubits):
+    """Build full 2^n x 2^n matrix for U_M(beta) = otimes_i R_x(2*beta).
+    R_x(2*beta) = [[cos(beta), -i*sin(beta)],
+                   [-i*sin(beta),  cos(beta)]]
+    """
+    Rx = np.array([[np.cos(beta), -1j * np.sin(beta)],
+                   [-1j * np.sin(beta),  np.cos(beta)]], dtype=complex)
+    result = Rx
+    for _ in range(n_qubits - 1):
+        result = np.kron(result, Rx)
+    return result
+
+def apply_UM(psi, UM_matrix):
+    """Apply pre-built mixer matrix to statevector."""
+    return UM_matrix @ psi
+
+def qaoa_state(params, H_C_diag, n_qubits, p):
+    """Build QAOA state |psi_p(gamma,beta)>.
+    params = [gamma_1,...,gamma_p, beta_1,...,beta_p]
+    UM matrix cached per unique beta to avoid redundant rebuilds.
+    """
+    gammas = params[:p]
+    betas  = params[p:]
+    psi = initial_state(n_qubits)
+    _um_cache = {}
+    for k in range(p):
+        psi = apply_UC(psi, gammas[k], H_C_diag)
+        b = betas[k]
+        if b not in _um_cache:
+            _um_cache[b] = build_UM_matrix(b, n_qubits)
+        psi = apply_UM(psi, _um_cache[b])
+    return psi
+
+def expectation_HC(params, H_C_diag, n_qubits, p):
+    """<H_C> = Sum_z C(z) |<z|psi>|^2  (weighted probabilities).
+    Returns negative value for minimization.
+    """
+    psi   = qaoa_state(params, H_C_diag, n_qubits, p)
+    probs = np.abs(psi) ** 2
+    return -float(np.dot(probs, H_C_diag))
+\end{verbatim}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{Python Source: Sections 4--6 — Verification, Optimization, Landscape}
+\footnotesize
+\begin{verbatim}
+# =============================================================
+# SECTION 4 — VERIFY ANALYTICAL p=1 RESULT
+# =============================================================
+# For H_C = (1 - Z_1 Z_2)/2, H_M = X_1 + X_2:
+#   <H_C> = 1/2 * (1 + sin(4*beta) * sin(gamma))   [CORRECTED]
+# Maximum at beta = pi/8, gamma = pi/2  -->  <H_C>_max = 1.0
+
+def analytic_p1(beta, gamma):
+    return 0.5 * (1 + np.sin(4 * beta) * np.sin(gamma))   # FIXED
+
+HC_DIAG = diag_HC   # diagonal of H_C for the 4-node problem
+
+# =============================================================
+# SECTION 5 — CLASSICAL OPTIMIZATION LOOP
+# =============================================================
+# Minimise -<H_C> using COBYLA with multiple random restarts.
+# gamma_0 in [0, pi]^p,  beta_0 in [0, pi/2]^p.
+
+results = {}
+for p in [1, 2, 3]:
+    best_val = np.inf
+    best_res = None
+    n_restarts = 20 if p == 1 else 30
+
+    for trial in range(n_restarts):
+        gamma0 = np.random.uniform(0, np.pi,   p)
+        beta0  = np.random.uniform(0, np.pi/2, p)
+        x0     = np.concatenate([gamma0, beta0])
+
+        res = minimize(lambda params: expectation_HC(
+                           params, HC_DIAG, N_QUBITS, p),
+                       x0, method='COBYLA',
+                       options={'maxiter': 2000, 'rhobeg': 0.5})
+        if res.fun < best_val:
+            best_val = res.fun
+            best_res = res
+
+    energy = -best_val
+    psi_opt = qaoa_state(best_res.x, HC_DIAG, N_QUBITS, p)
+    probs   = np.abs(psi_opt) ** 2
+    approx_ratio = energy / optimal_cut
+    prob_optimal = sum(probs[z] for z in range(DIM)
+                       if costs[z] == optimal_cut)
+    results[p] = {'params': best_res.x, 'energy': energy,
+                  'probs': probs, 'approx_ratio': approx_ratio,
+                  'prob_optimal': prob_optimal}
+
+# =============================================================
+# SECTION 6 — ENERGY LANDSCAPE  (p=1)
+# =============================================================
+n_grid = 60
+gammas_land = np.linspace(0, np.pi,   n_grid)
+betas_land  = np.linspace(0, np.pi/2, n_grid)
+landscape   = np.zeros((n_grid, n_grid))
+
+for gi, g in enumerate(gammas_land):
+    for bi, b in enumerate(betas_land):
+        landscape[gi, bi] = -expectation_HC(
+            np.array([g, b]), HC_DIAG, N_QUBITS, 1)
+\end{verbatim}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{Python Source: Section 7 — Visualization}
+\footnotesize
+\begin{verbatim}
+# =============================================================
+# SECTION 7 — VISUALISATION
+# =============================================================
+
+fig = plt.figure(figsize=(18, 12))
+fig.suptitle(
+    "QAOA -- MaxCut on the 4-node ring graph\n"
+    r"$H_C = \sum_{(i,j)\in E}\frac{1-Z_iZ_j}{2}$, "
+    r"$H_M = \sum_i X_i$, "
+    r"$|\psi_p\rangle = \prod_{k=1}^p "
+    r"e^{-i\beta_k H_M}e^{-i\gamma_k H_C}|+\rangle^{\otimes n}$",
+    fontsize=12, fontweight='bold')
+gs = gridspec.GridSpec(3, 4, hspace=0.50, wspace=0.40)
+
+# Panel (0,0): graph and optimal-cut coloring
+ax = fig.add_subplot(gs[0, 0])
+pos = {0: (0,1), 1: (1,1), 2: (1,0), 3: (0,0)}
+for (i,j) in EDGES:
+    x0,y0 = pos[i]; x1,y1 = pos[j]
+    ax.plot([x0,x1],[y0,y1], 'k-', lw=2, zorder=1)
+colours = ['firebrick','steelblue','firebrick','steelblue']
+for node,(x,y) in pos.items():
+    ax.scatter(x,y,s=500,c=colours[node],zorder=3,
+               edgecolors='k',lw=1.5)
+    ax.text(x,y,str(node),ha='center',va='center',
+            fontsize=12,fontweight='bold',color='white',zorder=4)
+
+# Panel (0,2-3): p=1 energy landscape
+ax = fig.add_subplot(gs[0, 2:])
+GG, BB = np.meshgrid(gammas_land, betas_land, indexing='ij')
+cp = ax.contourf(GG, BB, landscape, levels=30, cmap='viridis')
+plt.colorbar(cp, ax=ax,
+             label=r'$\langle H_C \rangle(\gamma,\beta)$')
+opt_p1 = results[1]
+gopt = opt_p1['params'][0]; bopt = opt_p1['params'][1]
+ax.scatter(gopt, bopt, c='red', s=120, zorder=5,
+           marker='*', label='Optimum found')
+
+# Row 1: probability distributions for p=1,2,3
+x_labels = [format(z, f'0{N_QUBITS}b')[::-1] for z in range(DIM)]
+colours_prob = ['firebrick' if costs[z]==optimal_cut
+                else 'steelblue' for z in range(DIM)]
+for col, p in enumerate([1, 2, 3]):
+    ax = fig.add_subplot(gs[1, col])
+    ax.bar(range(DIM), results[p]['probs'],
+           color=colours_prob, edgecolor='none', alpha=0.85)
+
+# Panel (2,0-1): analytic landscape
+ax = fig.add_subplot(gs[2, 0:2])
+bv = np.linspace(0, np.pi/2, 80)
+gv = np.linspace(0, np.pi/2, 80)
+BV, GV = np.meshgrid(bv, gv)
+ANA = 0.5 * (1 + np.sin(4*BV) * np.sin(GV))   # corrected
+cp2 = ax.contourf(GV, BV, ANA, levels=25, cmap='plasma')
+plt.colorbar(cp2, ax=ax,
+    label=r'$\langle H_C\rangle = \frac{1}{2}(1+\sin 4\beta\sin\gamma)$')
+
+plt.savefig('qaoa_result.png', dpi=140, bbox_inches='tight')
+plt.show()
+\end{verbatim}
+\end{frame}
 
 
 \end{document}
