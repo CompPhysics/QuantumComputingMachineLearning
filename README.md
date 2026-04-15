@@ -125,8 +125,9 @@ themes can be covered:
 
 
 ## April 13-17, 2026
-  - the HHL algorithm, codes and algorithms
-  - Start discussing The QAOA algorithm
+  - The HHL algorithm, codes and algorithms
+  - Video of lecture at https://youtu.be/e70HFOTKKMg
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek112pdf  
 
 ## April 20-24, 2026 Quantum Machine Learning
   - QAOA algorithm and implementation
