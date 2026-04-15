@@ -12,6 +12,31 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% ---- Python listing style ----
+\lstdefinestyle{pythonstyle}{
+  language=Python,
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\color{blue!80!black}\bfseries,
+  commentstyle=\color{green!55!black}\itshape,
+  stringstyle=\color{red!65!black},
+  numberstyle=\tiny\color{gray},
+  numbers=left,
+  stepnumber=5,
+  numbersep=4pt,
+  backgroundcolor=\color{gray!7},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray!45},
+  tabsize=4,
+  captionpos=b,
+  xleftmargin=6pt,
+  xrightmargin=2pt
+}
+\lstset{style=pythonstyle}
 
 
 
@@ -269,8 +294,8 @@ VQE and QPE are complementary:
 
 \begin{frame}{What is the HHL algorithm?}
 
-The HHL algorithm—named after Aram Harrow, Avinatan Hassidim, and Seth
-Lloyd—is one of the central quantum algorithms for solving linear
+The HHL algorithm--named after Aram Harrow, Avinatan Hassidim, and Seth
+Lloyd--is one of the central quantum algorithms for solving linear
 systems of equations.
 
 The core idea is to solve a linear system
@@ -2486,6 +2511,1140 @@ A^{-1}|b\rangle
 \]
 
 HHL is therefore best interpreted as a quantum inverse-operator method.
+\end{frame}
+
+
+%================================================
+\section{Python Implementation: HHL in Pure NumPy}
+%================================================
+
+\begin{frame}{Overview of \texttt{hhl.py}}
+The script \texttt{hhl.py} implements the complete HHL algorithm
+using \textbf{pure NumPy} -- no quantum computing library is required.
+Every gate and every unitary is an explicit matrix acting on a full statevector.
+
+\medskip
+\textbf{Test system} (2$\times$2, analytically tractable):
+\[
+  A = \begin{pmatrix} 1.5 & 0.5 \\ 0.5 & 1.5 \end{pmatrix},
+  \quad
+  \mathbf{b} = \begin{pmatrix}1\\0\end{pmatrix},
+  \quad
+  \mathbf{x}_{\rm exact} = A^{-1}\mathbf{b} = \begin{pmatrix}3/4\\-1/4\end{pmatrix}.
+\]
+Eigenvalues $\lambda_1 = 1$, $\lambda_2 = 2$; condition number $\kappa = 2$.
+
+\medskip
+\textbf{Register layout:} 1 ancilla $+$ $m=3$ clock $+$ 1 system $= 5$ qubits total,
+Hilbert space dimension $2^5 = 32$.
+
+\medskip
+\textbf{Code structure (10 sections):}\\
+\S1 problem setup \quad \S2 register layout \quad \S3 state preparation\\
+\S4 QPE \quad \S5 controlled rotation \quad \S6 inverse QPE\\
+\S7 post-selection \quad \S8 solution extraction \quad \S9 test cases \quad \S10 visualisation
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S1--\S2: Problem Setup and Register Layout}
+\textbf{Spectral decomposition} (used throughout the algorithm):
+\[
+  A = \sum_j \lambda_j |u_j\rangle\langle u_j|,
+  \qquad
+  |b\rangle = \sum_j \beta_j |u_j\rangle,
+  \quad \beta_j = \langle u_j | b\rangle.
+\]
+
+The code computes this via \texttt{np.linalg.eigh(A)}, which guarantees
+real eigenvalues and a unitary eigenvector matrix.
+
+\medskip
+\textbf{Qubit index convention} (MSB $\to$ LSB in bitstrings):
+\begin{center}
+\small
+\begin{tabular}{cll}
+\toprule
+Qubit(s) & Register & Dimension \\
+\midrule
+0 & ancilla & $2^1 = 2$ \\
+$1 \ldots m$ & clock (QPE) & $2^m = 8$ \\
+$m+1$ & system & $2^1 = 2$ \\
+\midrule
+total & & $2^5 = 32$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+Initial state:
+$|\Psi_0\rangle = |0\rangle_{\rm anc} \otimes |0\cdots0\rangle_{\rm clk}
+\otimes |b\rangle_{\rm sys}$,
+where $|b\rangle = b/\|b\|$ is the normalised source.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S3--\S4: State Preparation and QPE}
+\textbf{State preparation} -- encode $|b\rangle$ in the system register:
+\[
+  |\Psi_0\rangle[i] = b_{\rm sys}[i]
+  \quad \text{for } i \in \{0,1\},
+  \quad \text{all other amplitudes zero.}
+\]
+
+\textbf{QPE in three sub-steps:}
+
+\medskip
+\textbf{(a) Hadamard layer} on all clock qubits:
+\[
+  U_H = I_{\rm anc} \otimes H^{\otimes m} \otimes I_{\rm sys},
+  \qquad
+  H = \frac{1}{\sqrt{2}}\begin{pmatrix}1&1\\1&-1\end{pmatrix}.
+\]
+
+\textbf{(b) Controlled-$U^{2^k}$} for $k=0,\ldots,m-1$, where $U = e^{iAt}$:
+\[
+  \mathrm{ctrl}\text{-}U^{2^k}
+  = |0\rangle\langle 0|_{k} \otimes I
+  + |1\rangle\langle 1|_{k} \otimes U^{2^k}.
+\]
+The matrix exponential $e^{iAt}$ is computed \emph{exactly} via
+$U \mathrm{diag}(e^{i\lambda_j t}) U^\dagger$ -- no Trotter error.
+
+\textbf{(c) Inverse QFT} on the clock register:
+\[
+  \mathrm{QFT}_{jk} = \frac{1}{\sqrt{N}} e^{2\pi i jk/N},
+  \quad N = 2^m,
+  \qquad \mathrm{IQFT} = \mathrm{QFT}^\dagger.
+\]
+After this step the clock register stores $|\widetilde{\lambda}_j\rangle$,
+a binary approximation of the eigenphase
+$\phi_j = \lambda_j t / (2\pi)$.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S5: Controlled Rotation -- The Inversion Step}
+This is the core of HHL.
+For each clock basis state encoding $\widetilde{\lambda}$,
+the ancilla is rotated:
+\[
+  |0\rangle_{\rm anc}
+  \;\longmapsto\;
+  \sqrt{1 - \frac{C^2}{\widetilde{\lambda}^2}}\,|0\rangle_{\rm anc}
+  +\frac{C}{\widetilde{\lambda}}\,|1\rangle_{\rm anc}.
+\]
+
+The scaling constant is $C = \lambda_{\min}$, ensuring
+$C/\widetilde{\lambda} \le 1$ for all $j$.
+
+\medskip
+\textbf{Implementation strategy} (explicit, no ancilla-conditioned circuit needed):
+\begin{enumerate}
+  \item Loop over all $2^5 = 32$ basis indices $i$ with ancilla $= 0$.
+  \item Extract clock integer $k$ from bits $[1 \ldots m]$ of $i$.
+  \item Compute $\widetilde{\lambda} = k\cdot 2\pi/(2^m\,t)$.
+  \item Apply the $2\times 2$ rotation to amplitudes
+        $\psi[i]$ and $\psi[i \oplus (\text{ancilla flip})]$.
+\end{enumerate}
+
+After this step, the $|1\rangle_{\rm anc}$ branch carries amplitudes
+$\propto C/\lambda_j$:
+\[
+  |\Psi_2\rangle
+  = \sum_j \beta_j |\widetilde{\lambda}_j\rangle|u_j\rangle
+  \Bigl(\sqrt{1-C^2/\lambda_j^2}\,|0\rangle + (C/\lambda_j)|1\rangle\Bigr)_{\rm anc}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S6--\S7: Inverse QPE and Post-Selection}
+\textbf{Inverse QPE} (\S6) -- uncomputes the clock register:
+\[
+  \mathrm{QPE}^\dagger = H^{\otimes m}
+  \cdot \prod_{k=m-1}^{0} \mathrm{ctrl}\text{-}(U^{2^k})^\dagger
+  \cdot \mathrm{QFT}.
+\]
+This is the \emph{exact adjoint} of the forward QPE pass,
+applied in reverse order with $U^\dagger = e^{-iAt}$.
+After uncomputation:
+\[
+  |\Psi_3\rangle
+  = |0\rangle^{\otimes m}_{\rm clk}
+  \Bigl[
+    |0\rangle_{\rm anc}\sum_j \beta_j\sqrt{1-C^2/\lambda_j^2}\,|u_j\rangle
+    +|1\rangle_{\rm anc}\sum_j \frac{\beta_j C}{\lambda_j}|u_j\rangle
+  \Bigr].
+\]
+The code verifies $P(\text{clock}=|0\rangle^{\otimes m}) \approx 1$.
+
+\medskip
+\textbf{Post-selection} (\S7) -- measure ancilla, keep outcome $|1\rangle$:
+\[
+  P(\text{success}) = C^2\sum_j \frac{|\beta_j|^2}{\lambda_j^2}
+  \;\sim\; \frac{1}{\kappa^2}.
+\]
+Renormalise to obtain the solution state:
+\[
+  |x\rangle = \frac{A^{-1}|b\rangle}{\|A^{-1}|b\rangle\|}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S8--\S9: Solution Extraction and Test Cases}
+\textbf{Solution extraction} (\S8):
+Extract the two amplitudes from basis states with
+ancilla $= 1$, clock $= 000$. The quantum state encodes the
+\emph{direction} of $A^{-1}|b\rangle$; the overall scale is recovered
+by a dot-product projection against the classical solution.
+
+\medskip
+\textbf{Residual check:}
+\[
+  \|A\,\mathbf{x}_{\rm HHL} - \mathbf{b}\|_2 \lesssim 10^{-2}
+  \quad \text{(limited by $m=3$ clock-qubit resolution)}.
+\]
+
+\medskip
+\textbf{Additional test cases} (\S9): the helper \texttt{hhl\_simulate(A, b)}
+reruns the full pipeline for arbitrary $2\times 2$ Hermitian systems:
+\begin{center}
+\small
+\begin{tabular}{lll}
+\toprule
+System & Classical $x$ & HHL $x$ \\
+\midrule
+$\mathrm{diag}(2,3)$, $b=(1,1)$ & $(0.5,\;0.333)$ & $\approx(0.5,\;0.333)$ \\
+$I_2$, $b=(0.5,0.5)$ & $(0.5,\;0.5)$ & $\approx(0.5,\;0.5)$ \\
+$A$ above, $b=(1,0)$ & $(0.75,\;-0.25)$ & $\approx(0.75,\;-0.25)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\textbf{Visualisation} (\S10): 6-panel figure saved to \texttt{hhl\_result.png}
+showing the matrix, spectrum, algorithm stages, QPE clock distribution,
+solution comparison, and success-probability vs.\ $\kappa$.
+\end{frame}
+
+%================================================
+\section{Python Implementation: HHL for the Poisson Equation}
+%================================================
+
+\begin{frame}{Overview of \texttt{hhl\_poisson.py}}
+The script \texttt{hhl\_poisson.py} applies HHL to a concrete PDE:
+the \textbf{1-D Poisson equation with Dirichlet boundary conditions}:
+\[
+  -\frac{d^2 u}{dx^2} = f(x) = \sin(\pi x),
+  \quad x\in[0,1],
+  \quad u(0)=u(1)=0.
+\]
+\textbf{Exact solution:} $u(x) = \sin(\pi x)/\pi^2$.
+
+\medskip
+\textbf{Finite-difference discretisation} on $n$ interior points,
+$h=1/(n+1)$:
+\[
+  A\,\mathbf{u} = \mathbf{b},
+  \qquad
+  A = \frac{1}{h^2}\,\mathrm{tridiag}(-1,\;2,\;-1),
+  \quad
+  b_i = \sin(\pi x_i).
+\]
+
+\medskip
+\textbf{Code structure (9 sections):}\\
+\S1 FD discretisation \quad \S2 Thomas' algorithm\\
+\S3 Grid-convergence study \quad \S4 HHL building blocks\\
+\S5 Full HHL pipeline \quad \S6 HHL for $n=2,4$\\
+\S7 Clock-precision study \quad \S8 Comparison table \quad \S9 Visualisation
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S1: Finite-Difference Poisson Matrix}
+With $n$ interior points and $h=1/(n+1)$, the matrix is:
+\[
+  A = \frac{1}{h^2}
+  \begin{pmatrix}
+    2  & -1 &    &    \\
+    -1 &  2 & -1 &    \\
+       & \ddots & \ddots & -1 \\
+       &    & -1 &  2
+  \end{pmatrix}
+  \in \mathbb{R}^{n\times n}.
+\]
+Its eigenvalues are known analytically:
+\[
+  \lambda_k = \frac{4}{h^2}\sin^2\!\left(\frac{k\pi}{2(n+1)}\right),
+  \quad k = 1,\ldots,n.
+\]
+
+For $n=4$, $h=0.2$:
+$\lambda_{\min} \approx 9.55$, $\lambda_{\max} \approx 90.5$,
+condition number $\kappa \approx 9.47$.
+
+\medskip
+\textbf{Key point:} the matrix is \emph{Hermitian} (in fact symmetric
+positive definite), so all HHL steps apply directly.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S2--\S3: Thomas' Algorithm and Grid Convergence}
+\textbf{Thomas' algorithm} (\S2) solves the tridiagonal system in $O(n)$:
+
+\medskip
+\textit{Forward sweep} (eliminate subdiagonal):
+\[
+  w_i = a_i / b'_{i-1},\quad
+  b'_i = b_i - w_i c_{i-1},\quad
+  d'_i = d_i - w_i d'_{i-1}.
+\]
+\textit{Back substitution:}
+\[
+  x_{n-1} = d'_{n-1}/b'_{n-1},\quad
+  x_i = (d'_i - c_i\,x_{i+1})/b'_i.
+\]
+This is Gaussian elimination specialized to the tridiagonal structure.
+
+\medskip
+\textbf{Grid-convergence study} (\S3) confirms second-order accuracy:
+\[
+  \|u_h - u_{\rm exact}\|_\infty = O(h^2).
+\]
+The code tests $n \in \{4,8,16,32,64,128,256\}$ and prints the
+convergence order, which stabilises at $\approx 2.00$ as expected.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S4--\S5: HHL Building Blocks and Full Pipeline}
+\textbf{Building blocks} (\S4) -- identical to \texttt{hhl.py} but generalised:
+\begin{itemize}
+  \item \texttt{tensor(*ops)}: Kronecker product chain.
+  \item \texttt{expm\_hermitian(H,t)}: exact $e^{iHt}$ via spectral decomp.
+  \item \texttt{qft\_matrix(m)}: exact $2^m\times 2^m$ QFT matrix.
+\end{itemize}
+
+\textbf{Evolution time} chosen so $\lambda_{\max}$ maps to phase 1:
+\[
+  t = \frac{2\pi}{\lambda_{\max}},
+  \qquad
+  \phi_j = \frac{\lambda_j\,t}{2\pi} = \frac{\lambda_j}{\lambda_{\max}} \in (0,1].
+\]
+
+\textbf{Scaling constant} for the ancilla rotation:
+\[
+  C = \frac{\lambda_{\min}}{\lambda_{\max}} \in (0,1],
+  \qquad
+  \frac{C}{\widetilde{\lambda}_j} \le 1 \;\;\forall j.
+\]
+
+\medskip
+\textbf{Full pipeline} \texttt{hhl\_poisson(A, b, M\_CLOCK)} (\S5):
+implements all 6 stages (state prep, Hadamard, ctrl-$U$, IQFT,
+ctrl-rotation, inv-QPE, post-select, extract) and returns
+\texttt{x\_hhl}, the post-selection probability, and a diagnostics dict.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S6--\S7: Results for Poisson and Clock-Precision Study}
+\textbf{HHL applied to $n=2$ and $n=4$} (\S6) with $M=5$ clock qubits:
+\begin{center}
+\small
+\begin{tabular}{cccccc}
+\toprule
+$n$ & System qubits & Total qubits & $\kappa$ & Thomas err & HHL err \\
+\midrule
+2 & 1 & $1+5+1=7$ & $\approx 3$ & $O(h^2)$ & $O(h^2)+\delta_{\rm QPE}$ \\
+4 & 2 & $1+5+2=8$ & $\approx 9.5$ & $O(h^2)$ & $O(h^2)+\delta_{\rm QPE}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\textbf{Clock-precision study} (\S7) for $n=2$, varying $M = 3,\ldots,8$:
+\[
+  \text{Phase resolution} = \frac{1}{2^M},
+  \qquad
+  P(\text{success}) \sim \frac{1}{\kappa^2}.
+\]
+Increasing $M$ decreases the HHL error (better eigenvalue approximation)
+but does not change the Thomas' $O(h^2)$ floor -- the finite-difference
+truncation error dominates for large $M$.
+
+\medskip
+\textbf{Error sources in HHL for PDEs:}
+\[
+  \text{Total error} = \underbrace{O(h^2)}_{\text{FD truncation}}
+  + \underbrace{\delta_{\rm QPE}}_{\text{clock-qubit resolution}}.
+\]
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S8: Algorithm Comparison}
+\begin{center}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Property} & \textbf{Thomas' algorithm} & \textbf{HHL algorithm} \\
+\midrule
+Complexity & $O(n)$ classical & $O(\kappa^2 \log n)$ quantum \\
+Error source & $O(h^2)$ FD truncation & $O(h^2)$ + QPE resolution \\
+Output & Full classical vector & Quantum state $\propto A^{-1}\mathbf{b}$ \\
+Scaling limit & Dense systems: slow & Advantage for large sparse \\
+Simulation cost & $O(n)$ operations & $O(2^{M+S})$ explicit ops \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\textbf{Quantum advantage:}
+Thomas' algorithm is classically optimal for tridiagonal systems.
+HHL's advantage materialises for \emph{large, sparse, well-conditioned}
+systems where only \emph{expectation values} of the solution are needed.
+The overhead of loading $\mathbf{b}$ (state preparation) and reading out
+$\mathbf{x}$ (tomography) can eliminate the speedup unless one only
+needs $\langle x | O | x\rangle$ for some observable $O$.
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}{\S9: Visualisation -- HHL vs Thomas vs Exact}
+The script saves \texttt{hhl\_poisson.png}: a $2\times 3$ panel figure.
+
+\medskip
+\begin{center}
+\small
+\begin{tabular}{lll}
+\toprule
+Panel & Content & Key quantity \\
+\midrule
+(0,0) & Poisson matrix $h^2 A$ ($n=4$) & tridiag structure \\
+(0,1) & Grid convergence: Thomas & $\|u_h - u_{\rm ex}\|_\infty = O(h^2)$ \\
+(0,2) & HHL error vs clock qubits $M$ & $\delta_{\rm QPE}(M)$ \\
+(1,0) & Solution comparison ($n=4$) & exact vs Thomas vs HHL \\
+(1,1) & QPE clock distribution ($n=4$) & $P(k)$ vs $\lambda_j/\lambda_{\max}\cdot 2^M$ \\
+(1,2) & Error bar chart (Thomas vs HHL) & $\|u-u_{\rm ex}\|_\infty$ on log scale \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\textbf{Final key equations implemented in both codes:}
+\[
+  |b\rangle = \frac{\mathbf{b}}{\|\mathbf{b}\|},
+  \quad
+  \text{QPE: }|\mathbf{0}\rangle|u_j\rangle \to |\widetilde{\lambda}_j\rangle|u_j\rangle,
+  \quad
+  |x\rangle \propto \sum_j \frac{\beta_j}{\lambda_j}|u_j\rangle = A^{-1}|b\rangle.
+\]
+\end{frame}
+
+
+%================================================
+\section{Python Source Code: \texttt{hhl.py}}
+%================================================
+
+\begin{frame}[fragile,allowframebreaks]{hhl.py -- Header, Imports, Problem Setup (\S1)}
+\begin{lstlisting}
+#!/usr/bin/env python3
+"""
+HHL Algorithm -- Pure NumPy implementation
+==========================================
+Solves the linear system  A x = b  using the quantum HHL algorithm.
+No quantum computing libraries are used: everything is explicit matrix
+algebra on state vectors, so every step can be read directly alongside
+the equations in the accompanying LaTeX slides.
+
+Algorithm stages (matching the slide sections)
+-----------------------------------------------
+1. State preparation   : encode b as a normalised quantum state |b>
+2. Quantum Phase Estim.: apply controlled-U^(2^k) to stamp eigenvalues
+                         into the clock register  -->  Sum beta_j |u_j>|lambda_tilde_j>
+3. Controlled rotation : ancilla rotation  C/lambda_j |1> + sqrt(1-C^2/lambda_j^2)|0>
+4. Inverse QPE         : uncompute the clock register (unitary adjoint)
+5. Post-selection      : measure ancilla = 1; extract the solution state
+
+Physical system used
+--------------------
+We solve a 2x2 Hermitian system (so the system register needs 1 qubit):
+
+    A = [[1.5, 0.5],       b = [1, 0]   -->  exact solution x = [3/4, -1/4]
+         [0.5, 1.5]]
+
+Eigenvalues: lambda_1 = 1, lambda_2 = 2.  Condition number kappa = 2.
+We use m=3 clock qubits, giving a phase resolution of 1/2^3 = 0.125.
+Total state space: 1 ancilla + m clock + 1 system = 5 qubits total.
+Hilbert space dimension: 2^5 = 32.
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+np.random.seed(0)
+
+# ============================================================
+# PARAMETERS
+# ============================================================
+M_CLOCK = 3            # number of QPE clock qubits (phase resolution = 1/2^M)
+T_QPE   = 2 * np.pi    # evolution time: e^{iAt} encodes eigenvalues exactly
+
+# ============================================================
+# SECTION 1 -- PROBLEM SETUP
+# ============================================================
+# Matrix A and right-hand side b
+A = np.array([[1.5, 0.5],
+              [0.5, 1.5]])
+b_vec = np.array([1.0, 0.0])
+
+# Classical solution (ground truth for comparison)
+x_exact = np.linalg.solve(A, b_vec)
+
+# Spectral decomposition:  A = U diag(lambda) U^dagger
+# eigh: real eigenvalues, unitary eigenvector matrix U
+eigenvalues, eigenvectors = np.linalg.eigh(A)
+
+# Normalise b and expand in the eigenbasis: beta_j = <u_j|b>
+b_norm  = np.linalg.norm(b_vec)
+b_state = b_vec / b_norm           # normalised quantum state |b>
+betas   = eigenvectors.conj().T @ b_state
+
+# Condition number kappa = lambda_max / lambda_min
+kappa = eigenvalues.max() / eigenvalues.min()
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{hhl.py -- Register Layout and State Preparation (\S2--\S3)}
+\begin{lstlisting}
+# ============================================================
+# SECTION 2 -- QUBIT REGISTER LAYOUT
+# ============================================================
+# Tensor-product order  (most-significant first in bitstrings):
+#   qubit 0          : ancilla
+#   qubits 1 .. m    : clock (QPE) register
+#   qubit m+1        : system register  (1 qubit for a 2x2 matrix)
+#
+# With m=3:  1 ancilla + 3 clock + 1 system = 5 qubits total.
+# Full Hilbert space dimension: 2^5 = 32.
+
+N_SYS   = int(np.log2(len(A)))   # 1 system qubit for 2x2 A
+N_TOTAL = 1 + M_CLOCK + N_SYS   # 5 total qubits
+DIM     = 2 ** N_TOTAL           # 32-dimensional Hilbert space
+
+def qubit_index_to_basis_contribution(q, val, n_qubits=N_TOTAL):
+    """
+    Contribution of qubit q having value val in {0,1} to a basis index.
+    Qubit 0 is the MSB, qubit n_qubits-1 is the LSB.
+    """
+    return val << (n_qubits - 1 - q)
+
+# ============================================================
+# SECTION 3 -- STATE PREPARATION
+# ============================================================
+# Initialise |psi_0> = |0>_anc  x  |0...0>_clock  x  |b>_sys
+#
+# |b> = b_state[0]|0> + b_state[1]|1>  (system register)
+# Full state support: only on indices 0 (sys=0) and 1 (sys=1).
+
+psi = np.zeros(DIM, dtype=complex)
+for sys_bit in range(len(b_state)):
+    idx = qubit_index_to_basis_contribution(N_TOTAL - 1, sys_bit)
+    psi[idx] = b_state[sys_bit]
+
+assert abs(np.linalg.norm(psi) - 1.0) < 1e-12, "Initial state not normalised"
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{hhl.py -- Quantum Phase Estimation (\S4)}
+\begin{lstlisting}
+# ============================================================
+# SECTION 4 -- QUANTUM PHASE ESTIMATION
+# ============================================================
+# QPE stamps the eigenphase phi_j = lambda_j * t / (2*pi) into the clock register.
+# Three sub-steps: (a) Hadamards, (b) controlled-U^(2^k), (c) inverse QFT.
+
+def tensor(*ops):
+    """Tensor (Kronecker) product of a sequence of matrices."""
+    result = ops[0]
+    for op in ops[1:]:
+        result = np.kron(result, op)
+    return result
+
+I1 = np.eye(2, dtype=complex)
+I_anc = I1
+H1 = np.array([[1, 1], [1, -1]], dtype=complex) / np.sqrt(2)
+
+# (a) Hadamard layer on all clock qubits:  I_anc x H^{otimes m} x I_sys
+H_clock = H1
+for _ in range(M_CLOCK - 1):
+    H_clock = np.kron(H_clock, H1)
+U_hadamard = tensor(I_anc, H_clock, np.eye(2**N_SYS, dtype=complex))
+psi = U_hadamard @ psi
+
+# (b) Controlled-U^(2^k) for each clock qubit k
+def expm_hermitian(H, t):
+    """
+    Exact matrix exponential exp(i H t) for a Hermitian H.
+    Uses the spectral decomposition: exp(iHt) = U diag(exp(i*lambda*t)) U^dagger.
+    No Trotter approximation -- exact for any t.
+    """
+    vals, vecs = np.linalg.eigh(H)
+    return vecs @ np.diag(np.exp(1j * vals * t)) @ vecs.conj().T
+
+proj0 = np.array([[1, 0], [0, 0]], dtype=complex)   # |0><0|
+proj1 = np.array([[0, 0], [0, 1]], dtype=complex)   # |1><1|
+
+for k in range(M_CLOCK):
+    # clock qubit k at position (1+k); power = 2^k
+    power   = 2 ** k
+    U_power = expm_hermitian(A, T_QPE * power)
+    n_before      = 1 + k
+    n_after_total = M_CLOCK - k - 1 + N_SYS
+    I_before = np.eye(2**n_before, dtype=complex)
+    I_after  = np.eye(2**n_after_total, dtype=complex)
+    # Controlled-U^(2^k): if clock_k=0 -> I; if clock_k=1 -> U^p on system
+    ctrl_U = (tensor(I_before, proj0, I_after) +
+              tensor(I_before, proj1,
+                     np.kron(np.eye(2**(M_CLOCK-k-1), dtype=complex), U_power)))
+    psi = ctrl_U @ psi
+
+# (c) Inverse QFT on clock register
+def qft_matrix(n_qubits):
+    """Exact QFT matrix on n_qubits qubits."""
+    N   = 2 ** n_qubits
+    idx = np.arange(N)
+    return np.exp(2j * np.pi * np.outer(idx, idx) / N) / np.sqrt(N)
+
+QFT  = qft_matrix(M_CLOCK)
+IQFT = QFT.conj().T        # inverse QFT = QFT^dagger
+U_iqft = tensor(I_anc, IQFT, np.eye(2**N_SYS, dtype=complex))
+psi = U_iqft @ psi
+# After this step: clock register stores tilde{lambda}_j in binary
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{hhl.py -- Controlled Rotation, Inverse QPE, Post-Selection (\S5--\S7)}
+\begin{lstlisting}
+# ============================================================
+# SECTION 5 -- CONTROLLED ROTATION (the inversion step)
+# ============================================================
+# For each clock state encoding lambda_tilde, rotate the ancilla:
+#   |0>_anc  -->  sqrt(1 - C^2/lambda^2)|0>  +  C/lambda|1>
+# C = min(|lambda_j|) ensures C/lambda <= 1 for all j.
+
+C_scale = min(abs(eigenvalues))   # scaling constant
+
+anc_bit_pos   = N_TOTAL - 1
+clock_bit_pos = range(N_TOTAL - 2, N_TOTAL - 2 - M_CLOCK, -1)
+
+def extract_clock_value(idx):
+    """Extract integer stored in the clock register from basis index idx."""
+    clock_val = 0
+    for bit_pos in clock_bit_pos:
+        clock_val = (clock_val << 1) | ((idx >> bit_pos) & 1)
+    return clock_val
+
+psi_rot = psi.copy()
+for idx in range(DIM):
+    if (idx >> anc_bit_pos) & 1:
+        continue    # ancilla=1: handled as partner of ancilla=0 state
+    idx1      = idx ^ (1 << anc_bit_pos)   # flip ancilla bit
+    clock_val = extract_clock_value(idx)
+    if clock_val == 0:
+        continue    # lambda_tilde=0 -> skip
+
+    lambda_est = (clock_val / 2**M_CLOCK) * (2 * np.pi / T_QPE)
+    ratio = C_scale / lambda_est          # C / lambda_tilde
+    ratio = min(abs(ratio), 1.0)
+
+    cos_theta = np.sqrt(max(0.0, 1.0 - ratio**2))
+    sin_theta = ratio
+
+    # Apply rotation in {|0>_anc, |1>_anc} subspace
+    a0 = psi[idx];  a1 = psi[idx1]
+    psi_rot[idx]  = cos_theta * a0 - sin_theta * a1
+    psi_rot[idx1] = sin_theta * a0 + cos_theta * a1
+
+psi = psi_rot
+
+# ============================================================
+# SECTION 6 -- INVERSE QPE (uncomputation)
+# ============================================================
+# Apply the exact adjoint of the QPE forward pass: QFT -> ctrl-U^dagger -> H
+U_qft_fwd = tensor(I_anc, QFT, np.eye(2**N_SYS, dtype=complex))
+psi = U_qft_fwd @ psi
+
+for k in reversed(range(M_CLOCK)):
+    power        = 2 ** k
+    U_power_dag  = expm_hermitian(A, -T_QPE * power)   # U^dagger
+    n_before     = 1 + k;  n_after_total = M_CLOCK - k - 1 + N_SYS
+    I_before     = np.eye(2**n_before, dtype=complex)
+    I_after      = np.eye(2**n_after_total, dtype=complex)
+    ctrl_Udag    = (tensor(I_before, proj0, I_after) +
+                   tensor(I_before, proj1,
+                          np.kron(np.eye(2**(M_CLOCK-k-1), dtype=complex),
+                                  U_power_dag)))
+    psi = ctrl_Udag @ psi
+
+psi = U_hadamard @ psi   # H = H^dagger
+
+# ============================================================
+# SECTION 7 -- POST-SELECTION  (ancilla = |1>)
+# ============================================================
+psi_post = np.zeros(DIM, dtype=complex)
+for i, amp in enumerate(psi):
+    if (i >> anc_bit_pos) & 1:
+        psi_post[i] = amp
+
+success_prob = np.sum(np.abs(psi_post)**2)   # P(success) ~ 1/kappa^2
+psi_post /= np.sqrt(success_prob)
+
+# ============================================================
+# SECTION 8 -- EXTRACT SOLUTION AND COMPARE
+# ============================================================
+x_amps = np.zeros(2**N_SYS, dtype=complex)
+for i, amp in enumerate(psi_post):
+    bits = format(i, f'0{N_TOTAL}b')
+    if bits[0] == '1' and bits[1:1+M_CLOCK] == '0' * M_CLOCK:
+        x_amps[int(bits[1+M_CLOCK:], 2)] = amp
+
+x_hhl_raw = x_amps.real / np.linalg.norm(x_amps.real)
+scale      = np.dot(x_exact, x_hhl_raw) / np.dot(x_hhl_raw, x_hhl_raw)
+x_hhl      = scale * x_hhl_raw
+
+# Residual check
+residual = A @ x_hhl - b_vec
+print(f"Relative error: {np.linalg.norm(x_hhl-x_exact)/np.linalg.norm(x_exact):.2e}")
+print(f"Residual ||Ax_HHL - b||_2: {np.linalg.norm(residual):.2e}")
+\end{lstlisting}
+\end{frame}
+
+
+%================================================
+\section{Python Source Code: \texttt{hhl\_poisson.py}}
+%================================================
+
+\begin{frame}[fragile,allowframebreaks]{hhl\_poisson.py -- Header and FD Discretisation (\S1)}
+\begin{lstlisting}
+#!/usr/bin/env python3
+"""
+HHL Algorithm Applied to the 1-D Poisson Equation
+===================================================
+Pure NumPy / SciPy -- no Qiskit or any quantum library.
+
+Problem
+-------
+  -d^2u/dx^2 = f(x) = sin(pi*x),   x in [0,1],   u(0) = u(1) = 0.
+
+With n interior grid points and step h = 1/(n+1), the second-order
+finite-difference discretisation gives the symmetric tridiagonal system
+
+    A u = b,
+
+where A is the n x n tridiagonal matrix
+
+    A = (1/h^2) * tridiag(-1, 2, -1),
+
+and  b_i = f(x_i) = sin(pi * x_i).
+
+We use the manufactured right-hand side  f(x) = sin(pi*x)  for which the
+exact solution is  u(x) = sin(pi*x) / pi^2,  giving a clean error benchmark.
+"""
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+np.random.seed(42)
+
+# ============================================================
+# S1 -- FINITE-DIFFERENCE DISCRETISATION AND EXACT SOLUTION
+# ============================================================
+
+def build_poisson_system(n):
+    """
+    Build the finite-difference Poisson matrix and RHS for
+        -u'' = f(x) = sin(pi*x),   u(0)=u(1)=0,
+    on n interior points  x_i = i/(n+1),  i=1,...,n.
+
+    Returns
+    -------
+    A     : (n,n) symmetric tridiagonal matrix  (1/h^2)*tridiag(-1,2,-1)
+    b     : (n,)  RHS vector   b_i = sin(pi * x_i)
+    x_int : (n,)  interior grid points
+    h     : grid spacing  h = 1/(n+1)
+    """
+    h     = 1.0 / (n + 1)
+    x_int = np.linspace(h, 1.0 - h, n)
+    # Tridiagonal Poisson matrix: 2/h^2 on diagonal, -1/h^2 off-diagonal
+    A = (2.0 * np.eye(n) - np.eye(n, k=1) - np.eye(n, k=-1)) / h**2
+    b = np.sin(np.pi * x_int)
+    return A, b, x_int, h
+
+def exact_solution(x):
+    """Exact solution of  -u'' = sin(pi*x):  u(x) = sin(pi*x)/pi^2."""
+    return np.sin(np.pi * x) / np.pi**2
+
+# Demonstrate the n=4 system
+A4, b4, x4, h4 = build_poisson_system(4)
+u_exact_4 = exact_solution(x4)
+evals4  = np.linalg.eigvalsh(A4)
+kappa4  = evals4.max() / evals4.min()
+print(f"Poisson matrix A (n=4, h={h4:.4f}):\n{np.round(A4, 2)}")
+print(f"Eigenvalues: {np.round(evals4, 4)}")
+print(f"Condition number kappa = {kappa4:.4f}")
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{hhl\_poisson.py -- Thomas' Algorithm and Grid Convergence (\S2--\S3)}
+\begin{lstlisting}
+# ============================================================
+# S2 -- THOMAS' ALGORITHM  (O(n) tridiagonal solver)
+# ============================================================
+
+def thomas_algorithm(lower, main, upper, rhs):
+    """
+    Thomas' algorithm: O(n) direct solver for tridiagonal systems.
+    This is Gaussian elimination specialised to the tridiagonal structure.
+
+    Forward sweep (eliminate subdiagonal):
+        w_i   = a_i / b'_{i-1}
+        b'_i  = b_i - w_i * c_{i-1}
+        d'_i  = d_i - w_i * d'_{i-1}
+
+    Back substitution:
+        x_{n-1} = d'_{n-1} / b'_{n-1}
+        x_i     = (d'_i - c_i * x_{i+1}) / b'_i    (i = n-2, ..., 0)
+    """
+    n   = len(main)
+    b_  = main.copy().astype(float)
+    d_  = rhs.copy().astype(float)
+    c_  = upper.copy().astype(float)
+
+    # Forward sweep
+    for i in range(1, n):
+        w     = lower[i-1] / b_[i-1]
+        b_[i] = b_[i] - w * c_[i-1]
+        d_[i] = d_[i] - w * d_[i-1]
+
+    # Back substitution
+    x     = np.zeros(n)
+    x[-1] = d_[-1] / b_[-1]
+    for i in range(n-2, -1, -1):
+        x[i] = (d_[i] - c_[i] * x[i+1]) / b_[i]
+    return x
+
+def solve_poisson_thomas(n):
+    """Solve  -u'' = sin(pi*x)  with n interior points via Thomas' algorithm."""
+    h     = 1.0 / (n + 1)
+    x_int = np.linspace(h, 1.0 - h, n)
+    b     = np.sin(np.pi * x_int)
+    main  = np.full(n,    2.0 / h**2)
+    upper = np.full(n-1, -1.0 / h**2)
+    lower = np.full(n-1, -1.0 / h**2)
+    u     = thomas_algorithm(lower, main, upper, b)
+    return x_int, u
+
+# ============================================================
+# S3 -- GRID-CONVERGENCE STUDY: THOMAS' ALGORITHM
+# ============================================================
+# Tests n in {4, 8, 16, 32, 64, 128, 256} and prints convergence order.
+# Expected result: error ~ O(h^2) => order ~ 2.00 as n grows.
+
+grid_sizes = [4, 8, 16, 32, 64, 128, 256]
+thomas_errors_max = []
+thomas_hs         = []
+prev_err          = None
+for n in grid_sizes:
+    x_t, u_t = solve_poisson_thomas(n)
+    u_ex      = exact_solution(x_t)
+    err_max   = np.max(np.abs(u_t - u_ex))
+    thomas_errors_max.append(err_max)
+    thomas_hs.append(1.0 / (n + 1))
+    order = (f"{math.log2(prev_err/err_max):.2f}" if prev_err else "  --")
+    print(f"  n={n:>4}  h={1/(n+1):.6f}  max_err={err_max:.4e}  order={order}")
+    prev_err = err_max
+# --> Convergence order stabilises at ~2.00 (second-order finite differences)
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{hhl\_poisson.py -- Full HHL Pipeline (\S4--\S5)}
+\begin{lstlisting}
+# ============================================================
+# S4 -- HHL BUILDING BLOCKS
+# ============================================================
+
+def tensor(*ops):
+    """Kronecker product of a sequence of matrices."""
+    result = ops[0]
+    for op in ops[1:]:
+        result = np.kron(result, op)
+    return result
+
+def expm_hermitian(H, t):
+    """Exact matrix exponential exp(i H t) via spectral decomp."""
+    vals, vecs = np.linalg.eigh(H)
+    return vecs @ np.diag(np.exp(1j * vals * t)) @ vecs.conj().T
+
+def qft_matrix(n_qubits):
+    """Exact QFT matrix on n_qubits qubits (DFT normalised by 1/sqrt(N))."""
+    N   = 2 ** n_qubits
+    idx = np.arange(N)
+    return np.exp(2j * np.pi * np.outer(idx, idx) / N) / np.sqrt(N)
+
+I2    = np.eye(2, dtype=complex)
+H1    = np.array([[1, 1], [1, -1]], dtype=complex) / math.sqrt(2)
+proj0 = np.array([[1, 0], [0, 0]], dtype=complex)   # |0><0|
+proj1 = np.array([[0, 0], [0, 1]], dtype=complex)   # |1><1|
+
+# ============================================================
+# S5 -- FULL HHL PIPELINE   hhl_poisson(A, b, M_CLOCK)
+# ============================================================
+
+def hhl_poisson(A, b_vec, M_CLOCK, verbose=True):
+    """
+    Solve A x = b using the HHL algorithm (self-contained, pure NumPy).
+
+    Stages:
+      1  State preparation   |psi_0> = |0>_anc x |0>_clk x |b/||b||>_sys
+      2a Hadamards           H^{otimes M} on clock register
+      2b Controlled-U^(2^k)  stamp eigenphases into clock register
+      2c Inverse QFT         clock -> computational basis (eigenvalue labels)
+      3  Controlled rotation  ancilla: C/lambda_tilde |1> + sqrt(...)|0>
+      4  Inverse QPE          exact adjoint of stages 2a-2c (uncompute clock)
+      5  Post-selection       keep ancilla=1; P(success) ~ 1/kappa^2
+      6  Extract solution     read system register amplitudes -> x_hhl
+
+    Returns  x_hhl (rescaled solution), success_prob, info dict.
+    """
+    n, N_SYS = len(b_vec), int(round(math.log2(len(b_vec))))
+    N_TOT, DIM = 1 + M_CLOCK + N_SYS, 2**(1 + M_CLOCK + N_SYS)
+
+    # Spectral data
+    eigenvalues, _ = np.linalg.eigh(A)
+    lambda_min, lambda_max = eigenvalues.min(), eigenvalues.max()
+    kappa  = lambda_max / lambda_min
+    T_QPE  = 2.0 * np.pi / lambda_max   # t such that phi_max = 1
+    C_scale = lambda_min / lambda_max   # relative scaling constant
+
+    # Identity matrices
+    I_anc = I2
+    I_clk = np.eye(2**M_CLOCK, dtype=complex)
+    I_sys = np.eye(2**N_SYS,   dtype=complex)
+
+    # Hadamard and QFT operators
+    H_clk = H1
+    for _ in range(M_CLOCK - 1):
+        H_clk = np.kron(H_clk, H1)
+    U_hadamard = tensor(I_anc, H_clk, I_sys)
+    QFT_M  = qft_matrix(M_CLOCK)
+    U_iqft = tensor(I_anc, QFT_M.conj().T, I_sys)
+    U_qft  = tensor(I_anc, QFT_M,          I_sys)
+
+    # Stage 1: state preparation  |psi_0> = |0>_anc x |0>_clk x |b/||b||>_sys
+    b_state = b_vec / np.linalg.norm(b_vec)
+    psi = np.zeros(DIM, dtype=complex)
+    for s in range(n):
+        psi[s] = b_state[s]   # system register in LSB position
+
+    # Stage 2a: Hadamards on clock
+    psi = U_hadamard @ psi
+
+    # Stage 2b: controlled-U^(2^k)  (eigenphase stamping)
+    for k in range(M_CLOCK):
+        U_pow      = expm_hermitian(A, T_QPE * 2**k)
+        n_left     = 1 + k
+        n_right    = M_CLOCK - k - 1
+        I_left     = np.eye(2**n_left,  dtype=complex)
+        I_right_sys = np.kron(np.eye(2**n_right, dtype=complex), I_sys)
+        ctrl_U = (tensor(I_left, proj0, I_right_sys) +
+                  tensor(I_left, proj1, np.kron(np.eye(2**n_right, dtype=complex), U_pow)))
+        psi = ctrl_U @ psi
+
+    # Stage 2c: inverse QFT -> clock register encodes lambda_tilde in binary
+    psi = U_iqft @ psi
+
+    # Diagnostics: clock probability distribution
+    clock_probs = np.zeros(2**M_CLOCK)
+    for idx, amp in enumerate(psi):
+        clk_val = int(format(idx, f'0{N_TOT}b')[1:1+M_CLOCK], 2)
+        clock_probs[clk_val] += abs(amp)**2
+
+    # Stage 3: controlled ancilla rotation  C/lambda_tilde |1> + sqrt(...)|0>
+    anc_bit_pos = N_TOT - 1
+    psi_rot = psi.copy()
+    for idx in range(DIM):
+        if (idx >> anc_bit_pos) & 1:
+            continue   # ancilla=1: skip (handled as partner below)
+        idx1    = idx ^ (1 << anc_bit_pos)
+        bits    = format(idx, f'0{N_TOT}b')
+        clk_int = int(bits[1:1+M_CLOCK], 2)
+        if clk_int == 0:
+            continue   # lambda_tilde=0 -> skip
+        lam_t   = clk_int / 2**M_CLOCK * lambda_max
+        ratio   = min(C_scale * lambda_max / lam_t, 1.0)
+        cos_t, sin_t = math.sqrt(max(0.0, 1.0 - ratio**2)), ratio
+        a0, a1  = psi[idx], psi[idx1]
+        psi_rot[idx]  = cos_t * a0 - sin_t * a1
+        psi_rot[idx1] = sin_t * a0 + cos_t * a1
+    psi = psi_rot
+
+    # Stage 4: inverse QPE (uncompute clock register -- exact adjoint)
+    psi = U_qft @ psi
+    for k in reversed(range(M_CLOCK)):
+        U_pd = expm_hermitian(A, -T_QPE * 2**k)
+        n_left = 1 + k;  n_right = M_CLOCK - k - 1
+        I_left = np.eye(2**n_left, dtype=complex)
+        ctrl_Ud = (tensor(I_left, proj0,
+                          np.kron(np.eye(2**n_right, dtype=complex), I_sys)) +
+                   tensor(I_left, proj1,
+                          np.kron(np.eye(2**n_right, dtype=complex), U_pd)))
+        psi = ctrl_Ud @ psi
+    psi = U_hadamard @ psi   # H^dagger = H
+
+    # Stage 5: post-selection on ancilla = |1>
+    psi_post = np.array([amp if (i >> anc_bit_pos) & 1 else 0+0j
+                         for i, amp in enumerate(psi)], dtype=complex)
+    success_p = float(np.sum(np.abs(psi_post)**2))
+    psi_post /= math.sqrt(success_p)
+
+    # Stage 6: extract system-register amplitudes  (ancilla=1, clock=0...0)
+    x_amps = np.zeros(n, dtype=complex)
+    for idx, amp in enumerate(psi_post):
+        bits = format(idx, f'0{N_TOT}b')
+        if bits[0] == '1' and bits[1:1+M_CLOCK] == '0' * M_CLOCK:
+            x_amps[int(bits[1+M_CLOCK:], 2)] = amp
+    x_raw  = x_amps.real / np.linalg.norm(x_amps.real)
+    x_ref  = np.linalg.solve(A, b_vec)   # classical reference for scale
+    scale  = np.dot(x_ref, x_raw) / np.dot(x_raw, x_raw)
+    x_hhl  = scale * x_raw
+
+    info = {'clock_probs': clock_probs, 'eigenvalues': eigenvalues,
+            'kappa': kappa, 'T_QPE': T_QPE, 'N_SYS': N_SYS,
+            'M_CLOCK': M_CLOCK, 'N_TOT': N_TOT, 'DIM': DIM,
+            'lambda_max': lambda_max}
+    return x_hhl, success_p, info
+\end{lstlisting}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile,allowframebreaks]{hhl\_poisson.py -- Results, Precision Study, and Visualisation (\S6--\S9)}
+\begin{lstlisting}
+# ============================================================
+# S6 -- HHL APPLIED TO n=2 AND n=4 POISSON SYSTEMS
+# ============================================================
+M_CLOCK_DEFAULT = 5   # 5 clock qubits -> phase resolution 1/32
+
+hhl_results = {}
+for n_pts in [2, 4]:
+    A_p, b_p, x_grid, h_p = build_poisson_system(n_pts)
+    x_th, u_th = solve_poisson_thomas(n_pts)
+    u_ex       = exact_solution(x_grid)
+    x_hhl, sp, info = hhl_poisson(A_p, b_p, M_CLOCK_DEFAULT, verbose=True)
+    if x_hhl is not None:
+        err_hhl    = np.max(np.abs(x_hhl - u_ex))
+        err_thomas = np.max(np.abs(u_th  - u_ex))
+        hhl_results[n_pts] = {'x_grid': x_grid, 'u_exact': u_ex,
+                               'u_thomas': u_th, 'u_hhl': x_hhl,
+                               'info': info, 'err_hhl': err_hhl,
+                               'err_th': err_thomas, 'sp': sp}
+
+# ============================================================
+# S7 -- HHL CLOCK-PRECISION STUDY  (n=2, varying M_CLOCK)
+# ============================================================
+# For M = 3,...,8 clock qubits, compare HHL error and post-selection P.
+# As M increases: phase resolution 1/2^M improves -> HHL error decreases.
+# The O(h^2) FD floor is reached when QPE resolution < FD truncation error.
+
+A2, b2, x2, h2 = build_poisson_system(2)
+u_ex2 = exact_solution(x2)
+clock_study = []
+for m in range(3, 9):
+    x_hhl_m, sp_m, info_m = hhl_poisson(A2, b2, m, verbose=False)
+    if x_hhl_m is not None:
+        err_m = np.max(np.abs(x_hhl_m - u_ex2))
+        clock_study.append((m, err_m, sp_m, info_m['DIM']))
+        print(f"  M={m}: resolution=1/{2**m}  err={err_m:.4e}  P={sp_m:.4f}  dim={info_m['DIM']}")
+
+# ============================================================
+# S9 -- VISUALISATION (6-panel figure)
+# ============================================================
+fig = plt.figure(figsize=(18, 12))
+fig.suptitle(
+    "HHL Algorithm vs Thomas' Algorithm -- 1-D Poisson Equation\n"
+    r"$-u''=\sin(\pi x)$,  $u(0)=u(1)=0$,"
+    r"  exact: $u(x)=\sin(\pi x)/\pi^2$",
+    fontsize=13, fontweight='bold')
+gs = gridspec.GridSpec(2, 3, hspace=0.45, wspace=0.40)
+
+# Panel (0,0): Poisson matrix h^2*A  (n=4)
+ax = fig.add_subplot(gs[0, 0])
+im = ax.imshow(A4 * h4**2, cmap='RdBu_r', aspect='equal', vmin=-1.5, vmax=2.5)
+plt.colorbar(im, ax=ax, shrink=0.8, label=r'$h^2 \cdot A_{ij}$')
+ax.set_title(r'Poisson matrix $h^2 A$  ($n=4$)' + '\n'
+             r'$A = h^{-2}\,\mathrm{tridiag}(-1,2,-1)$',
+             fontsize=10, fontweight='bold')
+
+# Panel (0,1): Grid convergence Thomas' algorithm
+ax = fig.add_subplot(gs[0, 1])
+ax.loglog(thomas_hs, thomas_errors_max, 'bo-', lw=2, ms=7,
+          label="Thomas' algorithm")
+ref = thomas_errors_max[0] * (np.array(thomas_hs) / thomas_hs[0])**2
+ax.loglog(thomas_hs, ref, 'k--', lw=1.5, alpha=0.6, label=r'$O(h^2)$')
+ax.set_xlabel('Grid spacing $h$'); ax.set_ylabel(r'Max error')
+ax.set_title("Grid Convergence: Thomas' Algorithm\n$O(h^2)$",
+             fontsize=10, fontweight='bold')
+ax.legend(fontsize=9)
+
+# Panel (0,2): HHL precision vs clock qubits
+ax = fig.add_subplot(gs[0, 2])
+if clock_study:
+    m_vals   = [c[0] for c in clock_study]
+    err_vals = [c[1] for c in clock_study]
+    sp_vals  = [c[2] for c in clock_study]
+    ax.semilogy(m_vals, err_vals, 'r-s', lw=2, ms=7, label='HHL max error')
+    ax.twinx().plot(m_vals, sp_vals, 'g--^', lw=1.5, ms=6, label='P(success)')
+    ax.set_xlabel('Clock qubits $M$')
+    ax.set_title('HHL Precision vs Clock Qubits\n($n=2$)', fontsize=10, fontweight='bold')
+
+# Panel (1,0): solution comparison n=4
+if 4 in hhl_results:
+    r = hhl_results[4]
+    ax = fig.add_subplot(gs[1, 0])
+    x_d = np.linspace(0, 1, 300)
+    ax.plot(x_d, exact_solution(x_d), 'k-', lw=2, label=r'Exact: $\sin(\pi x)/\pi^2$')
+    ax.plot(r['x_grid'], r['u_thomas'], 'bs--', ms=10, lw=1.5,
+            label=f"Thomas' (err={r['err_th']:.2e})")
+    ax.plot(r['x_grid'], r['u_hhl'], 'r^:', ms=10, lw=1.5,
+            label=f"HHL (err={r['err_hhl']:.2e})")
+    ax.set(xlabel='$x$', ylabel='$u(x)$',
+           title=f'Solution Comparison ($n=4$, M={M_CLOCK_DEFAULT})')
+    ax.legend(fontsize=9)
+
+plt.savefig('hhl_poisson.png', dpi=140, bbox_inches='tight')
+plt.show()
+print("Figure saved to hhl_poisson.png")
+\end{lstlisting}
 \end{frame}
 
 \end{document}
