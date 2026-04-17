@@ -1,0 +1,877 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage{physics}
+\usepackage{braket}
+\usepackage{quantikz}
+\usepackage{hyperref}
+\usepackage{booktabs}
+
+\usetheme{Madrid}
+
+\title{Quantum Approximate Optimization Algorithm (QAOA)}
+\subtitle{From Combinatorial Optimization to Quantum Neural Networks}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% =============================================================================
+\section{Motivation}
+% =============================================================================
+
+\begin{frame}{Why QAOA?}
+Many optimization problems can be written as the minimization or maximization of a
+cost function over binary variables,
+\[
+x_i \in \{0,1\}, \qquad i=1,\dots,n.
+\]
+
+Examples:
+\begin{itemize}
+    \item MaxCut,
+    \item portfolio optimization,
+    \item scheduling,
+    \item constraint satisfaction,
+    \item graph partitioning.
+\end{itemize}
+
+QAOA is a variational quantum algorithm designed to attack such combinatorial
+optimization problems by encoding the cost function into a quantum Hamiltonian.
+\end{frame}
+
+\begin{frame}{High-Level Idea}
+QAOA constructs a parameterized quantum state
+\[
+\ket{\psi_p(\bm{\gamma},\bm{\beta})}
+=
+\prod_{\ell=1}^p e^{-i\beta_\ell H_M} e^{-i\gamma_\ell H_C}\ket{+}^{\otimes n},
+\]
+where
+\begin{itemize}
+    \item \(H_C\) is the cost Hamiltonian (encodes the objective),
+    \item \(H_M\) is the mixer Hamiltonian (generates transitions),
+    \item \(p\) is the circuit depth,
+    \item \(\bm{\gamma}=(\gamma_1,\dots,\gamma_p)\), \(\bm{\beta}=(\beta_1,\dots,\beta_p)\).
+\end{itemize}
+
+The parameters are optimized classically to maximize \(\ev{H_C}{\psi_p}\).
+\end{frame}
+
+\begin{frame}{Goals of These Notes}
+We develop four themes:
+\begin{enumerate}
+    \item rigorous derivation of the QAOA cost Hamiltonian from combinatorial
+          optimization via QUBO and Ising models,
+    \item analytical results for \(p=1\) QAOA applied to MaxCut,
+    \item the interpretation of QAOA as a discretized adiabatic protocol,
+    \item explicit connections between QAOA and quantum neural networks (QNNs).
+\end{enumerate}
+
+\medskip
+The central idea is that QAOA is simultaneously:
+\begin{itemize}
+    \item an optimization algorithm for combinatorial problems,
+    \item a discretized adiabatic protocol,
+    \item and a structured parameterized quantum circuit / QNN.
+\end{itemize}
+\end{frame}
+
+% =============================================================================
+\section{QUBO and the Ising Mapping}
+% =============================================================================
+
+\begin{frame}{Rigorous Formulation of QUBO}
+A quadratic unconstrained binary optimization (QUBO) problem is
+\[
+\min_{x\in\{0,1\}^n} f(x),
+\]
+with
+\[
+f(x)=x^T Q x + c^T x + c_0,
+\]
+where
+\begin{itemize}
+    \item \(x=(x_1,\dots,x_n)^T\),
+    \item \(Q\in\mathbb{R}^{n\times n}\),
+    \item \(c\in\mathbb{R}^n\),
+    \item \(c_0\in\mathbb{R}\).
+\end{itemize}
+
+Because \(x_i^2=x_i\) for binary variables, any quadratic binary polynomial
+can be reduced to this form.
+\end{frame}
+
+\begin{frame}{Expanded QUBO Form}
+Writing out the quadratic form,
+\[
+f(x)=\sum_{i,j=1}^n Q_{ij}x_i x_j + \sum_{i=1}^n c_i x_i + c_0.
+\]
+
+If \(Q\) is symmetrized, one may equivalently write
+\[
+f(x)=\sum_{i=1}^n a_i x_i + \sum_{1\le i<j\le n} b_{ij} x_i x_j + c_0.
+\]
+
+Constraint terms are often converted into QUBO penalties, for example
+\[
+\lambda\Big(\sum_i x_i - k\Big)^2,
+\]
+which enforces \(\sum_i x_i \approx k\) when \(\lambda\) is sufficiently large.
+\end{frame}
+
+\begin{frame}{Why QUBO is So Central}
+QUBO is important because many discrete optimization problems can be transformed
+into it.
+
+\[
+\text{optimization problem}
+\;\longrightarrow\;
+\text{binary variables}
+\;\longrightarrow\;
+\text{quadratic objective}
+\;\longrightarrow\;
+\text{Ising Hamiltonian}
+\;\longrightarrow\;
+\text{quantum cost Hamiltonian}.
+\]
+
+QAOA acts on the final object in this chain.
+\end{frame}
+
+\begin{frame}{Binary-to-Spin Transformation}
+To map QUBO to an Ising model, introduce spin variables
+\[
+z_i \in \{-1,+1\}
+\]
+through
+\[
+x_i = \frac{1-z_i}{2},
+\qquad
+z_i = 1-2x_i.
+\]
+
+\textbf{Linear terms:}
+\[
+a_i x_i = \frac{a_i}{2} - \frac{a_i}{2} z_i.
+\]
+
+\textbf{Quadratic terms:}
+\[
+b_{ij} x_i x_j
+=
+\frac{b_{ij}}{4}\bigl(1 - z_i - z_j + z_i z_j\bigr).
+\]
+
+Every quadratic binary interaction becomes a constant, local fields, and a
+pairwise Ising coupling.
+\end{frame}
+
+\begin{frame}{General Ising Form}
+After the substitution \(x_i=(1-z_i)/2\), any QUBO becomes
+\[
+f(x)
+=
+\mathrm{const}
++
+\sum_i h_i z_i
++
+\sum_{i<j} J_{ij} z_i z_j.
+\]
+
+The quantum cost Hamiltonian is then obtained by promoting classical spins to
+Pauli-\(Z\) operators,
+\[
+z_i \;\longrightarrow\; Z_i,
+\qquad
+z_i z_j \;\longrightarrow\; Z_i Z_j,
+\]
+giving
+\[
+H_C
+=
+\sum_i h_i Z_i
++
+\sum_{i<j} J_{ij} Z_i Z_j
++
+\mathrm{const}.
+\]
+
+This Hamiltonian is diagonal in the computational basis.
+\end{frame}
+
+% =============================================================================
+\section{MaxCut: From Graph to Quantum Hamiltonian}
+% =============================================================================
+
+\begin{frame}{Definition of MaxCut}
+Let \(G=(V,E)\) be a graph with edge weights \(w_{ij}\ge 0\).
+A cut partitions the vertices into two sets.
+
+For binary variables \(x_i\in\{0,1\}\), interpret
+\[
+x_i =
+\begin{cases}
+0, & i \in S,\\
+1, & i \in \bar S.
+\end{cases}
+\]
+
+An edge \((i,j)\) is cut if \(x_i\neq x_j\). The weighted MaxCut objective is
+\[
+\max_{x\in\{0,1\}^n}
+C(x)
+=
+\sum_{(i,j)\in E} w_{ij}\,\mathbf{1}_{x_i\neq x_j}.
+\]
+\end{frame}
+
+\begin{frame}{MaxCut as a QUBO and Ising Hamiltonian}
+Because \(\mathbf{1}_{x_i\neq x_j} = x_i+x_j-2x_ix_j\), the cut objective is
+\[
+C(x)
+=
+\sum_{(i,j)\in E} w_{ij}\bigl[x_i+x_j-2x_i x_j\bigr].
+\]
+
+After the spin substitution \(x_i=(1-z_i)/2\), one finds
+\[
+x_i+x_j-2x_ix_j = \frac{1}{2}(1-z_iz_j).
+\]
+
+Therefore,
+\[
+C(z)
+=
+\sum_{(i,j)\in E} \frac{w_{ij}}{2}(1-z_iz_j).
+\]
+
+Promoting \(z_i\) to Pauli operators gives the MaxCut cost Hamiltonian:
+\[
+H_C
+=
+\sum_{(i,j)\in E} \frac{w_{ij}}{2}(I-Z_iZ_j).
+\]
+\end{frame}
+
+\begin{frame}{Why This Hamiltonian Encodes MaxCut}
+On a computational basis state \(\ket{z_1\cdots z_n}\), each \(Z_i\) has
+eigenvalue \(z_i\in\{-1,+1\}\). Hence
+\[
+Z_i Z_j \ket{z} = z_i z_j \ket{z}.
+\]
+
+Therefore
+\[
+\frac{1-z_i z_j}{2}
+=
+\begin{cases}
+0, & z_i=z_j,\\
+1, & z_i\neq z_j.
+\end{cases}
+\]
+
+So each edge contributes exactly its cut value \(w_{ij}\frac{1-z_iz_j}{2}\).
+\end{frame}
+
+\begin{frame}{Worked MaxCut Example: Triangle Graph}
+Consider a 3-vertex complete graph with unit weights:
+\[
+E=\{(1,2),(2,3),(1,3)\}.
+\]
+
+Then
+\[
+H_C
+=
+\frac{1}{2}(I-Z_1Z_2)
++
+\frac{1}{2}(I-Z_2Z_3)
++
+\frac{1}{2}(I-Z_1Z_3)
+=
+\frac{3}{2}I - \frac{1}{2}(Z_1Z_2+Z_2Z_3+Z_1Z_3).
+\]
+
+The maximum cut has value \(2\), achieved by any state with one spin
+separated from the other two.
+\end{frame}
+
+% =============================================================================
+\section{QAOA Hamiltonians and the QAOA State}
+% =============================================================================
+
+\begin{frame}{Cost Hamiltonian}
+For a generic problem, define \(H_C\) so that computational basis states are
+eigenstates with the classical objective as eigenvalues:
+\[
+H_C\ket{x}=C(x)\ket{x}.
+\]
+
+For MaxCut,
+\[
+H_C = \sum_{(i,j)\in E} w_{ij}\frac{I-Z_iZ_j}{2}.
+\]
+
+The QAOA algorithm maximizes
+\[
+\expval{H_C}.
+\]
+\end{frame}
+
+\begin{frame}{Mixer Hamiltonian}
+The standard choice of mixer is
+\[
+H_M = \sum_{i=1}^n X_i.
+\]
+
+Starting from
+\[
+\ket{+}^{\otimes n}
+=
+\bigotimes_{i=1}^n \frac{\ket{0}+\ket{1}}{\sqrt{2}},
+\]
+the mixer drives transitions between computational basis states:
+\[
+X_i\ket{x_1\cdots x_i\cdots x_n}
+=
+\ket{x_1\cdots (1-x_i)\cdots x_n}.
+\]
+
+QAOA requires
+\[
+[H_C,H_M]\neq 0
+\]
+to generate a nontrivial variational manifold.
+\end{frame}
+
+\begin{frame}{The QAOA State}
+At depth \(p\), the QAOA state is
+\[
+\ket{\psi_p(\bm{\gamma},\bm{\beta})}
+=
+e^{-i\beta_p H_M}e^{-i\gamma_p H_C}
+\cdots
+e^{-i\beta_1 H_M}e^{-i\gamma_1 H_C}
+\ket{+}^{\otimes n}.
+\]
+
+The variational objective is
+\[
+F_p(\bm{\gamma},\bm{\beta})
+=
+\ev{H_C}{\psi_p(\bm{\gamma},\bm{\beta})}.
+\]
+
+Parameters \((\bm{\gamma}^\star,\bm{\beta}^\star)\) are found by the classical
+outer loop:
+\[
+(\bm{\gamma}^\star,\bm{\beta}^\star)
+=
+\arg\max_{\bm{\gamma},\bm{\beta}}
+F_p(\bm{\gamma},\bm{\beta}).
+\]
+\end{frame}
+
+% =============================================================================
+\section{From Adiabatic Evolution to QAOA}
+% =============================================================================
+
+\begin{frame}{Adiabatic Optimization and Its Discretization}
+Start from the adiabatic interpolation
+\[
+H(s) = (1-s)H_M + s H_C,
+\qquad s\in[0,1].
+\]
+
+The ground state of \(H(0)=H_M\) is \(\ket{+}^{\otimes n}\) (easy to prepare).
+The ground state of \(H(1)=H_C\) encodes the optimal solution.
+
+Discretizing into \(p\) time slices and applying first-order Trotterization,
+\[
+e^{-i\Delta t_\ell\left[(1-s_\ell)H_M+s_\ell H_C\right]}
+\approx
+e^{-i\beta_\ell H_M}e^{-i\gamma_\ell H_C},
+\]
+with \(\beta_\ell=(1-s_\ell)\Delta t_\ell\), \(\gamma_\ell=s_\ell\Delta t_\ell\), yields:
+\[
+\ket{\psi_p(\bm{\gamma},\bm{\beta})}
+=
+\prod_{\ell=1}^p e^{-i\beta_\ell H_M}e^{-i\gamma_\ell H_C}
+\ket{+}^{\otimes n}.
+\]
+\end{frame}
+
+\begin{frame}{Why the Parameters Become Variational}
+In strict adiabatic evolution, the schedule \(s(t)\) is fixed beforehand.
+
+In QAOA, the effective step parameters
+\[
+\{(\gamma_\ell,\beta_\ell)\}_{\ell=1}^p
+\]
+are treated as \emph{free variational parameters} and optimized classically.
+
+This changes the problem from
+\[
+\text{simulate a prescribed schedule}
+\]
+to
+\[
+\text{optimize over a family of Trotterized schedules}.
+\]
+
+QAOA is therefore a discretized, variationally optimized form of adiabatic
+evolution.
+\end{frame}
+
+\begin{frame}{Variational Manifold}
+Define the QAOA manifold
+\[
+\mathcal{M}_p
+=
+\left\{
+\ket{\psi_p(\bm{\gamma},\bm{\beta})}
+:
+\bm{\gamma},\bm{\beta}\in\mathbb{R}^p
+\right\}.
+\]
+
+QAOA searches only within \(\mathcal{M}_p\). Its expressive power depends on:
+\begin{itemize}
+    \item the depth \(p\),
+    \item the choice of cost Hamiltonian,
+    \item the choice of mixer,
+    \item the optimizer used in the classical loop.
+\end{itemize}
+
+As \(p\to\infty\) with suitable schedules, \(\mathcal{M}_p\) can approximate the
+adiabatic solution arbitrarily well.
+\end{frame}
+
+% =============================================================================
+\section{Circuit-Level Implementation}
+% =============================================================================
+
+\begin{frame}{Cost Unitary for MaxCut}
+Because all \(Z_iZ_j\) terms commute, the cost unitary factorizes:
+\[
+e^{-i\gamma H_C}
+=
+\prod_{(i,j)\in E}
+e^{-i\gamma w_{ij}(I-Z_iZ_j)/2}.
+\]
+
+Each edge corresponds to a two-qubit \(ZZ\)-phase interaction, implementable as
+a standard \texttt{CNOT}--\(R_z\)--\texttt{CNOT} sequence.
+
+The mixer unitary also factorizes over qubits since \([X_i,X_j]=0\):
+\[
+e^{-i\beta H_M}
+=
+\prod_{i=1}^n e^{-i\beta X_i}
+=
+\prod_{i=1}^n R_x(2\beta).
+\]
+\end{frame}
+
+\begin{frame}{Quantikz: One MaxCut Edge}
+For one edge \((i,j)\) with weight \(w\), the cost unitary
+\(e^{-i\gamma \frac{w}{2}(I-Z_iZ_j)}\)
+is implemented (up to global phase) by a \(ZZ\)-rotation:
+
+\begin{quantikz}[row sep=0.3cm]
+\lstick{$\ket{q_i}$} & \ctrl{1} & \qw                   & \ctrl{1} & \qw \\
+\lstick{$\ket{q_j}$} & \targ{}  & \gate{R_z(\gamma w)}  & \targ{}  & \qw
+\end{quantikz}
+\end{frame}
+
+\begin{frame}{Quantikz: Mixer Layer}
+Because \(e^{-i\beta X} = R_x(2\beta)\), the full mixer layer
+\(e^{-i\beta H_M}=\prod_i e^{-i\beta X_i}\)
+is simply a product of single-qubit \(X\)-rotations:
+
+\begin{quantikz}[row sep=0.25cm]
+\lstick{$\ket{q_1}$} & \gate{R_x(2\beta)} & \qw \\
+\lstick{$\ket{q_2}$} & \gate{R_x(2\beta)} & \qw \\
+\lstick{$\ket{q_3}$} & \gate{R_x(2\beta)} & \qw \\
+\lstick{$\vdots$}    & \vdots             &     \\
+\lstick{$\ket{q_n}$} & \gate{R_x(2\beta)} & \qw
+\end{quantikz}
+\end{frame}
+
+\begin{frame}{Quantikz: One Full \(p=1\) QAOA Layer}
+For a 3-qubit line graph with edges \((1,2)\) and \((2,3)\), one layer looks like:
+
+\begin{quantikz}[row sep=0.28cm, column sep=0.38cm]
+\lstick{$\ket{+}$} & \ctrl{1} & \qw & \ctrl{1} & \gate{R_x(2\beta)} & \qw \\
+\lstick{$\ket{+}$} & \targ{}  & \gate{R_z(\gamma w_{12})} & \targ{} & \ctrl{1} & \gate{R_x(2\beta)} \\
+\lstick{$\ket{+}$} & \qw      & \qw & \qw      & \targ{} & \gate{R_z(\gamma w_{23})}
+\end{quantikz}
+
+\medskip
+The layer alternates:
+\[
+\underbrace{\text{cost layer}}_{\text{problem-dependent entangling phases}}
+\;\longrightarrow\;
+\underbrace{\text{mixer layer}}_{\text{global single-qubit rotations}}.
+\]
+\end{frame}
+
+% =============================================================================
+\section{Analytical \texorpdfstring{\(p=1\)}{p=1} Results for MaxCut}
+% =============================================================================
+
+\begin{frame}{The \(p=1\) Objective}
+At depth \(p=1\),
+\[
+\ket{\psi_1(\gamma,\beta)}
+=
+e^{-i\beta H_M}e^{-i\gamma H_C}\ket{+}^{\otimes n},
+\]
+and the optimization problem is
+\[
+\max_{\gamma,\beta}
+F_1(\gamma,\beta)
+=
+\ev{H_C}{\psi_1(\gamma,\beta)}.
+\]
+
+Because \(H_C=\sum_{(i,j)\in E}C_{ij}\), this reduces to a sum over edges:
+\[
+F_1(\gamma,\beta)
+=
+\sum_{(i,j)\in E} \ev{C_{ij}}{\psi_1}.
+\]
+
+The key object to compute is therefore \(\ev{Z_iZ_j}_{\gamma,\beta}\).
+\end{frame}
+
+\begin{frame}{Heisenberg-Picture Strategy}
+Instead of evolving the state, evolve the operator:
+\[
+\ev{Z_iZ_j}_{\gamma,\beta}
+=
+\bra{+}^{\otimes n}
+e^{i\gamma H_C}
+e^{i\beta H_M}
+Z_iZ_j
+e^{-i\beta H_M}
+e^{-i\gamma H_C}
+\ket{+}^{\otimes n}.
+\]
+
+Because \(\ket{+}\) is an eigenstate of \(X\), only terms that are products
+of \(X\)-operators survive:
+\[
+\bra{+} X \ket{+}=1,\qquad
+\bra{+} Y \ket{+}=0,\qquad
+\bra{+} Z \ket{+}=0.
+\]
+
+\textbf{Conjugation by the mixer:}
+\[
+e^{i\beta H_M} Z_i e^{-i\beta H_M}
+=
+Z_i\cos(2\beta)+Y_i\sin(2\beta).
+\]
+
+So \(e^{i\beta H_M}Z_iZ_je^{-i\beta H_M}\) expands into four terms involving
+\(Z_iZ_j\), \(Z_iY_j\), \(Y_iZ_j\), and \(Y_iY_j\).
+\end{frame}
+
+\begin{frame}{Conjugation by the Cost Hamiltonian}
+Because \(H_C\) contains only \(Z\)-type terms, conjugation by
+\(e^{i\gamma H_C}\) can be analyzed locally.
+
+For a single neighbor interaction,
+\[
+e^{i\theta Z_iZ_j} Y_i e^{-i\theta Z_iZ_j}
+=
+Y_i\cos(2\theta)+X_i Z_j\sin(2\theta),
+\]
+and similarly for \(Y_j\).
+
+These identities convert \(Y\) operators into \(X\) operators, which can survive
+in the \(\ket{+}^{\otimes n}\) expectation value.
+
+For \(Y_iY_j\), one finds
+\[
+e^{i\theta Z_iZ_j} Y_iY_j e^{-i\theta Z_iZ_j}
+= Y_iY_j\cos^2(2\theta) - X_iX_j\sin^2(2\theta) + \cdots.
+\]
+\end{frame}
+
+\begin{frame}{Closed-Form Result: Unweighted \(d\)-Regular Graphs}
+For an unweighted \(d\)-regular, triangle-free graph, all edges are equivalent
+and the \(p=1\) expectation value has the closed form:
+\[
+\ev{C_{ij}}
+=
+\frac{1}{2}
++
+\frac{1}{2}\sin(4\beta)\sin\gamma \cos^{d-1}\gamma.
+\]
+
+Hence the total expected cut value is
+\[
+\boxed{
+F_1(\gamma,\beta)
+=
+|E|
+\left[
+\frac{1}{2}
++
+\frac{1}{2}\sin(4\beta)\sin\gamma \cos^{d-1}\gamma
+\right].
+}
+\]
+
+\begin{itemize}
+    \item \(\sin(4\beta)\) measures mixer-generated interference efficiency.
+    \item \(\sin\gamma\) generates the edge-dependent cost phase.
+    \item \(\cos^{d-1}\gamma\) encodes the suppression from \(d-1\) neighboring edges.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Optimizing the \(p=1\) Formula}
+The formula is maximized by choosing \(\sin(4\beta)=1\), i.e.\ \(\beta=\pi/8\),
+which reduces the problem to maximizing
+\[
+f(\gamma)=\sin\gamma \cos^{d-1}\gamma.
+\]
+
+Differentiating,
+\[
+f'(\gamma)=\cos^d\gamma - (d-1)\sin^2\gamma\,\cos^{d-2}\gamma = 0,
+\]
+gives
+\[
+\tan^2\gamma = \frac{1}{d-1},
+\qquad
+\tan\gamma = \frac{1}{\sqrt{d-1}}.
+\]
+
+For \(d=3\) this yields the well-known approximation ratio
+\[
+\alpha_{p=1} \approx 0.6924,
+\]
+already nontrivially above the random-cut bound of \(1/2\).
+\end{frame}
+
+\begin{frame}{Example: Ring Graph (\(d=2\))}
+For a cycle graph (\(d=2\)):
+\[
+F_1(\gamma,\beta)
+=
+|E|
+\left[
+\frac{1}{2}
++
+\frac{1}{4}\sin(4\beta)\sin(2\gamma)
+\right].
+\]
+
+The optimum is achieved for
+\[
+\beta=\frac{\pi}{8},
+\qquad
+\gamma=\frac{\pi}{4},
+\]
+giving
+\[
+F_1^{\max} = \frac{3|E|}{4}.
+\]
+
+So QAOA at \(p=1\) recovers \(75\%\) of the maximum cut on a ring,
+using just two parameters.
+\end{frame}
+
+\begin{frame}{Expressivity vs Depth}
+Increasing \(p\) enlarges the variational manifold:
+\[
+\mathcal{M}_1 \;\subset\; \mathcal{M}_2 \;\subset\; \cdots
+\]
+
+In the limit \(p\to\infty\) one expects convergence to the adiabatic solution
+for suitable schedules.
+
+But larger \(p\) also means:
+\begin{itemize}
+    \item more parameters to optimize,
+    \item harder classical optimization (barren plateaus),
+    \item deeper circuits,
+    \item more hardware noise.
+\end{itemize}
+
+The \(p=1\) results above show that even the shallowest layer captures
+nontrivial graph structure.
+\end{frame}
+
+% =============================================================================
+\section{QAOA and Quantum Neural Networks}
+% =============================================================================
+
+\begin{frame}{QAOA as a Parameterized Quantum Circuit}
+A general quantum neural network (QNN) or parameterized quantum circuit has
+the form
+\[
+\ket{\psi(\bm{\theta})}=U(\bm{\theta})\ket{\psi_0}.
+\]
+
+QAOA is a highly structured special case:
+\[
+U(\bm{\theta})
+=
+\prod_{\ell=1}^p e^{-i\beta_\ell H_M}e^{-i\gamma_\ell H_C},
+\qquad
+\bm{\theta}=(\bm{\gamma},\bm{\beta}).
+\]
+
+In a classical neural network one has
+\(x\mapsto W_L\sigma(\cdots\sigma(W_1 x))\);
+in a QNN one has alternating parameterized unitaries.
+QAOA fits exactly this architecture, where each QAOA layer is a structured
+quantum neural layer.
+\end{frame}
+
+\begin{frame}{QAOA, VQE, and QNNs}
+These three frameworks are closely related:
+
+\medskip
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{VQE:}  & \(\displaystyle\min_{\bm{\theta}} \ev{H}{\psi(\bm{\theta})}\) \\[8pt]
+\textbf{QAOA:} & \(\displaystyle\max_{\bm{\gamma},\bm{\beta}} \ev{H_C}{\psi_p(\bm{\gamma},\bm{\beta})}\) \\[8pt]
+\textbf{QNN:}  & \(\displaystyle\min_{\bm{\theta}} \mathcal{L}\bigl(\ev{O_1},\ev{O_2},\dots\bigr)\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+All are instances of:
+\begin{itemize}
+    \item a parameterized quantum circuit,
+    \item a classical loss or objective function,
+    \item a hybrid quantum-classical optimization loop.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Task-Informed vs Generic QNNs}
+QAOA differs from a generic hardware-efficient ansatz because its architecture
+is not arbitrary.
+
+Instead, it is designed around:
+\begin{itemize}
+    \item the problem Hamiltonian \(H_C\) (problem-specific entangling structure),
+    \item a physically motivated mixer \(H_M\),
+    \item an optimization objective directly aligned with the task.
+\end{itemize}
+
+So QAOA is a \textbf{task-informed QNN}, not a black-box trainable circuit.
+
+\medskip
+Gradients can be computed via the \textbf{parameter-shift rule}:
+\[
+\frac{\partial}{\partial\gamma_\ell}F_p
+=
+\frac{F_p(\gamma_\ell+\pi/2)-F_p(\gamma_\ell-\pi/2)}{2},
+\]
+enabling gradient-based classical optimization without finite differences.
+\end{frame}
+
+\begin{frame}{Variational Principle and Expressivity}
+All three frameworks share the same variational structure:
+\begin{enumerate}
+    \item a \textbf{manifold of trial states},
+    \item an \textbf{objective functional}.
+\end{enumerate}
+
+\medskip
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Method & Manifold & Objective \\
+\midrule
+QAOA & \(\mathcal{M}_p = \{\ket{\psi_p(\bm{\gamma},\bm{\beta})}\}\) & \(\ev{H_C}{\psi_p}\) \\[4pt]
+VQE  & \(\{\ket{\psi(\bm{\theta})}\}\) & \(\ev{H}{\psi}\) \\[4pt]
+QNN  & \(\{\ket{\psi(\bm{\theta})}\}\) & task-dependent loss \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+QAOA is best viewed as a \textbf{variational principle with a structured and
+interpretable ansatz} shaped by the problem's combinatorial structure.
+\end{frame}
+
+% =============================================================================
+\section{Summary}
+% =============================================================================
+
+\begin{frame}{Conceptual Summary: The Two Derivation Chains}
+QAOA sits at the intersection of two independent derivation chains:
+
+\medskip
+\textbf{From optimization:}
+\[
+\text{combinatorial opt.}
+\;\to\;
+\text{QUBO}
+\;\to\;
+\text{Ising model}
+\;\to\;
+\text{Pauli Hamiltonian}
+\;\to\;
+H_C.
+\]
+
+\textbf{From adiabatic physics:}
+\[
+\text{adiabatic evolution}
+\;\to\;
+\text{Trotterization}
+\;\to\;
+\text{variational schedule}
+\;\to\;
+\text{QAOA ansatz}.
+\]
+
+\medskip
+Both chains arrive at the same object:
+\[
+\ket{\psi_p(\bm{\gamma},\bm{\beta})}
+=
+\prod_{\ell=1}^p e^{-i\beta_\ell H_M}e^{-i\gamma_\ell H_C}\ket{+}^{\otimes n}.
+\]
+\end{frame}
+
+\begin{frame}{Final Summary}
+We have developed:
+\begin{itemize}
+    \item a rigorous formulation of QUBO and its mapping to Ising / Pauli Hamiltonians,
+    \item the MaxCut Hamiltonian \(H_C=\sum_{(i,j)\in E}\frac{w_{ij}}{2}(I-Z_iZ_j)\)
+          derived step by step,
+    \item explicit definitions of the QAOA cost and mixer Hamiltonians,
+    \item a derivation of QAOA from adiabatic evolution via Trotterization,
+    \item closed-form \(p=1\) analytical results: approximation ratio
+          \(\alpha_{p=1}\approx 0.6924\) for 3-regular graphs,
+    \item circuit-level realizations using quantikz,
+    \item the connection between QAOA and quantum neural networks / VQE.
+\end{itemize}
+
+\medskip
+QAOA is therefore a structured variational quantum algorithm for discrete
+optimization with deep links to physics and quantum machine learning.
+\end{frame}
+
+\end{document}
