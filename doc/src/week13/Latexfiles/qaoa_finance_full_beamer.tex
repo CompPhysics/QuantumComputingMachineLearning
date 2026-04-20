@@ -1,0 +1,245 @@
+
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{physics}
+\usepackage{braket}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{quantikz}
+
+\usetheme{Madrid}
+
+\title{QAOA in Finance: A Research-Level Treatment}
+\subtitle{From S\&P Data to Spin Glasses and Quantum Circuits}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%================================================
+\section{Overview}
+%================================================
+
+\begin{frame}{Full Pipeline}
+\[
+\text{Financial Data}
+\rightarrow (\mu,\Sigma)
+\rightarrow \text{QUBO}
+\rightarrow \text{Ising Hamiltonian}
+\rightarrow \text{Pauli operators}
+\rightarrow \text{QAOA}
+\]
+\end{frame}
+
+%================================================
+\section{Finance Formulation}
+%================================================
+
+\begin{frame}{Mean-Variance Optimization}
+\[
+\min_x \left( -\mu^\top x + \lambda x^\top \Sigma x \right)
+\]
+
+\begin{itemize}
+\item $\mu_i$: expected return
+\item $\Sigma_{ij}$: covariance
+\item $x_i \in \{0,1\}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Constraint: Fixed Budget}
+Add constraint:
+\[
+\sum_i x_i = K
+\]
+
+Penalty:
+\[
+C(x) \rightarrow C(x) + A\left(\sum_i x_i - K\right)^2
+\]
+\end{frame}
+
+%================================================
+\section{QUBO}
+%================================================
+
+\begin{frame}{QUBO Form}
+\[
+C(x) = x^\top Q x
+\]
+
+\[
+Q = \lambda \Sigma - \text{diag}(\mu) + \text{constraint terms}
+\]
+\end{frame}
+
+%================================================
+\section{Ising Mapping}
+%================================================
+
+\begin{frame}{Binary to Spin}
+\[
+x_i = \frac{1 - z_i}{2}, \quad z_i \in \{-1,1\}
+\]
+
+Insert into $C(x)$
+\end{frame}
+
+\begin{frame}{Resulting Hamiltonian}
+\[
+H = \sum_i h_i z_i + \sum_{i<j} J_{ij} z_i z_j
+\]
+
+\[
+h_i = -\frac{\mu_i}{2} + \text{penalty}
+\]
+
+\[
+J_{ij} = \frac{\lambda \Sigma_{ij}}{4}
+\]
+\end{frame}
+
+\begin{frame}{Spin Glass Interpretation}
+\begin{itemize}
+\item Disorder: covariance matrix
+\item Frustration: conflicting correlations
+\item Many local minima
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Quantum Mapping}
+%================================================
+
+\begin{frame}{Pauli Mapping}
+\[
+z_i \rightarrow Z_i
+\]
+
+\[
+H_C = \sum_i h_i Z_i + \sum_{i<j} J_{ij} Z_i Z_j
+\]
+\end{frame}
+
+%================================================
+\section{QAOA}
+%================================================
+
+\begin{frame}{Ansatz}
+\[
+\ket{\psi(\gamma,\beta)} = e^{-i\beta H_M} e^{-i\gamma H_C} \ket{+}^{\otimes n}
+\]
+
+\[
+H_M = \sum_i X_i
+\]
+\end{frame}
+
+\begin{frame}{p-layer QAOA}
+\[
+\prod_{k=1}^{p} e^{-i\beta_k H_M} e^{-i\gamma_k H_C}
+\]
+\end{frame}
+
+\begin{frame}{Variational Principle}
+\[
+E(\gamma,\beta) = \bra{\psi} H_C \ket{\psi}
+\]
+\end{frame}
+
+%================================================
+\section{Quantum Circuit}
+%================================================
+
+\begin{frame}{Circuit (p=1)}
+\begin{quantikz}
+\lstick{$q_1$} & \gate{H} & \gate{e^{-i\gamma H_C}} & \gate{R_x(2\beta)} & \meter{} \\
+\lstick{$q_2$} & \gate{H} & \gate{e^{-i\gamma H_C}} & \gate{R_x(2\beta)} & \meter{}
+\end{quantikz}
+\end{frame}
+
+%================================================
+\section{Worked Example}
+%================================================
+
+\begin{frame}{Real Data Workflow}
+\begin{enumerate}
+\item Download S\&P data (AAPL, MSFT, AMZN, GOOG)
+\item Compute returns
+\item Compute covariance
+\item Build Q matrix
+\item Map to Hamiltonian
+\item Run QAOA
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Returns}
+\[
+r_i(t) = \frac{P_i(t+1)-P_i(t)}{P_i(t)}
+\]
+\end{frame}
+
+\begin{frame}{Covariance}
+\[
+\Sigma_{ij} = \langle r_i r_j \rangle - \langle r_i \rangle \langle r_j \rangle
+\]
+\end{frame}
+
+\begin{frame}{Example Hamiltonian}
+\[
+H = \sum_i h_i Z_i + \sum_{i<j} J_{ij} Z_i Z_j
+\]
+
+Coefficients computed from real data.
+\end{frame}
+
+%================================================
+\section{Statistical Physics Connection}
+%================================================
+
+\begin{frame}{Partition Function}
+\[
+Z = \sum_{\{z\}} e^{-\beta H(z)}
+\]
+\end{frame}
+
+\begin{frame}{Free Energy}
+\[
+F = -\frac{1}{\beta} \ln Z
+\]
+\end{frame}
+
+\begin{frame}{QAOA as Variational Free Energy Minimization}
+\begin{itemize}
+\item QAOA approximates ground state
+\item Equivalent to minimizing energy landscape
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Scaling}
+%================================================
+
+\begin{frame}{Complexity}
+\begin{itemize}
+\item Classical: NP-hard
+\item Quantum: variational heuristic
+\end{itemize}
+\end{frame}
+
+%================================================
+\section{Summary}
+%================================================
+
+\begin{frame}{Key Insights}
+\begin{itemize}
+\item Finance maps to spin physics
+\item QAOA is a variational solver
+\item Data $\rightarrow$ Hamiltonian
+\end{itemize}
+\end{frame}
+
+\end{document}
