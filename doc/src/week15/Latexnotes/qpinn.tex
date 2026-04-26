@@ -1,0 +1,1460 @@
+%% ============================================================
+%%  Quantum Physics-Informed Neural Networks (QPINNs)
+%%  Solving PDEs and ODEs with Variational Quantum Circuits
+%%  Author: Morten Hjorth-Jensen
+%%  Department of Physics, University of Oslo
+%% ============================================================
+\documentclass[aspectratio=169,10pt]{beamer}
+
+%% -- Theme & colours ---------------------------------------------
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\usefonttheme[onlymath]{serif}
+
+\setbeamercolor{frametitle}{bg=blue!15!white,fg=blue!60!black}
+\setbeamercolor{title}{fg=blue!70!black}
+\setbeamercolor{block title}{bg=blue!20!white,fg=blue!60!black}
+\setbeamercolor{block body}{bg=blue!5!white}
+\setbeamercolor{alerted text}{fg=red!60!black}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.50\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{1em}%
+      \insertframenumber{}/\inserttotalframenumber\hspace*{1ex}
+    \end{beamercolorbox}}%
+  \vskip0pt}
+
+%% -- Packages ----------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,bm,physics}
+\usepackage{braket}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,
+                decorations.pathreplacing,fit}
+\usepackage{quantikz}
+\usepackage{listings}
+\usepackage{hyperref}
+
+%% -- Python listing style -----------------------------------------
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{red!60!black},
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{blue!3!white},
+  xleftmargin=4pt, xrightmargin=4pt,
+  numbers=left,
+  numberstyle=\ttfamily\tiny\color{gray},
+  numbersep=5pt
+}
+
+%% -- Metadata ----------------------------------------------------
+\title[Quantum PINNs]{Quantum Physics-Informed Neural Networks}
+\subtitle{Solving PDEs and ODEs with Variational Quantum Circuits}
+\author[M.~Hjorth-Jensen]{Morten Hjorth-Jensen}
+\institute[UiO]{Department of Physics \& CCSE\\University of Oslo}
+\date{2026}
+
+%% ============================================================
+\begin{document}
+%% ============================================================
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents[hidesubsections]
+\end{frame}
+
+%% ============================================================
+\section{Recap: Quantum Neural Networks}
+%% ============================================================
+
+\begin{frame}{QNN as a Variational Quantum State (from week15.tex)}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The central object of a \textbf{Quantum Neural Network}:
+      \[
+        \ket{\psi(x,\theta)} = U(\theta)\,U(x)\,\ket{0}^{\otimes n}
+      \]
+      \[
+        f(x,\theta) = \bra{\psi(x,\theta)}\,O\,\ket{\psi(x,\theta)}
+      \]
+      \begin{itemize}
+        \item $U(x)$: \textbf{feature map} --- encodes the input
+        \item $U(\theta)$: \textbf{variational ansatz} --- trainable
+        \item $O$: \textbf{observable} --- defines the output scalar
+      \end{itemize}
+      \begin{block}{Pauli ansatz}
+        \[
+          U(\theta)=e^{-iH(\theta)},\quad
+          H(\theta)=\sum_\alpha\theta_\alpha P_\alpha
+        \]
+      \end{block}
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.45cm, column sep=0.42cm]
+        \lstick{$\ket{0}$}
+          & \gate{R_x(x_1)} & \gate{R_y(\theta_1)} & \ctrl{1}
+          & \gate{R_z(\theta_3)} & \meter{} \\
+        \lstick{$\ket{0}$}
+          & \gate{R_x(x_2)} & \gate{R_y(\theta_2)} & \targ{}
+          & \gate{R_z(\theta_4)} & \meter{}
+      \end{quantikz}
+      \end{center}
+      \vspace{0.2cm}
+      \begin{alertblock}{Key tool: parameter-shift rule}
+        \[
+          \frac{\partial f}{\partial\theta}
+          = \tfrac{1}{2}\bigl[f(\theta+\tfrac{\pi}{2})
+                              -f(\theta-\tfrac{\pi}{2})\bigr]
+        \]
+        Exact gradient, 2 circuit evaluations per parameter.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{QFI, TDVP, and Natural Gradient}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Quantum Fisher Information (QFI):}
+      \[
+        F_{ij} = 4\,\mathrm{Re}\!\left(
+          \langle\partial_i\psi|\partial_j\psi\rangle
+          - \langle\partial_i\psi|\psi\rangle
+            \langle\psi|\partial_j\psi\rangle
+        \right)
+      \]
+      Riemannian metric on the variational manifold.
+
+      \medskip
+      \textbf{Time-Dependent Variational Principle (TDVP):}
+      \[
+        \sum_j F_{ij}\,\dot\theta_j = C_i,\quad
+        C_i = \mathrm{Im}\langle\partial_i\psi|H|\psi\rangle
+      \]
+      \textbf{Natural gradient descent:}
+      \[
+        \dot\theta = F^{-1}\nabla_\theta\mathcal{L}
+      \]
+    \column{0.44\textwidth}
+      \begin{block}{BCH expansion}
+        \[
+          U^\dagger O\,U = O + i[H,O]
+            + \tfrac{i^2}{2}[H,[H,O]] + \cdots
+        \]
+        Depth $\leftrightarrow$ hierarchy of correlations.
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Barren plateaus}
+        Deep random circuits:
+        \[
+          \mathrm{Var}(\nabla_\theta\mathcal{L})\sim 2^{-n}
+        \]
+        Mitigation: problem-inspired shallow ansätze ---
+        exactly what QPINNs do.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{From Discriminative QNNs to Physics-Informed QNNs}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \begin{block}{Classical discriminative QNN}
+        \begin{itemize}
+          \item Input: data pair $(x_k, y_k)$
+          \item Loss: $\mathcal{L}=\sum_k(f(x_k;\theta)-y_k)^2$
+          \item Learns a mapping from observations
+          \item No physical constraint enforced
+        \end{itemize}
+      \end{block}
+      \vspace{0.3cm}
+      \begin{alertblock}{Physics-informed QNN (QPINN)}
+        \begin{itemize}
+          \item Input: collocation points $x_k\in\Omega$
+          \item Loss: residual of a differential equation
+            \[
+              \mathcal{L}=\|\mathcal{D}[f_\theta]\|^2
+                         +\lambda\|\mathcal{B}[f_\theta]\|^2
+            \]
+          \item Learns the solution to a PDE / ODE
+          \item Physics is baked into the loss function
+        \end{itemize}
+      \end{alertblock}
+    \column{0.44\textwidth}
+      \textbf{Why quantum circuits for PDEs?}
+      \begin{enumerate}\itemsep4pt
+        \item Potential exponential compression of solution
+              space via entanglement
+        \item Natural encoding of wave-like solutions
+              through rotation gates
+        \item Gradient information from parameter-shift rule
+              maps directly onto PDE residuals
+        \item Hardware noise acts as a form of regularisation
+        \item Connection to quantum simulation of
+              differential operators
+      \end{enumerate}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Classical Physics-Informed Neural Networks}
+%% ============================================================
+
+\begin{frame}{Classical PINNs: Raissi, Perdikaris, Karniadakis (2019)}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      A classical PINN approximates the solution $u(x,t)$ of a PDE
+      \[
+        \mathcal{N}[u](x,t) = 0,\quad (x,t)\in\Omega
+      \]
+      by a neural network $u_\theta(x,t)$ trained to minimise:
+      \[
+        \mathcal{L}(\theta)
+        = \underbrace{\frac{1}{N_r}\sum_{k=1}^{N_r}
+            \bigl|\mathcal{N}[u_\theta](x_k,t_k)\bigr|^2}_{
+            \text{PDE residual loss}\;\mathcal{L}_r}
+          + \lambda\,\underbrace{\frac{1}{N_b}\sum_{k=1}^{N_b}
+            \bigl|u_\theta(x_k^b,t_k^b)-g_k\bigr|^2}_{
+            \text{BC/IC loss}\;\mathcal{L}_b}
+      \]
+      where $\{x_k\}$ are \emph{collocation points} sampled in $\Omega$
+      and $\{x_k^b\}$ are boundary/initial condition points.
+    \column{0.44\textwidth}
+      \begin{block}{Automatic differentiation}
+        Classical PINNs exploit automatic differentiation
+        to evaluate $\mathcal{N}[u_\theta]$ exactly
+        (no finite differences).
+      \end{block}
+      \vspace{0.2cm}
+      \begin{block}{Examples}
+        \begin{itemize}
+          \item Poisson: $-\nabla^2 u = f$
+          \item Heat: $\partial_t u - \kappa\nabla^2 u = 0$
+          \item Wave: $\partial_{tt}u - c^2\nabla^2 u = 0$
+          \item Burgers: $\partial_t u + u\partial_x u = \nu\partial_{xx}u$
+          \item Schrödinger: $i\partial_t\psi = H\psi$
+        \end{itemize}
+      \end{block}
+      \begin{alertblock}{Key challenge}
+        Spectral bias: classical NNs learn low-frequency
+        components of $u$ much faster than high-frequency ones.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{PINN Loss Landscape and Gradient Flow}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      For a general differential operator $\mathcal{D}$ the
+      residual at collocation point $x_k$ is:
+      \[
+        r_k(\theta) = \mathcal{D}[f_\theta](x_k)
+      \]
+      The total loss and its gradient:
+      \[
+        \mathcal{L}(\theta)
+        = \frac{1}{N}\sum_k r_k^2(\theta),\quad
+        \nabla_\theta\mathcal{L}
+        = \frac{2}{N}\sum_k r_k\,\nabla_\theta r_k
+      \]
+      The Neural Tangent Kernel (NTK) of the PINN governs
+      training dynamics:
+      \[
+        \Theta_{kl}(\theta)
+        = \nabla_\theta f_\theta(x_k)^\top
+          \nabla_\theta f_\theta(x_l)
+      \]
+      Eigenvalues of $\Theta$ determine the convergence rate
+      for each frequency component.
+    \column{0.44\textwidth}
+      \begin{alertblock}{Failure modes of classical PINNs}
+        \begin{enumerate}
+          \item \textbf{Spectral bias:} slow convergence for
+                high-frequency solutions
+          \item \textbf{Ill-conditioning:} loss balance
+                between $\mathcal{L}_r$ and $\mathcal{L}_b$
+          \item \textbf{Stiff equations:} chaotic loss landscape
+          \item \textbf{High dimensionality:} curse of
+                dimensionality for high-$d$ PDEs
+        \end{enumerate}
+      \end{alertblock}
+      \vspace{0.2cm}
+      \begin{block}{Quantum motivation}
+        QPINNs address points 1 and 4: entangled circuits
+        have richer frequency spectra; quantum memory scales
+        exponentially with qubits.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Quantum PINNs: Mathematical Foundation}
+%% ============================================================
+
+\begin{frame}{QPINN: The Quantum Ansatz for PDE Solutions}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      Replace the classical network $u_\theta(x)$ with a
+      \textbf{variational quantum circuit output}:
+      \[
+        u_\theta(x) = \bra{0}U^\dagger(x,\theta)\,O\,U(x,\theta)\ket{0}
+      \]
+      \[
+        = \bra{\psi(x,\theta)}\,O\,\ket{\psi(x,\theta)}
+      \]
+      where:
+      \begin{itemize}
+        \item $U(x,\theta) = W_L(\theta)\cdots W_1(\theta)\,S(x)$
+        \item $S(x)$: data-encoding unitary (feature map)
+        \item $W_l(\theta)$: variational layers
+        \item $O$: a fixed observable (e.g., $Z_0$)
+      \end{itemize}
+      The output $u_\theta(x)\in[-1,1]$ approximates the
+      normalised PDE solution.
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.42cm, column sep=0.38cm]
+        \lstick{$\ket{0}$}
+          & \gate{S_1(x)} & \gate{W_1(\theta)} & \ctrl{1}
+          & \gate{W_1'(\theta)} & \meter{$O$} \\
+        \lstick{$\ket{0}$}
+          & \gate{S_2(x)} & \gate{W_2(\theta)} & \targ{}
+          & \gate{W_2'(\theta)} & \qw \\
+        \lstick{$\ket{0}$}
+          & \gate{S_3(x)} & \gate{W_3(\theta)} & \ctrl{1}
+          & \gate{W_3'(\theta)} & \qw \\
+        \lstick{$\ket{0}$}
+          & \gate{S_4(x)} & \gate{W_4(\theta)} & \targ{}
+          & \gate{W_4'(\theta)} & \qw
+      \end{quantikz}
+      \end{center}
+      {\small $S_i(x)$: encoding of coordinate $x$;\\
+       $W_i(\theta)$: variational Pauli rotations;\\
+       $O=Z_0$: observable giving scalar output.}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Data Encoding Strategies for PDEs}
+  The choice of encoding $x\mapsto S(x)$ is critical for QPINNs.
+
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{1.\ Angle encoding}
+      \[
+        S(x) = \bigotimes_{i=1}^n R_y(x\pi)
+      \]
+      Simple, one qubit per input; output is a
+      degree-$n$ Fourier series in $x$.
+
+      \vspace{0.3cm}
+      \textbf{2.\ Repeated angle encoding}
+      \[
+        S(x) = \prod_{l=1}^L\bigl[W_l(\theta)\,
+          {\textstyle\bigotimes_i} R_y(x)\bigr]
+      \]
+      Interleaving data re-uploads with variational layers
+      (\emph{data re-uploading}): extends the expressible
+      frequency spectrum to $[-Ln/2, Ln/2]$.
+    \column{0.48\textwidth}
+      \textbf{3.\ IQP / ZZ encoding} (richer correlations)
+      \[
+        S(x) = e^{-ixH_{\rm enc}},\quad
+        H_{\rm enc} = \sum_i x\,Z_i + \sum_{i<j}x^2 Z_iZ_j
+      \]
+
+      \vspace{0.3cm}
+      \begin{alertblock}{Fourier perspective (Schuld et al.)}
+        Any QNN output is a partial Fourier series:
+        \[
+          f_\theta(x) = \sum_{\omega\in\Omega}
+            c_\omega(\theta)\,e^{i\omega x}
+        \]
+        The set of accessible frequencies $\Omega$ is
+        determined entirely by the data-encoding gates.
+        Wider $\Omega$ $\Rightarrow$ richer PDE solutions.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Derivatives of the Quantum Ansatz}
+  \textbf{The core challenge:} PDE residuals require
+  $\partial_x u_\theta$, $\partial_{xx} u_\theta$, etc.
+  These are \emph{derivatives with respect to the input $x$},
+  not the parameters $\theta$.
+
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Input-shift rule.}
+      For angle encoding $S(x) = e^{-ixP/2}$ (Pauli $P$):
+      \[
+        \frac{\partial u_\theta}{\partial x}
+        = \tfrac{1}{2}\bigl[
+            u_\theta(x+\tfrac{\pi}{2}) - u_\theta(x-\tfrac{\pi}{2})
+          \bigr]
+      \]
+      This is the \emph{same} parameter-shift formula, now
+      applied to the \textbf{input encoding} gate.
+
+      \textbf{Second derivative:}
+      \begin{align*}
+        \frac{\partial^2 u_\theta}{\partial x^2}
+        &= \tfrac{1}{2}\bigl[
+            u_\theta(x+\pi) - 2u_\theta(x) + u_\theta(x-\pi)
+          \bigr]
+      \end{align*}
+      General $n$-th order derivative via repeated shifts.
+    \column{0.44\textwidth}
+      \begin{alertblock}{Key result}
+        All spatial derivatives of $u_\theta(x)$ are
+        computable by evaluating the \emph{same circuit} at
+        shifted input values --- no ancilla qubits, no
+        additional circuit depth.
+      \end{alertblock}
+      \vspace{0.2cm}
+      \begin{block}{Multi-dimensional PDE}
+        For $u(x_1,\ldots,x_d)$ with $n_i$ qubits encoding
+        $x_i$:
+        \[
+          \partial_{x_i}\partial_{x_j}u_\theta
+          = \text{shift in } x_i \text{ and } x_j
+        \]
+        Cross-derivatives come from shifts in
+        \emph{two} inputs simultaneously.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The QPINN Loss Function}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      For a PDE $\mathcal{D}[u](x) = f(x)$ on $\Omega$
+      with boundary conditions $u(x) = g(x)$ on $\partial\Omega$:
+
+      \textbf{Total QPINN loss:}
+      \[
+        \mathcal{L}(\theta)
+        = \mathcal{L}_r(\theta) + \lambda\,\mathcal{L}_b(\theta)
+      \]
+      \[
+        \mathcal{L}_r = \frac{1}{N_r}\sum_{k=1}^{N_r}
+          \bigl|\mathcal{D}[u_\theta](x_k) - f(x_k)\bigr|^2
+      \]
+      \[
+        \mathcal{L}_b = \frac{1}{N_b}\sum_{k=1}^{N_b}
+          \bigl|u_\theta(x_k^b) - g(x_k^b)\bigr|^2
+      \]
+      where $u_\theta(x) = \bra{\psi(x,\theta)}O\ket{\psi(x,\theta)}$
+      and all derivatives entering $\mathcal{D}[u_\theta]$ are
+      evaluated via input-shift rules.
+    \column{0.44\textwidth}
+      \begin{block}{Gradient w.r.t.\ $\theta_\mu$}
+        \[
+          \frac{\partial\mathcal{L}_r}{\partial\theta_\mu}
+          = \frac{2}{N_r}\sum_k r_k\,
+            \frac{\partial r_k}{\partial\theta_\mu}
+        \]
+        where $r_k = \mathcal{D}[u_\theta](x_k) - f(x_k)$
+        and
+        \[
+          \frac{\partial r_k}{\partial\theta_\mu}
+          = \mathcal{D}\!\left[
+              \frac{\partial u_\theta}{\partial\theta_\mu}
+            \right](x_k)
+        \]
+        The operator $\mathcal{D}$ is linear in $u_\theta$
+        $\Rightarrow$ shifts and $\mathcal{D}$ commute.
+      \end{block}
+      \begin{alertblock}{Parameter-shift + input-shift}
+        Both types of derivatives are computable with
+        $O(N_p\cdot N_r)$ circuit evaluations.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{QPINN Circuit for a 1D PDE}
+  Complete QPINN circuit for $-\partial_{xx}u = f(x)$,
+  $x\in[0,1]$, with $n=4$ qubits:
+
+  \vspace{0.2cm}
+  \begin{center}
+  \begin{quantikz}[row sep=0.42cm, column sep=0.38cm]
+    \lstick{$\ket{0}$}
+      & \gate{R_y(\pi x)} & \gate{R_y(\theta_1^{(1)})} & \ctrl{1} & \qw
+      & \gate{R_y(\theta_1^{(2)})} & \ctrl{1} & \qw
+      & \meter{$Z$} \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(\pi x)} & \gate{R_y(\theta_2^{(1)})} & \targ{} & \ctrl{1}
+      & \gate{R_y(\theta_2^{(2)})} & \targ{} & \ctrl{1}
+      & \qw \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(\pi x)} & \gate{R_y(\theta_3^{(1)})} & \qw & \targ{}
+      & \gate{R_y(\theta_3^{(2)})} & \qw & \targ{}
+      & \qw \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(\pi x)} & \gate{R_y(\theta_4^{(1)})} & \qw & \qw
+      & \gate{R_y(\theta_4^{(2)})} & \qw & \qw
+      & \qw
+  \end{quantikz}
+  \end{center}
+
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Evaluation for residual:}
+      \begin{enumerate}
+        \item $u_\theta(x)$: run circuit with input $x$
+        \item $u_\theta(x\pm\frac\pi2)$: two shifted circuits
+              for $\partial_{xx}u_\theta$ via second-order shift
+      \end{enumerate}
+    \column{0.48\textwidth}
+      \textbf{Gradient for training:}
+      \begin{enumerate}
+        \item For each $\theta_\mu$: parameter-shift at
+              $x$, $x\pm\frac\pi2$
+        \item Total: $2N_p \times 3N_r$ circuit evaluations
+              per gradient step
+      \end{enumerate}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Poisson Equation and Quantum Solution}
+%% ============================================================
+
+\begin{frame}{The 1D Poisson Equation}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Problem statement:}
+      \[
+        -\frac{d^2 u}{dx^2} = f(x),\quad x\in(0,1)
+      \]
+      \[
+        u(0) = u(1) = 0 \quad\text{(Dirichlet BCs)}
+      \]
+      \textbf{Exact solution} for $f(x) = \pi^2\sin(\pi x)$:
+      \[
+        u^\star(x) = \sin(\pi x)
+      \]
+
+      \textbf{QPINN residual loss:}
+      \[
+        \mathcal{L}_r = \frac{1}{N_r}\sum_{k=1}^{N_r}
+          \left[-\frac{d^2 u_\theta}{dx^2}\bigg|_{x_k}
+                - f(x_k)\right]^2
+      \]
+      \textbf{Boundary loss:}
+      \[
+        \mathcal{L}_b = u_\theta(0)^2 + u_\theta(1)^2
+      \]
+    \column{0.44\textwidth}
+      \textbf{Second derivative via input-shift:}
+      \[
+        \frac{d^2 u_\theta}{dx^2}\bigg|_x
+        = \frac{1}{2}\left[
+            u_\theta(x{+}\tfrac\pi2)
+            - 2u_\theta(x)
+            + u_\theta(x{-}\tfrac\pi2)
+          \right]
+      \]
+      This uses the identity for $u_\theta(x)
+      = \langle O\rangle_{x}$
+      with $S(x) = e^{-ixP/2}$:
+      \[
+        \partial_{xx}\langle O\rangle_x
+        = -\langle O\rangle_x + \tfrac12\bigl(
+          \langle O\rangle_{x+\pi/2}
+          + \langle O\rangle_{x-\pi/2}\bigr)
+      \]
+      \begin{alertblock}{Three circuit evaluations}
+        The Laplacian at one point costs exactly 3 circuit
+        runs: $x-\pi/2$, $x$, $x+\pi/2$.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Variational Formulation and Connection to FEM}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The Poisson equation has an equivalent \textbf{variational form}:
+      \[
+        \min_u\,\mathcal{E}[u]
+        = \int_0^1\!\left[\tfrac12(u')^2 - f\,u\right]dx
+      \]
+      subject to $u(0)=u(1)=0$.
+
+      The QPINN can be trained directly on the
+      \emph{energy functional} (Ritz method):
+      \[
+        \mathcal{L}_{\rm Ritz}(\theta)
+        = \sum_k w_k\!\left[
+            \tfrac12\left(\frac{du_\theta}{dx}\bigg|_{x_k}\right)^2
+            - f(x_k)\,u_\theta(x_k)
+          \right]
+      \]
+      where $w_k$ are quadrature weights.
+    \column{0.44\textwidth}
+      \begin{block}{Why Ritz can outperform strong form}
+        \begin{itemize}
+          \item Needs only first derivatives
+                (one input-shift per point)
+          \item Smoother loss landscape
+          \item Natural for symmetric positive-definite operators
+          \item Directly minimises the physical energy
+        \end{itemize}
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Connection to FEM}
+        The Ritz-QPINN is a \emph{quantum Galerkin method}:
+        the quantum ansatz $u_\theta(x)$ plays the role of
+        the finite element basis, but spans an exponentially
+        large function space.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Generalisation: ODEs and Other PDEs}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{1D harmonic oscillator ODE:}
+      \[
+        \frac{d^2u}{dx^2} + \omega^2 u = 0
+      \]
+      Residual: $r_k = u_\theta''(x_k) + \omega^2 u_\theta(x_k)$
+
+      \medskip
+      \textbf{1D heat equation (time-dependent):}
+      \[
+        \partial_t u - \kappa\partial_{xx}u = 0
+      \]
+      Encode $(x,t)$ into circuit:
+      $S(x,t)=R_y(\pi x)\otimes R_y(\pi t)$;
+      evaluate time and space derivatives by input-shift
+      on respective qubit registers.
+
+      \medskip
+      \textbf{Burgers equation (nonlinear):}
+      \[
+        \partial_t u + u\,\partial_x u = \nu\,\partial_{xx}u
+      \]
+      Nonlinear term $u\partial_x u$: product of two
+      circuit outputs at shifted inputs --- still computable.
+    \column{0.44\textwidth}
+      \begin{block}{Schrödinger equation as a QPINN}
+        \[
+          i\partial_t\psi = -\tfrac{1}{2}\partial_{xx}\psi
+                            + V(x)\psi
+        \]
+        The quantum ansatz $\psi_\theta(x,t)$ has a
+        \emph{natural} complex structure:
+        measure real and imaginary parts via two
+        different observables ($Z$ and $Y$).
+
+        The QPINN loss enforces the time-evolution equation
+        directly --- a bridge between QPINNs and
+        Hamiltonian simulation.
+      \end{block}
+      \begin{alertblock}{Key point}
+        All linear differential operators act linearly
+        on the circuit output $u_\theta(x)$, so residuals
+        always reduce to sums of circuit evaluations at
+        shifted inputs.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Derivative Computation via Parameter and Input Shifts}
+%% ============================================================
+
+\begin{frame}{Unified Shift Framework: Parameters and Inputs}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      For a quantum circuit with a gate $e^{-i\phi P/2}$
+      (Pauli $P$, half-angle $\phi$):
+      \[
+        \frac{\partial}{\partial\phi}
+        \langle O\rangle_\phi
+        = \frac{1}{2}\bigl[
+            \langle O\rangle_{\phi+\pi/2}
+            - \langle O\rangle_{\phi-\pi/2}
+          \bigr]
+      \]
+      \textbf{This formula is universal:}
+      \begin{itemize}
+        \item $\phi = \theta_\mu$ (variational parameter):
+              \textbf{parameter-shift rule} --- gives gradient
+              w.r.t.\ trainable weights
+        \item $\phi = x$ (input encoding):
+              \textbf{input-shift rule} --- gives spatial
+              derivative of the PDE solution
+      \end{itemize}
+
+      Higher-order derivatives by repeated application:
+      \[
+        \partial^n_\phi\langle O\rangle
+        = \sum_{k=0}^n(-1)^k\binom{n}{k}
+          \langle O\rangle_{\phi+(\frac{n}{2}-k)\frac\pi2}
+      \]
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.45cm, column sep=0.38cm]
+        \lstick{$\ket{0}$}
+          & \gate{R_y(x\pm\frac\pi2)} & \gate{W(\theta)} & \meter{}
+      \end{quantikz}
+      \end{center}
+      {\small Input-shift: evaluates $\partial_x u_\theta$
+       using $3$ circuit runs at $x{-}\frac\pi2$, $x$, $x{+}\frac\pi2$.}
+
+      \vspace{0.4cm}
+      \begin{center}
+      \begin{quantikz}[row sep=0.45cm, column sep=0.38cm]
+        \lstick{$\ket{0}$}
+          & \gate{R_y(x)} & \gate{R_y(\theta\pm\frac\pi2)} & \meter{}
+      \end{quantikz}
+      \end{center}
+      {\small Parameter-shift: evaluates $\partial_\theta u_\theta$
+       using $2$ circuit runs at $\theta{\pm}\frac\pi2$.}
+
+      \begin{alertblock}{Total budget}
+        $k$-th order spatial derivative at one point:
+        $k+1$ circuit runs.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Commutation of Differential Operators with Circuit Output}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      Let $u_\theta(x) = \bra{0}U^\dagger(x,\theta)O\,U(x,\theta)\ket{0}$.
+      For a \emph{linear} differential operator $\mathcal{D}$:
+      \[
+        \mathcal{D}[u_\theta](x)
+        = \bra{0}U^\dagger(x,\theta)\,
+          \tilde{O}(x,\mathcal{D})\,
+          U(x,\theta)\ket{0}
+      \]
+      where $\tilde{O}(x,\mathcal{D})$ is the \emph{effective
+      observable} induced by $\mathcal{D}$ acting on $U(x,\theta)$.
+
+      \textbf{For $\mathcal{D} = \partial_x^2$:}
+      \[
+        \partial_{xx} u_\theta(x)
+        = \bra{0}\partial_{xx}\!\left[
+            U^\dagger O\,U
+          \right]\ket{0}
+        = \bra{0}\tilde{O}_{xx}\ket{0}
+      \]
+      The effective observable $\tilde{O}_{xx}$ is:
+      \[
+        \tilde{O}_{xx}
+        = U^\dagger\!(\partial_{xx} U)O
+          + 2U^\dagger\!(\partial_x U)O(\partial_x U^\dagger)U
+          + \cdots
+      \]
+    \column{0.44\textwidth}
+      \begin{block}{Practical evaluation}
+        Rather than computing $\tilde{O}_{xx}$ analytically,
+        the input-shift rule evaluates it implicitly:
+        \[
+          \partial_{xx} u_\theta(x)
+          \approx \frac{u_\theta(x+h)-2u_\theta(x)+u_\theta(x-h)}{h^2}
+        \]
+        with $h=\pi/2$ for \emph{exact} (not approximate) results.
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Linearity is key}
+        For \emph{linear} PDEs, the QPINN gradient decomposes
+        into a sum of parameter-shift evaluations, each at a
+        different input shift --- no cross-terms.
+        Nonlinear PDEs require products of circuit outputs.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Expressivity, Error Bounds, and Barren Plateaus}
+%% ============================================================
+
+\begin{frame}{Expressivity of QPINNs: Fourier Analysis}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Theorem (Schuld et al.\ 2021).}
+      The output of any QNN with data-encoding gates
+      $e^{-ixP/2}$ (Pauli $P$) is a \emph{partial Fourier series}:
+      \[
+        u_\theta(x) = \sum_{\omega\in\Omega}
+          c_\omega(\theta)\,e^{i\omega x}
+      \]
+      where the set of accessible frequencies is:
+      \[
+        \Omega \subseteq \bigl\{
+          \omega_1 + \omega_2 + \cdots + \omega_n
+          : \omega_i\in\{0,\pm\tfrac{1}{2}\}
+        \bigr\}
+      \]
+      The coefficients $c_\omega(\theta)$ depend on the
+      variational parameters; the frequencies $\Omega$
+      depend only on the \emph{encoding}.
+
+      \textbf{For solving PDEs,} the highest frequency
+      in $\Omega$ limits the shortest spatial scale
+      that can be resolved.
+    \column{0.44\textwidth}
+      \begin{block}{Extending the frequency spectrum}
+        \begin{itemize}
+          \item More qubits $\to$ denser $\Omega$
+          \item Data re-uploading $\to$ integer multiples
+          \item IQP encoding $\to$ pairwise frequencies
+                $x_ix_j$
+        \end{itemize}
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Consequence for PDEs}
+        A QPINN with $n$ qubits and $L$ re-uploading layers
+        can represent solutions containing frequencies up
+        to $\omega_{\max} = Ln/2$.
+        For a target function with frequencies up to
+        $\omega^\star$, we need:
+        \[
+          Ln \geq 2\omega^\star
+        \]
+        qubits $\times$ layers.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Approximation Error and Convergence}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      Let $u^\star\in H^s(\Omega)$ (Sobolev space of order $s$)
+      be the exact PDE solution. The QPINN approximation error
+      decomposes into three parts:
+      \[
+        \|u_{\theta^\star} - u^\star\|_{L^2}
+        \leq \underbrace{\varepsilon_{\rm approx}}_{\text{expressivity}}
+           + \underbrace{\varepsilon_{\rm opt}}_{\text{optimisation}}
+           + \underbrace{\varepsilon_{\rm stat}}_{\text{sampling}}
+      \]
+
+      \textbf{Approximation error} (best possible):
+      \[
+        \varepsilon_{\rm approx}
+        \sim \|\hat{u}^\star_\omega\|
+             \text{ for }\omega\notin\Omega
+      \]
+      Controlled by the frequency spectrum of $u^\star$ and $\Omega$.
+
+      \textbf{Optimisation error:} depends on the loss landscape
+      (barren plateaus, local minima).
+
+      \textbf{Statistical error:} $\varepsilon_{\rm stat}
+      \sim N_r^{-1/2}$ from finite collocation points.
+    \column{0.44\textwidth}
+      \begin{block}{No free lunch}
+        QPINNs do not automatically outperform classical
+        PINNs for arbitrary PDEs.
+        Advantage requires:
+        \begin{enumerate}
+          \item Solutions with quantum-compressible
+                frequency structure
+          \item High-dimensional problems ($d\gg 1$)
+                where quantum memory helps
+          \item Availability of quantum hardware
+        \end{enumerate}
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{High-$d$ advantage}
+        For $d$-dimensional PDEs, the classical PINN needs
+        $O(\varepsilon^{-d})$ parameters; the QPINN can
+        compress the solution using $O(d)$ qubits if the
+        solution has a tensor-product structure.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Barren Plateaus in QPINNs and Mitigation}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      QPINNs suffer from the same barren plateau phenomenon
+      as general QNNs (from week15.tex):
+      \[
+        \mathrm{Var}\!\left(
+          \frac{\partial\mathcal{L}}{\partial\theta_\mu}
+        \right)
+        \sim \frac{1}{2^n}
+      \]
+      \textbf{Additional sources in QPINNs:}
+      \begin{itemize}
+        \item Residual $r_k\approx 0$ early in training:
+              gradient is small even without barren plateaus
+        \item Loss balance: $\mathcal{L}_r\gg\mathcal{L}_b$
+              makes BC enforcement slow
+        \item Stiff PDEs: widely varying eigenvalues of the
+              differential operator
+      \end{itemize}
+    \column{0.44\textwidth}
+      \begin{block}{Mitigation strategies for QPINNs}
+        \begin{enumerate}
+          \item \textbf{Physics-inspired ansatz:}
+                layer structure mirrors the Green's function
+                of the differential operator
+          \item \textbf{Incremental training:}
+                start with low-frequency modes,
+                progressively add higher frequencies
+          \item \textbf{Adaptive collocation:}
+                concentrate points where residual is large
+          \item \textbf{Loss weighting:}
+                normalise $\mathcal{L}_r$ and $\mathcal{L}_b$
+                by their gradient norms
+          \item \textbf{Natural gradient (QFI):}
+                \[
+                  \dot\theta = F^{-1}\nabla_\theta\mathcal{L}
+                \]
+                Respects the geometry of the quantum
+                state manifold
+        \end{enumerate}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{QPINN vs.\ Classical PINN: Comparison}
+  \begin{center}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{p{3.2cm}p{4.8cm}p{4.8cm}}
+    \toprule
+    \textbf{Feature} & \textbf{Classical PINN} & \textbf{QPINN} \\
+    \midrule
+    Ansatz       & Deep MLP $u_\theta(x)$ &
+                   Circuit output $\langle O\rangle_{x,\theta}$ \\
+    Derivatives  & Automatic differentiation &
+                   Input-shift rule (exact) \\
+    Gradient     & Backpropagation &
+                   Parameter-shift rule (exact) \\
+    Memory       & $O(N_p)$ parameters &
+                   $2^n$ amplitudes, $O(n)$ params \\
+    Freq.\ spectrum & Arbitrary (but spectral bias) &
+                   Bounded by encoding \\
+    High-$d$ PDE & Exponential cost &
+                   Potential $O(d)$ qubit advantage \\
+    Hardware     & GPU/CPU & Quantum device or simulator \\
+    Maturity     & Production-ready & Research / NISQ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.2cm}
+  \begin{alertblock}{When QPINNs are most promising}
+    High-dimensional PDEs; solutions with structured
+    frequency spectra; problems with natural quantum
+    simulation analogues (e.g., Schrödinger, Maxwell).
+  \end{alertblock}
+\end{frame}
+
+%% ============================================================
+\section{Python Implementation: 1D Poisson Equation}
+%% ============================================================
+
+\begin{frame}[fragile]{Python Implementation: Gates and Circuit}
+  \begin{lstlisting}
+import numpy as np
+from scipy.optimize import minimize
+
+# -- Gate definitions --------------------------------------------
+def ry(t):
+    c, s = np.cos(t / 2), np.sin(t / 2)
+    return np.array([[c, -s], [s, c]], dtype=complex)
+
+def rz(t):
+    return np.diag([np.exp(-1j * t / 2), np.exp(1j * t / 2)]).astype(complex)
+
+I2   = np.eye(2, dtype=complex)
+CNOT = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]], dtype=complex)
+Z0   = np.kron(np.diag([1., -1.]).astype(complex), I2)  # Z on qubit 0
+
+def var_layer(p):
+    """Ry(p0)xRy(p1) -> CNOT -> Rz(p2)xRz(p3)"""
+    return np.kron(rz(p[2]), rz(p[3])) @ CNOT @ np.kron(ry(p[0]), ry(p[1]))
+
+def circuit(x, params):
+    """
+    2-qubit QPINN circuit for 1D PDE.
+    Encoding: Ry(pi*x) on each qubit.
+    Ansatz:   2 variational layers (8 parameters).
+    Output:   <Z_0> in [-1, 1].
+    """
+    state = np.zeros(4, dtype=complex); state[0] = 1.0
+    # Angle encoding: x -> Ry(pi*x)
+    U = np.kron(ry(np.pi * x), ry(np.pi * x))
+    U = var_layer(params[:4]) @ U    # variational layer 1
+    U = var_layer(params[4:8]) @ U   # variational layer 2
+    psi = U @ state
+    return float((psi.conj() @ Z0 @ psi).real)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Derivatives via Input-Shift Rule}
+  \begin{lstlisting}
+# -- Input-shift rule for spatial derivatives ---------------------
+SHIFT = np.pi / 2   # shift for Pauli Ry generator
+
+def du_dx(x, params):
+    """First derivative d/dx u_theta(x) via input-shift rule."""
+    return 0.5 * (circuit(x + SHIFT, params)
+                - circuit(x - SHIFT, params))
+
+def d2u_dx2(x, params):
+    """
+    Second derivative d^2/dx^2 u_theta(x) via second-order shift.
+    Uses: f''(x) = f(x + pi/2) - 2*f(x) + f(x - pi/2)
+    (exact for generators with eigenvalues +/- 1/2).
+    """
+    return (circuit(x + SHIFT, params)
+          - 2 * circuit(x, params)
+          + circuit(x - SHIFT, params))
+
+# -- Source term for Poisson: f(x) = pi^2 * sin(pi*x) ------------
+def source(x):
+    return np.pi**2 * np.sin(np.pi * x)
+
+# -- Exact solution for validation -------------------------------
+def exact(x):
+    return np.sin(np.pi * x)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{QPINN Loss Function and Gradient}
+  \begin{lstlisting}
+# -- Collocation and boundary points -----------------------------
+np.random.seed(42)
+N_r = 20    # interior collocation points
+N_b = 2     # boundary points (x=0 and x=1)
+x_r = np.linspace(0.05, 0.95, N_r)    # interior
+x_b = np.array([0.0, 1.0])            # boundary
+lambda_bc = 10.0                       # BC weight
+
+# -- QPINN loss --------------------------------------------------
+def loss(params):
+    # PDE residual: -u''(x) - f(x) = 0
+    residuals = np.array([
+        -d2u_dx2(x, params) - source(x) for x in x_r
+    ])
+    L_r = np.mean(residuals**2)
+
+    # Boundary conditions: u(0) = u(1) = 0
+    L_b = circuit(x_b[0], params)**2 + circuit(x_b[1], params)**2
+
+    return L_r + lambda_bc * L_b
+
+# -- Parameter-shift gradient (exact) ---------------------------
+def grad_loss(params, shift=np.pi / 2):
+    g = np.zeros(len(params))
+    for mu in range(len(params)):
+        p_plus  = params.copy(); p_plus[mu]  += shift
+        p_minus = params.copy(); p_minus[mu] -= shift
+        g[mu] = 0.5 * (loss(p_plus) - loss(p_minus))
+    return g
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Training Loop and Results}
+  \begin{lstlisting}
+# -- Training ----------------------------------------------------
+np.random.seed(7)
+params = np.random.uniform(0, np.pi, 8)   # 2 layers x 4 params
+
+history = []
+# Adam hyperparameters
+lr, b1, b2, eps = 0.15, 0.9, 0.999, 1e-8
+m, v = np.zeros(8), np.zeros(8)
+
+for step in range(300):
+    g = grad_loss(params)
+    t = step + 1
+    m = b1 * m + (1 - b1) * g
+    v = b2 * v + (1 - b2) * g**2
+    mc, vc = m / (1 - b1**t), v / (1 - b2**t)
+    params -= lr * mc / (np.sqrt(vc) + eps)
+    history.append(loss(params))
+    if (step + 1) % 75 == 0:
+        print(f"Step {step+1:4d}  loss = {history[-1]:.6f}")
+
+# -- Evaluate and compare to exact solution ----------------------
+x_test   = np.linspace(0, 1, 100)
+u_qpinn  = np.array([circuit(x, params) for x in x_test])
+u_exact  = exact(x_test)
+l2_error = np.sqrt(np.mean((u_qpinn - u_exact)**2))
+print(f"\nL2 error vs. sin(pi*x): {l2_error:.4f}")
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Plotting and Interpretation}
+  \begin{lstlisting}
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 3.5))
+
+# -- Solution comparison -----------------------------------------
+axes[0].plot(x_test, u_exact, 'k-', lw=2, label=r'Exact $\sin(\pi x)$')
+axes[0].plot(x_test, u_qpinn, 'b--', lw=2, label='QPINN (2 qubits, 2 layers)')
+axes[0].scatter(x_r, np.zeros_like(x_r), s=20, c='r', zorder=5,
+                label='Collocation points')
+axes[0].set_xlabel('$x$'); axes[0].set_ylabel('$u(x)$')
+axes[0].set_title('QPINN solution: $-u\'\'=\\pi^2\\sin(\\pi x)$')
+axes[0].legend(fontsize=8)
+
+# -- Training loss -----------------------------------------------
+axes[1].semilogy(history, 'steelblue')
+axes[1].set_xlabel('Training step'); axes[1].set_ylabel('Loss')
+axes[1].set_title('QPINN training loss (Adam, lr=0.15)')
+
+plt.tight_layout(); plt.show()
+  \end{lstlisting}
+
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Expected output:}
+      \begin{itemize}
+        \item L2 error $\lesssim 0.05$ after 300 steps
+        \item Loss decreases by 2--3 orders of magnitude
+        \item QPINN traces $\sin(\pi x)$ correctly
+      \end{itemize}
+    \column{0.48\textwidth}
+      \textbf{Improving accuracy:}
+      \begin{itemize}
+        \item More qubits (wider frequency spectrum)
+        \item More variational layers
+        \item More collocation points $N_r$
+        \item Longer training / lower learning rate
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Extended Applications}
+%% ============================================================
+
+\begin{frame}{Extension: Time-Dependent PDEs}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      For $u(x,t)$, encode both space and time:
+      \[
+        S(x,t) = R_y(\pi x)\otimes R_y(\pi t)
+          \otimes\cdots
+      \]
+      \textbf{1D heat equation:}
+      $\partial_t u - \kappa\partial_{xx}u = 0$
+
+      QPINN circuit on $n_x + n_t$ qubits:
+
+      \begin{center}
+      \begin{quantikz}[row sep=0.42cm, column sep=0.35cm]
+        \lstick{$\ket{0}$\,($x$)}
+          & \gate{R_y(\pi x)} & \gate[4]{W(\theta)} & \meter{} \\
+        \lstick{$\ket{0}$\,($x$)}
+          & \gate{R_y(\pi x)} & \qw                 & \qw \\
+        \lstick{$\ket{0}$\,($t$)}
+          & \gate{R_y(\pi t)} & \qw                 & \qw \\
+        \lstick{$\ket{0}$\,($t$)}
+          & \gate{R_y(\pi t)} & \qw                 & \qw
+      \end{quantikz}
+      \end{center}
+    \column{0.44\textwidth}
+      \textbf{Input shifts for PDE residual:}
+      \begin{align*}
+        \partial_t u &\approx
+          \tfrac12[u(x,t{+}\tfrac\pi2) - u(x,t{-}\tfrac\pi2)]\\
+        \partial_{xx}u &\approx
+          u(x{+}\tfrac\pi2,t) - 2u(x,t) + u(x{-}\tfrac\pi2,t)
+      \end{align*}
+      Each point: 5 circuit evaluations for residual.
+
+      \begin{block}{Initial condition}
+        Add IC loss:
+        \[
+          \mathcal{L}_{\rm IC}
+          = \frac1{N_x}\sum_k\bigl|u_\theta(x_k,0)-u_0(x_k)\bigr|^2
+        \]
+      \end{block}
+      \begin{alertblock}{Scaling}
+        $d$-dimensional PDE: $n_x + n_t = n$ qubits.
+        Classical PINN: exponential in $n$; QPINN: linear.
+        Advantage is largest when $d\gg 1$.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The Schrödinger Equation as a QPINN}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The time-dependent Schrödinger equation:
+      \[
+        i\hbar\,\partial_t\psi(x,t) = H\psi(x,t),\quad
+        H = -\frac{\hbar^2}{2m}\partial_{xx} + V(x)
+      \]
+
+      Split into real and imaginary parts:
+      $\psi = \psi_R + i\psi_I$:
+      \begin{align*}
+        \partial_t\psi_R &= \phantom{-}\tfrac{\hbar}{2m}\partial_{xx}\psi_I
+                           - V\psi_I/\hbar\\
+        \partial_t\psi_I &= -\tfrac{\hbar}{2m}\partial_{xx}\psi_R
+                           + V\psi_R/\hbar
+      \end{align*}
+      Two QPINNs: $\psi_R\approx\langle Z_0\rangle_{x,t,\theta_R}$
+      and $\psi_I\approx\langle Z_0\rangle_{x,t,\theta_I}$.
+    \column{0.44\textwidth}
+      \begin{block}{Residual losses}
+        \[
+          r_R = \partial_t\psi_R
+                - \tfrac\hbar{2m}\partial_{xx}\psi_I
+                + \tfrac{V}\hbar\psi_I
+        \]
+        \[
+          r_I = \partial_t\psi_I
+                + \tfrac\hbar{2m}\partial_{xx}\psi_R
+                - \tfrac{V}\hbar\psi_R
+        \]
+        All derivatives by input-shift;
+        $V(x)$ evaluated analytically.
+      \end{block}
+      \begin{alertblock}{Bridge to Hamiltonian simulation}
+        The QPINN Schrödinger formulation is the classical
+        simulation of quantum time evolution.
+        On a quantum device, Hamiltonian simulation provides
+        $e^{-iHt/\hbar}$ exactly --- the QPINN bridges
+        continuous PDE solving and digital quantum simulation.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Application to Eigenvalue Problems}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The time-independent Schrödinger equation:
+      \[
+        H\psi(x) = E\psi(x)
+      \]
+      is a \textbf{quantum eigenvalue problem}.
+      A QPINN approach minimises the Rayleigh quotient:
+      \[
+        E[\psi_\theta]
+        = \frac{\langle\psi_\theta|H|\psi_\theta\rangle}
+               {\langle\psi_\theta|\psi_\theta\rangle}
+        \ge E_0
+      \]
+      \textbf{Connection to VQE (week15.tex):}\\
+      This is precisely the VQE objective, with the quantum
+      ansatz encoding the spatial wavefunction $\psi_\theta(x)$.
+
+      The QFI metric governs the geometry of the wavefunction
+      manifold; TDVP (week15.tex) provides the optimal
+      projection of the Schrödinger equation.
+    \column{0.44\textwidth}
+      \begin{block}{Excited states}
+        Minimise the augmented loss:
+        \[
+          \mathcal{L}_n(\theta)
+          = \langle H\rangle_\theta
+            + \sum_{k<n}\mu_k|\langle\psi_k|\psi_\theta\rangle|^2
+        \]
+        Penalty $\mu_k$ enforces orthogonality to the
+        already-found states $\psi_0,\ldots,\psi_{n-1}$.
+        QPINN naturally extends to excited states
+        of the Schrödinger, Helmholtz, and
+        Sturm-Liouville equations.
+      \end{block}
+      \begin{alertblock}{QPINN $\leftrightarrow$ VQE}
+        VQE on a qubit Hamiltonian (week15.tex) is the
+        \emph{discretised} version of a QPINN applied to
+        the Schrödinger equation on a spatial grid.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Exercises, Outlook, and References}
+%% ============================================================
+
+\begin{frame}{Exercises}
+  \begin{enumerate}\itemsep5pt
+    \item \textbf{Harmonic oscillator.}
+          Modify the Poisson code to solve $u'' + \omega^2 u = 0$
+          with $u(0)=0$, $u'(0)=1$.
+          Compare to the exact solution $u(x) = \sin(\omega x)/\omega$.
+
+    \item \textbf{Second-order input-shift identity.}
+          Prove that for $u_\theta(x) = \langle O\rangle$ with
+          $S(x) = e^{-ixP/2}$ (Pauli $P$, eigenvalues $\pm\tfrac12$):
+          \[
+            \frac{d^2 u_\theta}{dx^2}
+            = u_\theta(x+\tfrac\pi2) - 2u_\theta(x) + u_\theta(x-\tfrac\pi2)
+          \]
+
+    \item \textbf{Frequency analysis.}
+          For a 2-qubit QPINN with angle encoding $R_y(\pi x)$ on each
+          qubit and $L=2$ variational layers, list all accessible
+          Fourier frequencies $\omega\in\Omega$.
+          What is the highest frequency representable?
+
+    \item \textbf{Ritz method.}
+          Implement the variational (Ritz) QPINN loss
+          $\mathcal{L}_{\rm Ritz} = \sum_k w_k[\tfrac12(u'_\theta)^2 - fu_\theta]$
+          for the Poisson problem and compare convergence to the
+          strong-form residual loss.
+
+    \item \textbf{Heat equation.}
+          Extend the code to solve $\partial_t u = \partial_{xx} u$,
+          $x\in(0,1)$, $t\in(0,0.5)$, with $u(x,0)=\sin(\pi x)$
+          and $u(0,t)=u(1,t)=0$.
+          Exact solution: $u(x,t) = e^{-\pi^2 t}\sin(\pi x)$.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Outlook: Open Problems and Future Directions}
+  \begin{columns}[T]
+    \column{0.50\textwidth}
+      \begin{block}{Near-term (NISQ)}
+        \begin{itemize}
+          \item Small QPINNs for 1D/2D PDEs on simulators
+          \item Error mitigation for noisy derivatives
+          \item Hybrid: QPINN ansatz + classical finite
+                element solver
+          \item Benchmarking vs.\ classical PINNs on
+                spectral-bias-prone problems
+        \end{itemize}
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Fundamental trade-off}
+        \[
+          \underbrace{n \text{ qubits}}_{\text{exp.\ memory}}
+          \longleftrightarrow
+          \underbrace{2^n \text{ amplitudes}}_{\text{hard to read out}}
+        \]
+        Read-out bottleneck may eliminate quantum advantage.
+      \end{alertblock}
+    \column{0.46\textwidth}
+      \begin{block}{Long-term directions}
+        \begin{itemize}
+          \item \textbf{Quantum simulation of PDEs:}
+                Hamiltonian simulation provides $e^{-iHt}$
+                exactly --- QPINNs as a variational bridge
+          \item \textbf{High-$d$ PDEs:} molecular dynamics,
+                financial derivatives, kinetic theory
+          \item \textbf{Inverse problems:} learn the
+                coefficients of a PDE from data
+                (combination of QPINN + QBM)
+          \item \textbf{Multi-physics:}
+                coupled PDE systems via multi-register
+                quantum circuits
+          \item \textbf{Error correction:}
+                fault-tolerant QPINNs for provably
+                accurate PDE solvers
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Summary: QPINN in Context}
+  \begin{center}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{p{2.8cm}p{3.8cm}p{3.8cm}}
+    \toprule
+    & \textbf{Classical PINN} & \textbf{QPINN} \\
+    \midrule
+    Ansatz & MLP $u_\theta(x)$ &
+             Circuit $\langle O\rangle_{x,\theta}$ \\
+    Derivatives & Autograd & Input-shift (exact) \\
+    Parameter grad & Backprop & Parameter-shift (exact) \\
+    Frequency & Spectral bias & Bounded, explicit $\Omega$ \\
+    Memory & $O(N_p)$ & $O(n)$ params, $2^n$ states \\
+    BC enforcement & Loss penalty & Same \\
+    Optimiser & Adam, L-BFGS & Adam + natural gradient \\
+    Geometry & Euclidean & QFI / Fubini-Study \\
+    PDE target & Any & Linear PDEs best \\
+    Advantage & Production-ready & High-$d$, quantum PDEs \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.2cm}
+  \begin{alertblock}{The central message}
+    A QPINN is a \textbf{physics-informed QNN}: the circuit
+    output approximates the PDE solution; all spatial
+    derivatives are obtained via the \emph{input-shift rule}
+    (a cousin of the parameter-shift rule); training minimises
+    the PDE residual using exact quantum gradients.
+    The QFI and TDVP from week15.tex provide the natural
+    optimisation geometry.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{References}
+  \begin{columns}[T]
+    \column{0.50\textwidth}
+      \textbf{Classical PINNs}
+      \begin{enumerate}
+        \item M.~Raissi, P.~Perdikaris, G.~E.~Karniadakis,
+              \emph{Physics-informed neural networks},
+              J.\ Comput.\ Phys.\ \textbf{378}, 686 (2019).
+        \item S.~Wang, X.~Yu, P.~Perdikaris,
+              \emph{When and why PINNs fail to train},
+              J.\ Comput.\ Phys.\ \textbf{449}, 110768 (2022).
+      \end{enumerate}
+      \textbf{Quantum PINNs}
+      \begin{enumerate}\setcounter{enumi}{2}
+        \item A.~Kyriienko, A.~E.~Paine, V.~E.~Elfving,
+              \emph{Solving nonlinear differential equations
+              with differentiable quantum circuits},
+              Phys.\ Rev.\ A \textbf{103}, 052416 (2021).
+        \item T.~Goto et al.,
+              \emph{Universal approximation property of quantum
+              machine learning models in quantum-enhanced
+              feature spaces},
+              Phys.\ Rev.\ Lett.\ \textbf{127}, 090506 (2021).
+      \end{enumerate}
+    \column{0.46\textwidth}
+      \textbf{Fourier analysis of QNNs}
+      \begin{enumerate}\setcounter{enumi}{4}
+        \item M.~Schuld et al.,
+              \emph{Effect of data encoding on the expressive
+              power of variational quantum machine learning
+              models},
+              Phys.\ Rev.\ A \textbf{103}, 032430 (2021).
+      \end{enumerate}
+      \textbf{Data re-uploading and expressivity}
+      \begin{enumerate}\setcounter{enumi}{5}
+        \item A.~P\'{e}rez-Salinas et al.,
+              \emph{Data re-uploading for a universal quantum
+              classifier},
+              Quantum \textbf{4}, 226 (2020).
+        \item H.-Y.~Huang et al.,
+              \emph{Power of data in quantum machine learning},
+              Nat.\ Commun.\ \textbf{12}, 2631 (2021).
+      \end{enumerate}
+      \textbf{QNN foundation (see also week15.tex)}
+      \begin{enumerate}\setcounter{enumi}{7}
+        \item J.~Stokes et al.,
+              \emph{Quantum natural gradient},
+              Quantum \textbf{4}, 269 (2020).
+        \item M.~Cerezo et al.,
+              \emph{Variational quantum algorithms},
+              Nat.\ Rev.\ Phys.\ \textbf{3}, 625 (2021).
+      \end{enumerate}
+  \end{columns}
+\end{frame}
+
+\end{document}
