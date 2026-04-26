@@ -1,0 +1,1791 @@
+TITLE: Quantum Computing, Quantum Machine Learning and Quantum Information Theories
+AUTHOR: Morten Hjorth-Jensen {copyright, 1999-present|CC BY-NC} at Department of Physics and Center for Computing in Science Education, University of Oslo, Norway
+DATE: April 19
+
+!split
+===== Plans for the week of April 27-May 1 =====
+
+!bblock 
+o Classical Support Vector Machines, reminder from last week
+o Classical Kernels and transition to Quantum Kernels 
+o Quantum Support Vector Machines
+o Video of lecture at URL:"https://youtu.be/L-c4EBMinwM"
+o Whiteboard notes at URL:"https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril30.pdf"
+!eblock
+
+!split
+===== Reading recommendations =====
+!bblock 
+o For classical Support Vector Machines, see lecture notes by Morten Hjorth-Jensen at URL:"https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapter5.html"
+o Claudio Conti, Quantum Machine Learning (Springer), sections 1.5-1.12 and chapter 2, see URL:"https://link.springer.com/book/10.1007/978-3-031-44226-1".
+o See also Maria Schuld's article at URL:"https://arxiv.org/abs/2101.11020".
+o For coding, we included examples using PennyLane at URL:"https://pennylane.ai/" and Qiskit, see URL:"https://qiskit-community.github.io/qiskit-machine-learning/"
+!eblock
+
+
+
+
+!split
+===== What is Quantum Machine Learning? =====
+
+Quantum Machine Learning (QML) integrates quantum computing with
+machine learning algorithms to exploit quantum advantages. It explores
+how quantum computing can enhance classical machine learning.
+
+!bblock Motivation:
+o High-dimensional Hilbert spaces for better feature representation.
+o Quantum parallelism for faster computation.
+o Quantum entanglement for richer data encoding.
+!eblock 
+
+!split
+===== Quantum Speedups in ML =====
+Why Quantum?
+!bblock
+o _Quantum Parallelism:_ Process multiple states simultaneously.
+o _Quantum Entanglement:_ Correlated states for richer information.
+o _Quantum Interference:_ Constructive and destructive interference to enhance solutions.
+!eblock
+
+!split
+===== Challenges in Quantum Machine Learning =====
+
+
+!bblock Quantum Hardware Limitations:
+o Noisy Intermediate-Scale Quantum (NISQ) devices.
+o Decoherence and limited qubit coherence times.
+!eblock
+
+!bblock Data Encoding:
+o Efficient embedding of classical data into quantum states.
+!eblock
+
+!bblock Scalability:
+o Difficult to scale circuits to large datasets.
+!eblock
+
+!split
+===== Support vector machines =====
+
+As discussed last week,  a central model in classical
+supervised learning is the support vector machine (SVM), which is a
+max-margin classifier.  SVMs are widely used for binary classification
+and have extensions to regression problems as well.
+They build on statistical learning
+theory and are known for finding decision boundaries with maximal
+margin.  In particular, SVMs can perform non-linear classification by
+employing the kernel trick, which implicitly maps data into a
+high-dimensional feature space via a kernel function.
+
+
+!split
+===== The quantum SVM =====
+
+A Quantum Support Vector Machine (QSVM) replaces the classical kernel
+or feature map with a quantum procedure.  In QSVM, classical data
+points $\bm{x}$ are encoded into quantum states
+$|\phi(\bm{x})\rangle$ via a quantum feature map (a parameterized
+quantum circuit).  The inner product (overlap) between two such states
+serves as a quantum kernel, measuring data similarity in a
+high-dimensional Hilbert space.  Many quantum models, including
+_quantum neural networks_, ultimately behave like kernel methods: they
+analyze data in exponentially-large Hilbert spaces, accessible only
+through state overlaps, see for example Maria Schuld,
+Supervised quantum machine learning models are kernel methods, at URL:"arXiv:2101.11020"
+
+!split
+===== More on quantum SVMs =====
+
+Schuld shows that supervised
+quantum models can be reformulated as SVMs whose kernels compute the
+distance (inner product) between data-encoded quantum states .  Thus,
+QSVMs can leverage the expressive power of quantum state space to
+potentially separate data that classical kernels struggle with.
+
+
+
+
+!split
+===== Kernels and more =====
+
+In classical SVMs, kernels help with non-linear data
+separations. Quantum computers can speed up the computation of complex
+kernel evaluations by efficiently simulating an inner product in an
+exponentially large Hilbert space.
+
+
+
+!split
+=====  Quantum Support Vector Machines (QSVMs) =====
+
+!bblock Quantum Kernel Estimation:
+o Maps classical data to a quantum Hilbert space.
+o Quantum kernel measures similarity in high-dimensional space.
+!eblock
+
+!bblock Quantum-enhanced  kernel:
+!bt
+\[
+K(\bm{x}, \bm{x}') = \vert \langle \psi(\bm{x}) \vert  \psi(\bm{x}')\rangle\vert ^2
+\]
+!et
+!eblock
+
+Here, $\vert \phi(\bm{x})\rangle$ is the quantum state encoding of
+the classical data $\bm{x}$.
+
+Advantage: Potentially exponential speedup over classical SVMs.
+
+
+!split
+===== Quantum Neural Networks (QNNs) =====
+
+Quantum Neural Networks replace classical neurons with parameterized quantum circuits.
+!bblock  Key Concepts:
+o Quantum Gates as Activation Functions.
+o Variational Quantum Circuits (VQCs) for optimization.
+!eblock
+!bblock
+_Parameterized Quantum Circuit:_
+!bt
+\[
+U(\theta) = \prod_i R_y(\theta_i) \cdot CNOT \cdot R_x(\theta_i)
+\]
+!et
+!eblock
+Advantage:Quantum gradients enable exploration of non-convex landscapes.
+
+!split
+===== Quantum Boltzmann Machines (QBMs) =====
+
+Quantum Boltzmann Machines leverage quantum mechanics to sample from a probability distribution.
+
+!bblock
+o Quantum tunneling aids in escaping local minima.
+o Quantum annealing for optimization problems.
+!eblock
+!bblock Quantum Hamiltonian:
+!bt
+\[
+H = -\sum_i b_i \sigma_i^z - \sum_{ij} w_{ij} \sigma_i^z \sigma_j^z
+\]
+!et
+!eblock
+Advantage: Efficient sampling in complex probability distributions.
+
+
+
+
+
+
+
+
+
+!split
+===== Key properties of SVMs =====
+
+Support vector machines use only the support vectors (training points on
+the margin) to define the classifier, making the decision function
+sparse and often memory-efficient.  They are robust to overfitting
+when properly regularized (max-margin helps generalization) .
+
+However, training SVMs can be costly for very large datasets, as one
+must solve a quadratic program that scales roughly as $O(N^3)$ in
+naive implementations.  Evaluating the kernel (especially for complex
+kernels or large feature dimension) can also be expensive.  In fact,
+“kernel methods for machine learning are ubiquitous for pattern
+recognition, with SVMs being the most well-known method…” , but they
+face limitations when feature spaces become large and kernel
+computations costly.  This sets the stage for using quantum computers
+to estimate kernels or implement SVMs more efficiently.
+
+
+!split
+===== Reminder from last week =====
+
+We present first a repetition from last week, before we move on to quantum support vector machines.
+
+
+!split
+===== What is a hyperplane? =====
+
+The aim of the SVM algorithm is to find a hyperplane in a
+$p$-dimensional space, where $p$ is the number of features that
+distinctly classifies the data points.
+
+In a $p$-dimensional space, a hyperplane is what we call an affine
+subspace of dimension of $p-1$.  As an example, in two dimension, a
+hyperplane is simply as straight line while in three dimensions it is
+a two-dimensional subspace, or stated simply, a plane.
+
+
+
+!split
+===== Introducing the margin =====
+
+Last week we defined the so-called margin between classes of 
+ a binary problem.
+
+We derived aa margin $M$ with $\bm{w}$ normalized to
+$\vert\vert \bm{w}\vert\vert =1$ subject to the condition
+
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, p. 
+\]
+!et
+All points are thus at a signed distance from the decision boundary defined by the line $L$. The parameters $b$ and $w_1$ and $w_2$ define this line. 
+
+!split
+===== Largest value $M$ =====
+
+
+We seek the largest value $M$ defined by
+!bt
+\[
+\frac{1}{\vert \vert \bm{w}\vert\vert}y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, n, 
+\]
+!et
+or just 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) \geq M\vert \vert \bm{w}\vert\vert \hspace{0.1cm}\forall i. 
+\]
+!et
+If we scale the equation so that $\vert \vert \bm{w}\vert\vert = 1/M$, we have to find the minimum of 
+$\bm{w}^T\bm{w}=\vert \vert \bm{w}\vert\vert$ (the norm) subject to the condition
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) \geq 1 \hspace{0.1cm}\forall i.
+\]
+!et
+
+We have thus defined our margin as the invers of the norm of
+$\bm{w}$. We want to minimize the norm in order to have a as large as
+possible margin $M$.
+
+!split
+===== Setting up the problem =====
+
+In order to solve the above problem, we define the following Lagrangian function to be minimized 
+!bt
+\[
+{\cal L}(\lambda,b,\bm{w})=\frac{1}{2}\bm{w}^T\bm{w}-\sum_{i=1}^n\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b)-1\right],
+\]
+!et
+where $\lambda_i$ is a so-called Lagrange multiplier subject to the condition $\lambda_i \geq 0$.
+
+
+!split
+===== Setting up derivaties =====
+
+Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial b} = -\sum_{i} \lambda_iy_i=0,
+\]
+!et
+and 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial \bm{w}} = 0 = \bm{w}-\sum_{i} \lambda_iy_i\bm{x}_i.
+\]
+!et
+Inserting these constraints into the equation for ${\cal L}$ we obtain
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+\]
+!et
+subject to the constraints $\lambda_i\geq 0$ and $\sum_i\lambda_iy_i=0$. 
+
+!split
+===== Karush-Kuhn-Tucker condition =====
+
+We must in addition satisfy the "Karush-Kuhn-Tucker":"https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions" (KKT) condition
+!bt
+\[
+\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b) -1\right] \hspace{0.1cm}\forall i.
+\]
+!et
+o If $\lambda_i > 0$, then $y_i(\bm{w}^T\bm{x}_i+b)=1$ and we say that $x_i$ is on the boundary.
+o If $y_i(\bm{w}^T\bm{x}_i+b)> 1$, we say $x_i$ is not on the boundary and we set $\lambda_i=0$. 
+When $\lambda_i > 0$, the vectors $\bm{x}_i$ are called support vectors. They are the vectors closest to the line (or hyperplane) and define the margin $M$. 
+
+!split
+===== The problem to solve =====
+
+We can rewrite 
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+\]
+!et
+and its constraints in terms of a matrix-vector problem where we minimize w.r.t. $\lambda$ the following problem
+!bt
+\[
+\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1\bm{x}_1^T\bm{x}_1 & y_1y_2\bm{x}_1^T\bm{x}_2 & \dots & \dots & y_1y_n\bm{x}_1^T\bm{x}_n \\
+y_2y_1\bm{x}_2^T\bm{x}_1 & y_2y_2\bm{x}_2^T\bm{x}_2 & \dots & \dots & y_1y_n\bm{x}_2^T\bm{x}_n \\
+\dots & \dots & \dots & \dots & \dots \\
+\dots & \dots & \dots & \dots & \dots \\
+y_ny_1\bm{x}_n^T\bm{x}_1 & y_ny_2\bm{x}_n^T\bm{x}_2 & \dots & \dots & y_ny_n\bm{x}_n^T\bm{x}_n \\
+\end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
+\]
+!et
+subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
+$\bm{y}=[y_1,y_2,\dots,y_n]$. 
+
+
+!split
+===== The last steps =====
+
+Solving the above problem, yields the values of $\lambda_i$.
+To find the coefficients of your hyperplane we need simply to compute 
+!bt
+\[
+\bm{w}=\sum_{i} \lambda_iy_i\bm{x}_i.
+\]
+!et
+With our vector $\bm{w}$ we can in turn find the value of the intercept $b$ (here in two dimensions) via 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1,
+\]
+!et
+resulting in
+!bt
+\[
+b = \frac{1}{y_i}-\bm{w}^T\bm{x}_i,
+\]
+!et
+or if we write it out in terms of the support vectors only, with $N_s$ being their number,  we have
+!bt
+\[
+b = \frac{1}{N_s}\sum_{j\in N_s}\left(y_j-\sum_{i=1}^n\lambda_iy_i\bm{x}_i^T\bm{x}_j\right).
+\]
+!et
+
+!split
+===== Classifier equations =====
+With our hyperplane coefficients we can use our classifier to assign any observation by simply using 
+!bt
+\[
+y_i = \mathrm{sign}(\bm{w}^T\bm{x}_i+b).
+\]
+!et
+Below we discuss how to find the optimal values of $\lambda_i$. Before we proceed however, we discuss now the so-called soft classifier. 
+
+!split
+===== A soft classifier =====
+
+Till now, the margin is strictly defined by the support vectors. This defines what is called a hard classifier, that is the margins are well defined.
+
+Suppose now that classes overlap in feature space, as shown in the
+figure here. One way to deal with this problem before we define the
+so-called _kernel approach_, is to allow a kind of slack in the sense
+that we allow some points to be on the wrong side of the margin.
+
+We introduce thus the so-called _slack_ variables $\bm{\xi} =[\xi_1,x_2,\dots,x_n]$ and 
+modify our previous equation
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1,
+\]
+!et
+to 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i,
+\]
+!et
+with the requirement $\xi_i\geq 0$. The total violation is now $\sum_i\xi$. 
+
+!split
+===== Misclassification =====
+
+The value $\xi_i$ in the constraint the last constraint corresponds to
+the amount by which the prediction $y_i(\bm{w}^T\bm{x}_i+b)=1$ is on
+the wrong side of its margin. Hence by bounding the sum $\sum_i
+\xi_i$, we bound the total amount by which predictions fall on the
+wrong side of their margins.
+
+Misclassifications occur when $\xi_i > 1$. Thus bounding the total sum by some value $C$ bounds in turn the total number of
+misclassifications.
+
+!split
+===== Soft optmization problem =====
+
+
+This has in turn the consequences that we change our optmization problem to finding the minimum of 
+!bt
+\[
+{\cal L}=\frac{1}{2}\bm{w}^T\bm{w}-\sum_{i=1}^n\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b)-(1-\xi_)\right]+C\sum_{i=1}^n\xi_i-\sum_{i=1}^n\gamma_i\xi_i,
+\]
+!et
+subject to 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i \hspace{0.1cm}\forall i,
+\]
+!et
+with the requirement $\xi_i\geq 0$.
+
+!split
+===== Derivatives with respect to $b$ and $\bm{w}$ =====
+
+Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial b} = -\sum_{i} \lambda_iy_i=0,
+\]
+!et
+and 
+!bt
+\[
+\frac{\partial {\cal L}}{\partial \bm{w}} = 0 = \bm{w}-\sum_{i} \lambda_iy_i\bm{x}_i, 
+\]
+!et
+and
+!bt
+\[
+\lambda_i = C-\gamma_i \hspace{0.1cm}\forall i.
+\]
+!et
+
+!split
+===== New constraints =====
+
+Inserting these constraints into the equation for ${\cal L}$ we obtain the same equation as before
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
+\]
+!et
+but now subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ and $0\leq\lambda_i \leq C$. 
+We must in addition satisfy the Karush-Kuhn-Tucker condition which now reads
+!bt
+\[
+\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_)\right]=0 \hspace{0.1cm}\forall i,
+\]
+!et
+!bt
+\[
+\gamma_i\xi_i = 0,
+\]
+!et
+and 
+!bt
+\[
+y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_) \geq 0 \hspace{0.1cm}\forall i.
+\]
+!et
+
+!split
+===== Kernels and non-linearity =====
+
+The cases we have studied till now, were all characterized by two classes
+with a close to linear separability. The classifiers we have described
+so far find linear boundaries in our input feature space. It is
+possible to make our procedure more flexible by exploring the feature
+space using other basis expansions such as higher-order polynomials,
+wavelets, splines etc.
+
+If our feature space is not easy to separate, as shown in the figure
+here, we can achieve a better separation by introducing more complex
+basis functions. The ideal would be, as shown in the next figure, to, via a specific transformation to 
+obtain a separation between the classes which is almost linear. 
+
+The change of basis, from $x\rightarrow z=\phi(x)$ leads to the same type of equations to be solved, except that
+we need to introduce for example a polynomial transformation to a two-dimensional training set.
+
+!bc pycod
+import numpy as np
+import os
+
+np.random.seed(42)
+
+# To plot pretty figures
+import matplotlib
+import matplotlib.pyplot as plt
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
+
+
+from sklearn.svm import SVC
+from sklearn import datasets
+
+
+
+X1D = np.linspace(-4, 4, 9).reshape(-1, 1)
+X2D = np.c_[X1D, X1D**2]
+y = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0])
+
+plt.figure(figsize=(11, 4))
+
+plt.subplot(121)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.plot(X1D[:, 0][y==0], np.zeros(4), "bs")
+plt.plot(X1D[:, 0][y==1], np.zeros(5), "g^")
+plt.gca().get_yaxis().set_ticks([])
+plt.xlabel(r"$x_1$", fontsize=20)
+plt.axis([-4.5, 4.5, -0.2, 0.2])
+
+plt.subplot(122)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.axvline(x=0, color='k')
+plt.plot(X2D[:, 0][y==0], X2D[:, 1][y==0], "bs")
+plt.plot(X2D[:, 0][y==1], X2D[:, 1][y==1], "g^")
+plt.xlabel(r"$x_1$", fontsize=20)
+plt.ylabel(r"$x_2$", fontsize=20, rotation=0)
+plt.gca().get_yaxis().set_ticks([0, 4, 8, 12, 16])
+plt.plot([-4.5, 4.5], [6.5, 6.5], "r--", linewidth=3)
+plt.axis([-4.5, 4.5, -1, 17])
+plt.subplots_adjust(right=1)
+plt.show()
+
+!ec
+
+
+
+
+!split
+===== Kernel trick =====
+
+We note that this is nothing but the dot product of the two original
+vectors $(\bm{x}_i^T\bm{x}_j)^2$. Instead of thus computing the
+product in the Lagrangian of $\bm{z}_i^T\bm{z}_j$ we simply compute
+the dot product $(\bm{x}_i^T\bm{x}_j)^2$.
+
+
+This leads to the so-called
+kernel trick and the result leads to the same as if we went through
+the trouble of performing the transformation
+$\phi(\bm{x}_i)^T\phi(\bm{x}_j)$ during the SVM calculations.
+
+
+
+!split
+===== Visualization of the Kernel trick =====
+
+FIGURE: [figures/kerneltrick.png, width=900 frac=1.0]
+
+
+!split
+===== The problem to solve =====
+Using our definition of the kernel We can rewrite again the Lagrangian
+!bt
+\[
+{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{z}_i^T\bm{z}_j,
+\]
+!et
+subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ in terms of a convex optimization problem
+!bt
+\[
+\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1K(\bm{x}_1,\bm{x}_1) & y_1y_2K(\bm{x}_1,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_1,\bm{x}_n) \\
+y_2y_1K(\bm{x}_2,\bm{x}_1) & y_2y_2(\bm{x}_2,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_2,\bm{x}_n) \\
+\dots & \dots & \dots & \dots & \dots \\
+\dots & \dots & \dots & \dots & \dots \\
+y_ny_1K(\bm{x}_n,\bm{x}_1) & y_ny_2K(\bm{x}_n\bm{x}_2) & \dots & \dots & y_ny_nK(\bm{x}_n,\bm{x}_n) \\
+\end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
+\]
+!et
+subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
+$\bm{y}=[y_1,y_2,\dots,y_n]$. 
+If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
+
+!split
+===== Convex optimization =====
+We can rewrite this (see the solutions below) in terms of a convex optimization problem of the type
+!bt
+\begin{align*}
+    &\mathrm{min}_{\lambda}\hspace{0.2cm} \frac{1}{2}\bm{\lambda}^T\bm{P}\bm{\lambda}+\bm{q}^T\bm{\lambda},\\ \nonumber
+    &\mathrm{subject\hspace{0.1cm}to} \hspace{0.2cm} \bm{G}\bm{\lambda} \preceq \bm{h} \hspace{0.2cm} \wedge \bm{A}\bm{\lambda}=f.
+\end{align*}
+!et
+Below we discuss how to solve these equations. Here we note that the matrix $\bm{P}$ has matrix elements $p_{ij}=y_iy_jK(\bm{x}_i,\bm{x}_j)$.
+Given a kernel $K$ and the targets $y_i$ this matrix is easy to set up. The constraint $\bm{y}^T\bm{\lambda}=0$ leads to $f=0$ and $\bm{A}=\bm{y}$. How to set up the matrix $\bm{G}$ is discussed later. Here note that the inequalities $0\leq \lambda_i \leq C$ can be split up into
+$0\leq \lambda_i$ and $\lambda_i \leq C$. These two inequalities define then the matrix $\bm{G}$ and the vector $\bm{h}$.
+
+
+!split
+===== Different kernels =====
+
+There are several popular kernels being used. These are
+o Linear: $K(\bm{v},\bm{w})=\bm{v}^T\bm{w}$,
+o Polynomial: $K(\bm{v},\bm{w})=(\bm{v}^T\bm{w}+\gamma)^d$,
+o Gaussian Radial Basis Function: $K(\bm{v},\bm{w})=\exp{\left(-\gamma\vert\vert\bm{v}-\bm{w}\vert\vert^2\right)}$,
+o Tanh: $K(\bm{v},\bm{w})=\tanh{(\bm{v}^T\bm{w}+\gamma)}$,
+and many other ones.
+
+
+The kernel trick involves implicitly mapping the input data into a
+higher-dimensional feature space where a linear separation is
+possible. Instead of explicitly transforming each data point using a
+mapping function, the kernel function computes the inner product
+directly. This approach avoids the computational cost of handling
+high-dimensional spaces explicitly.
+
+
+!split
+===== Mercer's theorem =====
+
+An important theorem for us is "Mercer's
+theorem":"https://en.wikipedia.org/wiki/Mercer%27s_theorem".  The
+theorem states that if a kernel function $K$ is symmetric, continuous
+and leads to a positive semi-definite matrix $\bm{P}$ then there
+exists a function $\phi$ that maps $\bm{x}_i$ and $\bm{x}_j$ into
+another space (possibly with much higher dimensions) such that
+
+!bt
+\[
+K(\bm{x}_i,\bm{x}_j)=\phi(\bm{x}_i)^T\phi(\bm{x}_j).
+\]
+!et
+
+So you can use $K$ as a kernel since you know $\phi$ exists, even if
+you don’t know what $\phi$ is. 
+
+Note that some frequently used kernels (such as the Sigmoid kernel)
+don’t respect all of Mercer’s conditions, yet they generally work well
+in practice.
+
+
+!split
+===== The moons example =====
+!bc pycod
+from __future__ import division, print_function, unicode_literals
+
+import numpy as np
+np.random.seed(42)
+
+import matplotlib
+import matplotlib.pyplot as plt
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
+
+
+from sklearn.svm import SVC
+from sklearn import datasets
+
+
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+
+
+from sklearn.datasets import make_moons
+X, y = make_moons(n_samples=100, noise=0.15, random_state=42)
+
+def plot_dataset(X, y, axes):
+    plt.plot(X[:, 0][y==0], X[:, 1][y==0], "bs")
+    plt.plot(X[:, 0][y==1], X[:, 1][y==1], "g^")
+    plt.axis(axes)
+    plt.grid(True, which='both')
+    plt.xlabel(r"$x_1$", fontsize=20)
+    plt.ylabel(r"$x_2$", fontsize=20, rotation=0)
+
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+plt.show()
+
+from sklearn.datasets import make_moons
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+
+polynomial_svm_clf = Pipeline([
+        ("poly_features", PolynomialFeatures(degree=3)),
+        ("scaler", StandardScaler()),
+        ("svm_clf", LinearSVC(C=10, loss="hinge", random_state=42))
+    ])
+
+polynomial_svm_clf.fit(X, y)
+
+def plot_predictions(clf, axes):
+    x0s = np.linspace(axes[0], axes[1], 100)
+    x1s = np.linspace(axes[2], axes[3], 100)
+    x0, x1 = np.meshgrid(x0s, x1s)
+    X = np.c_[x0.ravel(), x1.ravel()]
+    y_pred = clf.predict(X).reshape(x0.shape)
+    y_decision = clf.decision_function(X).reshape(x0.shape)
+    plt.contourf(x0, x1, y_pred, cmap=plt.cm.brg, alpha=0.2)
+    plt.contourf(x0, x1, y_decision, cmap=plt.cm.brg, alpha=0.1)
+
+plot_predictions(polynomial_svm_clf, [-1.5, 2.5, -1, 1.5])
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+
+plt.show()
+
+
+from sklearn.svm import SVC
+
+poly_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="poly", degree=3, coef0=1, C=5))
+    ])
+poly_kernel_svm_clf.fit(X, y)
+
+poly100_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="poly", degree=10, coef0=100, C=5))
+    ])
+poly100_kernel_svm_clf.fit(X, y)
+
+plt.figure(figsize=(11, 4))
+
+plt.subplot(121)
+plot_predictions(poly_kernel_svm_clf, [-1.5, 2.5, -1, 1.5])
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+plt.title(r"$d=3, r=1, C=5$", fontsize=18)
+
+plt.subplot(122)
+plot_predictions(poly100_kernel_svm_clf, [-1.5, 2.5, -1, 1.5])
+plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+plt.title(r"$d=10, r=100, C=5$", fontsize=18)
+
+plt.show()
+
+def gaussian_rbf(x, landmark, gamma):
+    return np.exp(-gamma * np.linalg.norm(x - landmark, axis=1)**2)
+
+gamma = 0.3
+
+x1s = np.linspace(-4.5, 4.5, 200).reshape(-1, 1)
+x2s = gaussian_rbf(x1s, -2, gamma)
+x3s = gaussian_rbf(x1s, 1, gamma)
+
+XK = np.c_[gaussian_rbf(X1D, -2, gamma), gaussian_rbf(X1D, 1, gamma)]
+yk = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0])
+
+plt.figure(figsize=(11, 4))
+
+plt.subplot(121)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.scatter(x=[-2, 1], y=[0, 0], s=150, alpha=0.5, c="red")
+plt.plot(X1D[:, 0][yk==0], np.zeros(4), "bs")
+plt.plot(X1D[:, 0][yk==1], np.zeros(5), "g^")
+plt.plot(x1s, x2s, "g--")
+plt.plot(x1s, x3s, "b:")
+plt.gca().get_yaxis().set_ticks([0, 0.25, 0.5, 0.75, 1])
+plt.xlabel(r"$x_1$", fontsize=20)
+plt.ylabel(r"Similarity", fontsize=14)
+plt.annotate(r'$\mathbf{x}$',
+             xy=(X1D[3, 0], 0),
+             xytext=(-0.5, 0.20),
+             ha="center",
+             arrowprops=dict(facecolor='black', shrink=0.1),
+             fontsize=18,
+            )
+plt.text(-2, 0.9, "$x_2$", ha="center", fontsize=20)
+plt.text(1, 0.9, "$x_3$", ha="center", fontsize=20)
+plt.axis([-4.5, 4.5, -0.1, 1.1])
+
+plt.subplot(122)
+plt.grid(True, which='both')
+plt.axhline(y=0, color='k')
+plt.axvline(x=0, color='k')
+plt.plot(XK[:, 0][yk==0], XK[:, 1][yk==0], "bs")
+plt.plot(XK[:, 0][yk==1], XK[:, 1][yk==1], "g^")
+plt.xlabel(r"$x_2$", fontsize=20)
+plt.ylabel(r"$x_3$  ", fontsize=20, rotation=0)
+plt.annotate(r'$\phi\left(\mathbf{x}\right)$',
+             xy=(XK[3, 0], XK[3, 1]),
+             xytext=(0.65, 0.50),
+             ha="center",
+             arrowprops=dict(facecolor='black', shrink=0.1),
+             fontsize=18,
+            )
+plt.plot([-0.1, 1.1], [0.57, -0.1], "r--", linewidth=3)
+plt.axis([-0.1, 1.1, -0.1, 1.1])
+    
+plt.subplots_adjust(right=1)
+
+plt.show()
+
+
+x1_example = X1D[3, 0]
+for landmark in (-2, 1):
+    k = gaussian_rbf(np.array([[x1_example]]), np.array([[landmark]]), gamma)
+    print("Phi({}, {}) = {}".format(x1_example, landmark, k))
+
+rbf_kernel_svm_clf = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm_clf", SVC(kernel="rbf", gamma=5, C=0.001))
+    ])
+rbf_kernel_svm_clf.fit(X, y)
+
+
+from sklearn.svm import SVC
+
+gamma1, gamma2 = 0.1, 5
+C1, C2 = 0.001, 1000
+hyperparams = (gamma1, C1), (gamma1, C2), (gamma2, C1), (gamma2, C2)
+
+svm_clfs = []
+for gamma, C in hyperparams:
+    rbf_kernel_svm_clf = Pipeline([
+            ("scaler", StandardScaler()),
+            ("svm_clf", SVC(kernel="rbf", gamma=gamma, C=C))
+        ])
+    rbf_kernel_svm_clf.fit(X, y)
+    svm_clfs.append(rbf_kernel_svm_clf)
+
+plt.figure(figsize=(11, 7))
+
+for i, svm_clf in enumerate(svm_clfs):
+    plt.subplot(221 + i)
+    plot_predictions(svm_clf, [-1.5, 2.5, -1, 1.5])
+    plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
+    gamma, C = hyperparams[i]
+    plt.title(r"$\gamma = {}, C = {}$".format(gamma, C), fontsize=16)
+
+plt.show()
+
+!ec
+
+
+!split
+===== The Iris data =====
+
+!bc pycod
+# import the required packages
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score,classification_report,f1_score
+iris = load_iris()
+dataset=pd.DataFrame(iris.data,columns=iris.feature_names)
+dataset["target"]=iris.target
+dataset
+features= dataset[dataset.columns[1:4]]
+target=dataset["target"]
+# split the data into training set and testing set 
+X_train,X_test,Y_train,Y_test=train_test_split(features,target,test_size=0.25,random_state=42)
+# Scale the data
+from sklearn.preprocessing import MinMaxScaler
+
+minmax=MinMaxScaler()
+X_train=minmax.fit_transform(X_train)
+X_test=minmax.transform(X_test)
+X_test=np.clip(X_test,0,1)
+import time
+start_time=time.time()
+svm_model=SVC(kernel="rbf")
+svm_model.fit(X_train, Y_train)
+end_time=time.time()
+print(end_time-start_time)
+predictions = svm_model.predict(X_test)
+
+# Calculate accuracy and other metrics
+predictions=svm_model.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+print(f"the accuracy is: {accuracy:.2f}%")
+f1score=f1_score(Y_test,predictions,average='macro')
+print(f"the f1-score is:{f1score:.2f}%")
+print(classification_report(Y_test,predictions))
+!ec
+
+
+
+!split
+===== Quantum SVMs =====
+
+The idea of a classical SVM is that we have a set of points
+that are in either one group or another and we want to find a line that
+separates these two groups. This line can be linear, but it can also be
+much more complex, which can be achieved by the use of Kernels.
+
+
+!split
+===== How QSVM works =====
+
+FIGURE: [figures/qsvm.png, width=900 frac=1.0]
+
+!split
+===== Basic steps: Data Encoding (Quantum Feature Mapping)  =====
+
+!bblock 
+Mapping to Quantum States: Input data is first encoded into quantum
+states. This process is akin to a quantum feature map, where classical
+information is represented in the quantum Hilbert space.
+!eblock
+
+!split
+===== Basic steps: Quantum Kernel =====
+!bblock 
+In many QSVM implementations, this mapping enables the computation of
+a kernel matrix, where the similarity (or inner product) between
+quantum states is evaluated. This quantum kernel can capture complex
+relationships in data that might be challenging for classical kernels.
+!eblock 
+
+!split
+===== Basic steps: Quantum Circuit Processing =====
+
+!bblock 
+Quantum Gates and Circuits: Once data is encoded, a series of quantum
+gates (forming a quantum circuit) is applied. These gates manipulate
+the quantum states to perform the equivalent of the SVM algorithm’s
+optimization and decision-making steps.
+!eblock
+
+!split
+===== Basic steps: Measurement =====
+
+!bblock
+Outcome: After the quantum operations, a measurement is performed on
+the output state. The result of this measurement provides the
+classification outcome, analogous to deciding on which side of the
+hyperplane a data point lies.
+!eblock
+
+
+!split
+===== Quantum Kernels and Feature Maps =====
+
+
+A core idea of QSVM is to use a quantum feature map that encodes
+classical input $\bm{x}$ into a quantum state
+$\vert \phi(\bm{x})\rangle$ in an exponentially large Hilbert space.
+
+Mathematically, a quantum feature map is a unitary circuit
+$U(\bm{x})$ acting on an $n$-qubit register initialized to
+$\vert 0\rangle^{\otimes n}$, producing
+
+!bt
+\[
+\vert \phi(\bm{x})\rangle = U(\bm{x})\vert 0\rangle^{\otimes n}.
+\]
+!et
+
+!split
+===== Input dependence =====
+
+This state depends on the input $\bm{x}\in\mathbb{R}^d$.  The
+choice of $U(\bm{x})$ is analogous to choosing a classical feature
+mapping $\phi(\bm{x})$ in kernel methods.  Common quantum feature
+maps include amplitude encoding (embedding data amplitudes in the
+state vector) and angle encoding (rotations whose angles are functions
+of $\bm{x}$) .
+
+
+
+Once data are encoded as quantum states, one defines a quantum kernel
+as an overlap between states.  A simple definition is the fidelity:
+
+!bt
+\[
+K(\bm{x},\bm{x}{\prime}) = \bigl\vert \langle \phi(\bm{x}) \mid \phi(\bm{x}{\prime}) \rangle\bigr\vert ^2.
+\]
+!et
+
+
+!split
+===== Quantum kernels  =====
+
+That is, the kernel is the squared magnitude of the inner product of
+the two quantum states.  Another common (unnormalized) version is
+!bt
+\[
+K’(\bm{x},\bm{x}’) = \langle \phi(\bm{x}) \vert\phi(\bm{x}’) \rangle,
+\]
+!et
+but measuring this amplitude directly can
+be difficult due to the absolute value.  Many QSVM implementations
+(and theoretical definitions) use the squared overlap.  In any case,
+the kernel measures similarity: if $\vert \phi(\bm{x})\rangle$ and
+$\vert \phi(\bm{x}’)\rangle$ are close in Hilbert space,
+$K(\bm{x},\bm{x}’)$ is large.
+
+!split
+===== What is a quantum kernel? =====
+
+A quantum kernel is a function that measures the similarity between
+two quantum states, which are obtained by applying a quantum feature
+map to classical data.  In other words, each classical vector
+$\bm{x}$ is mapped to a quantum state $\vert \phi(\bm{x})\rangle$
+via a feature map, and the kernel is defined by the inner product of
+these states .  Concretely, one may write
+!bt
+\[
+K_{ij} = K(\bm{x}_i,\bm{x}_j) \;=\; \bigl\vert \langle \phi(\bm{x}_i)\mid\phi(\bm{x}_j)\rangle\bigr\vert ^2.
+\]
+!et
+
+This forms a positive semidefinite kernel matrix $K$ on the dataset,
+just as in classical SVMs.
+
+
+
+!split
+===== What will we need in the case of a quantum computer? =====
+
+!bblock
+We will have to translate the classical data point $\vec{x}$
+into a quantum datapoint $\vert \Phi{(\vec{x})} \rangle$. This can
+be achieved by a circuit $\mathcal{U}_{\Phi(\vec{x})} \vert 0\rangle$.
+
+
+Here $\Phi()$ could be any classical function applied
+on the classical data $\vec{x}$.
+!eblock
+!bblock 
+We need a parameterized quantum circuit $W(\theta)$ that
+processes the data in a way that in the end we
+can apply a measurement that returns a classical value $-1$ or
+$1$ for each classical input $\vec{x}$ that indentifies the label
+of the classical data.
+!eblock
+
+
+!split
+===== The most general ansatz =====
+
+Following these steps we can define an ansatz for this kind of problem
+which is
+!bt
+\[
+W(\theta) \mathcal{U}_{\Phi}(\vec{x}) \vert 0 \rangle.
+\]
+!et
+
+These kind of ansatzes are called quantum variational circuits.
+
+!split
+===== Quantum SVM =====
+
+In the case of a quantum SVM we will only use the quantum feature maps
+!bt
+\[
+\mathcal{U}_{\Phi(\vec{x})},
+\]
+!et
+to translate the classical data into
+quantum states and build the Kernel of the SVM out of these quantum
+states. After calculating the Kernel matrix on the quantum computer we
+can train the Quantum SVM the same way as the classical SVM.
+
+
+!split
+===== Defining the Quantum Kernel =====
+
+The idea of the quantum kernel is exactly the same as in the classical
+case. We take the inner product
+!bt
+\[
+K(\vec{x}, \vec{z}) = \vert \langle \Phi (\vec{x}) \vert \Phi(\vec{z}) \rangle \vert^2 = \langle 0^n \vert \mathcal{U}_{\Phi(\vec{x})}^{t} \mathcal{U}_{\Phi(\vec{z})} \vert 0^n \rangle,
+\]
+!et
+but now with the quantum feature maps
+!bt
+\[
+\mathcal{U}_{\Phi(\vec{x})}.
+\]
+!et
+
+The idea is that if we choose a quantum feature maps that is not easy
+to simulate with a classical computer we might obtain a quantum
+advantage.
+
+
+!split
+===== Side note =====
+
+There is no proof yet that the QSVM brings a quantum
+advantage, but the argument the authors of
+URL:"https://arxiv.org/pdf/1804.11326.pdf" make, is that there is
+for sure no advantage if we use feature maps that are easy to simulate
+classically, because then we would not need a quantum computer to
+construct the Kernel.
+
+!split
+===== Feature map =====
+
+For the feature maps we use the ansatz
+!bt
+\[
+\mathcal{U}_{\Phi(x)} = U_{\Phi(x)} \otimes H^{\otimes n},
+\]
+!et
+where
+!bt
+\[
+U_{\Phi(x)} = \exp \left( i \sum_{S \in n} \phi_S(x) \prod_{i \in S} Z_i \right),
+\]
+!et
+which simplifies a lot when we (like in URL:"https://arxiv.org/pdf/1804.11326.pdf") only consider
+$S \leq 2$ interactions, which means we only let two qubits interact
+at a time. For $S \leq 2$ the product $\prod_{i \in S}$ only leads
+to interactions $Z_i Z_j$ and non interacting terms $Z_i$. And the
+sum $\sum_{S \in n}$ over all these terms that are possible with $n$
+qubits.
+
+
+
+
+!split
+===== Power of quantum kernels =====
+
+The power of quantum kernels comes from the exponentially large
+feature space.  An $n$-qubit state has dimension $2^n$, so even a
+simple feature map using $n$ qubits corresponds to an embedding of
+$\bm{x}$ into $\mathbb{C}^{2^n}$.  Entangling gates in
+$U(\bm{x})$ allow highly non-linear features.  In principle, a
+carefully chosen quantum feature map can capture complex structures in
+data that are hard to model classically.  For example, Havlíček et
+al. used a feature map involving Pauli-Z rotations and controlled-Z
+gates to embed data into a $2^n$-dimensional space .  They note that
+classical kernels become expensive as feature dimensions grow, while
+quantum circuits naturally operate in these large spaces .
+
+
+!split
+===== Estimating quantum kernels =====
+
+We must be able to estimate the quantum kernel in
+practice.  Given two data vectors $\bm{x}$ and $\bm{x}’$, we
+need to compute (or measure)
+$\vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$.  This can be
+done on a quantum computer by preparing $\vert \phi(\bm{x})\rangle$ and
+$\vert \phi(\bm{x}’)\rangle$ in some interference experiment.  For
+instance, one can prepare $\vert \phi(\bm{x})\rangle$, then apply
+$U(\bm{x}’)^\dagger$, and measure the probability of returning to
+the $\vert 0\rangle^{\otimes n}$ state.  That probability is exactly
+$\vert \langle 0\vert U(\bm{x})^\dagger U(\bm{x}’)\vert 0\rangle\vert ^2 =
+\vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$.  In PennyLane,
+this is conveniently done by defining a QNode circuit that encodes
+$\bm{x}$, then encodes $\bm{x}’$ inversely (via the adjoint).
+
+
+!split
+===== Code example =====
+
+For example, using PennyLane’s AngleEmbedding template, we can write:
+
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+dev = qml.device('default.qubit', wires=2)
+@qml.qnode(dev)
+def circuit(x1, x2):
+    qml.templates.AngleEmbedding(x1, wires=dev.wires)
+    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=dev.wires)
+    return qml.probs(wires=dev.wires)
+
+kernel = lambda x1, x2: circuit(x1, x2)[0]
+X_train = np.random.random((4,2))
+X_test = np.random.random((3,2))
+qml.kernels.kernel_matrix(X_train, X_test, kernel)
+!ec
+
+!split
+===== What happens =====
+
+Here, _AngleEmbedding(x1)_ encodes the vector _x1_ into two qubits via
+rotations, and qml.adjoint applies the inverse embedding for _x2_.  The
+output probability of measuring the $\vert 00\rangle$ state is exactly the
+squared overlap of the two embedded states.  Using this kernel
+function, PennyLane can compute the kernel matrix
+$K_{ij}=k(\bm{x}_i,\bm{x}_j)$ efficiently for training.  In
+fact, PennyLane provides a utility qml.kernels.kernel$\_$matrix to
+evaluate such kernels systematically .
+
+
+!split
+===== Quantum feature map =====
+
+A quantum feature map
+$\bm{x}\mapsto\vert \phi(\bm{x})\rangle$ combined with the kernel
+$K(\bm{x},\bm{x}’)=\vert \langle\phi(\bm{x})\vert \phi(\bm{x}’)\rangle\vert ^2$
+defines a QSVM kernel.  The intuition is that the quantum device is
+implicitly computing a rich similarity measure via its
+high-dimensional state space.
+
+This is analogous to the classical kernel trick but potentially more powerful:
+_quantum kernels can potentially offer advantages over classical
+kernel methods, such as speedup, accuracy, flexibility, and
+robustness_.
+
+
+!split
+===== Examples of Feature Map Circuits =====
+
+
+There are many choices for $U(\bm{x})$.  Common simple maps include:
+
+!bblock Angle (or rotation) embedding:
+For an $n$-dimensional feature vector $\bm{x}=(x_1,\dots,x_n)$, apply single-qubit rotations $\mathrm{R}_X(x_i)$ or $\mathrm{R}_Y(x_i)$ to the $i$th qubit.  For example:
+!bt
+\[
+U(\bm{x})=\bigotimes{i=1}^n R_Y(x_i) = R_Y(x_1)\otimes \cdots \otimes R_Y(x_n).
+\]
+!et
+This maps $x_i$ to an angle on the Bloch sphere.  It produces product states (no entanglement).
+!eblock
+
+!split
+===== More features =====
+!bblock Amplitude encoding:
+Encode the normalized data vector $\bm{x}$ directly into the amplitudes of the quantum state.  For example, for 2 qubits one can map $(x_1,x_2,x_3,x_4)$ (with $\sum x_i^2=1$) to $x_1\vert 00\rangle + x_2\vert 01\rangle + x_3\vert 10\rangle + x_4\vert 11\rangle$.  This uses exponentially many amplitudes and can be powerful, but requires complex circuits.
+!eblock
+!bblock Entangling feature maps:
+Combine rotations with entangling gates.  For instance, the ZZ feature map used in [Havlíček et al.] alternates single-qubit $R_Z(x_i)$ rotations with controlled-Z (CZ) gates between qubits.  This creates entangled states whose overlaps can capture correlations in the data.  In PennyLane, one could implement something like:
+!bc pycod
+for i in range(n):
+    qml.RZ(x[i], wires=i)
+for i in range(n-1):
+    qml.CNOT(wires=[i, i+1])
+for i in range(n):
+    qml.RZ(x[i], wires=i)
+!ec
+
+!eblock
+
+
+!split
+===== Polynomial feature map =====
+
+These are inspired by classical polynomial kernels, one
+can encode quadratic or higher terms.  For example, apply
+$R_Z(x_i),R_X(x_i)$ on each qubit and use multi-qubit rotations to
+create cross-terms .
+
+
+The choice of feature map affects the kernel.  A richer (more
+entanglement) map may separate classes better but might also be harder
+to learn or require more quantum resources.  In practice, one often
+starts with simple maps (e.g. AngleEmbedding) and experiments.
+
+!split
+===== Kernel Estimation on Quantum Devices =====
+
+
+
+Once $\vert \phi(\bm{x})\rangle$ is defined, we must compute
+$k(\bm{x},\bm{x}’)$ on actual quantum hardware.  Typically
+this involves running a quantum circuit multiple times (shots) to
+estimate a probability.  For the overlap kernel, one measures the
+probability of a certain outcome after applying $U(\bm{x})$ and
+$U(\bm{x}’)^\dagger$.  Alternative schemes include the SWAP test,
+which uses an ancilla qubit to directly estimate overlaps, but this
+requires extra gates.  The above adjoint-circuit method only needs the
+same number of qubits as the feature map.
+
+!split
+===== Short summary =====
+
+In summary, the quantum kernel is given by inner products in a
+quantum-defined feature space.  We emphasize: all computations on the
+quantum device yield kernel values (scalars).  The heavy lifting of
+classification (optimizing $\alpha_i$) remains a classical task,
+typically done by classical SVM software using the quantum-computed
+kernel matrix.  This _hybrid_ approach leverages quantum hardware
+where it’s needed (kernel evaluation) and classical hardware for
+optimization.  
+
+
+
+!split
+===== Quantum Support Vector Machine Theory =====
+
+
+
+We now combine the classical SVM formulation with quantum kernels.  In
+essence, we run a classical SVM algorithm (e.g. solving the dual) but
+supply it with a quantum-computed kernel matrix.  The resulting model
+is the same form: $f(\bm{x})=\operatorname{sign}(\sum_i \alpha_i
+y_i K(\bm{x}_i,\bm{x})+b)$, but $K$ comes from a quantum
+device.  The hope is that the quantum kernel captures data structure
+that a classical kernel might not.
+
+
+
+!split
+===== QSVM Formulation via Quantum Kernels =====
+
+
+
+Given training data $(\bm{x}_i,y_i)$, we choose a quantum feature
+map $U(\bm{x})$ and define the kernel $K_{ij} =
+\vert \langle\phi(\bm{x}i)\vert \phi(\bm{x}j)\rangle\vert ^2$.  Then we solve
+the binary type of  SVM problems discussed last week, with $x_i^T x_j$ replaced
+by $K_{ij}$.  That is:
+!bt
+\[
+\max{\lambda} \; \sum_i \lambda_i - \frac{1}{2}\sum_{i,j} \lambda_i \lambda_j y_i y_j \,K(\bm{x}_i,\bm{x}_j),
+\]
+!et
+subject to $\sum_i \lambda_i y_i=0$, $0\le \lambda_i\le C$.  After
+solving for $\lambda_i$, the decision function is
+!bt
+\[
+f(\bm{x})=\operatorname{sign}\Bigl(\sum{i} \lambda_i y_i \,K(\bm{x}_i,\bm{x}) + b\Bigr).
+\]
+!et
+
+All kernel values $K(\bm{x}_i,\bm{x}_j)$ are estimated by the
+quantum device.  Thus the QSVM is essentially a classical SVM with a
+learned quantum kernel.
+
+!split
+===== Important training point =====
+
+A key point is that training is still classical: one uses a
+conventional convex solver (e.g. libSVM) on the kernel matrix.  The
+quantum part is in computing $K_{ij}$.  This is sometimes called a
+quantum kernel estimator.  Alternatively, one can approximate
+gradients of a parameterized kernel for optimization, but here we
+focus on the fixed-kernel case.
+
+!split
+===== Why might a quantum kernel be better than a classical one? =====
+
+The hope is that the Hilbert-space embedding is very high-dimensional
+(exponential), so that more functions (decision boundaries) become
+linear in that space.  Replacing dot products by quantum overlaps is a
+generalization of classical kernels.  In fact, Schuld argues that many
+near-term _quantum neural networks_ are really kernel machines: “a lot
+of near-term and fault-tolerant quantum models can be replaced by a
+general support vector machine whose kernel computes distances between
+data-encoding quantum states” .  Thus, one may as well solve directly
+in kernel form.
+
+
+
+!split
+===== Quantum SVM Algorithms (large-scale vs NISQ) =====
+
+
+There are two broad approaches in the literature for QSVMs:
+
+
+!bblock Quantum Algorithms (fault-tolerant):
+Early work by Rebentrost, Mohseni, and Lloyd (2014) formulated an SVM
+in terms of quantum linear algebra.  They showed that one can invert
+the kernel matrix (a positive semidefinite matrix) using quantum
+algorithms (HHL algorithm) in time polylogarithmic in $N$ and $d$ .
+Concretely, they assumed quantum RAM (QRAM) access to data and used a
+quantum subroutine to solve the dual SVM as a linear system, yielding
+the vector of $\alpha_i$ in superposition.  Under ideal conditions
+(sparse data, good condition number), this yields exponential speed-up
+over classical SVM training.  However, it requires fully
+fault-tolerant quantum hardware and QRAM, making it more a theoretical
+result than a near-term implementation.
+!eblock
+
+!split
+===== And NISQ Quantum Kernels =====
+
+More recent work focuses on near-term devices.  Here the idea is to
+compute the kernel matrix entries with a quantum circuit on current
+hardware or simulators, and then use a classical SVM solver for the
+rest.  This does not claim an exponential runtime speed-up (indeed,
+the kernel matrix still has $N^2$ entries).  Instead, it aims for a
+possible quality or feature-based advantage: the quantum feature map
+might separate data better than any known classical kernel.  This
+approach has been demonstrated on small datasets (e.g. Iris) and
+studied theoretically.  For example, Havlicek *et al.*, see URL:"https://www.nature.com/articles/s41586-019-0980-2"
+showed on a toy
+problem that a quantum kernel can correctly classify points that a
+simple classical kernel cannot.  However, other studies have found
+that for random data classical kernels often suffice, so the advantage
+is subtle.  Research is ongoing  on which problems
+truly benefit from quantum kernels.
+
+
+!split
+===== Quantum neural network =====
+
+Another variation is the quantum variational classifier, sometimes
+called a quantum neural network.  Instead of precomputing a fixed
+kernel, one trains a parameterized quantum circuit to output labels.
+Interestingly, Schuld (2021) shows that variational quantum models,
+when trained by minimizing a loss, are mathematically equivalent to
+kernel machines with a particular kernel determined by the circuit .
+In fact, one can often find a kernel SVM that matches or outperforms
+the variational model.  In practice, one can combine these: use a
+trainable quantum embedding $U(\bm{x};\theta)$ with tunable
+parameters $\theta$, and optimize $\theta$ to maximize the SVM
+classification accuracy.  This is called a quantum kernel learning
+approach.
+
+
+!split
+===== Quantum vs Classical SVM Performance =====
+
+For our purposes, we concentrate on the case where the quantum feature
+map is fixed (or manually chosen), and we use classical SVM
+optimization on the resulting kernel.
+
+Quantum SVMs are subject to the same generalization considerations as
+classical SVMs: overfitting can occur if the kernel is too flexible,
+and the choice of regularization $C$ matters.  One advantage is that
+quantum kernels can in principle provide very complex decision
+boundaries.  On the other hand, estimating the kernel matrix
+accurately requires many quantum measurements (shots).  Each kernel
+entry $K_{ij}$ is obtained by sampling; statistical noise in kernel
+values can degrade SVM performance.  Error mitigation techniques may
+be needed.  Also, evaluating a kernel classically might in some cases
+simulate the quantum one if the circuit is not too complex; then no
+advantage is gained.
+
+
+!split
+===== Comparing computational complexity =====
+
+
+
+o Classical SVM: Training roughly $O(N^3)$ time, inference $O(N_s)$ time per point, where $N_s$ is number of support vectors.
+o Quantum kernel SVM: Kernel estimation takes $O(n_q N^2)$ time (where $n_q$ is quantum circuit time per inner product) to compute all $K_{ij}$, plus classical $O(N^3)$.  No asymptotic speed-up unless one uses quantum linear algebra (which still needs QRAM).
+o Quantum linear SVM: Potential $O(\log N)$ for training under ideal QRAM assumptions, inference also $O(\log N)$, at expense of large constant overhead.
+
+
+
+!split
+===== Actual implementations =====
+
+In practice on current hardware, QSVM speed is dominated by circuit
+execution time.  However, QSVM experiments are valuable to test
+expressivity: for some data, a simple quantum feature map yields
+perfect classification where classical kernels fail.
+
+
+
+
+Finally, it is worth noting that both the variational quantum
+classifier and the kernel QSVM ultimately hinge on how data is encoded
+into quantum states.  Schuld summarizes that _the way that data is
+encoded into quantum states is the main ingredient that can
+potentially set quantum models apart from classical machine learning
+models_.  Thus, a lot of focus is on designing powerful quantum
+embeddings and kernels.  The SVM framework provides a clear way to
+evaluate them.
+
+
+
+
+!split
+===== Practical Implementation with PennyLane =====
+
+
+
+We now turn to hands-on implementation of QSVM using PennyLane, a
+Python library for quantum machine learning.  PennyLane interfaces
+with quantum simulators and hardware and provides convenient utilities
+for kernels and optimization.  In this chapter we will outline how to
+construct a QSVM: define a quantum feature map, compute the kernel
+matrix, and train a classical SVM using scikit-learn.
+
+!split
+===== Setting up PennyLane =====
+
+
+
+
+
+First, install PennyLane (pip install pennylane) and import necessary modules:
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+from sklearn import svm
+!ec
+
+PennyLane uses devices to run quantum circuits.  For QSVM experiments we can use the default.qubit simulator:
+!bc pycod
+dev = qml.device("default.qubit", wires=n_qubits, shots=None)
+!ec
+
+Here n$\_$qubits is chosen based on our feature map (often equal to data
+dimension or its log, etc.)  shots=None means analytic probabilities
+(no sampling noise).  For realistic experiments, set shots=100 or so
+to simulate finite sampling.
+
+
+!split
+===== Defining Quantum Feature Maps in PennyLane =====
+
+
+We must define a quantum circuit (QNode) that encodes input vectors.  For example, for a 2-dimensional input $\bm{x}=(x_0,x_1)$, we might use AngleEmbedding:
+!bc pycod 
+@qml.qnode(dev)
+def feature_map(x):
+    qml.templates.AngleEmbedding(x, wires=[0,1])
+    return [qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))]
+!ec
+
+This feature map returns expectation values (though for kernel
+computation we will use a different approach).  Alternatively, we can
+directly define a unitary:
+
+!bc pycod
+@qml.qnode(dev)
+def U(x):
+    qml.RY(x[0], wires=0)
+    qml.RY(x[1], wires=1)
+    return qml.state()
+!ec
+This QNode returns the quantum state (though qml.state() may require a
+special device).  For kernel computation, we actually want to overlap
+two circuits, as shown below.
+
+
+
+
+!split
+===== Computing Quantum Kernel Matrices =====
+
+To train an SVM, we need the kernel matrix
+$K_{ij}=K(\bm{x}_i,\bm{x}_j)$.  PennyLane provides
+qml.kernels.kernel$\_$matrix, which takes two datasets and a kernel
+function.  We must supply a function _kernel(x1,x2)_ that returns the
+overlap of states.
+
+
+
+Using the adjoint trick, we define:
+!bc pycod
+@qml.qnode(dev)
+def kernel_circuit(x1, x2):
+    # encode x1
+    qml.templates.AngleEmbedding(x1, wires=[0,1])
+    # apply inverse embedding of x2
+    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=[0,1])
+    # return probability of \vert 00>
+    return qml.probs(wires=[0,1])[0]
+!ec
+
+This returns $\vert \langle \phi(x_1)\vert \phi(x_2)\rangle\vert ^2$ (the prob. of measuring all zeros).  We then set:
+!bc pycod
+kernel = lambda a, b: kernel_circuit(a, b)
+!ec
+and compute kernel matrices.  For training:
+!bc pycod
+X_train = np.array([...])  # shape (N_train, 2)
+Y_train = np.array([...])  # labels +1/-1
+K_train = qml.kernels.kernel_matrix(X_train, X_train, kernel)
+!ec
+This yields an $N_{\rm train}\times N_{\rm train}$ matrix.  Similarly compute K$\_$test = kernel$\_$matrix(X$\_$test, X$\_$train, kernel) for test data.
+
+
+
+Alternatively, as PennyLane docs show , one can directly call the kernel matrix function:
+!bc pycod
+K_train = qml.kernels.kernel_matrix(X_train, X_train, kernel_function=kernel)
+K_test = qml.kernels.kernel_matrix(X_test, X_train, kernel_function=kernel)
+!ec
+
+
+!split
+===== Training SVM with Precomputed Quantum Kernels =====
+
+With the kernel matrix in hand, we use scikit-learn’s SVM with a precomputed kernel.  In Python:
+!bc pycod
+clf = svm.SVC(kernel='precomputed')
+clf.fit(K_train, Y_train)
+y_pred = clf.predict(K_test)
+!ec
+
+The SVM solver will treat K$\_$train[i,j] as the feature inner products.
+After fitting, one can retrieve support vectors via _clf.support_ if
+desired.  The prediction y$\_$pred will be an array of +1/-1 predictions
+on the test set.
+
+
+
+It is also possible to integrate PennyLane’s differentiable capabilities by defining a parameterized kernel and optimizing parameters via gradient descent, but here we keep a fixed feature map.
+
+
+!split
+===== Example: Kernel SVM in PennyLane =====
+
+
+
+
+
+Below is a compact example that ties it together for a toy 2D dataset:
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+from sklearn import svm
+
+# Example dataset
+X_train = np.array([[0.1, 0.2], [1.1, -0.4], [0.0, 0.9], [1.0, 0.5]])
+Y_train = np.array([+1, +1, -1, -1])
+X_test = np.array([[0.2, 0.1], [0.9, 0.0]])
+
+# Define device and feature map
+dev = qml.device("default.qubit", wires=2)
+
+@qml.qnode(dev)
+def kernel_circuit(x1, x2):
+    qml.templates.AngleEmbedding(x1, wires=[0,1])
+    qml.adjoint(qml.templates.AngleEmbedding)(x2, wires=[0,1])
+    return qml.probs(wires=[0,1])[0]
+
+kernel = lambda a, b: kernel_circuit(a, b)
+
+# Compute kernel matrices
+K_train = qml.kernels.kernel_matrix(X_train, X_train, kernel_function=kernel)
+K_test = qml.kernels.kernel_matrix(X_test, X_train, kernel_function=kernel)
+
+# Train SVM
+clf = svm.SVC(kernel='precomputed')
+clf.fit(K_train, Y_train)
+predictions = clf.predict(K_test)
+print("Predicted labels:", predictions)
+!ec
+
+This code snippet demonstrates defining a quantum kernel via
+AngleEmbedding and using it with scikit-learn.  In a real application,
+one would use more data points and possibly include more sophisticated
+feature maps.
+
+
+
+!split
+===== Discussion of Implementation =====
+
+In practice, one must consider:
+
+o Noise and shots: If using real hardware or finite shots, each entry $K_{ij}$ is a noisy estimate.  It is common to run many shots (e.g. 1000) to reduce variance.  One may also average results or use kernel averaging.
+o Data preprocessing: Classical kernels often require normalized or scaled inputs.  Similarly, for quantum kernels, it can help to scale data so that features match the expected range of angles.
+o Computational cost: Computing an $N\times N$ kernel matrix on a quantum device takes $O(N^2)$ circuits.  For large $N$ this can be slow.  One might use a subset of training data or low-rank approximations.
+o Hyperparameters: The QSVM has hyperparameters (e.g. SVM regularization $C$) that should be tuned by cross-validation.  The choice of feature map is also a “hyperparameter” of sorts.
+
+
+
+!split
+===== PennyLane implementations =====
+
+In summary, implementing QSVM with PennyLane involves four steps:
+o choose a feature map and implement it as a QNode;
+o define a kernel function via that QNode;
+o compute kernel matrices with qml.kernels;
+o train/predict using an SVM with the precomputed kernels.
+
+!split
+===== Steps in Quantum Kernel SVM =====
+
+o Data Encoding (Feature Map Generation)
+  * The classical data (x) is encoded into a quantum state using a quantum feature map (quantum circuit).
+
+o Quantum Kernel Computation
+  * The kernel matrix is computed using a quantum computer by measuring the inner product of quantum states.
+
+o Classical SVM Training
+  * The quantum kernel matrix is used in a classical SVM algorithm to find the optimal decision boundary.
+
+o Prediction
+  * New data is classified using the trained SVM model with the quantum kernel.
+
+
+!split
+===== Iris Dataset =====
+
+
+!bc pycod
+import pennylane as qml
+from pennylane import numpy as np
+from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+num_qubits=4
+device=qml.device('default.qubit',wires=num_qubits)
+
+
+@qml.qnode(device)
+def qnode(inputs,weights):
+    qml.templates.AngleEmbedding(inputs, 
+                                 wires=range(num_qubits), 
+                                 rotation='Y') # encode the inputs into the quantum state by rotating each qubit along the Y-axis.
+    qml.adjoint(qml.AngleEmbedding(features=weights, 
+                                   wires=range(num_qubits),
+                                    rotation='Y')) # applies the inverse transformation using the weights parameter.
+    return qml.probs(wires=range(num_qubits))
+
+
+def qkernel(inputs,weights):
+    return np.array([[qnode(input,weight)[0] for weight in weights] for input in inputs ]) # compute the quantum kernel
+
+
+# Fit the model
+start_time=time.time()
+qsvm=SVC(kernel=qkernel)
+qsvm.fit(X_train,Y_train)
+end_time=time.time()
+print(end_time-start_time)
+
+# Make predictions and calculate the accuracy
+predictions=qsvm.predict(X_test)
+accuracy=accuracy_score(Y_test,predictions)
+print(f"the accuracy is: {accuracy:.2f} %")
+f1score=f1_score(Y_test,predictions,average='macro')
+print(f"the f1-score is: {f1score:.2f}%")
+print(classification_report(Y_test,predictions))
+
+
+!ec
+
+
+
+
+!split
+===== Qiskit implementation =====
+
+A similar implementation on Qiskit is given here (you need to have installed Qiskit as well).
+!bc pycod
+from qiskit import BasicAer
+from qiskit.utils import QuantumInstance
+from qiskit.circuit.library import ZZFeatureMap
+from qiskit_machine_learning.algorithms import QSVC
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+
+# Load and preprocess dataset
+dataset = load_iris()
+X = dataset.data
+y = dataset.target
+
+# For simplicity, we'll only classify between two classes
+X = X[y != 2]
+y = y[y != 2]
+
+# Standardize features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Split into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Define quantum feature map
+feature_map = ZZFeatureMap(feature_dimension=4, reps=2)
+
+# Set up quantum instance
+quantum_instance = QuantumInstance(BasicAer.get_backend('qasm_simulator'), shots=1024)
+
+# Initialize QSVC
+qsvc = QSVC(quantum_instance=quantum_instance, feature_map=feature_map)
+
+# Train QSVC
+qsvc.fit(X_train, y_train)
+
+# Evaluate QSVC
+accuracy = qsvc.score(X_test, y_test)
+print(f'QSVC accuracy: {accuracy * 100:.2f}%')
+
+!ec
+
+!split
+===== Plans for next week =====
+o Summary of quantum support vector machines
+o Quantum neural networks
