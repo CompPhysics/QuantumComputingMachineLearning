@@ -1,2361 +1,1045 @@
+%% ============================================================
+%%  Quantum Computing and Quantum Machine Learning
+%%  Week 15: QNN, VQE, QAOA, QSVM, HHL
+%%  Author: Morten Hjorth-Jensen
+%%  Department of Physics, University of Oslo
+%% ============================================================
+\documentclass[aspectratio=169,10pt]{beamer}
 
-% LaTeX Beamer file automatically generated from DocOnce
-% https://github.com/doconce/doconce
-
-%-------------------- begin beamer-specific preamble ----------------------
-
-\documentclass{beamer}
-
+%% ── Theme & colours ─────────────────────────────────────────────
 \usetheme{Madrid}
-\usecolortheme{default}
+\usecolortheme{seahorse}
+\usefonttheme[onlymath]{serif}
 
-% turn off the almost invisible, yet disturbing, navigation symbols:
+\setbeamercolor{frametitle}{bg=blue!15!white,fg=blue!60!black}
+\setbeamercolor{title}{fg=blue!70!black}
+\setbeamercolor{block title}{bg=blue!20!white,fg=blue!60!black}
+\setbeamercolor{block body}{bg=blue!5!white}
+\setbeamercolor{alerted text}{fg=red!60!black}
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.50\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{1em}%
+      \insertframenumber{}/\inserttotalframenumber\hspace*{1ex}
+    \end{beamercolorbox}}%
+  \vskip0pt}
 
-% Examples on customization:
-%\usecolortheme[named=RawSienna]{structure}
-%\usetheme[height=7mm]{Rochester}
-%\setbeamerfont{frametitle}{family=\rmfamily,shape=\itshape}
-%\setbeamertemplate{items}[ball]
-%\setbeamertemplate{blocks}[rounded][shadow=true]
-%\useoutertheme{infolines}
-%
-%\usefonttheme{}
-%\useinntertheme{}
-%
-%\setbeameroption{show notes}
-%\setbeameroption{show notes on second screen=right}
-
-% fine for B/W printing:
-%\usecolortheme{seahorse}
-
-\usepackage{pgf}
+%% ── Packages ────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb,bm,physics}
+\usepackage{braket}
 \usepackage{graphicx}
-\usepackage{epsfig}
-\usepackage{relsize}
-
-\usepackage{fancybox}  % make sure fancybox is loaded before fancyvrb
-
-\usepackage{fancyvrb}
-% minted replaced with listings (no shell-escape required)
-\usepackage{listings}
-\lstset{basicstyle=\small\ttfamily,breaklines=true,language=Python}
-%\usepackage{anslistings}
-%\usepackage{listingsutf8}
-
-\usepackage{amsmath,amssymb,bm}
-%\usepackage[latin1]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{colortbl}
-\usepackage[english]{babel}
+\usepackage{booktabs}
+\usepackage{xcolor}
 \usepackage{tikz}
 \usepackage{quantikz}
-\usepackage{braket}
-\usepackage{framed}
-% Use some nice templates
-\beamertemplatetransparentcovereddynamic
+\usepackage{listings}
+\usepackage{hyperref}
 
-% --- begin table of contents based on sections ---
-% Delete this, if you do not want the table of contents to pop up at
-% the beginning of each section:
-% (Only section headings can enter the table of contents in Beamer
-% slides generated from DocOnce source, while subsections are used
-% for the title in ordinary slides.)
-\AtBeginSection[]
-{
-  \begin{frame}<beamer>[plain]
-  \frametitle{}
-  %\frametitle{Outline}
-  \tableofcontents[currentsection]
-  \end{frame}
+%% ── Python listing style ─────────────────────────────────────────
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{red!60!black},
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{blue!3!white},
+  xleftmargin=4pt, xrightmargin=4pt
 }
-% --- end table of contents based on sections ---
 
-% If you wish to uncover everything in a step-wise fashion, uncomment
-% the following command:
+%% ── Metadata ────────────────────────────────────────────────────
+\title[QC and QML -- Week 14]{Quantum Computing and Quantum Machine Learning}
+\subtitle{QNN, VQE, QAOA, QSVM, HHL}
+\author[M.~Hjorth-Jensen]{Morten Hjorth-Jensen}
+\institute[UiO]{Department of Physics \& CCSE\\University of Oslo}
+\date{April 29, 2026}
 
-%\beamerdefaultoverlayspecification{<+->}
-
-\newcommand{\shortinlinecomment}[3]{\note{\textbf{#1}: #2}}
-\newcommand{\longinlinecomment}[3]{\shortinlinecomment{#1}{#2}{#3}}
-
-\definecolor{linkcolor}{rgb}{0,0,0.4}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=linkcolor,
-    urlcolor=linkcolor,
-    pdfmenubar=true,
-    pdftoolbar=true,
-    bookmarksdepth=3
-    }
-\setlength{\parskip}{0pt}  % {1em}
-
-\newenvironment{doconceexercise}{}{}
-\newcounter{doconceexercisecounter}
-\newenvironment{doconce:movie}{}{}
-\newcounter{doconce:movie:counter}
-
-\newcommand{\subex}[1]{\noindent\textbf{#1}}  % for subexercises: a), b), etc
-
-\logo{{\tiny \copyright\ 1999-2026, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license}}
-
-%-------------------- end beamer-specific preamble ----------------------
-
-% Add user's preamble
-
-
-
-
-% insert custom LaTeX commands...
-
-\raggedbottom
-\makeindex
-
-%-------------------- end preamble ----------------------
-
+%% ============================================================
 \begin{document}
+%% ============================================================
 
-% matching end for #ifdef PREAMBLE
-
-\newcommand{\exercisesection}[1]{\subsection*{#1}}
-
-
-
-% ------------------- main content ----------------------
-
-
-
-% ----------------- title -------------------------
-
-\title{Quantum Computing and Quantum Machine Learning}
-
-% ----------------- author(s) -------------------------
-
-\author{Morten Hjorth-Jensen\inst{1}}
-\institute{Department of Physics, University of Oslo, Norway\inst{1}}
-% ----------------- end author(s) -------------------------
-
-\date{April 22
-% <optional titlepage figure>
-\ \\ 
-{\tiny \copyright\ 1999-2026, Morten Hjorth-Jensen. Released under CC Attribution-NonCommercial 4.0 license}
-}
-
-\begin{frame}[plain,fragile]
-\titlepage
+\begin{frame}
+  \titlepage
 \end{frame}
 
-\begin{frame}[plain,fragile]
-\frametitle{Plans for the week of April 20-24, 2026}
-
-\begin{block}{Quantum Machine Learning (QML) }
-\begin{enumerate}
- \item Introduction to QML
-
- \item Support Vector Machines (SVM, classical machine learning approach)
-
- \item Quantum Support Vector Machine Learning (QSVM), short intro
-
- \item Video of lecture at \href{{https://youtu.be/C36Kg4eaO7A}}{\nolinkurl{https://youtu.be/C36Kg4eaO7A}}
-
- \item Whiteboard notes at \href{{https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf}}{\nolinkurl{https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2025/NotesApril23.pdf}}  
-\end{enumerate}
-
-\noindent
-\end{block}
-
-\begin{block}{Reading recommendations }
-\begin{enumerate}
-\item For classical Support Vector Machines, see lecture notes by Morten Hjorth-Jensen at \href{{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapter5.html}}{\nolinkurl{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapter5.html}}
-
-\item Claudio Conti, Quantum Machine Learning (Springer), sections 1.5-1.12, see \href{{https://link.springer.com/book/10.1007/978-3-031-44226-1}}{\nolinkurl{https://link.springer.com/book/10.1007/978-3-031-44226-1}}. With an IP-number from the university of Oslo, you can download this book for free. The material on quantum support vector machines will be discussed next week.
-\end{enumerate}
-
-\noindent
-\end{block}
+\begin{frame}{Outline}
+  \tableofcontents[hidesubsections]
 \end{frame}
 
-
-%================================================
+%% ============================================================
 \section{Introduction to Quantum Machine Learning}
-%================================================
+%% ============================================================
+
+\begin{frame}{Week 14 — Plan}
+  \begin{enumerate}\itemsep4pt
+    \item Discussion of the \textbf{QAOA algorithm} with repetition from last week
+    \item Parametrized quantum circuits (PQC) and Variational Quantum Circuits (VQCs)
+    \item \textbf{Quantum Neural Networks (QNNs):} mathematical structure, QFI, TDVP,
+          barren plateaus, quantikz circuit examples
+    \item \textbf{Variational Quantum Eigensolver (VQE):} variational ansatz, UCC,
+          connections to many-body theory
+    \item \textbf{QAOA:} adiabatic motivation, MaxCut, parameter landscape
+    \item \textbf{QSVM:} quantum kernels, fidelity, RKHS
+    \item \textbf{HHL algorithm:} solving linear systems, QPE, Green's functions
+    \item Grand unification: Geometry + Dynamics + Operators
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{What is Quantum Machine Learning?}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      Quantum Machine Learning (QML) integrates quantum computing with
+      machine learning to exploit quantum advantages:
+      \begin{itemize}
+        \item \textbf{Quantum parallelism:} process exponentially many states
+        \item \textbf{Quantum entanglement:} correlated, non-classical feature spaces
+        \item \textbf{Quantum interference:} enhance solutions, suppress errors
+      \end{itemize}
+      \vspace{0.3cm}
+      \begin{alertblock}{Core question}
+        When and how does quantum hardware give a genuine advantage
+        over the best classical algorithm?
+      \end{alertblock}
+    \column{0.42\textwidth}
+      \begin{block}{NISQ challenges}
+        \begin{itemize}
+          \item Noisy Intermediate-Scale Quantum devices
+          \item Decoherence limits circuit depth
+          \item Efficient classical data encoding is non-trivial
+          \item Scalability to large datasets is open
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Quantum Neural Networks}
+%% ============================================================
+
+\begin{frame}{QNN as a Variational Quantum State}
+  The most compact mathematical description of a QNN:
+  \[
+    \ket{\psi(x,\theta)} = U(\theta)\,U(x)\,\ket{0}^{\otimes n}
+  \]
+  \[
+    f(x,\theta) = \bra{\psi(x,\theta)}\,O\,\ket{\psi(x,\theta)}
+  \]
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Three components}
+        \begin{itemize}
+          \item $U(x)$: \textbf{feature map} — encodes classical data
+          \item $U(\theta)$: \textbf{variational ansatz} — trainable unitary
+          \item $O$: \textbf{observable} — defines the scalar output
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{alertblock}{Key point}
+        Training a QNN means finding $\theta^\star$ that minimises a
+        classical loss $\mathcal{L}(\theta)$ computed from repeated
+        quantum measurements.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ── Circuit: generic 2-qubit QNN ────────────────────────────────
+\begin{frame}{Generic 2-Qubit QNN Circuit}
+  \[
+    \ket{\psi(x,\theta)} = W(\theta)\,U(x)\,\ket{00}
+  \]
+
+  \vspace{0.3cm}
+  \begin{center}
+  \begin{quantikz}[row sep=0.5cm, column sep=0.5cm]
+    \lstick{$\ket{0}$}
+      & \gate{R_x(x_1)} & \gate{R_y(\theta_1)} & \ctrl{1}
+      & \gate{R_z(\theta_3)} & \meter{} \\
+    \lstick{$\ket{0}$}
+      & \gate{R_x(x_2)} & \gate{R_y(\theta_2)} & \targ{}
+      & \gate{R_z(\theta_4)} & \meter{}
+  \end{quantikz}
+  \end{center}
+
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item \textbf{Layer 1} ($U(x)$): $R_x(x_i)$ encodes data as rotation angles
+    \item \textbf{Layer 2} ($W_1(\theta)$): $R_y(\theta_i)$ variational rotations
+          $\to$ CNOT entangler
+    \item \textbf{Layer 3} ($W_2(\theta)$): $R_z(\theta_i)$ refines the state
+    \item Output: $f = \langle Z_0 \rangle$ (expectation of $Z\otimes I$)
+  \end{itemize}
+\end{frame}
 
-\begin{frame}[plain,fragile]
-\frametitle{What is Machine Learning?}
-
-Machine Learning (ML) is the study of algorithms that improve through data experience.
-
-\begin{block}{Types of Machine Learning: }
-\begin{enumerate}
-\item \textbf{Supervised Learning:} Labeled data for classification or regression.
-
-\item \textbf{Unsupervised Learning:} No labels; discover hidden patterns.
-
-\item \textbf{Reinforcement Learning:} Learning through interaction with the environment.
-\end{enumerate}
-
-\noindent
-\end{block}
-
-\begin{block}{}
-\textbf{ML Workflow:}
-\[
-\text{Data} \rightarrow \text{Model Training} \rightarrow \text{Prediction}
-\]
-\end{block}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{What is Quantum Machine Learning?}
-
-Quantum Machine Learning (QML) integrates quantum computing with machine learning algorithms to exploit quantum advantages.
-
-\begin{block}{Motivation: }
-\begin{enumerate}
-\item High-dimensional Hilbert spaces for better feature representation.
-
-\item Quantum parallelism for faster computation.
-
-\item Quantum entanglement for richer data encoding.
-\end{enumerate}
-
-\noindent
-\end{block}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Quantum Speedups in ML}
-
-\textbf{Why Quantum?}
-\begin{block}{}
-\begin{enumerate}
-\item \textbf{Quantum Parallelism:} Process multiple states simultaneously.
-
-\item \textbf{Quantum Entanglement:} Correlated states for richer information.
-
-\item \textbf{Quantum Interference:} Constructive and destructive interference to enhance solutions.
-\end{enumerate}
-
-\noindent
-\end{block}
-
-\begin{block}{}
-Example - Quantum Fourier transforms:
-\begin{align*}
-\mathrm{Discrete Fourier Transform} & \sim O(N^2)\\
-\mathrm{Fast Fourier Transform} & \sim O(N^2)\\
-\mathrm{Qauntum Fourier Transform} & \sim O(N^2)\\
-\end{align*}
-\end{block}
-
-Advantage: Speedups in high-dimensional optimization and linear algebra problems.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Challenges in Quantum Machine Learning}
-
-\begin{block}{Quantum Hardware Limitations: }
-\begin{enumerate}
-\item Noisy Intermediate-Scale Quantum (NISQ) devices.
-
-\item Decoherence and limited qubit coherence times.
-\end{enumerate}
-
-\noindent
-\end{block}
-
-\begin{block}{Data Encoding: }
-\begin{enumerate}
-\item Efficient embedding of classical data into quantum states.
-\end{enumerate}
-
-\noindent
-\end{block}
-
-\begin{block}{Scalability: }
-\begin{enumerate}
-\item Difficult to scale circuits to large datasets.
-\end{enumerate}
-
-\noindent
-\end{block}
-\end{frame}
-%------------------------------------------------
-
-%================================================
-\section{Motivation}
-%================================================
-
-\begin{frame}{Why Quantum Machine Learning?}
-\begin{itemize}
-\item Classical ML struggles with high-dimensional feature spaces
-\item Kernel methods implicitly lift data into large Hilbert spaces
-\item Quantum systems naturally live in exponentially large Hilbert spaces
-\end{itemize}
-
-\medskip
-
-\begin{block}{Key Idea}
-Use a quantum computer to efficiently compute inner products in large Hilbert spaces.
-\end{block}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Physics Viewpoint}
-\begin{itemize}
-\item Data $\rightarrow$ quantum state $\ket{\phi(x)}$
-\item Kernel:
-\[
-K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2
-\]
-\item This is a transition probability between quantum states
-\end{itemize}
-
-\medskip
-
-Thus QSVMs are naturally formulated in quantum mechanics.
-\end{frame}
-
-
-%================================================
-\section{Overview of Quantum Machine Learning Methods}
-%================================================
-
-\begin{frame}[plain,fragile]
-\frametitle{Classical Support Vector Machines (SVMs)}
-
-Support Vector Machines (SVM) are supervised learning algorithms used
-for classification tasks, and regression tasks as well. The main goal
-of SVMs is to find the optimal separating hyperplane (in
-high-dimensional space) that provides a maximum margin between
-classes.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Quantum Support Vector Machines (QSVMs)}
-
-\begin{block}{Quantum Kernel Estimation: }
-\begin{enumerate}
-\item Maps classical data to a quantum Hilbert space.
-
-\item Quantum kernel measures similarity in high-dimensional space.
-\end{enumerate}
-
-\noindent
-\end{block}
-
-\begin{block}{Quantum-enhanced  kernel: }
-\[
-K(\bm{x}, \bm{x}') = |\langle \psi(\bm{x}) \vert  \psi(\bm{x}')\rangle|^2
-\]
-\end{block}
-
-Here, $\vert \phi(\bm{x})\rangle$ is the quantum state encoding of
-the classical data $\bm{x}$.
-
-Advantage: Potentially exponential speedup over classical SVMs.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Quantum Neural Networks (QNNs)}
-
-Quantum Neural Networks replace classical neurons with parameterized quantum circuits.
-\begin{block}{Key Concepts: }
-\begin{enumerate}
-\item Quantum Gates as Activation Functions.
-
-\item Variational Quantum Circuits (VQCs) for optimization.
-\end{enumerate}
-
-\noindent
-\end{block}
-\begin{block}{}
-\textbf{Parameterized Quantum Circuit:}
-\[
-U(\theta) = \prod_i R_y(\theta_i) \cdot CNOT \cdot R_x(\theta_i)
-\]
-\end{block}
-Advantage:Quantum gradients enable exploration of non-convex landscapes.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Quantum Boltzmann Machines (QBMs)}
-
-Quantum Boltzmann Machines leverage quantum mechanics to sample from a probability distribution.
-
-\begin{block}{}
-\begin{enumerate}
-\item Quantum tunneling aids in escaping local minima.
-
-\item Quantum annealing for optimization problems.
-\end{enumerate}
-
-\noindent
-\end{block}
-\begin{block}{Quantum Hamiltonian: }
-\[
-H = -\sum_i b_i \sigma_i^z - \sum_{ij} w_{ij} \sigma_i^z \sigma_j^z
-\]
-\end{block}
-Advantage: Efficient sampling in complex probability distributions.
-\end{frame}
-%------------------------------------------------
-
-
-%================================================
-\section{Classical Support Vector Machines: Theory}
-%================================================
-
-\begin{frame}[plain,fragile]
-\frametitle{Classical Support Vector Machines, overarching aims (best visualized with jupyter-notebook)}
-
-A Support Vector Machine (SVM) is a very powerful and versatile
-Machine Learning method, capable of performing linear or nonlinear
-classification, regression, and even outlier detection. It is one of
-the most popular models in Machine Learning, and anyone interested in
-Machine Learning should have it in their toolbox. SVMs are
-particularly well suited for classification of complex but small-sized or
-medium-sized datasets.  
-
-The case with two well-separated classes only can be understood in an
-intuitive way in terms of lines in a two-dimensional space separating
-the two classes (see figure below).
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{First mathematical formulation of SVMs (formal details below)}
-
-For a dataset \((\mathbf{x}_i, y_i)\) where \(\mathbf{x}_i \in
-\mathbb{R}^n\) and \(y_i \in \{-1, 1\}\), the decision boundary is
-defined as:
-\[
-f(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b = 0.
-\]
-
-The goal is to optimize
-\[
-\min_{\mathbf{w}, b} \frac{1}{2} ||\mathbf{w}||^2,
-\]
-subject to
-\[
-y_i (\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad \forall i
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Basic mathematics}
-
-The basic mathematics behind the SVM is however less familiar to most of us. 
-It relies on the definition of hyperplanes and the
-definition of a \textbf{margin} which separates classes (in case of
-classification problems) of variables. It is also used for regression
-problems.
-
-With SVMs we distinguish between hard margin and soft margins. The
-latter introduces a so-called softening parameter to be discussed
-below.  We distinguish also between linear and non-linear
-approaches. The latter are the most frequent ones since it is rather
-unlikely that we can separate classes easily by say straight lines.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Hyperplanes and all that}
-
-The theory behind support vector machines (SVM hereafter) is based on
-the mathematical description of so-called hyperplanes. Let us start
-with a two-dimensional case. This will also allow us to introduce our
-first SVM examples. These will be tailored to the case of two specific
-classes, as displayed in the figure here based on the usage of the petal data.
-
-We assume here that our data set can be well separated into two
-domains, where a straight line does the job in the separating the two
-classes. Here the two classes are represented by either squares or
-circles.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\begin{lstlisting}
-from sklearn import datasets
-from sklearn.svm import SVC, LinearSVC
-from sklearn.linear_model import SGDClassifier
-from sklearn.preprocessing import StandardScaler
-import matplotlib
-import matplotlib.pyplot as plt
-plt.rcParams['axes.labelsize'] = 14
-plt.rcParams['xtick.labelsize'] = 12
-plt.rcParams['ytick.labelsize'] = 12
-
-
-iris = datasets.load_iris()
-X = iris["data"][:, (2, 3)]  # petal length, petal width
-y = iris["target"]
-
-setosa_or_versicolor = (y == 0) | (y == 1)
-X = X[setosa_or_versicolor]
-y = y[setosa_or_versicolor]
-
-
-
-C = 5
-alpha = 1 / (C * len(X))
-
-lin_clf = LinearSVC(loss="hinge", C=C, random_state=42)
-svm_clf = SVC(kernel="linear", C=C)
-sgd_clf = SGDClassifier(loss="hinge", learning_rate="constant", eta0=0.001, alpha=alpha,
-                        max_iter=100000, random_state=42)
-
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-lin_clf.fit(X_scaled, y)
-svm_clf.fit(X_scaled, y)
-sgd_clf.fit(X_scaled, y)
-
-print("LinearSVC:                   ", lin_clf.intercept_, lin_clf.coef_)
-print("SVC:                         ", svm_clf.intercept_, svm_clf.coef_)
-print("SGDClassifier(alpha={:.5f}):".format(sgd_clf.alpha), sgd_clf.intercept_, sgd_clf.coef_)
-
-# Compute the slope and bias of each decision boundary
-w1 = -lin_clf.coef_[0, 0]/lin_clf.coef_[0, 1]
-b1 = -lin_clf.intercept_[0]/lin_clf.coef_[0, 1]
-w2 = -svm_clf.coef_[0, 0]/svm_clf.coef_[0, 1]
-b2 = -svm_clf.intercept_[0]/svm_clf.coef_[0, 1]
-w3 = -sgd_clf.coef_[0, 0]/sgd_clf.coef_[0, 1]
-b3 = -sgd_clf.intercept_[0]/sgd_clf.coef_[0, 1]
-
-# Transform the decision boundary lines back to the original scale
-line1 = scaler.inverse_transform([[-10, -10 * w1 + b1], [10, 10 * w1 + b1]])
-line2 = scaler.inverse_transform([[-10, -10 * w2 + b2], [10, 10 * w2 + b2]])
-line3 = scaler.inverse_transform([[-10, -10 * w3 + b3], [10, 10 * w3 + b3]])
-
-# Plot all three decision boundaries
-plt.figure(figsize=(11, 4))
-plt.plot(line1[:, 0], line1[:, 1], "k:", label="LinearSVC")
-plt.plot(line2[:, 0], line2[:, 1], "b--", linewidth=2, label="SVC")
-plt.plot(line3[:, 0], line3[:, 1], "r-", label="SGDClassifier")
-plt.plot(X[:, 0][y==1], X[:, 1][y==1], "bs") # label="Iris-Versicolor"
-plt.plot(X[:, 0][y==0], X[:, 1][y==0], "yo") # label="Iris-Setosa"
-plt.xlabel("Petal length", fontsize=14)
-plt.ylabel("Petal width", fontsize=14)
-plt.legend(loc="upper center", fontsize=14)
-plt.axis([0, 5.5, 0, 2])
-
-plt.show()
-
-
-
-
-\end{lstlisting}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{What is a hyperplane?}
-
-The aim of the SVM algorithm is to find a hyperplane in a
-$p$-dimensional space, where $p$ is the number of features that
-distinctly classifies the data points.
-
-In a $p$-dimensional space, a hyperplane is what we call an affine
-subspace of dimension of $p-1$.  As an example, in two dimension, a
-hyperplane is simply as straight line while in three dimensions it is
-a two-dimensional subspace, or stated simply, a plane.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Two-dimensional case}
-
-In two dimensions, with the variables $x_1$ and $x_2$, the hyperplane is defined as
-\[
-b+w_1x_1+w_2x_2=0,
-\]
-
-where $b$ is the intercept and $w_1$ and $w_2$ define the elements of a vector orthogonal to the line 
-$b+w_1x_1+w_2x_2=0$. 
-In two dimensions we define the vectors $\bm{x} =[x1,x2]$ and $\bm{w}=[w1,w2]$. 
-We can then rewrite the above equation as 
-
-\[
-\bm{x}^T\bm{w}+b=0.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{A $p$-dimensional space of features}
-
-We limit ourselves to two classes of outputs $y_i$ and assign these classes the values $y_i = \pm 1$. 
-In a $p$-dimensional space of say $p$ features we have a hyperplane defines as 
-\[
-b+wx_1+w_2x_2+\dots +w_px_p=0.
-\]
-If we define a 
-matrix $\bm{X}=\left[\bm{x}_1,\bm{x}_2,\dots, \bm{x}_p\right]$
-of dimension $n\times p$, where $n$ represents the observations for each feature and each vector $x_i$ is a column vector of the matrix $\bm{X}$, 
-\[
-\bm{x}_i = \begin{bmatrix} x_{i1} \\ x_{i2} \\ \dots \\ \dots \\ x_{ip} \end{bmatrix}.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{More details}
-
-We need to remember that we took $dx$ and $dy$ to be arbitrary and thus we must have
-\[
-\frac{\partial f}{\partial x}+\lambda\frac{\partial \phi}{\partial x} =0,
-\]
-and
-\[
-\frac{\partial f}{\partial y}+\lambda\frac{\partial \phi}{\partial y} =0.
-\]
-When all these equations are satisfied, $df=0$.  We have four unknowns, $x,y,z$ and
-$\lambda$. Actually we want only $x,y,z$, $\lambda$ needs not to be determined, 
-it is therefore often called
-Lagrange's undetermined multiplier.
-If we have a set of constraints $\phi_k$ we have the equations
-\[
-\frac{\partial f}{\partial x_i}+\sum_k\lambda_k\frac{\partial \phi_k}{\partial x_i} =0.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{The two-dimensional case}
-
-Let us try to develop our intuition about SVMs by limiting ourselves to a two-dimensional
-plane.  To separate the two classes of data points, there are many
-possible lines (hyperplanes if you prefer a more strict naming)  
-that could be chosen. Our objective is to find a
-plane that has the maximum margin, i.e the maximum distance between
-data points of both classes. Maximizing the margin distance provides
-some reinforcement so that future data points can be classified with
-more confidence.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Linear classifier}
-
-What a linear classifier attempts to accomplish is to split the
-feature space into two half spaces by placing a hyperplane between the
-data points.  This hyperplane will be our decision boundary.  All
-points on one side of the plane will belong to class one and all points
-on the other side of the plane will belong to the second class two.
-
-Unfortunately there are many ways in which we can place a hyperplane
-to divide the data.  Below is an example of two candidate hyperplanes
-for our data sample.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Getting into the details}
-
-Let us define the function
-\[
-f(x) = \bm{w}^T\bm{x}+b = 0,
-\]
-as the function that determines the line $L$ that separates two classes (our two features), see the figure here. 
-
-Any point defined by $\bm{x}_i$ and $\bm{x}_2$ on the line $L$ will satisfy $\bm{w}^T(\bm{x}_1-\bm{x}_2)=0$. 
-
-The signed distance $\delta$ from any point defined by a vector $\bm{x}$ and a point $\bm{x}_0$ on the line $L$ is then
-\[
-\delta = \frac{1}{\vert\vert \bm{w}\vert\vert}(\bm{w}^T\bm{x}+b).
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{First attempt at a minimization approach}
-
-How do we find the parameter $b$ and the vector $\bm{w}$? What we could
-do is to define a cost function which now contains the set of all
-misclassified points $M$ and attempt to minimize this function
-
-\[
-C(\bm{w},b) = -\sum_{i\in M} y_i(\bm{w}^T\bm{x}_i+b).
-\]
-
-We could now for example define all values $y_i =1$ as misclassified
-in case we have $\bm{w}^T\bm{x}_i+b < 0$ and the opposite if we have
-$y_i=-1$. Taking the derivatives gives us
-
-\[
-\frac{\partial C}{\partial b} = -\sum_{i\in M} y_i,
-\]
-and 
-\[
-\frac{\partial C}{\partial \bm{w}} = -\sum_{i\in M} y_ix_i.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Solving the equations}
-
-We can now use the Newton-Raphson method or different variants of the gradient descent family (from plain gradient descent to various stochastic gradient descent approaches) to solve the equations
-\[
-b \leftarrow b +\eta \frac{\partial C}{\partial b},
-\]
-and
-\[
-\bm{w} \leftarrow \bm{w} +\eta \frac{\partial C}{\partial \bm{w}},
-\]
-where $\eta$ is our by now well-known learning rate.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Problems with the Simpler Approach}
-
-The equations we discussed above can be coded rather easily (the
-framework is similar to what has been  developed for say logistic
-regression).
-
-There are however problems with this approach, although it looks
-pretty straightforward to implement. When running such a code, we see that we can easily end up with many diffeent lines which separate the two classes.
-
-For small
-gaps between the entries, we may also end up needing many iterations
-before the solutions converge and if the data cannot be separated
-properly into two distinct classes, we may not experience a converge
-at all.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{A better approach}
-
-A better approach is rather to try to define a large margin between
-the two classes (if they are well separated from the beginning).
-
-Thus, we wish to find a margin $M$ with $\bm{w}$ normalized to
-$\vert\vert \bm{w}\vert\vert =1$ subject to the condition
-
-\[
-y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, p. 
-\]
-All points are thus at a signed distance from the decision boundary defined by the line $L$. The parameters $b$ and $w_1$ and $w_2$ define this line.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Largest value $M$}
-
-We seek the largest value $M$ defined by
-\[
-\frac{1}{\vert \vert \bm{w}\vert\vert}y_i(\bm{w}^T\bm{x}_i+b) \geq M \hspace{0.1cm}\forall i=1,2,\dots, n, 
-\]
-or just 
-\[
-y_i(\bm{w}^T\bm{x}_i+b) \geq M\vert \vert \bm{w}\vert\vert \hspace{0.1cm}\forall i. 
-\]
-If we scale the equation so that $\vert \vert \bm{w}\vert\vert = 1/M$, we have to find the minimum of 
-$\bm{w}^T\bm{w}=\vert \vert \bm{w}\vert\vert$ (the norm) subject to the condition
-\[
-y_i(\bm{w}^T\bm{x}_i+b) \geq 1 \hspace{0.1cm}\forall i.
-\]
-
-We have thus defined our margin as the invers of the norm of
-$\bm{w}$. We want to minimize the norm in order to have a as large as
-possible margin $M$. Before we proceed, we need to remind ourselves
-about Lagrangian multipliers.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{A quick Reminder on Lagrangian Multipliers}
-
-Consider a function of three independent variables $f(x,y,z)$ . For the function $f$ to be an
-extreme we have
-\[
-df=0.
-\]
-A necessary and sufficient condition is
-\[
-\frac{\partial f}{\partial x} =\frac{\partial f}{\partial y}=\frac{\partial f}{\partial z}=0,
-\]
-due to
-\[
-df = \frac{\partial f}{\partial x}dx+\frac{\partial f}{\partial y}dy+\frac{\partial f}{\partial z}dz.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Not all variables are indepenent of each other}
-
-In many problems the variables $x,y,z$ are often subject to constraints (such as those above for the margin)
-so that they are no longer all independent. It is possible at least in principle to use each 
-constraint to eliminate one variable
-and to proceed with a new and smaller set of independent varables.
-
-The use of so-called Lagrangian  multipliers is an alternative technique  when the elimination
-of variables is incovenient or undesirable.  Assume that we have an equation of constraint on 
-the variables $x,y,z$
-\[
-\phi(x,y,z) = 0,
-\]
- resulting in
-\[
-d\phi = \frac{\partial \phi}{\partial x}dx+\frac{\partial \phi}{\partial y}dy+\frac{\partial \phi}{\partial z}dz =0.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Only two independent variables}
-
-Now we cannot set anymore
-\[
-\frac{\partial f}{\partial x} =\frac{\partial f}{\partial y}=\frac{\partial f}{\partial z}=0,
-\]
-if $df=0$ is wanted
-because there are now only two independent variables!  Assume $x$ and $y$ are the independent 
-variables.
-Then $dz$ is no longer arbitrary.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Adding the Multiplier}
-
-However, we can add to
-\[
-df = \frac{\partial f}{\partial x}dx+\frac{\partial f}{\partial y}dy+\frac{\partial f}{\partial z}dz,
-\]
-a multiplum of $d\phi$, viz. $\lambda d\phi$, resulting  in
-\[
-df+\lambda d\phi = (\frac{\partial f}{\partial z}+\lambda
-\frac{\partial \phi}{\partial x})dx+(\frac{\partial f}{\partial y}+\lambda\frac{\partial \phi}{\partial y})dy+
-(\frac{\partial f}{\partial z}+\lambda\frac{\partial \phi}{\partial z})dz =0.
-\]
-Our multiplier is chosen so that
-\[
-\frac{\partial f}{\partial z}+\lambda\frac{\partial \phi}{\partial z} =0.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Setting up the problem}
-
-In order to solve the above problem, we define the following Lagrangian function to be minimized 
-\[
-{\cal L}(\lambda,b,\bm{w})=\frac{1}{2}\bm{w}^T\bm{w}-\sum_{i=1}^n\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b)-1\right],
-\]
-where $\lambda_i$ is a so-called Lagrange multiplier subject to the condition $\lambda_i \geq 0$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Setting up derivaties}
-
-Taking the derivatives  with respect to $b$ and $\bm{w}$ we obtain 
-\[
-\frac{\partial {\cal L}}{\partial b} = -\sum_{i} \lambda_iy_i=0,
-\]
-and 
-\[
-\frac{\partial {\cal L}}{\partial \bm{w}} = 0 = \bm{w}-\sum_{i} \lambda_iy_i\bm{x}_i.
-\]
-Inserting these constraints into the equation for ${\cal L}$ we obtain
-\[
-{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
-\]
-subject to the constraints $\lambda_i\geq 0$ and $\sum_i\lambda_iy_i=0$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Karush-Kuhn-Tucker condition}
-
-We must in addition satisfy the \href{{https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions}}{Karush-Kuhn-Tucker} (KKT) condition
-\[
-\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b) -1\right] \hspace{0.1cm}\forall i.
-\]
-\begin{enumerate}
-\item If $\lambda_i > 0$, then $y_i(\bm{w}^T\bm{x}_i+b)=1$ and we say that $x_i$ is on the boundary.
-
-\item If $y_i(\bm{w}^T\bm{x}_i+b)> 1$, we say $x_i$ is not on the boundary and we set $\lambda_i=0$. 
-\end{enumerate}
-
-\noindent
-When $\lambda_i > 0$, the vectors $\bm{x}_i$ are called support vectors. They are the vectors closest to the line (or hyperplane) and define the margin $M$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{The problem to solve}
-
-Using our definition of the kernel We can rewrite again the Lagrangian
-\[
-{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{z}_j,
-\]
-subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ in terms of a convex optimization problem
-\[
-\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1K(\bm{x}_1,\bm{x}_1) & y_1y_2K(\bm{x}_1,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_1,\bm{x}_n) \\
-y_2y_1K(\bm{x}_2,\bm{x}_1) & y_2y_2(\bm{x}_2,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_2,\bm{x}_n) \\
-\dots & \dots & \dots & \dots & \dots \\
-\dots & \dots & \dots & \dots & \dots \\
-y_ny_1K(\bm{x}_n,\bm{x}_1) & y_ny_2K(\bm{x}_n\bm{x}_2) & \dots & \dots & y_ny_nK(\bm{x}_n,\bm{x}_n) \\
-\end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
-\]
-subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
-$\bm{y}=[y_1,y_2,\dots,y_n]$. 
-If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{The last steps}
-
-Solving the above problem, yields the values of $\lambda_i$.
-To find the coefficients of your hyperplane we need simply to compute 
-\[
-\bm{w}=\sum_{i} \lambda_iy_i\bm{x}_i.
-\]
-With our vector $\bm{w}$ we can in turn find the value of the intercept $b$ (here in two dimensions) via 
-\[
-y_i(\bm{w}^T\bm{x}_i+b)=1,
-\]
-resulting in
-\[
-b = \frac{1}{y_i}-\bm{w}^T\bm{x}_i,
-\]
-or if we write it out in terms of the support vectors only, with $N_s$ being their number,  we have
-\[
-b = \frac{1}{N_s}\sum_{j\in N_s}\left(y_j-\sum_{i=1}^n\lambda_iy_i\bm{x}_i^T\bm{x}_j\right).
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Classifier equations}
-
-With our hyperplane coefficients we can use our classifier to assign any observation by simply using 
-\[
-y_i = \mathrm{sign}(\bm{w}^T\bm{x}_i+b).
-\]
-Below we discuss how to find the optimal values of $\lambda_i$. Before we proceed however, we discuss now the so-called soft classifier.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{A soft classifier}
-
-Till now, the margin is strictly defined by the support vectors. This defines what is called a hard classifier, that is the margins are well defined.
-
-Suppose now that classes overlap in feature space, as shown in the
-figure here. One way to deal with this problem before we define the
-so-called \textbf{kernel approach}, is to allow a kind of slack in the sense
-that we allow some points to be on the wrong side of the margin.
-
-We introduce thus the so-called \textbf{slack} variables $\bm{\xi} =[\xi_1,x_2,\dots,x_n]$ and 
-modify our previous equation
-\[
-y_i(\bm{w}^T\bm{x}_i+b)=1,
-\]
-to 
-\[
-y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i,
-\]
-with the requirement $\xi_i\geq 0$. The total violation is now $\sum_i\xi$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Misclassification}
-
-The value $\xi_i$ in the constraint the last constraint corresponds to
-the amount by which the prediction $y_i(\bm{w}^T\bm{x}_i+b)=1$ is on
-the wrong side of its margin. Hence by bounding the sum $\sum_i
-\xi_i$, we bound the total amount by which predictions fall on the
-wrong side of their margins.
-
-Misclassifications occur when $\xi_i > 1$. Thus bounding the total sum by some value $C$ bounds in turn the total number of
-misclassifications.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Soft optmization problem}
-
-This has in turn the consequences that we change our optmization problem to finding the minimum of 
-\[
-{\cal L}=\frac{1}{2}\bm{w}^T\bm{w}-\sum_{i=1}^n\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b)-(1-\xi_)\right]+C\sum_{i=1}^n\xi_i-\sum_{i=1}^n\gamma_i\xi_i,
-\]
-subject to 
-\[
-y_i(\bm{w}^T\bm{x}_i+b)=1-\xi_i \hspace{0.1cm}\forall i,
-\]
-with the requirement $\xi_i\geq 0$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{New constraints}
-
-Inserting these constraints into the equation for ${\cal L}$ we obtain the same equation as before
-\[
-{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{x}_j,
-\]
-but now subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ and $0\leq\lambda_i \leq C$. 
-We must in addition satisfy the Karush-Kuhn-Tucker condition which now reads
-\[
-\lambda_i\left[y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_)\right]=0 \hspace{0.1cm}\forall i,
-\]
-\[
-\gamma_i\xi_i = 0,
-\]
-and 
-\[
-y_i(\bm{w}^T\bm{x}_i+b) -(1-\xi_) \geq 0 \hspace{0.1cm}\forall i.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}{Binary Classification}
-Given labeled data:
-\[
-(x_i, y_i), \quad y_i \in \{-1,1\}
-\]
-
-Find hyperplane:
-\[
-w \cdot x + b = 0
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}{Maximum Margin Principle}
-Solve:
-\[
-\min_{w,b} \frac{1}{2}\|w\|^2
-\]
-subject to:
-\[
-y_i(w\cdot x_i + b) \ge 1
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}{Dual Formulation}
-\[
-\max_{\alpha}
-\sum_i \alpha_i
--
-\frac{1}{2}
-\sum_{i,j} \alpha_i \alpha_j y_i y_j K(x_i,x_j)
-\]
-
-with:
-\[
-K(x_i,x_j) = x_i \cdot x_j
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}{Kernel Trick}
-Replace inner product:
-\[
-x_i \cdot x_j \rightarrow K(x_i,x_j)
-\]
-
-\medskip
-
-Implicit mapping:
-\[
-x \rightarrow \phi(x)
-\]
-
-\[
-K(x,x') = \phi(x) \cdot \phi(x')
-\]
-\end{frame}
-%------------------------------------------------
-
-
-%================================================
-\section{Kernels and Non-linearity}
-%================================================
-
-\begin{frame}[plain,fragile]
-\frametitle{Kernels and more}
-
-In classical SVMs, kernels help with non-linear data
-separations. Quantum computers can speed up the computation of complex
-kernel evaluations by efficiently simulating an inner product in an
-exponentially large Hilbert space.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Kernels and non-linearity}
-
-The cases we have studied till now, were all characterized by two classes
-with a close to linear separability. The classifiers we have described
-so far find linear boundaries in our input feature space. It is
-possible to make our procedure more flexible by exploring the feature
-space using other basis expansions such as higher-order polynomials,
-wavelets, splines etc.
-
-If our feature space is not easy to separate, as shown in the figure
-here, we can achieve a better separation by introducing more complex
-basis functions. The ideal would be, as shown in the next figure, to, via a specific transformation to 
-obtain a separation between the classes which is almost linear. 
-
-The change of basis, from $x\rightarrow z=\phi(x)$ leads to the same type of equations to be solved, except that
-we need to introduce for example a polynomial transformation to a two-dimensional training set.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\begin{lstlisting}
-import numpy as np
-import os
-
-np.random.seed(42)
-
-# To plot pretty figures
-import matplotlib
-import matplotlib.pyplot as plt
-plt.rcParams['axes.labelsize'] = 14
-plt.rcParams['xtick.labelsize'] = 12
-plt.rcParams['ytick.labelsize'] = 12
-
-
-from sklearn.svm import SVC
-from sklearn import datasets
-
-
-
-X1D = np.linspace(-4, 4, 9).reshape(-1, 1)
-X2D = np.c_[X1D, X1D**2]
-y = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0])
-
-plt.figure(figsize=(11, 4))
-
-plt.subplot(121)
-plt.grid(True, which='both')
-plt.axhline(y=0, color='k')
-plt.plot(X1D[:, 0][y==0], np.zeros(4), "bs")
-plt.plot(X1D[:, 0][y==1], np.zeros(5), "g^")
-plt.gca().get_yaxis().set_ticks([])
-plt.xlabel(r"$x_1$", fontsize=20)
-plt.axis([-4.5, 4.5, -0.2, 0.2])
-
-plt.subplot(122)
-plt.grid(True, which='both')
-plt.axhline(y=0, color='k')
-plt.axvline(x=0, color='k')
-plt.plot(X2D[:, 0][y==0], X2D[:, 1][y==0], "bs")
-plt.plot(X2D[:, 0][y==1], X2D[:, 1][y==1], "g^")
-plt.xlabel(r"$x_1$", fontsize=20)
-plt.ylabel(r"$x_2$", fontsize=20, rotation=0)
-plt.gca().get_yaxis().set_ticks([0, 4, 8, 12, 16])
-plt.plot([-4.5, 4.5], [6.5, 6.5], "r--", linewidth=3)
-plt.axis([-4.5, 4.5, -1, 17])
-plt.subplots_adjust(right=1)
-plt.show()
-
-
-\end{lstlisting}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{The equations}
-
-Suppose we define a polynomial transformation of degree two only (we
-continue to live in a plane with $x_i$ and $y_i$ as variables)
-\[
-z = \phi(x_i) =\left(x_i^2, y_i^2, \sqrt{2}x_iy_i\right).
-\]
-
-With our new basis, the equations we solved earlier are basically the same, that is we have now (without the slack option for simplicity)
-\[
-{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{z}_i^T\bm{z}_j,
-\]
-subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$, and for the support vectors
-\[
-y_i(\bm{w}^T\bm{z}_i+b)= 1 \hspace{0.1cm}\forall i,
-\]
-from which we also find $b$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Defining the kernel}
-
-To compute $\bm{z}_i^T\bm{z}_j$ we define the kernel $K(\bm{x}_i,\bm{x}_j)$ as
-\[
-K(\bm{x}_i,\bm{x}_j)=\bm{z}_i^T\bm{z}_j= \phi(\bm{x}_i)^T\phi(\bm{x}_j).
-\]
-For the above example, the kernel reads
-\[
-K(\bm{x}_i,\bm{x}_j)=[x_i^2, y_i^2, \sqrt{2}x_iy_i]^T\begin{bmatrix} x_j^2 \\ y_j^2 \\ \sqrt{2}x_jy_j \end{bmatrix}=x_i^2x_j^2+2x_ix_jy_iy_j+y_i^2y_j^2.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Kernel trick}
-
-We note that this is nothing but the dot product of the two original
-vectors $(\bm{x}_i^T\bm{x}_j)^2$. Instead of thus computing the
-product in the Lagrangian of $\bm{z}_i^T\bm{z}_j$ we simply compute
-the dot product $(\bm{x}_i^T\bm{x}_j)^2$.
-
-This leads to the so-called
-kernel trick and the result leads to the same as if we went through
-the trouble of performing the transformation
-$\phi(\bm{x}_i)^T\phi(\bm{x}_j)$ during the SVM calculations.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{The problem to solve}
-
-Using our definition of the kernel We can rewrite again the Lagrangian
-\[
-{\cal L}=\sum_i\lambda_i-\frac{1}{2}\sum_{ij}^n\lambda_i\lambda_jy_iy_j\bm{x}_i^T\bm{z}_j,
-\]
-subject to the constraints $\lambda_i\geq 0$, $\sum_i\lambda_iy_i=0$ in terms of a convex optimization problem
-\[
-\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1K(\bm{x}_1,\bm{x}_1) & y_1y_2K(\bm{x}_1,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_1,\bm{x}_n) \\
-y_2y_1K(\bm{x}_2,\bm{x}_1) & y_2y_2(\bm{x}_2,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_2,\bm{x}_n) \\
-\dots & \dots & \dots & \dots & \dots \\
-\dots & \dots & \dots & \dots & \dots \\
-y_ny_1K(\bm{x}_n,\bm{x}_1) & y_ny_2K(\bm{x}_n\bm{x}_2) & \dots & \dots & y_ny_nK(\bm{x}_n,\bm{x}_n) \\
-\end{bmatrix}\bm{\lambda}-\mathbb{1}\bm{\lambda}, 
-\]
-subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
-$\bm{y}=[y_1,y_2,\dots,y_n]$. 
-If we add the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Convex optimization}
-
-We can rewrite this (see the solutions below) in terms of a convex optimization problem of the type
-\begin{align*}
-    &\mathrm{min}_{\lambda}\hspace{0.2cm} \frac{1}{2}\bm{\lambda}^T\bm{P}\bm{\lambda}+\bm{q}^T\bm{\lambda},\\ \nonumber
-    &\mathrm{subject\hspace{0.1cm}to} \hspace{0.2cm} \bm{G}\bm{\lambda} \preceq \bm{h} \hspace{0.2cm} \wedge \bm{A}\bm{\lambda}=f.
-\end{align*}
-Below we discuss how to solve these equations. Here we note that the matrix $\bm{P}$ has matrix elements $p_{ij}=y_iy_jK(\bm{x}_i,\bm{x}_j)$.
-Given a kernel $K$ and the targets $y_i$ this matrix is easy to set up. The constraint $\bm{y}^T\bm{\lambda}=0$ leads to $f=0$ and $\bm{A}=\bm{y}$. How to set up the matrix $\bm{G}$ is discussed later. Here note that the inequalities $0\leq \lambda_i \leq C$ can be split up into
-$0\leq \lambda_i$ and $\lambda_i \leq C$. These two inequalities define then the matrix $\bm{G}$ and the vector $\bm{h}$.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Different kernels}
-
-There are several popular kernels being used. These are
-\begin{enumerate}
-\item Linear: $K(\bm{x},\bm{y})=\bm{x}^T\bm{y}$,
-
-\item Polynomial: $K(\bm{x},\bm{y})=(\bm{x}^T\bm{y}+\gamma)^d$,
-
-\item Gaussian Radial Basis Function: $K(\bm{x},\bm{y})=\exp{\left(-\gamma\vert\vert\bm{x}-\bm{y}\vert\vert^2\right)}$,
-
-\item Tanh: $K(\bm{x},\bm{y})=\tanh{(\bm{x}^T\bm{y}+\gamma)}$,
-\end{enumerate}
-
-\noindent
-and many other ones.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Mercer's theorem}
-
-An important theorem for us is \href{{https://en.wikipedia.org/wiki/Mercer%27s_theorem}}{Mercer's
-theorem}.  The
-theorem states that if a kernel function $K$ is symmetric, continuous
-and leads to a positive semi-definite matrix $\bm{P}$ then there
-exists a function $\phi$ that maps $\bm{x}_i$ and $\bm{x}_j$ into
-another space (possibly with much higher dimensions) such that
-
-\[
-K(\bm{x}_i,\bm{x}_j)=\phi(\bm{x}_i)^T\phi(\bm{x}_j).
-\]
-
-So you can use $K$ as a kernel since you know $\phi$ exists, even if
-you don’t know what $\phi$ is. 
-
-Note that some frequently used kernels (such as the Sigmoid kernel)
-don’t respect all of Mercer’s conditions, yet they generally work well
-in practice.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{The moons example}
-
-\begin{lstlisting}
-from __future__ import division, print_function, unicode_literals
-
-import numpy as np
-np.random.seed(42)
-
-import matplotlib
-import matplotlib.pyplot as plt
-plt.rcParams['axes.labelsize'] = 14
-plt.rcParams['xtick.labelsize'] = 12
-plt.rcParams['ytick.labelsize'] = 12
-
-
-from sklearn.svm import SVC
-from sklearn import datasets
-
-
-
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import LinearSVC
-
-
-from sklearn.datasets import make_moons
-X, y = make_moons(n_samples=100, noise=0.15, random_state=42)
-
-def plot_dataset(X, y, axes):
-    plt.plot(X[:, 0][y==0], X[:, 1][y==0], "bs")
-    plt.plot(X[:, 0][y==1], X[:, 1][y==1], "g^")
-    plt.axis(axes)
-    plt.grid(True, which='both')
-    plt.xlabel(r"$x_1$", fontsize=20)
-    plt.ylabel(r"$x_2$", fontsize=20, rotation=0)
-
-plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
-plt.show()
-
-from sklearn.datasets import make_moons
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import PolynomialFeatures
-
-polynomial_svm_clf = Pipeline([
-        ("poly_features", PolynomialFeatures(degree=3)),
-        ("scaler", StandardScaler()),
-        ("svm_clf", LinearSVC(C=10, loss="hinge", random_state=42))
-    ])
-
-polynomial_svm_clf.fit(X, y)
-
-def plot_predictions(clf, axes):
-    x0s = np.linspace(axes[0], axes[1], 100)
-    x1s = np.linspace(axes[2], axes[3], 100)
-    x0, x1 = np.meshgrid(x0s, x1s)
-    X = np.c_[x0.ravel(), x1.ravel()]
-    y_pred = clf.predict(X).reshape(x0.shape)
-    y_decision = clf.decision_function(X).reshape(x0.shape)
-    plt.contourf(x0, x1, y_pred, cmap=plt.cm.brg, alpha=0.2)
-    plt.contourf(x0, x1, y_decision, cmap=plt.cm.brg, alpha=0.1)
-
-plot_predictions(polynomial_svm_clf, [-1.5, 2.5, -1, 1.5])
-plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
-
-plt.show()
-
-
-from sklearn.svm import SVC
-
-poly_kernel_svm_clf = Pipeline([
-        ("scaler", StandardScaler()),
-        ("svm_clf", SVC(kernel="poly", degree=3, coef0=1, C=5))
-    ])
-poly_kernel_svm_clf.fit(X, y)
-
-poly100_kernel_svm_clf = Pipeline([
-        ("scaler", StandardScaler()),
-        ("svm_clf", SVC(kernel="poly", degree=10, coef0=100, C=5))
-    ])
-poly100_kernel_svm_clf.fit(X, y)
-
-plt.figure(figsize=(11, 4))
-
-plt.subplot(121)
-plot_predictions(poly_kernel_svm_clf, [-1.5, 2.5, -1, 1.5])
-plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
-plt.title(r"$d=3, r=1, C=5$", fontsize=18)
-
-plt.subplot(122)
-plot_predictions(poly100_kernel_svm_clf, [-1.5, 2.5, -1, 1.5])
-plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
-plt.title(r"$d=10, r=100, C=5$", fontsize=18)
-
-plt.show()
-
-def gaussian_rbf(x, landmark, gamma):
-    return np.exp(-gamma * np.linalg.norm(x - landmark, axis=1)**2)
-
-gamma = 0.3
-
-x1s = np.linspace(-4.5, 4.5, 200).reshape(-1, 1)
-x2s = gaussian_rbf(x1s, -2, gamma)
-x3s = gaussian_rbf(x1s, 1, gamma)
-
-XK = np.c_[gaussian_rbf(X1D, -2, gamma), gaussian_rbf(X1D, 1, gamma)]
-yk = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0])
-
-plt.figure(figsize=(11, 4))
-
-plt.subplot(121)
-plt.grid(True, which='both')
-plt.axhline(y=0, color='k')
-plt.scatter(x=[-2, 1], y=[0, 0], s=150, alpha=0.5, c="red")
-plt.plot(X1D[:, 0][yk==0], np.zeros(4), "bs")
-plt.plot(X1D[:, 0][yk==1], np.zeros(5), "g^")
-plt.plot(x1s, x2s, "g--")
-plt.plot(x1s, x3s, "b:")
-plt.gca().get_yaxis().set_ticks([0, 0.25, 0.5, 0.75, 1])
-plt.xlabel(r"$x_1$", fontsize=20)
-plt.ylabel(r"Similarity", fontsize=14)
-plt.annotate(r'$\mathbf{x}$',
-             xy=(X1D[3, 0], 0),
-             xytext=(-0.5, 0.20),
-             ha="center",
-             arrowprops=dict(facecolor='black', shrink=0.1),
-             fontsize=18,
-            )
-plt.text(-2, 0.9, "$x_2$", ha="center", fontsize=20)
-plt.text(1, 0.9, "$x_3$", ha="center", fontsize=20)
-plt.axis([-4.5, 4.5, -0.1, 1.1])
-
-plt.subplot(122)
-plt.grid(True, which='both')
-plt.axhline(y=0, color='k')
-plt.axvline(x=0, color='k')
-plt.plot(XK[:, 0][yk==0], XK[:, 1][yk==0], "bs")
-plt.plot(XK[:, 0][yk==1], XK[:, 1][yk==1], "g^")
-plt.xlabel(r"$x_2$", fontsize=20)
-plt.ylabel(r"$x_3$  ", fontsize=20, rotation=0)
-plt.annotate(r'$\phi\left(\mathbf{x}\right)$',
-             xy=(XK[3, 0], XK[3, 1]),
-             xytext=(0.65, 0.50),
-             ha="center",
-             arrowprops=dict(facecolor='black', shrink=0.1),
-             fontsize=18,
-            )
-plt.plot([-0.1, 1.1], [0.57, -0.1], "r--", linewidth=3)
-plt.axis([-0.1, 1.1, -0.1, 1.1])
-    
-plt.subplots_adjust(right=1)
-
-plt.show()
-
-
-x1_example = X1D[3, 0]
-for landmark in (-2, 1):
-    k = gaussian_rbf(np.array([[x1_example]]), np.array([[landmark]]), gamma)
-    print("Phi({}, {}) = {}".format(x1_example, landmark, k))
-
-rbf_kernel_svm_clf = Pipeline([
-        ("scaler", StandardScaler()),
-        ("svm_clf", SVC(kernel="rbf", gamma=5, C=0.001))
-    ])
-rbf_kernel_svm_clf.fit(X, y)
-
-
-from sklearn.svm import SVC
-
-gamma1, gamma2 = 0.1, 5
-C1, C2 = 0.001, 1000
-hyperparams = (gamma1, C1), (gamma1, C2), (gamma2, C1), (gamma2, C2)
-
-svm_clfs = []
-for gamma, C in hyperparams:
-    rbf_kernel_svm_clf = Pipeline([
-            ("scaler", StandardScaler()),
-            ("svm_clf", SVC(kernel="rbf", gamma=gamma, C=C))
-        ])
-    rbf_kernel_svm_clf.fit(X, y)
-    svm_clfs.append(rbf_kernel_svm_clf)
-
-plt.figure(figsize=(11, 7))
-
-for i, svm_clf in enumerate(svm_clfs):
-    plt.subplot(221 + i)
-    plot_predictions(svm_clf, [-1.5, 2.5, -1, 1.5])
-    plot_dataset(X, y, [-1.5, 2.5, -1, 1.5])
-    gamma, C = hyperparams[i]
-    plt.title(r"$\gamma = {}, C = {}$".format(gamma, C), fontsize=16)
-
-plt.show()
-
-
-\end{lstlisting}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Mathematical optimization of convex functions}
-
-A mathematical (quadratic) optimization problem, or just optimization problem, has the form
-\begin{align*}
-    &\mathrm{min}_{\lambda}\hspace{0.2cm} \frac{1}{2}\bm{\lambda}^T\bm{P}\bm{\lambda}+\bm{q}^T\bm{\lambda},\\ \nonumber
-    &\mathrm{subject\hspace{0.1cm}to} \hspace{0.2cm} \bm{G}\bm{\lambda} \preceq \bm{h} \wedge  \bm{A}\bm{\lambda}=f.
-\end{align*}
-subject to some constraints for say a selected set $i=1,2,\dots, n$.
-In our case we are optimizing with respect to the Lagrangian multipliers $\lambda_i$, and the
-vector $\bm{\lambda}=[\lambda_1, \lambda_2,\dots, \lambda_n]$ is the optimization variable we are dealing with.
-
-In our case we are particularly interested in a class of optimization
-problems called convex optmization problems.
-
-Convex optimization problems play a central role in applied mathematics and we recommend strongly \href{{http://web.stanford.edu/~boyd/cvxbook/}}{Boyd and Vandenberghe's text on the topics}.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{How do we solve these problems?}
-
-If we use Python as programming language and wish to venture beyond
-\textbf{scikit-learn}, \textbf{tensorflow} and similar software which makes our
-lives so much easier, we need to dive into the wonderful world of
-quadratic programming. We can, if we wish, solve the minimization
-problem using say standard gradient methods or conjugate gradient
-methods. However, these methods tend to exhibit a rather slow
-converge. So, welcome to the promised land of quadratic programming.
-
-The functions we need are contained in the \href{{https://cvxopt.org/userguide/coneprog.html}}{quadratic programming library CVXOPT} and we need to import it together with \textbf{numpy} as
-
-
-
-
-\begin{lstlisting}
-import numpy
-import cvxopt
-
-\end{lstlisting}
-
-
-This will make our life much easier. You don't need to write your own optimizer.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{A simple example}
-
-We remind ourselves about the general problem we want to solve
-\begin{align*}
-    &\mathrm{min}_{x}\hspace{0.2cm} \frac{1}{2}\bm{x}^T\bm{P}\bm{x}+\bm{q}^T\bm{x},\\ \nonumber
-    &\mathrm{subject\hspace{0.1cm} to} \hspace{0.2cm} \bm{G}\bm{x} \preceq \bm{h} \wedge  \bm{A}\bm{x}=f.
-\end{align*}
-
-Let us show how to perform the optmization using a simple case. Assume we want to optimize the following problem
-\begin{align*}
-    &\mathrm{min}_{x}\hspace{0.2cm} \frac{1}{2}x^2+5x+3y \\ \nonumber
-    &\mathrm{subject}\hspace{0.5cm} \mathrm{to} \\ \nonumber
-    &x, y \geq 0 \\ \nonumber
-    &x+3y  \geq 15 \\ \nonumber
-    &2x+5y  \leq  100 \\ \nonumber
-    &3x+4y  \leq  80.  \\ \nonumber
-\end{align*}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Rewriting in terms of vectors and matrices}
-
-The minimization problem can be rewritten in terms of vectors and matrices as (with $x$ and $y$ being the unknowns)
-\[
-\frac{1}{2}\begin{bmatrix} x\\ y \end{bmatrix}^T   \begin{bmatrix} 1 & 0\\ 0 & 0  \end{bmatrix}  \begin{bmatrix} x \\ y \end{bmatrix}  + \begin{bmatrix}3\\ 4  \end{bmatrix}^T \begin{bmatrix}x \\ y  \end{bmatrix}.  
-\]
-Similarly, we can now set up the inequalities (we need to change $\geq$ to $\leq$ by multiplying with $-1$ on bot sides) as the following matrix-vector equation
-\[
-\begin{bmatrix} -1 & 0 \\ 0 & -1 \\ -1 & -3 \\ 2 & 5 \\ 3 & 4\end{bmatrix}\begin{bmatrix} x \\ y\end{bmatrix} \preceq \begin{bmatrix}0 \\ 0\\ -15 \\ 100 \\ 80\end{bmatrix}.
-\]
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Rewriting inequalities}
-
-We have collapsed all the inequalities into a single matrix $\bm{G}$. We see also that our matrix 
-\[
-\bm{P} =\begin{bmatrix} 1 & 0\\ 0 & 0  \end{bmatrix}
-\]
-is clearly positive semi-definite (all eigenvalues larger or equal zero). 
-Finally, the vector $\bm{h}$ is defined as 
-\[
-\bm{h} = \begin{bmatrix}0 \\ 0\\ -15 \\ 100 \\ 80\end{bmatrix}.
-\]
-
-Since we don't have any equalities the matrix $\bm{A}$ is set to zero
-The following code solves the equations for us
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\begin{lstlisting}
-# Import the necessary packages
-import numpy
-from cvxopt import matrix
-from cvxopt import solvers
-P = matrix(numpy.diag([1,0]), tc='d')
-q = matrix(numpy.array([3,4]), tc='d')
-G = matrix(numpy.array([[-1,0],[0,-1],[-1,-3],[2,5],[3,4]]), tc='d')
-h = matrix(numpy.array([0,0,-15,100,80]), tc='d')
-# Construct the QP, invoke solver
-sol = solvers.qp(P,q,G,h)
-# Extract optimal value and solution
-sol['x'] 
-sol['primal objective']
-print(sol['x'] )
-
-\end{lstlisting}
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{Back to the more realistic cases}
-
-We are now ready to return to our setup of the optmization problem for a more realistic case. Introducing the \textbf{slack} parameter $C$ we have
-\[
-\frac{1}{2} \bm{\lambda}^T\begin{bmatrix} y_1y_1K(\bm{x}_1,\bm{x}_1) & y_1y_2K(\bm{x}_1,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_1,\bm{x}_n) \\
-y_2y_1K(\bm{x}_2,\bm{x}_1) & y_2y_2K(\bm{x}_2,\bm{x}_2) & \dots & \dots & y_1y_nK(\bm{x}_2,\bm{x}_n) \\
-\dots & \dots & \dots & \dots & \dots \\
-\dots & \dots & \dots & \dots & \dots \\
-y_ny_1K(\bm{x}_n,\bm{x}_1) & y_ny_2K(\bm{x}_n\bm{x}_2) & \dots & \dots & y_ny_nK(\bm{x}_n,\bm{x}_n) \\
-\end{bmatrix}\bm{\lambda}-\mathbb{I}\bm{\lambda}, 
-\]
-subject to $\bm{y}^T\bm{\lambda}=0$. Here we defined the vectors $\bm{\lambda} =[\lambda_1,\lambda_2,\dots,\lambda_n]$ and 
-$\bm{y}=[y_1,y_2,\dots,y_n]$. 
-With  the slack constants this leads to the additional constraint $0\leq \lambda_i \leq C$.
-
-Using the \textbf{CVXOPT} library, the matrix $P$ would then be defined by the above matrix while the KKT conditions would all be collected by the matrix $G$.
-\end{frame}
-%------------------------------------------------
-
-
-%================================================
-\section{Towards Quantum Support Vector Machines}
-%================================================
-
-\begin{frame}[plain,fragile]
-\frametitle{Quantum SVMs}
-
-The idea of a classical SVM is that we have a set of points
-that are in either one group or another and we want to find a line that
-separates these two groups. This line can be linear, but it can also be
-much more complex, which can be achieved by the use of Kernels.
-\end{frame}
-%------------------------------------------------
-
-\begin{frame}[plain,fragile]
-\frametitle{What will we need in the case of a quantum computer?}
-
-\begin{block}{}
-We will have to translate the classical data point \(\vec{x}\)
-into a quantum datapoint \(\vert \Phi{(\vec{x})} \rangle\). This can
-be achieved by a circuit $\mathcal{U}_{\Phi(\vec{x})} \vert 0\rangle$.
-
-Here $\Phi()$ could be any classical function applied
-on the classical data $\vec{x}$.
-\end{block}
-\begin{block}{}
-We need a parameterized quantum circuit $W(\theta)$ that
-processes the data in a way that in the end we
-can apply a measurement that returns a classical value \(-1\) or
-\(1\) for each classical input \(\vec{x}\) that indentifies the label
-of the classical data.
-\end{block}
-\end{frame}
-%------------------------------------------------
-
-%================================================
-\section{Quantum Feature Maps}
-%================================================
-
-\begin{frame}{Quantum Embedding}
-Encode classical data into quantum states:
-\[
-\ket{\phi(x)} = U(x)\ket{0}
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Quantum Kernel}
-\[
-K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2
-\]
-
-\begin{itemize}
-\item computed via quantum circuits
-\item corresponds to state overlap
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Example Feature Map}
-Single qubit:
-\[
-U(x) = e^{i x Z}
-\]
-
-\[
-\ket{\phi(x)} = \cos x \ket{0} + i \sin x \ket{1}
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Multi-Qubit Feature Map}
-\[
-U(x) = \prod_i e^{i x_i Z_i} \prod_{i<j} e^{i x_i x_j Z_i Z_j}
-\]
-
-\begin{itemize}
-\item introduces entanglement
-\item encodes nonlinear correlations
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Quantum Kernel Estimation}
-%================================================
-
-\begin{frame}{Overlap Computation}
-We need:
-\[
-|\braket{\phi(x)}{\phi(x')}|^2
-\]
-
-Two main approaches:
-\begin{itemize}
-\item swap test
-\item direct fidelity estimation
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Swap Test Circuit}
-\centering
-\begin{quantikz}
-\lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \gate{H} & \meter{} \\
-\lstick{$\ket{\phi(x)}$} & \qw & \swap{1} & \qw & \qw \\
-\lstick{$\ket{\phi(x')}$} & \qw & \targX{}{} & \qw & \qw
-\end{quantikz}
-
-Probability of measuring $0$:
-\[
-P(0) = \frac{1 + |\braket{\phi(x)}{\phi(x')}|^2}{2}
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Kernel Matrix}
-Construct:
-\[
-K_{ij} = |\braket{\phi(x_i)}{\phi(x_j)}|^2
-\]
-
-\begin{itemize}
-\item evaluated on quantum hardware
-\item used in classical SVM solver
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{QSVM Algorithm}
-%================================================
-
-\begin{frame}{Hybrid QSVM}
-\begin{enumerate}
-\item Encode data into quantum states
-\item Compute kernel matrix using quantum circuits
-\item Solve SVM optimization classically
-\end{enumerate}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Decision Function}
-\[
-f(x) = \sum_i \alpha_i y_i K(x_i,x) + b
-\]
-\end{frame}
-
-
-%================================================
-\section{Example Circuits}
-%================================================
-
-\begin{frame}{Feature Map Circuit}
-\centering
-\begin{quantikz}
-\lstick{$\ket{0}$} & \gate{R_z(x_1)} & \ctrl{1} & \qw \\
-\lstick{$\ket{0}$} & \gate{R_z(x_2)} & \targ{} & \qw
-\end{quantikz}
-
-\begin{itemize}
-\item encodes classical data
-\item introduces entanglement
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Kernel Evaluation Circuit}
-\centering
-\begin{quantikz}
-\lstick{$\ket{0}$} & \gate{U(x)} & \gate{U^\dagger(x')} & \meter{}
-\end{quantikz}
-
-\[
-P(0) = |\braket{\phi(x)}{\phi(x')}|^2
-\]
-\end{frame}
-
-
-%================================================
-\section{Physics Interpretation}
-%================================================
-
-\begin{frame}{Hilbert Space Perspective}
-\begin{itemize}
-\item classical SVM: feature space $\mathbb{R}^d$
-\item QSVM: quantum Hilbert space $\mathcal{H}$
-\end{itemize}
-
-\medskip
-
-\[
-\dim(\mathcal{H}) = 2^n
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Connection to Many-Body Physics}
-\begin{itemize}
-\item feature maps $\leftrightarrow$ quantum states
-\item kernels $\leftrightarrow$ overlaps
-\item classification $\leftrightarrow$ phase discrimination
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Expressivity}
-\begin{itemize}
-\item entangled feature maps generate complex kernels
-\item difficult to simulate classically
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Advantages and Limitations}
-%================================================
-
-\begin{frame}{Advantages}
-\begin{itemize}
-\item access to exponential feature space
-\item potentially classically hard kernels
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Challenges}
-\begin{itemize}
-\item noise and decoherence
-\item kernel estimation cost
-\item unclear quantum advantage in practice
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Extensions}
-%================================================
-
-\begin{frame}{Variational QSVM}
-\begin{itemize}
-\item trainable feature maps
-\item hybrid optimization
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Connection to Other Methods}
-\begin{itemize}
-\item quantum neural networks
-\item quantum kernel methods
-\item variational classifiers
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Summary}
-%================================================
-
-\begin{frame}{Summary}
-\begin{itemize}
-\item QSVM = kernel SVM with quantum feature map
-\item kernel:
-\[
-K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2
-\]
-\item computed via quantum circuits
-\item connects ML with quantum mechanics
-\end{itemize}
-\end{frame}
-
-
-
-%================================================
-\section{Pauli Expansion of Feature Maps}
-%================================================
-
-\begin{frame}{General Quantum Feature Map}
-A quantum feature map is a unitary embedding:
-\[
-\ket{\phi(x)} = U(x)\ket{0}
-\]
-
-We can express the unitary as
-\[
-U(x) = e^{i H(x)},
-\]
-where \(H(x)\) is a Hermitian operator depending on the data.
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Pauli Decomposition}
-Any Hermitian operator can be expanded as
-\[
-H(x) = \sum_{\alpha} f_\alpha(x) P_\alpha,
-\]
-where:
-\begin{itemize}
-\item \(P_\alpha \in \{I,X,Y,Z\}^{\otimes n}\),
-\item \(f_\alpha(x)\) are real-valued functions.
-\end{itemize}
-
-Thus:
-\[
-U(x) = e^{i \sum_\alpha f_\alpha(x) P_\alpha}.
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Example: ZZ Feature Map}
-A commonly used feature map:
-\[
-U(x) = \prod_i e^{i x_i Z_i}
-\prod_{i<j} e^{i x_i x_j Z_i Z_j}.
-\]
-
-This corresponds to:
-\[
-H(x) = \sum_i x_i Z_i + \sum_{i<j} x_i x_j Z_i Z_j.
-\]
-
-\begin{itemize}
-\item Linear terms $\rightarrow$ local rotations
-\item Quadratic terms $\rightarrow$ entangling interactions
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Connection to Many-Body Physics}
-The feature map Hamiltonian resembles a spin model:
-\[
-H(x) = \sum_i h_i(x) Z_i + \sum_{ij} J_{ij}(x) Z_i Z_j.
-\]
-
-Interpretation:
-\begin{itemize}
-\item Data acts as coupling constants
-\item Feature map = time evolution under data-dependent Hamiltonian
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Kernel Expressivity}
-%================================================
-
-\begin{frame}{Kernel Expressivity}
-The kernel is
-\[
-K(x,x') = |\braket{\phi(x)}{\phi(x')}|^2.
-\]
-
-Expressivity refers to:
-\begin{itemize}
-\item how well the kernel separates data
-\item richness of the induced feature space
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Expansion of the Kernel}
-Using
-\[
-\ket{\phi(x)} = U(x)\ket{0},
-\]
-we have
-\[
-K(x,x') = |\bra{0} U^\dagger(x) U(x') \ket{0}|^2.
-\]
-
-This depends on the operator:
-\[
-U^\dagger(x)U(x') = e^{i(H(x') - H(x)) + \cdots}.
-\]
-
-Thus the kernel encodes differences in the effective Hamiltonians.
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Expressivity vs Circuit Depth}
-\begin{itemize}
-\item shallow circuits:
-\begin{itemize}
-\item limited correlations
-\item simple kernels
-\end{itemize}
-\item deep circuits:
-\begin{itemize}
-\item highly nonlinear kernels
-\item potentially hard to simulate classically
-\end{itemize}
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Entanglement and Expressivity}
-%================================================
-
-\begin{frame}{Entanglement as a Resource}
-Quantum feature maps can generate entanglement:
-\[
-\ket{\phi(x)} = U(x)\ket{0}.
-\]
-
-Measure using von Neumann entropy:
-\[
-S(\rho_A) = -\mathrm{Tr}(\rho_A \log \rho_A).
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Expressivity vs Entanglement}
-\begin{itemize}
-\item No entanglement:
-\begin{itemize}
-\item kernel factorizes
-\item limited expressivity
-\end{itemize}
-\item Moderate entanglement:
-\begin{itemize}
-\item richer correlations
-\item improved classification power
-\end{itemize}
-\item Too much entanglement:
-\begin{itemize}
-\item concentration of measure
-\item kernel becomes nearly constant
-\end{itemize}
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Concentration of Measure}
-For highly random states:
-\[
-|\braket{\phi(x)}{\phi(x')}|^2 \approx \frac{1}{2^n}.
-\]
-
-\begin{itemize}
-\item kernel loses discrimination power
-\item analogous to barren plateaus
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Quantum Fisher Information}
-%================================================
-
-\begin{frame}{Quantum Fisher Information (QFI)}
-The QFI measures sensitivity of states:
-\[
-F_{ij}(x) = 4\,\mathrm{Re}
-\left(
-\langle \partial_i \phi | \partial_j \phi \rangle
--
-\langle \partial_i \phi | \phi \rangle
-\langle \phi | \partial_j \phi \rangle
-\right).
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Geometric Interpretation}
-\begin{itemize}
-\item QFI defines a metric on quantum states
-\item determines distinguishability of feature states
-\end{itemize}
-
-\[
-ds^2 = \sum_{ij} F_{ij} dx_i dx_j
-\]
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{QFI and Kernel}
-For small perturbations:
-\[
-K(x,x+\delta x) \approx 1 - \frac{1}{4} \delta x^T F \delta x.
-\]
-
-Thus:
-\begin{itemize}
-\item QFI controls local kernel geometry
-\item large QFI $\Rightarrow$ better discrimination
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Connection to Learning}
-\begin{itemize}
-\item QFI $\leftrightarrow$ curvature of feature space
-\item determines resolution of classification boundary
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Comparison with Classical Kernels}
-%================================================
-
-\begin{frame}{Classical Kernels}
-Common examples:
-\begin{itemize}
-\item Linear:
-\[
-K(x,x') = x \cdot x'
-\]
-\item Polynomial:
-\[
-K(x,x') = (x \cdot x' + c)^d
-\]
-\item RBF:
-\[
-K(x,x') = e^{-\|x-x'\|^2 / 2\sigma^2}
-\]
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Quantum vs Classical Kernels}
-\begin{tabular}{l|l|l}
- & Classical & Quantum \\
-\hline
-Feature space & polynomial/infinite & $2^n$ dimensional \\
-Computation & explicit/implicit & quantum overlaps \\
-Correlations & limited & entangled \\
-\end{tabular}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{When Quantum Helps}
-Potential advantage if:
-\begin{itemize}
-\item kernel is hard to compute classically
-\item feature map generates non-classical correlations
-\item data matches quantum structure
-\end{itemize}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}{Limitations}
-\begin{itemize}
-\item kernel estimation cost
-\item noise
-\item unclear advantage for generic datasets
-\end{itemize}
-\end{frame}
-
-
-%================================================
-\section{Summary of Advanced Concepts}
-%================================================
-
-\begin{frame}{Summary}
-\begin{itemize}
-\item Feature maps = data-dependent Hamiltonians
-\item Kernel = overlap of quantum states
-\item Expressivity tied to entanglement
-\item QFI defines geometry of feature space
-\item Quantum kernels can exceed classical ones in structure
-\end{itemize}
+%% ── Feature map as Hamiltonian evolution ────────────────────────
+\begin{frame}{Feature Map as Hamiltonian Evolution}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      A common, physically motivated feature map:
+      \[
+        U(x) = e^{-iH(x)},\quad
+        H(x) = \sum_i x_i Z_i + \sum_{i<j} x_i x_j Z_i Z_j
+      \]
+      \begin{itemize}
+        \item Data $\equiv$ coupling constants of a spin Hamiltonian
+        \item Circuit $\equiv$ quantum time evolution
+        \item Pairwise terms create entanglement between features
+      \end{itemize}
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.5cm, column sep=0.45cm]
+        \lstick{$\ket{0}$}
+          & \gate{H} & \gate{R_z(x_1)} & \ctrl{1} & \qw \\
+        \lstick{$\ket{0}$}
+          & \gate{H} & \gate{R_z(x_2)} & \gate{R_{zz}(x_1 x_2)} & \qw
+      \end{quantikz}
+      \end{center}
+      \vspace{0.2cm}
+      {\small $R_{zz}(\phi)=e^{-i\phi Z\otimes Z/2}$:
+       two-qubit entangling gate encoding pairwise product $x_1 x_2$.}
+  \end{columns}
+\end{frame}
+
+%% ── Pauli ansatz ─────────────────────────────────────────────────
+\begin{frame}{Pauli Expansion of the Variational Ansatz}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The variational unitary is generated by a Pauli Hamiltonian:
+      \[
+        U(\theta) = e^{-iH(\theta)},\quad
+        H(\theta) = \sum_\alpha \theta_\alpha P_\alpha
+      \]
+      where $P_\alpha \in \{I,X,Y,Z\}^{\otimes n}$ are Pauli strings.
+
+      \medskip
+      The BCH expansion shows what the circuit computes:
+      \[
+        U^\dagger O\, U = O + i[H,O]
+          + \frac{i^2}{2}[H,[H,O]] + \cdots
+      \]
+      Each commutator level adds higher-body correlations — analogous
+      to coupled-cluster expansions.
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.5cm, column sep=0.4cm]
+        \lstick{$\ket{0}$}
+          & \gate{R_y(\theta_1)} & \ctrl{1}
+          & \gate{R_z(\phi_1)}   & \qw \\
+        \lstick{$\ket{0}$}
+          & \gate{R_y(\theta_2)} & \targ{}
+          & \gate{R_z(\phi_2)}   & \qw \\
+        \lstick{$\ket{0}$}
+          & \gate{R_y(\theta_3)} & \ctrl{1}
+          & \gate{R_z(\phi_3)}   & \qw \\
+        \lstick{$\ket{0}$}
+          & \gate{R_y(\theta_4)} & \targ{}
+          & \gate{R_z(\phi_4)}   & \qw
+      \end{quantikz}
+      \end{center}
+      {\small One layer of a hardware-efficient ansatz (4 qubits):
+       $R_y$ rotations + CNOT ladder + $R_z$ rotations.}
+  \end{columns}
+\end{frame}
+
+%% ── Deep multi-layer QNN circuit ────────────────────────────────
+\begin{frame}{Multi-Layer QNN: Full Circuit Diagram}
+  \begin{center}
+  \begin{quantikz}[row sep=0.45cm, column sep=0.35cm]
+    \lstick{$\ket{0}$}
+      & \gate[4]{U(x)}
+      & \gate{R_y(\theta_1^{(1)})} & \ctrl{1} & \qw
+      & \gate{R_y(\theta_1^{(2)})} & \ctrl{1} & \qw
+      & \meter{} \\
+    \lstick{$\ket{0}$}
+      &
+      & \gate{R_y(\theta_2^{(1)})} & \targ{}  & \ctrl{1}
+      & \gate{R_y(\theta_2^{(2)})} & \targ{}  & \ctrl{1}
+      & \qw \\
+    \lstick{$\ket{0}$}
+      &
+      & \gate{R_y(\theta_3^{(1)})} & \qw      & \targ{}
+      & \gate{R_y(\theta_3^{(2)})} & \qw      & \targ{}
+      & \qw \\
+    \lstick{$\ket{0}$}
+      & \qw
+      & \gate{R_y(\theta_4^{(1)})} & \qw & \qw
+      & \gate{R_y(\theta_4^{(2)})} & \qw & \qw
+      & \qw
+  \end{quantikz}
+  \end{center}
+  \vspace{0.2cm}
+  {\small Feature map $U(x)$ encodes data ($n=4$ qubits); $L=2$ repeated variational layers
+   $W^{(l)}(\theta^{(l)})$ build up correlations via $R_y$ rotations and CNOT
+   ladders; qubit 0 is measured to give the scalar output $f = \langle Z_0\rangle$.}
+\end{frame}
+
+%% ── Gradient: parameter shift ───────────────────────────────────
+\begin{frame}{Parameter-Shift Rule: Exact Quantum Gradients}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      For a gate $e^{-i\theta P/2}$ generated by a Pauli $P$
+      (eigenvalues $\pm\tfrac{1}{2}$), the gradient is \emph{exact}:
+      \[
+        \frac{\partial f}{\partial\theta}
+        = \frac{1}{2}\bigl[f(\theta+\tfrac{\pi}{2})
+                          - f(\theta-\tfrac{\pi}{2})\bigr]
+      \]
+      \begin{itemize}
+        \item Requires only 2 circuit evaluations per parameter
+        \item Exact (not a finite-difference approximation)
+        \item Hardware-friendly: no ancillas needed
+      \end{itemize}
+      Gradient derivation from commutator:
+      \[
+        \partial_\theta f
+        = \bra{\psi}\,i[H_\theta,\,O]\,\ket{\psi}
+      \]
+      \textbf{Physical meaning:} gradients are quantum response
+      functions.
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.5cm, column sep=0.4cm]
+        \lstick{$\ket{0}$}
+          & \gate{U(x)} & \gate{e^{-i(\theta\pm\pi/2)P/2}}
+          & \gate{V} & \meter{}
+      \end{quantikz}
+      \end{center}
+      \vspace{0.3cm}
+      \begin{alertblock}{Two-point formula}
+        Evaluate the circuit at $\theta+\frac{\pi}{2}$ and
+        $\theta-\frac{\pi}{2}$; their half-difference gives the exact
+        partial derivative.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ── QFI ─────────────────────────────────────────────────────────
+\begin{frame}{Quantum Fisher Information Matrix}
+  The \textbf{Quantum Fisher Information} (QFI) defines the Riemannian
+  metric on the manifold of variational states:
+  \[
+    F_{ij} = 4\,\mathrm{Re}\!\left(
+      \langle\partial_i\psi|\partial_j\psi\rangle
+      - \langle\partial_i\psi|\psi\rangle
+        \langle\psi|\partial_j\psi\rangle
+    \right)
+  \]
+
+  \begin{columns}[T]
+    \column{0.50\textwidth}
+      \begin{block}{Information-geometric metric}
+        \[
+          ds^2 = \sum_{ij} F_{ij}\,d\theta_i\,d\theta_j
+        \]
+        Measures the \emph{distinguishability} of nearby quantum
+        states — the Fubini-Study metric on projective Hilbert space.
+      \end{block}
+      \vspace{0.2cm}
+      \begin{block}{Practical formula (overlap method)}
+        \[
+          F_{ij} = 4\,\mathrm{Re}\left[
+            \bra{\partial_i\psi}\!\left(I - \ket{\psi}\bra{\psi}\right)
+            \!\ket{\partial_j\psi}
+          \right]
+        \]
+      \end{block}
+    \column{0.46\textwidth}
+      \begin{alertblock}{Natural gradient descent}
+        The \emph{natural gradient} corrects the Euclidean gradient
+        for the curved geometry of Hilbert space:
+        \[
+          \dot{\theta} = F^{-1}\nabla_\theta\mathcal{L}
+        \]
+        This is the basis of \textbf{Stochastic Reconfiguration (SR)}
+        in VMC and of imaginary-time TDVP.
+      \end{alertblock}
+      \vspace{0.2cm}
+      Diagonal elements: $F_{ii}$ = variance of the Pauli generator
+      $P_i$ in state $\ket{\psi}$.
+  \end{columns}
+\end{frame}
+
+%% ── QFI circuit ─────────────────────────────────────────────────
+\begin{frame}{Computing the QFI: Hadamard-Test Circuit}
+  The overlap $\langle\partial_i\psi|\partial_j\psi\rangle$ entering
+  $F_{ij}$ is measured by a Hadamard-test circuit:
+
+  \vspace{0.2cm}
+  \begin{center}
+  \begin{quantikz}[row sep=0.5cm, column sep=0.5cm]
+    \lstick{$\ket{0}$\,(ancilla)}
+      & \gate{H} & \ctrl{1} & \gate{H} & \meter{} \\
+    \lstick{$\ket{0}^{\otimes n}$}
+      & \gate[1]{U(\theta)} & \gate{P_i}
+      & \gate[1]{U^\dagger(\theta)} & \qw
+  \end{quantikz}
+  \end{center}
+
+  \vspace{0.3cm}
+  Outcome probability:
+  \[
+    P(0) = \frac{1}{2}
+      + \frac{1}{2}\,\mathrm{Re}\langle\psi|P_i|\psi\rangle
+    \implies
+    F_{ii} = 4\,\bigl(
+      \langle\psi|P_i^2|\psi\rangle - \langle\psi|P_i|\psi\rangle^2
+    \bigr)
+    = 4\,\mathrm{Var}(P_i)
+  \]
+
+  \begin{itemize}
+    \item For off-diagonal elements $F_{ij}$ use two Hadamard tests
+          with $P_i \pm P_j$
+    \item The QFI upper-bounds the classical Fisher information by the
+          quantum Cramér-Rao inequality: $\mathrm{Var}(\hat\theta)\ge 1/F$
+  \end{itemize}
+\end{frame}
+
+%% ── TDVP ─────────────────────────────────────────────────────────
+\begin{frame}{Time-Dependent Variational Principle (TDVP)}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The TDVP projects the Schrödinger equation onto the tangent
+      space of the variational manifold:
+      \[
+        \delta\|(i\partial_t - H)|\psi\rangle\| = 0
+      \]
+      Projecting $\langle\partial_i\psi|(i\partial_t-H)|\psi\rangle=0$:
+      \[
+        \sum_j F_{ij}\,\dot\theta_j = C_i,\quad
+        C_i = \mathrm{Im}\langle\partial_i\psi|H|\psi\rangle
+      \]
+    \column{0.44\textwidth}
+      \begin{block}{Interpretation}
+        QNN training $\equiv$ classical dynamical system on a curved
+        manifold.  Parameters $\theta_j$ evolve like
+        generalised coordinates; $F_{ij}$ is the mass matrix.
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Imaginary-time TDVP}
+        Replace $t\to-i\tau$ (imaginary time):
+        \[
+          \sum_j F_{ij}\,\dot\theta_j = E_i
+        \]
+        This is \textbf{Stochastic Reconfiguration} —
+        optimal ground-state search on the variational manifold.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ── Barren plateaus ─────────────────────────────────────────────
+\begin{frame}{Barren Plateaus}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      The gradient variance scales exponentially:
+      \[
+        \mathrm{Var}(\nabla_\theta \mathcal{L}) \sim \frac{1}{2^n}
+      \]
+      \textbf{Why?} Random, deep circuits form approximate
+      \textbf{unitary 2-designs} — their output distribution
+      concentrates near the Haar measure.  Local observables
+      concentrate around their mean, making gradients vanish.
+
+      \medskip
+      \textbf{Strategies to mitigate:}
+      \begin{itemize}
+        \item Local cost functions (support on $O(1)$ qubits)
+        \item Problem-inspired ansätze (exploit structure)
+        \item Layer-wise training (incremental depth)
+        \item Limiting entanglement in early training
+      \end{itemize}
+    \column{0.44\textwidth}
+      \begin{block}{Entanglement regimes}
+        \begin{tabular}{ll}
+          \toprule
+          Entanglement & Training \\
+          \midrule
+          Low & Classically simulable \\
+          Moderate & Optimal learning \\
+          High & Barren plateau \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+      \vspace{0.3cm}
+      \begin{alertblock}{Quantum Neural Tangent Kernel}
+        In the linearised training regime:
+        \[
+          K(x,x')=\sum_i
+            \frac{\partial f(x)}{\partial\theta_i}
+            \frac{\partial f(x')}{\partial\theta_i}
+        \]
+        connects QNNs to kernel methods.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ── Variational classifier circuit ──────────────────────────────
+\begin{frame}{Variational Quantum Classifier: Full Circuit}
+  Three-stage circuit for binary classification on $n=3$ qubits:
+
+  \vspace{0.3cm}
+  \begin{center}
+  \begin{quantikz}[row sep=0.5cm, column sep=0.4cm]
+    \lstick{$\ket{0}$}
+      & \gate{R_y(x_1)}
+      & \gate{R_z(\alpha_1)} & \ctrl{1} & \qw
+      & \gate{R_z(\beta_1)} & \ctrl{1} & \qw
+      & \meter{$Z$} \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(x_2)}
+      & \gate{R_z(\alpha_2)} & \targ{} & \ctrl{1}
+      & \gate{R_z(\beta_2)} & \targ{} & \ctrl{1}
+      & \qw \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(x_3)}
+      & \gate{R_z(\alpha_3)} & \qw & \targ{}
+      & \gate{R_z(\beta_3)} & \qw & \targ{}
+      & \qw
+  \end{quantikz}
+  \end{center}
+
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item \textbf{Encoding} (col.~2): $R_y(x_i)$ angle-embeds each feature
+    \item \textbf{Var.\ layer 1} (cols.~3--5): $R_z$ rotations + CNOT chain $0\to1\to2$
+    \item \textbf{Var.\ layer 2} (cols.~6--8): second block of $R_z$ + CNOT chain
+    \item \textbf{Output}: $f = \langle Z_0\rangle$; class~1 if $f>0$, class~0 if $f<0$
+  \end{itemize}
+\end{frame}
+
+%% ── Entanglement and expressivity ───────────────────────────────
+\begin{frame}{Entanglement Entropy and Expressivity}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      Entanglement entropy of subsystem $A$:
+      \[
+        S(\rho_A) = -\mathrm{Tr}(\rho_A\log\rho_A)
+      \]
+      Controls the complexity of the variational state:
+      \begin{itemize}
+        \item $S=0$: product state, no correlations, classically
+              efficient
+        \item $S = O(\text{area law})$: MPS-representable
+        \item $S = O(n)$: volume-law, generic circuit output
+      \end{itemize}
+
+      \medskip
+      The QNN ansatz lives on a \emph{low-dimensional submanifold}
+      of the full exponentially-large Hilbert space.
+      The manifold dimension is $\dim\theta$.
+    \column{0.44\textwidth}
+      \begin{alertblock}{Expressivity bound}
+        A circuit with $L$ layers and $n$ qubits can generate states
+        with at most
+        \[
+          S(\rho_A) \lesssim L\log 2
+        \]
+        entanglement entropy between any bipartition — a property
+        used to prove simulability of shallow circuits.
+      \end{alertblock}
+      \vspace{0.2cm}
+      \begin{block}{Optimal regime}
+        Moderate $S$ (moderate entanglement): rich correlations
+        without concentration of measure.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+%% ── PyTorch simulation summary ───────────────────────────────────
+\begin{frame}[fragile]{Simulating a QNN: NumPy + PyTorch}
+  We simulate the circuit as $2^n\times 2^n$ unitary matrix
+  operations in NumPy; gradients use the parameter-shift rule;
+  optimisation uses PyTorch Adam.
+
+  \medskip
+  \begin{lstlisting}
+def var_layer(p):
+    """Ry(p0) x Ry(p1) -> CNOT -> Rz(p2) x Rz(p3)."""
+    return kron(rz(p[2]),rz(p[3])) @ CNOT @ kron(ry(p[0]),ry(p[1]))
+
+def circuit(params, x):
+    """Full 2-qubit VQC: Rx feature map + 2 variational layers."""
+    state = |00>  # complex vector, length 4
+    U = kron(Rx(x[0]), Rx(x[1]))          # feature map
+    U = var_layer(params[:4]) @ U          # layer 1
+    U = var_layer(params[4:8]) @ U         # layer 2
+    psi = U @ state
+    return <psi| Z0 |psi>                  # expectation value
+
+def grad_circuit(params, x, shift=pi/2):
+    """Exact gradient via parameter-shift rule."""
+    g = zeros(8)
+    for i in range(8):
+        g[i] = 0.5*(circuit(params + shift*e_i, x)
+                  - circuit(params - shift*e_i, x))
+    return g
+  \end{lstlisting}
+\end{frame}
+
+%% ── 3-qubit credit classifier circuit ───────────────────────────
+\begin{frame}{Credit Classifier: 3-Qubit Strongly-Entangling Circuit}
+  \begin{center}
+  \begin{quantikz}[row sep=0.5cm, column sep=0.4cm]
+    \lstick{$\ket{0}$}
+      & \gate{R_y(x_1)}
+      & \gate{R_z R_y R_z(\alpha_1,\beta_1,\gamma_1)}
+      & \ctrl{1} & \qw
+      & \meter{$Z$} \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(x_2)}
+      & \gate{R_z R_y R_z(\alpha_2,\beta_2,\gamma_2)}
+      & \targ{} & \ctrl{1}
+      & \qw \\
+    \lstick{$\ket{0}$}
+      & \gate{R_y(x_3)}
+      & \gate{R_z R_y R_z(\alpha_3,\beta_3,\gamma_3)}
+      & \ctrl{-2} & \targ{}
+      & \qw
+  \end{quantikz}
+  \end{center}
+
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \textbf{Encoding:} $R_Y(x_i)$ angle-embeds income, debt ratio,
+      age (scaled to $[0,\pi]$). Each feature becomes a rotation angle
+      on one qubit.
+    \column{0.48\textwidth}
+      \textbf{Ansatz:} general $SU(2)$ Euler rotation per qubit
+      ($R_z R_y R_z$ = 3 parameters per qubit),
+      then \emph{ring} of CNOTs ($0\!\to\!1\!\to\!2\!\to\!0$).
+      Total: 9 trainable parameters.
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Variational Quantum Eigensolver}
+%% ============================================================
+
+\begin{frame}{Variational Quantum Eigensolver (VQE)}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Variational principle:}
+      \[
+        E_0 = \min_\psi\langle\psi|H|\psi\rangle,\quad
+        E(\theta)\ge E_0
+      \]
+      \textbf{Ansatz:} $\ket{\psi(\theta)} = U(\theta)\ket{0}$
+
+      \textbf{Measurement:} decompose $H = \sum_i c_i P_i$:
+      \[
+        E(\theta) = \sum_i c_i \langle P_i\rangle
+      \]
+      Each $\langle P_i\rangle$ measured on the quantum device.
+
+      \textbf{Gradient} via parameter-shift rule:
+      \[
+        \frac{\partial E}{\partial\theta}
+        = \tfrac{1}{2}\left[E(\theta+\tfrac{\pi}{2})
+                           -E(\theta-\tfrac{\pi}{2})\right]
+      \]
+    \column{0.44\textwidth}
+      \textbf{UCC ansatz:}
+      \[
+        U = e^{T-T^\dagger},\quad
+        T = \sum_{ai}t_{ai}\,a_a^\dagger a_i + \cdots
+      \]
+      Trotterised as $e^{A+B}\approx e^Ae^B$.
+
+      BCH connection to coupled-cluster:
+      \[
+        e^{-T}He^T = H + [H,T] + \tfrac{1}{2}[[H,T],T]+\cdots
+      \]
+
+      \begin{center}
+      \begin{quantikz}[row sep=0.4cm, column sep=0.4cm]
+        \lstick{$\ket{0}$}
+          & \gate[4,nwires=3]{U(\theta)} & \meter{} \\
+        \lstick{$\ket{0}$} & & \meter{} \\
+        \lstick{$\ket{0}$} & & \qw \\
+        \lstick{$\ket{0}$} & \qw & \qw
+      \end{quantikz}
+      \end{center}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Quantum Approximate Optimization Algorithm}
+%% ============================================================
+
+\begin{frame}{QAOA: Problem Statement and Ansatz}
+  \textbf{Goal:} maximise a classical cost $C(z)$ over bit strings
+  $z\in\{0,1\}^n$.
+
+  Encode as a diagonal Hamiltonian: $H_C\ket{z} = C(z)\ket{z}$.
+
+  \medskip
+  \textbf{QAOA ansatz} (depth $p$):
+  \[
+    \ket{\gamma,\beta}
+    = \prod_{l=1}^p e^{-i\beta_l H_M}\,e^{-i\gamma_l H_C}\,\ket{+}^{\otimes n}
+  \]
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.42cm, column sep=0.3cm]
+        \lstick{$\ket{+}$}
+          & \gate[3,nwires=2]{e^{-i\gamma H_C}}
+          & \gate{R_x(2\beta)} & \qw \\
+        \lstick{$\ket{+}$}
+          &  & \gate{R_x(2\beta)} & \qw \\
+        \lstick{$\ket{+}$}
+          & \qw & \gate{R_x(2\beta)} & \qw
+      \end{quantikz}
+      \end{center}
+      {\small One QAOA layer ($p=1$): cost unitary then mixer.}
+    \column{0.48\textwidth}
+      \begin{itemize}
+        \item $H_M = \sum_i X_i$: mixer Hamiltonian
+        \item $\ket{+}=H\ket{0}$: uniform superposition
+        \item Maximise $C(\gamma,\beta)=\langle H_C\rangle$ over
+              $2p$ parameters
+      \end{itemize}
+      \begin{alertblock}{Adiabatic connection}
+        QAOA = Trotterised adiabatic evolution.
+        $p\to\infty$ recovers exact adiabatic QC.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{QAOA: MaxCut and Trotterisation}
+  \textbf{MaxCut} on graph $G=(V,E)$: cost Hamiltonian
+  \[
+    H_C = \sum_{\langle ij\rangle\in E}\frac{1-Z_iZ_j}{2}
+  \]
+
+  The cost unitary $e^{-i\gamma H_C}$ decomposes into two-qubit
+  $R_{zz}$ gates:
+  \begin{center}
+  \begin{quantikz}[row sep=0.5cm, column sep=0.45cm]
+    \lstick{$\ket{+}$} & \gate{H} &
+      \ctrl{1} & \gate{R_z(2\gamma)} & \ctrl{1} & \gate{R_x(2\beta)} &
+      \meter{} \\
+    \lstick{$\ket{+}$} & \gate{H} &
+      \targ{} & \qw & \targ{} & \gate{R_x(2\beta)} &
+      \qw
+  \end{quantikz}
+  \end{center}
+  {\small $p=1$ QAOA for a single edge $(i,j)$: CNOT–$R_z$–CNOT implements
+   $e^{-i\gamma Z_iZ_j/2}$ on qubits $i,j$; $R_x(2\beta)$ is the mixer.}
+
+  \medskip
+  \begin{alertblock}{Trotter expansion}
+    \[
+      e^{-i(H_M+H_C)t}\approx e^{-iH_M\Delta t}e^{-iH_C\Delta t}
+    \]
+    QAOA at depth $p$ = $p$-step Trotterised adiabatic evolution with
+    variable step sizes $(\gamma_l,\beta_l)$.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{QAOA: Gradient, Landscape, and Relations to QNN/VQE}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Gradient} w.r.t.\ $\gamma_l$:
+      \[
+        \partial_{\gamma_l}C
+        = i\langle[H_C,H_{\text{eff}}]\rangle
+      \]
+      Computed via \emph{finite differences} (not parameter-shift,
+      because $H_C$ has a multi-valued spectrum $\{0,\ldots,|E|\}$).
+
+      \medskip
+      \textbf{Landscape:} $C(\gamma,\beta)$ non-convex but has
+      structured correlations — warm-starting and parameter
+      concentration exploit this.
+    \column{0.44\textwidth}
+      \begin{tabular}{lcc}
+        \toprule
+        Feature & QAOA & VQE \\
+        \midrule
+        Ansatz & fixed & general \\
+        Motivation & adiabatic & variational \\
+        Target & opt.\ problem & ground state \\
+        Params & $2p$ & many \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{0.3cm}
+      \begin{block}{QAOA $\subset$ QNN}
+        QAOA is a QNN with \emph{specific} Hamiltonians $H_C$, $H_M$
+        instead of a general hardware-efficient ansatz.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Quantum Support Vector Machines}
+%% ============================================================
+
+\begin{frame}{QSVM: Quantum Kernel Methods}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Quantum feature map:}
+      \[
+        \ket{\phi(x)} = U(x)\ket{0},\quad
+        K(x,x') = |\langle\phi(x)|\phi(x')\rangle|^2
+      \]
+      The kernel is a \textbf{fidelity} — a quantum overlap, directly
+      analogous to many-body correlation functions.
+
+      \medskip
+      \textbf{Swap test circuit:}
+      \begin{center}
+      \begin{quantikz}[row sep=0.4cm, column sep=0.4cm]
+        \lstick{$\ket{0}$} & \gate{H} & \ctrl{1} & \gate{H} & \meter{} \\
+        \lstick{$\ket{\phi(x)}$} & \qw & \swap{1} & \qw & \qw \\
+        \lstick{$\ket{\phi(x')}$} & \qw & \targX{} & \qw & \qw
+      \end{quantikz}
+      \end{center}
+      $P(0) = \tfrac{1}{2}(1+K(x,x'))$
+    \column{0.44\textwidth}
+      \begin{block}{SVM dual optimisation}
+        \[
+          \max_\alpha\sum_i\alpha_i
+          - \tfrac{1}{2}\sum_{ij}\alpha_i\alpha_j y_iy_j K_{ij}
+        \]
+        Solved classically once $K_{ij}$ is estimated on the device.
+      \end{block}
+      \vspace{0.2cm}
+      \begin{alertblock}{Concentration risk}
+        High entanglement in $U(x)$:
+        \[
+          K(x,x')\approx\frac{1}{2^n}\;\forall\,x,x'
+        \]
+        Kernel becomes uninformative — avoid deep random feature maps.
+      \end{alertblock}
+      \vspace{0.2cm}
+      \textbf{Connection to HHL:} kernel system
+      $(K+\lambda I)\alpha=y$ solvable by HHL.
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{HHL Algorithm}
+%% ============================================================
+
+\begin{frame}{HHL: Quantum Linear Systems Solver}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \textbf{Problem:} given Hermitian $A$ and $\ket{b}$, prepare
+      $\ket{x}\propto A^{-1}\ket{b}$.
+
+      \textbf{Spectral decomposition:}
+      \[
+        A^{-1}\ket{b}
+        = \sum_j\frac{\beta_j}{\lambda_j}\ket{u_j}
+      \]
+      HHL implements $\lambda_j\to\lambda_j^{-1}$ via QPE.
+
+      \textbf{Steps:}
+      \begin{enumerate}
+        \item QPE: encode eigenvalues in register
+        \item Controlled rotation: apply $\lambda_j^{-1}$
+        \item Uncompute QPE; post-select ancilla $=\ket{1}$
+      \end{enumerate}
+
+      \textbf{Complexity:}
+      $\mathcal{O}(\kappa^2\log N)$ vs classical $O(N\sqrt\kappa)$.
+    \column{0.44\textwidth}
+      \begin{center}
+      \begin{quantikz}[row sep=0.35cm, column sep=0.3cm]
+        \lstick{$\ket{b}$}
+          & \gate[1]{QPE} & \qw
+          & \gate[1]{QPE^\dagger} & \qw \\
+        \lstick{$\ket{0}^{\otimes m}$}
+          & \qw & \gate{\lambda^{-1}} & \qw & \qw \\
+        \lstick{$\ket{0}$\,(anc.)}
+          & \qw & \ctrl{-1} & \qw & \meter{}
+      \end{quantikz}
+      \end{center}
+      \vspace{0.2cm}
+      \begin{alertblock}{Green's function connection}
+        \[
+          A^{-1}\sim(\omega I-H)^{-1} = G(\omega)
+        \]
+        HHL $\equiv$ quantum computation of the resolvent operator /
+        Green's function of the many-body Hamiltonian.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Grand Unification: QML as Operator Science}
+%% ============================================================
+
+\begin{frame}{Three Fundamental Structures of QML}
+  \[
+    \boxed{
+      \text{Quantum Machine Learning}
+      = \text{Geometry} + \text{Dynamics} + \text{Operators}
+    }
+  \]
+  \vspace{0.2cm}
+  \begin{center}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{p{2.4cm}p{4.2cm}p{4.0cm}}
+    \toprule
+    \textbf{Structure} & \textbf{Mathematical object} & \textbf{QML method} \\
+    \midrule
+    Geometry  & QFI metric $F_{ij}$, Hilbert space $\mathcal{H}$
+              & QSVM (kernel = fidelity) \\
+    Dynamics  & Variational evolution, TDVP
+              & QNN, VQE, QAOA \\
+    Operators & Inverse maps, Green's functions
+              & HHL, QPE \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.3cm}
+  \textbf{Unifying correspondences:}
+  \begin{align*}
+    \text{HHL} &\;\longleftrightarrow\; \text{exact inverse operator}\\
+    \text{QSVM} &\;\longleftrightarrow\; \text{kernel geometry }
+      K(x,x')=|\langle\phi(x)|\phi(x')\rangle|^2\\
+    \text{QNN/VQE/QAOA} &\;\longleftrightarrow\; \text{variational dynamics }
+      \textstyle\sum_j F_{ij}\dot\theta_j = C_i
+  \end{align*}
+\end{frame}
+
+\begin{frame}{Spectral Perspective and Learning as Projection}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      All methods rely on the spectral structure:
+      \[
+        A = \sum_j\lambda_j\ket{u_j}\bra{u_j}
+      \]
+      \begin{itemize}
+        \item \textbf{HHL:} transforms $\lambda_j\to\lambda_j^{-1}$
+        \item \textbf{QNN/VQE:} learn the eigenstructure via
+              gradient descent on the variational manifold
+        \item \textbf{QSVM:} measures pairwise overlaps between
+              eigenstates
+      \end{itemize}
+
+      \medskip
+      \textbf{Learning as projection:}
+      \[
+        \text{Learning}\equiv\text{optimal projection onto}
+      \]
+      \[
+        \text{a submanifold of Hilbert space}
+      \]
+    \column{0.44\textwidth}
+      \begin{alertblock}{Unified master equation}
+        \[
+          \boxed{
+            \text{Learning}\equiv
+            \text{approximating operators}
+          }
+        \]
+      \end{alertblock}
+      \vspace{0.3cm}
+      \begin{tabular}{ll}
+        \toprule
+        Approach & Operator \\
+        \midrule
+        Exact & HHL ($A^{-1}$) \\
+        Variational & QNN/VQE/QAOA \\
+        Geometric & QSVM \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.3cm}
+
+      \textbf{Information geometry:}
+      $ds^2=\sum_{ij}F_{ij}d\theta_id\theta_j$;
+      training follows geodesics of the QFI metric.
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Outlook and References}
+%% ============================================================
+
+\begin{frame}{Outlook: Quantum Advantage and Future Directions}
+  \begin{columns}[T]
+    \column{0.50\textwidth}
+      \begin{block}{Where can genuine advantage emerge?}
+        \begin{itemize}
+          \item \textbf{Fault-tolerant QC:} HHL, QPE, Shor —
+                provable exponential speedup
+          \item \textbf{NISQ VQA:} VQE, QAOA, QSVM —
+                heuristic, unclear general advantage
+          \item \textbf{Quantum kernels:} only when the feature map
+                is classically hard to simulate
+        \end{itemize}
+      \end{block}
+      \vspace{0.3cm}
+      \begin{alertblock}{Fundamental trade-off}
+        \[
+          \underbrace{\text{High expressivity}}_{\text{deep circuits}}
+          \;\longleftrightarrow\;
+          \underbrace{\text{Hard optimisation}}_{\text{barren plateaus}}
+        \]
+      \end{alertblock}
+    \column{0.46\textwidth}
+      \textbf{Future directions:}
+      \begin{itemize}
+        \item Fault-tolerant QC and error correction
+        \item Adaptive ansatz design (ADAPT-VQE)
+        \item Quantum-classical co-design (hardware-aware)
+        \item Connection to many-body physics:
+              VQE $\leftrightarrow$ coupled cluster,
+              QAOA $\leftrightarrow$ adiabatic,
+              HHL $\leftrightarrow$ Green's functions
+        \item Quantum transformers and quantum RL
+        \item Field-theoretic view: circuits as discretised
+              quantum field theories
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{References}
+  \begin{columns}[T]
+    \column{0.50\textwidth}
+      \textbf{QNN and VQC}
+      \begin{enumerate}
+        \item A.~Abbas et al., \emph{Power of QNNs}, Nature CS \textbf{1}, 403 (2021).
+        \item E.~Anschuetz \& B.~Kiani, Nat.\ Commun.\ \textbf{13}, 7760 (2022).
+        \item M.~Zhao et al., arXiv:2504.16131 (2025).
+      \end{enumerate}
+      \textbf{QAOA}
+      \begin{enumerate}\setcounter{enumi}{3}
+        \item E.~Farhi et al., arXiv:1411.4028 (2014).
+        \item K.~Blekos et al., Phys.\ Rep.\ \textbf{1029}, 1 (2024).
+        \item L.~Zhou et al., Phys.\ Rev.\ X \textbf{10}, 021067 (2020).
+      \end{enumerate}
+    \column{0.46\textwidth}
+      \textbf{VQE}
+      \begin{enumerate}\setcounter{enumi}{6}
+        \item A.~Peruzzo et al., Nat.\ Commun.\ \textbf{5}, 4213 (2014).
+        \item J.~Tilly et al., Phys.\ Rep.\ \textbf{986}, 1 (2022).
+      \end{enumerate}
+      \textbf{QSVM}
+      \begin{enumerate}\setcounter{enumi}{8}
+        \item V.~Havlíček et al., Nature \textbf{567}, 209 (2019).
+        \item M.~Schuld \& N.~Killoran, PRL \textbf{122}, 040504 (2019).
+      \end{enumerate}
+      \textbf{HHL and QFI}
+      \begin{enumerate}\setcounter{enumi}{10}
+        \item A.~W.~Harrow et al., PRL \textbf{103}, 150502 (2009).
+        \item J.~Stokes et al., Quantum \textbf{4}, 269 (2020).
+        \item J.~R.~McClean et al., Nat.\ Commun.\ \textbf{9}, 4812 (2018).
+      \end{enumerate}
+  \end{columns}
 \end{frame}
 
 \end{document}
