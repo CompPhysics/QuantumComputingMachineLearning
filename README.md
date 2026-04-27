@@ -120,28 +120,35 @@ themes can be covered:
 ## April 6-10, 2026
   - Finalizing the QPE discussions, with codes and formalism
   - The HHL algorithm for solving linear algebra problems
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week11, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file
   - Video of lecture at https://youtu.be/Rsn2INejK7o
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek11.pdf
 
 
 ## April 13-17, 2026
   - The HHL algorithm, codes and algorithms
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
   - Video of lecture at https://youtu.be/e70HFOTKKMg
   - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek112pdf  
 
 ## April 20-24, 2026 Quantum Machine Learning
   - QAOA algorithm and implementation
-  - Basics of quantum machine learning (QML) 
-  - Quantum Support vector machines (SVM) and classical SVMs
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week13, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
+
 
 ## April 27-May 1, 2026 Quantum machine learning
-  - Quantum neural networks
+  - Basics of quantum machine learning (QML) 
+  - Quantum neural networks (QNN)
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
 
 ## May 4-8, 2026 Quantum Machine Learning
-  - Quantum neural networks
+  - Quantum neural networks and Quantum Physics Informed Neural Networks (QPINNs)
+  - Sovling differential equations with QPINNs
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week15, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
 
 ## May 11-15, 2026
   - Quantum neural networks and quantum Boltzmann machines
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week16, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file
 
 ## May 18-22, 2026
   - Summary of course and discussion of and work on project 2
