@@ -1,0 +1,934 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage{physics}
+\usepackage{braket}
+\usepackage{hyperref}
+\usetheme{Madrid}
+
+% ── convenience macros ────────────────────────────────────────────────────────
+\newcommand{\E}{\mathbb{E}}
+
+\newcommand{\sigmoid}{\sigma}
+\newcommand{\pdata}{p_{\mathrm{data}}}
+\newcommand{\pmodel}{p_{\theta}}
+\newcommand{\Edata}{\langle\,\cdot\,\rangle_{\mathrm{data}}}
+\newcommand{\Emodel}{\langle\,\cdot\,\rangle_{\mathrm{model}}}
+\newcommand{\Ek}{\langle\,\cdot\,\rangle_{k}}
+\newcommand{\DKL}{D_{\mathrm{KL}}}
+\newcommand{\Zth}{Z_\theta}
+
+\title{Contrastive Divergence}
+\subtitle{Derivation from KL Divergence, Energy-Based Models, and Quantum Boltzmann Machines}
+\author{Morten Hjorth-Jensen}
+\date{April 30, 2026}
+
+\begin{document}
+\frame{\titlepage}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Motivation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Aim}
+These notes derive contrastive divergence (CD) from the Kullback--Leibler
+divergence and connect it to:
+\begin{enumerate}
+  \item classical Boltzmann machines (BMs),
+  \item general energy-based models (EBMs),
+  \item restricted Boltzmann machines (RBMs),
+  \item quantum Boltzmann machines (QBMs).
+\end{enumerate}
+
+The central question is:
+\[
+  \boxed{\text{Why is the approximate BM gradient called
+  \emph{contrastive divergence}?}}
+\]
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Learning as KL Minimisation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{The Learning Problem}
+Let $\pdata(x)$ be the data distribution and $\pmodel(x)$ a parametric model.
+
+\textbf{Goal:} find $\theta$ such that $\pmodel \approx \pdata$.
+
+\medskip
+Maximum likelihood (ML) maximises
+\[
+  \mathcal{L}(\theta)
+  = \E_{\pdata}[\log \pmodel(x)]
+  = \sum_x \pdata(x)\log\pmodel(x).
+\]
+
+\medskip
+\textbf{Equivalence with KL minimisation.}
+\[
+  \DKL(\pdata\|\pmodel)
+  = \sum_x \pdata(x)\log\frac{\pdata(x)}{\pmodel(x)}
+  = \underbrace{H(\pdata)}_{\text{const.}} - \mathcal{L}(\theta),
+\]
+so minimising $\DKL(\pdata\|\pmodel)$ is exactly equivalent to maximising $\mathcal{L}(\theta)$.
+\end{frame}
+
+\begin{frame}{KL Divergence: Key Properties}
+\begin{itemize}
+  \item $\DKL(p\|q)\ge 0$, with equality iff $p=q$ (Gibbs inequality).
+  \item $\DKL$ is \emph{not} symmetric: $\DKL(p\|q)\ne\DKL(q\|p)$ in general.
+  \item $\DKL(p\|q)$ penalises regions where $p>0$ but $q\approx 0$
+        (mode-covering behaviour for ML estimation).
+\end{itemize}
+
+\medskip
+\textbf{Proof of non-negativity (Jensen).}
+Since $-\log$ is convex:
+\[
+  \DKL(p\|q)
+  = \E_p\!\left[-\log\frac{q(x)}{p(x)}\right]
+  \ge -\log\E_p\!\left[\frac{q(x)}{p(x)}\right]
+  = -\log\sum_x q(x) = 0.
+\]
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Energy-Based Models}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Energy-Based Models}
+An \textbf{energy-based model} assigns an energy $E_\theta(x)\in\mathbb{R}$ to
+each configuration $x$:
+\[
+  \pmodel(x)
+  = \frac{e^{-E_\theta(x)}}{\Zth},
+  \qquad
+  \Zth = \sum_x e^{-E_\theta(x)}.
+\]
+
+Taking the log:
+\[
+  \log\pmodel(x) = -E_\theta(x) - \log\Zth.
+\]
+
+\textbf{The fundamental difficulty:} $\Zth$ is a sum over all configurations,
+which is exponentially large for high-dimensional $x$.
+\end{frame}
+
+\begin{frame}{Log-Likelihood Gradient: Full Derivation}
+\[
+  \nabla_\theta\mathcal{L}(\theta)
+  = \E_{\pdata}[\nabla_\theta\log\pmodel(x)]
+  = -\E_{\pdata}[\nabla_\theta E_\theta(x)]
+    - \nabla_\theta\log\Zth.
+\]
+
+\textbf{Gradient of the partition function.}
+\begin{align*}
+  \nabla_\theta\log\Zth
+  &= \frac{\nabla_\theta\Zth}{\Zth}
+   = \frac{\nabla_\theta\sum_x e^{-E_\theta(x)}}{\Zth} \\
+  &= \frac{-\sum_x e^{-E_\theta(x)}\nabla_\theta E_\theta(x)}{\Zth}
+   = -\E_{\pmodel}[\nabla_\theta E_\theta(x)].
+\end{align*}
+
+Substituting back:
+\[
+  \boxed{
+    \nabla_\theta\mathcal{L}
+    = -\E_{\pdata}[\nabla_\theta E_\theta]
+      + \E_{\pmodel}[\nabla_\theta E_\theta].
+  }
+\]
+\end{frame}
+
+\begin{frame}{Positive and Negative Phases}
+For \emph{minimising} the negative log-likelihood $-\mathcal{L}$:
+\[
+  \nabla_\theta(-\mathcal{L})
+  = \underbrace{\langle\nabla_\theta E_\theta\rangle_{\mathrm{data}}}_{\text{positive phase}}
+    -
+    \underbrace{\langle\nabla_\theta E_\theta\rangle_{\mathrm{model}}}_{\text{negative phase}}.
+\]
+
+\begin{description}
+  \item[Positive phase] Lowers $E_\theta$ on observed data configurations.
+        Estimated cheaply from the training set.
+  \item[Negative phase] Raises $E_\theta$ on configurations preferred by the
+        current model. Requires samples from $\pmodel$ — generally intractable.
+\end{description}
+
+The negative phase is the computational bottleneck of all EBM training.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Boltzmann Machines}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Classical Boltzmann Machine}
+A \textbf{Boltzmann machine} has visible units $v=(v_i)$ and hidden units
+$h=(h_j)$, with energy
+\[
+  E_\theta(v,h)
+  = -\sum_i a_i v_i
+    - \sum_j b_j h_j
+    - \sum_{ij} W_{ij}v_i h_j
+    - \sum_{i<k} U_{ik}v_i v_k
+    - \sum_{j<\ell} V_{j\ell}h_j h_\ell.
+\]
+
+The joint and visible distributions are
+\[
+  p_\theta(v,h)=\frac{e^{-E_\theta(v,h)}}{\Zth},
+  \qquad
+  p_\theta(v)=\sum_h p_\theta(v,h).
+\]
+
+The log-likelihood gradient over visible data is
+\[
+  \nabla_\theta\mathcal{L}
+  = -\E_{\pdata(v)}\bigl[\E_{p(h|v)}[\nabla_\theta E_\theta(v,h)]\bigr]
+    + \E_{p_\theta(v,h)}[\nabla_\theta E_\theta(v,h)].
+\]
+\end{frame}
+
+\begin{frame}{Restricted Boltzmann Machine: Architecture}
+In an \textbf{RBM} visible–visible and hidden–hidden connections are removed:
+\[
+  E_\theta(v,h)
+  = -a^\top v - b^\top h - v^\top W h.
+\]
+
+This bipartite structure gives \emph{conditional independence}:
+\[
+  p_\theta(h\mid v) = \prod_j p_\theta(h_j\mid v),
+  \qquad
+  p_\theta(v\mid h) = \prod_i p_\theta(v_i\mid h).
+\]
+
+\textbf{Binary units.} For $v_i,h_j\in\{0,1\}$:
+\[
+  p(h_j=1\mid v)
+  = \sigmoid\!\left(b_j + \textstyle\sum_i W_{ij}v_i\right),
+\]
+\[
+  p(v_i=1\mid h)
+  = \sigmoid\!\left(a_i + \textstyle\sum_j W_{ij}h_j\right),
+\]
+where $\sigmoid(x) = 1/(1+e^{-x})$.
+\end{frame}
+
+\begin{frame}{Deriving the Conditional Probabilities}
+From the energy,
+\[
+  p(h_j=1\mid v)
+  = \frac{p_\theta(v, h_j=1)}{p_\theta(v,h_j=0)+p_\theta(v,h_j=1)}.
+\]
+
+The numerator's energy contribution from $h_j$ is
+$-(b_j + \sum_i W_{ij}v_i)h_j$.  Therefore
+
+\[
+  \frac{e^{b_j+\sum_i W_{ij}v_i}}{1 + e^{b_j+\sum_i W_{ij}v_i}}
+  = \sigmoid\!\bigl(b_j + \textstyle\sum_i W_{ij}v_i\bigr).
+\]
+
+Because $v$--$h$ are bipartite, the $h_j$ are \emph{conditionally independent}
+given $v$, so $p_\theta(h\mid v) = \prod_j p_\theta(h_j\mid v)$.
+This makes block Gibbs sampling exact and efficient.
+\end{frame}
+
+\begin{frame}{Exact RBM Gradient}
+Since $\partial E/\partial W_{ij} = -v_i h_j$, the gradient of the log-likelihood is
+\[
+  \frac{\partial\mathcal{L}}{\partial W_{ij}}
+  = \langle v_i h_j\rangle_{\mathrm{data}}
+    - \langle v_i h_j\rangle_{\mathrm{model}}.
+\]
+
+\textbf{Estimating the positive phase} (easy):
+\[
+  \langle v_i h_j\rangle_{\mathrm{data}}
+  = \E_{\pdata(v)}\bigl[v_i\,\sigmoid(b_j+W_{:j}^\top v)\bigr].
+\]
+
+\textbf{Estimating the negative phase} (hard): requires equilibrium Gibbs
+samples $\{v^*,h^*\}\sim p_\theta(v,h)$.
+
+Similarly, for biases:
+\[
+  \frac{\partial\mathcal{L}}{\partial a_i}
+  = \langle v_i\rangle_{\mathrm{data}} - \langle v_i\rangle_{\mathrm{model}},
+  \qquad
+  \frac{\partial\mathcal{L}}{\partial b_j}
+  = \langle h_j\rangle_{\mathrm{data}} - \langle h_j\rangle_{\mathrm{model}}.
+\]
+\end{frame}
+
+\begin{frame}{Gibbs Sampling for RBMs}
+Block Gibbs sampling alternates:
+\begin{enumerate}
+  \item Sample $h \sim p_\theta(h\mid v)$: draw each $h_j$ independently
+        from $\mathrm{Bernoulli}(\sigmoid(b_j+W_{:j}^\top v))$.
+  \item Sample $v' \sim p_\theta(v\mid h)$: draw each $v_i$ independently
+        from $\mathrm{Bernoulli}(\sigmoid(a_i+W_{i:}h))$.
+\end{enumerate}
+
+\medskip
+Starting from any $v^{(0)}$, iterating $k$ steps gives samples from
+$p_k(\cdot) = p_\theta(\cdot|T^k)$ where $T$ is the Gibbs transition.
+
+\textbf{Convergence:} as $k\to\infty$, $p_k\to p_\theta$ (ergodic Markov chain).
+CD-$k$ uses the $k$-step approximation in lieu of the true equilibrium.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Contrastive Divergence}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{The Bottleneck and the CD Idea}
+The exact model expectation
+\[
+  \langle v_i h_j\rangle_{\mathrm{model}}
+\]
+requires Gibbs chains run to equilibrium — expensive or impractical.
+
+\medskip
+\textbf{Contrastive divergence} (Hinton 2002) replaces equilibrium sampling by
+\emph{short chains initialised at data}:
+
+\[
+  v^{(0)}\!\sim\pdata
+  \;\to\; h^{(0)}\!\sim p(h|v^{(0)})
+  \;\to\; v^{(1)}\!\sim p(v|h^{(0)})
+  \;\to\; \cdots
+  \;\to\; v^{(k)}.
+\]
+
+The distribution of $v^{(k)}$ is denoted $p_k$.  CD-$k$ uses
+\[
+  \langle v_i h_j\rangle_{\mathrm{model}}
+  \approx \langle v_i h_j\rangle_{k}
+  \;\Longrightarrow\;
+  \Delta W_{ij}^{\mathrm{CD-}k}
+  \propto
+  \langle v_i h_j\rangle_{\mathrm{data}}
+  -
+  \langle v_i h_j\rangle_{k}.
+\]
+\end{frame}
+
+\begin{frame}{Why ``Contrastive Divergence''? — The Objective}
+Define the \textbf{contrastive divergence objective}:
+\[
+  \mathrm{CD}_k(\theta)
+  = \DKL(p_0\|\pmodel)
+    - \DKL(p_k\|\pmodel),
+\]
+where $p_0 = \pdata$ and $p_k = p_0 T_\theta^k$ ($T_\theta$ = Gibbs kernel leaving
+$\pmodel$ invariant).
+
+\medskip
+\textbf{Interpretation.}
+\begin{itemize}
+  \item The first term pushes $\pmodel$ toward the data distribution.
+  \item The second term \emph{undoes} some of that push, using
+        the short-run reconstruction distribution $p_k$.
+  \item The \emph{contrast} is between the data divergence and the $k$-step
+        reconstruction divergence.
+\end{itemize}
+
+As $k\to\infty$, $p_k\to\pmodel$, so $\mathrm{CD}_k\to\DKL(p_0\|\pmodel)$ (exact ML).
+\end{frame}
+
+\begin{frame}{Gradient of the First KL Term}
+Since $p_0 = \pdata$ does not depend on $\theta$:
+\begin{align*}
+  \nabla_\theta\DKL(p_0\|\pmodel)
+  &= -\nabla_\theta\E_{p_0}[\log\pmodel(x)] \\
+  &= -\E_{p_0}[\nabla_\theta\log\pmodel(x)] \\
+  &= \E_{p_0}[\nabla_\theta E_\theta(x)]
+     - \E_{\pmodel}[\nabla_\theta E_\theta(x)] \\
+  &= \langle\nabla_\theta E_\theta\rangle_{p_0}
+     - \langle\nabla_\theta E_\theta\rangle_{\pmodel}.
+\end{align*}
+
+This is the \emph{exact} ML gradient: positive phase minus negative phase.
+\end{frame}
+
+\begin{frame}{Gradient of the Second KL Term}
+\[
+  \DKL(p_k\|\pmodel)
+  = \sum_x p_k(x)\log\frac{p_k(x)}{\pmodel(x)}.
+\]
+
+The full gradient has two contributions:
+\begin{enumerate}
+  \item \textbf{Explicit:} derivative through $\pmodel$ (treating $p_k$ as fixed).
+  \item \textbf{Implicit:} derivative through $p_k = p_0 T_\theta^k$, since
+        $T_\theta$ depends on $\theta$.
+\end{enumerate}
+
+The \textbf{CD approximation} neglects the implicit term:
+\[
+  \nabla_\theta p_k \approx 0.
+\]
+
+Under this approximation:
+\[
+  \nabla_\theta\DKL(p_k\|\pmodel)
+  \approx
+  \langle\nabla_\theta E_\theta\rangle_{p_k}
+  - \langle\nabla_\theta E_\theta\rangle_{\pmodel}.
+\]
+\end{frame}
+
+\begin{frame}{The CD Gradient: Cancellation}
+\begin{align*}
+  \nabla_\theta\mathrm{CD}_k
+  &\approx
+  \nabla_\theta\DKL(p_0\|\pmodel)
+  -
+  \nabla_\theta\DKL(p_k\|\pmodel) \\[4pt]
+  &=
+  \Bigl[\langle\nabla_\theta E_\theta\rangle_{p_0}
+         - \langle\nabla_\theta E_\theta\rangle_{\pmodel}\Bigr]
+  -
+  \Bigl[\langle\nabla_\theta E_\theta\rangle_{p_k}
+         - \langle\nabla_\theta E_\theta\rangle_{\pmodel}\Bigr].
+\end{align*}
+
+The model expectations $\langle\nabla_\theta E_\theta\rangle_{\pmodel}$ cancel:
+\[
+  \boxed{
+    \nabla_\theta\mathrm{CD}_k
+    \approx
+    \langle\nabla_\theta E_\theta\rangle_{p_0}
+    -
+    \langle\nabla_\theta E_\theta\rangle_{p_k}.
+  }
+\]
+
+This is the final CD update rule:\ data statistics minus $k$-step
+reconstruction statistics.  The intractable partition-function gradient
+has been eliminated.
+\end{frame}
+
+\begin{frame}{Concrete RBM CD-1 Update}
+For CD-1 on an RBM, one Gibbs step gives $v^{(1)}$ from $v^{(0)}\sim\pdata$:
+
+\[
+  h_j^{(0)} \sim \mathrm{Bernoulli}\!\bigl(\sigmoid(b_j + W_{:j}^\top v^{(0)})\bigr),
+\]
+\[
+  v_i^{(1)} \sim \mathrm{Bernoulli}\!\bigl(\sigmoid(a_i + W_{i:} h^{(0)})\bigr),
+\]
+\[
+  h_j^{(1)} \sim \mathrm{Bernoulli}\!\bigl(\sigmoid(b_j + W_{:j}^\top v^{(1)})\bigr).
+\]
+
+The CD-1 weight update is then:
+\begin{align*}
+  \Delta W_{ij}
+  &= \eta\Bigl(v_i^{(0)}\,\E[h_j^{(0)}\mid v^{(0)}]
+               - v_i^{(1)}\,\E[h_j^{(1)}\mid v^{(1)}]\Bigr), \\
+  \Delta a_i
+  &= \eta\bigl(v_i^{(0)} - v_i^{(1)}\bigr), \qquad
+  \Delta b_j
+   = \eta\bigl(\E[h_j^{(0)}\mid v^{(0)}] - \E[h_j^{(1)}\mid v^{(1)}]\bigr).
+\end{align*}
+
+Using the \emph{mean-field} hidden activations (rather than samples) reduces variance.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Bias, Variants, and Connections}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Bias of the CD Gradient}
+CD-$k$ is \emph{not} an unbiased estimator of the ML gradient.
+
+\medskip
+\textbf{The bias.} Let $T_\theta$ be the Gibbs transition kernel.  The true
+gradient of $\DKL(p_k\|\pmodel)$ is
+\[
+  \nabla_\theta\DKL(p_k\|\pmodel)
+  = \langle\nabla_\theta E_\theta\rangle_{p_k}
+    - \langle\nabla_\theta E_\theta\rangle_{\pmodel}
+    + \underbrace{\sum_x (\nabla_\theta p_k(x))
+      \log\frac{p_k(x)}{\pmodel(x)}}_{\text{neglected implicit term}}.
+\]
+
+Neglecting the implicit term introduces a bias that vanishes as $k\to\infty$.
+
+\medskip
+\textbf{Consequence.} CD-$k$ may not converge to the true ML solution and can
+exhibit slow drift or oscillation during training.
+\end{frame}
+
+\begin{frame}{Persistent Contrastive Divergence (PCD)}
+\textbf{Key idea} (Tieleman 2008): maintain a persistent set of fantasy particles
+$\{v^{(n)}\}_{n=1}^N$ that are \emph{not} reinitialised from data.
+
+\medskip
+\textbf{PCD update:}
+\begin{enumerate}
+  \item Run one Gibbs step from each fantasy particle: $v^{(n)}\to v^{(n)}{}'$.
+  \item Compute:
+        $\Delta W_{ij} = \eta\bigl(\langle v_i h_j\rangle_{\mathrm{data}}
+                         - \langle v_i h_j\rangle_{\mathrm{fantasy}}\bigr)$.
+  \item Update the fantasy particles: $v^{(n)}\leftarrow v^{(n)}{}'$.
+\end{enumerate}
+
+\medskip
+\textbf{Why better?} Fantasy particles mix across modes between updates; they
+approximate the true model distribution more faithfully than CD-$k$ short chains.
+
+\medskip
+\textbf{CD vs PCD:}
+\begin{tabular}{lll}
+  & \textbf{CD-$k$} & \textbf{PCD} \\
+  Init.\ of chain & data & persistent fantasy \\
+  Bias & larger & smaller \\
+  Mixing & local & global \\
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Stochastic Maximum Likelihood (SML)}
+SML is essentially PCD with a rigorous motivation.
+
+\medskip
+At step $t$, the Markov chain is at $v^{(t)}$, which approximates a sample from
+$p_{\theta^{(t)}}$.  After a small parameter update $\theta^{(t)}\to\theta^{(t+1)}$,
+$v^{(t)}$ is still close to a sample from $p_{\theta^{(t+1)}}$ provided the
+update is small.
+
+\medskip
+\textbf{Gradient approximation:}
+\[
+  \nabla_\theta\mathcal{L}(\theta)
+  \approx
+  \langle\nabla_\theta E_\theta\rangle_{\mathrm{data}}
+  -
+  \nabla_\theta E_\theta(v^{(t)}).
+\]
+
+The approximation improves as the learning rate decreases, and under mild
+conditions SML is asymptotically unbiased.
+\end{frame}
+
+\begin{frame}{Natural Gradient and Fisher Information}
+Standard gradient ascent on $\mathcal{L}(\theta)$ is geometry-unaware.
+
+\medskip
+The \textbf{natural gradient} (Amari 1998) uses the \emph{Fisher information
+matrix} $F(\theta)$:
+\[
+  F_{ab}(\theta)
+  = \E_{\pmodel}\!\left[
+      \frac{\partial\log\pmodel}{\partial\theta_a}
+      \frac{\partial\log\pmodel}{\partial\theta_b}
+    \right],
+\]
+and updates
+\[
+  \theta \leftarrow \theta + \eta\, F(\theta)^{-1}\nabla_\theta\mathcal{L}(\theta).
+\]
+
+\textbf{For EBMs:}
+\[
+  F_{ab}(\theta)
+  = \operatorname{Cov}_{\pmodel}\!\left[
+      \nabla_{\theta_a}E_\theta,\;
+      \nabla_{\theta_b}E_\theta
+    \right].
+\]
+
+Computing $F^{-1}$ is expensive, but the natural gradient converges faster and is
+invariant to reparameterisation.  Approximate versions (e.g., K-FAC) are used in
+practice.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Energy-Based Interpretation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Energy Landscape Picture}
+For $\pmodel(x)\propto e^{-E_\theta(x)}$, learning reshapes the energy surface:
+
+\medskip
+\begin{center}
+\begin{tabular}{ll}
+  \textbf{ML} & Lower $E$ on data; raise $E$ on model samples. \\[4pt]
+  \textbf{CD-$k$} & Lower $E$ on data; raise $E$ on $k$-step reconstructions.
+\end{tabular}
+\end{center}
+
+\medskip
+The CD update is \emph{local}: it adjusts the energy landscape only in the
+neighbourhood of data points, as defined by the mixing distance of $k$ Gibbs steps.
+
+\medskip
+This locality is both a strength (cheap) and a weakness (misses distant modes).
+\end{frame}
+
+\begin{frame}{Relation to Other EBM Training Methods}
+\begin{tabular}{lll}
+  \textbf{Method} & \textbf{Negative samples} & \textbf{Notes} \\[3pt]
+  CD-$k$ & short Gibbs chains & biased, cheap \\
+  PCD / SML & persistent chains & less biased \\
+  Score matching & analytic & no sampling needed \\
+  Noise-contrastive est. & fixed noise dist.\ & binary classifier \\
+  Diffusion-based & learned reverse SDE & SOTA generative models \\
+\end{tabular}
+
+\medskip
+CD uses the model's own dynamics to generate negative samples.  Unlike score
+matching, it does not require second-order derivatives of $E_\theta$.  Unlike
+NCE, it does not need an explicit noise distribution.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Quantum Boltzmann Machines}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Quantum Boltzmann Machine: Setup}
+A \textbf{quantum Boltzmann machine} replaces the classical energy by a
+Hamiltonian $H_\theta$ acting on a Hilbert space $\mathcal{H}$.
+
+\medskip
+The \textbf{Gibbs (thermal) state} at inverse temperature $\beta$ is
+\[
+  \rho_\theta
+  = \frac{e^{-\beta H_\theta}}{\Zth},
+  \qquad
+  \Zth = \Tr\!\bigl(e^{-\beta H_\theta}\bigr).
+\]
+
+Visible probabilities arise from projective measurements:
+\[
+  p_\theta(v)
+  = \Tr\!\bigl[\Pi_v\,\rho_\theta\bigr],
+\]
+where $\Pi_v = |v\rangle\langle v|$ projects onto visible bitstring $v$, and
+the hidden degrees of freedom have been traced out.
+\end{frame}
+
+\begin{frame}{Quantum Log-Likelihood and Its Gradient}
+The training objective is
+\[
+  \mathcal{L}(\theta)
+  = \sum_v \pdata(v)\log p_\theta(v)
+  = \sum_v \pdata(v)\log\Tr\!\bigl[\Pi_v\rho_\theta\bigr].
+\]
+
+The gradient is
+\[
+  \nabla_\theta\mathcal{L}
+  = \sum_v \pdata(v)
+    \frac{\Tr[\Pi_v\,\partial_\theta\rho_\theta]}{\Tr[\Pi_v\,\rho_\theta]}.
+\]
+
+This requires computing $\partial_\theta\rho_\theta$, which is where the
+commuting and non-commuting cases diverge.
+\end{frame}
+
+\begin{frame}{Quantum Gradient: Commuting Hamiltonian}
+Suppose $H_\theta = \sum_a \theta_a O_a$ with all $[O_a, O_{a'}]=0$.
+
+\medskip
+Then $e^{-\beta H_\theta} = \prod_a e^{-\beta\theta_a O_a}$, and
+\[
+  \partial_{\theta_a}e^{-\beta H_\theta}
+  = -\beta O_a\, e^{-\beta H_\theta}.
+\]
+
+Therefore
+\[
+  \partial_{\theta_a}\Zth
+  = -\beta\Tr\!\bigl(O_a e^{-\beta H_\theta}\bigr)
+  = -\beta\Zth\langle O_a\rangle_{\rho_\theta},
+\]
+and
+\[
+  \partial_{\theta_a}\log\Zth = -\beta\langle O_a\rangle_{\rho_\theta}.
+\]
+
+The gradient of the log-likelihood has the classical BM structure:
+\[
+  \nabla_{\theta_a}(-\mathcal{L})
+  = \beta\bigl(\langle O_a\rangle_{\mathrm{data}}
+               - \langle O_a\rangle_{\rho_\theta}\bigr).
+\]
+\end{frame}
+
+\begin{frame}{Quantum Gradient: Non-Commuting Hamiltonian}
+When $[H_\theta, \partial_{\theta_a}H_\theta]\ne 0$, the derivative of
+$e^{-\beta H_\theta}$ is given by the \textbf{Duhamel (Dyson) formula}:
+\[
+  \partial_{\theta_a}e^{-\beta H_\theta}
+  =
+  -\int_0^\beta
+    e^{-(\beta-\tau)H_\theta}
+    (\partial_{\theta_a}H_\theta)
+    e^{-\tau H_\theta}
+  \,d\tau.
+\]
+
+Taking the trace:
+\[
+  \partial_{\theta_a}\Zth
+  =
+  -\int_0^\beta
+    \Tr\!\Bigl[
+      e^{-(\beta-\tau)H_\theta}
+      O_a\,
+      e^{-\tau H_\theta}
+    \Bigr]
+  d\tau
+  =
+  -\Zth
+  \int_0^\beta
+    \langle O_a(\tau)\rangle_\beta
+  \,d\tau,
+\]
+where $O_a(\tau) = e^{\tau H_\theta}O_a e^{-\tau H_\theta}$ is the
+\emph{imaginary-time Heisenberg picture} operator and
+$\langle\cdot\rangle_\beta = \Tr[\rho_\theta\,\cdot\,]/\Tr[\rho_\theta]$.
+\end{frame}
+
+\begin{frame}{Imaginary-Time Correlation Functions}
+Defining the \textbf{symmetrised imaginary-time correlator}
+\[
+  \widetilde{\langle O_a\rangle}_{\rho_\theta}
+  \;:=\;
+  \frac{1}{\beta}\int_0^\beta
+    \langle O_a(\tau)\rangle_\beta
+  \,d\tau
+  \;=\;
+  \frac{1}{\beta}
+  \int_0^\beta
+    \Tr\!\bigl[\rho_\theta^{1-\tau/\beta} O_a \rho_\theta^{\tau/\beta}\bigr]
+  \,d\tau,
+\]
+the partition-function gradient becomes
+\[
+  \partial_{\theta_a}\log\Zth
+  = -\beta\,\widetilde{\langle O_a\rangle}_{\rho_\theta}.
+\]
+
+\textbf{Key point.} In the commuting case,
+$\widetilde{\langle O_a\rangle} = \langle O_a\rangle_{\rho_\theta}$.
+In the non-commuting case, the gradient requires imaginary-time
+correlation functions, which are generally inaccessible from projective
+measurements alone.
+\end{frame}
+
+\begin{frame}{Full QBM Gradient Formula}
+Combining, for a QBM with non-commuting Hamiltonian:
+\[
+  \nabla_{\theta_a}(-\mathcal{L})
+  =
+  \beta\!\sum_v
+    \pdata(v)
+    \frac{\displaystyle
+      \Tr\!\Bigl[\Pi_v
+      \int_0^\beta e^{-(\beta-\tau)H_\theta}O_a e^{-\tau H_\theta}\,d\tau
+      \Bigr]}
+    {\Tr[\Pi_v\rho_\theta]}
+  \,-\,
+  \beta\,\widetilde{\langle O_a\rangle}_{\rho_\theta}.
+\]
+
+\textbf{Two difficulties:}
+\begin{itemize}
+  \item The positive phase requires conditional imaginary-time correlators
+        given each visible configuration $v$ — exponentially hard classically.
+  \item The negative phase requires the unconditional imaginary-time correlator
+        $\widetilde{\langle O_a\rangle}_{\rho_\theta}$.
+\end{itemize}
+
+Both can be accessed on a quantum processor but require care about
+state preparation and measurement.
+\end{frame}
+
+\begin{frame}{Quantum Contrastive Divergence}
+\textbf{Classical analogy:}
+\[
+  \pdata \;\longrightarrow\; p_k
+  \quad\text{via}\quad
+  k \text{ steps of Gibbs sampling}.
+\]
+
+\textbf{Quantum analogue:}
+\[
+  \rho_{\mathrm{data}} \;\longrightarrow\; \rho_k,
+\]
+where $\rho_k$ is obtained by:
+\begin{itemize}
+  \item \emph{short quantum annealing} toward the Gibbs state,
+  \item \emph{variational thermal-state} preparation (e.g., VQT),
+  \item \emph{Suzuki--Trotter} imaginary-time evolution for $k$ steps,
+  \item or \emph{mean-field} quantum approximations.
+\end{itemize}
+
+Under the same approximation $\nabla_\theta\rho_k\approx 0$:
+\[
+  \Delta\theta_a
+  \propto
+  \langle O_a\rangle_{\mathrm{data}}
+  -
+  \langle O_a\rangle_{\rho_k}.
+\]
+\end{frame}
+
+\begin{frame}{Quantum Contrastive Divergence: Objective}
+Defining the \textbf{quantum CD objective} as
+\[
+  \mathrm{QCD}_k(\theta)
+  = S(\rho_0\|\rho_\theta)
+    - S(\rho_k\|\rho_\theta),
+\]
+where $S(\rho\|\sigma) = \Tr[\rho(\log\rho - \log\sigma)]$ is the
+\textbf{quantum relative entropy} (KL divergence for density matrices).
+
+\medskip
+This mirrors the classical construction exactly, with
+$\DKL(p\|q)$ replaced by $S(\rho\|\sigma)$.
+
+\medskip
+\textbf{Properties of $S(\rho\|\sigma)$:}
+\begin{itemize}
+  \item $S(\rho\|\sigma)\ge 0$, with equality iff $\rho=\sigma$ (Klein's inequality).
+  \item $S(\rho\|\sigma)=\Tr[\rho\log\rho]-\Tr[\rho\log\sigma]$.
+  \item Not symmetric in general.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Practical Challenges for QBMs}
+\begin{tabular}{lp{8cm}}
+  \textbf{Challenge} & \textbf{Details} \\[3pt]
+  Gibbs-state prep.\ & Exact preparation is QMA-hard in general;
+                        variational or annealing-based methods are needed. \\[3pt]
+  Non-commuting $H$ & Requires imaginary-time correlators,
+                       not accessible from standard measurements. \\[3pt]
+  Hidden variables & Partial trace over hidden Hilbert space;
+                     exponential in hidden dimension. \\[3pt]
+  Hardware noise & Decoherence distorts the thermal state;
+                    error mitigation is essential. \\[3pt]
+  Gradient estimation & Each gradient call may require many circuit executions.
+\end{tabular}
+
+\medskip
+\textbf{Practical approaches:}
+mean-field QBMs, Suzuki--Trotter thermalization,
+variational thermal-state preparation (VQT),
+quantum annealing samples,
+and CD-like short-run estimates.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Summary}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Summary: Classical CD}
+For a classical EBM $\pmodel(x) = e^{-E_\theta(x)}/\Zth$,
+ML maximisation gives the intractable gradient
+\[
+  \nabla_\theta\mathcal{L}
+  = -\langle\nabla_\theta E_\theta\rangle_{\mathrm{data}}
+    + \langle\nabla_\theta E_\theta\rangle_{\mathrm{model}}.
+\]
+
+CD-$k$ approximates this by replacing equilibrium model expectations
+with $k$-step Gibbs reconstructions:
+\[
+  \nabla_\theta\mathrm{CD}_k
+  \approx
+  \langle\nabla_\theta E_\theta\rangle_{p_0}
+  -
+  \langle\nabla_\theta E_\theta\rangle_{p_k}.
+\]
+
+This approximation is \textbf{biased} (neglects $\nabla_\theta p_k$) but
+\textbf{efficient} (no partition function needed).
+\end{frame}
+
+\begin{frame}{Summary: Why the Name?}
+The CD objective is
+\[
+  \mathrm{CD}_k(\theta)
+  =
+  \underbrace{\DKL(p_0\|\pmodel)}_{\text{data divergence}}
+  -
+  \underbrace{\DKL(p_k\|\pmodel)}_{\text{reconstruction divergence}}.
+\]
+
+\begin{description}
+  \item[Contrastive] Compare (contrast) data statistics with short-run
+        reconstruction statistics.
+  \item[Divergence] The comparison is formalised through KL divergences.
+\end{description}
+
+As $k$ increases the approximation improves:
+\[
+  k=0: \quad \mathrm{CD}_0 = 0;
+  \qquad
+  k\to\infty: \quad \mathrm{CD}_k \to \DKL(p_0\|\pmodel) \;(= \text{exact ML}).
+\]
+\end{frame}
+
+\begin{frame}{Summary: Quantum Extension}
+For a QBM $\rho_\theta = e^{-\beta H_\theta}/\Zth$, the key results are:
+
+\medskip
+\begin{tabular}{ll}
+  Commuting $H$ & $\nabla_{\theta_a}(-\mathcal{L})
+                  = \beta(\langle O_a\rangle_{\mathrm{data}}
+                         - \langle O_a\rangle_{\rho_\theta})$ \\[6pt]
+  Non-commuting $H$ & $\nabla_{\theta_a}\log\Zth
+                       = -\beta\,\widetilde{\langle O_a\rangle}_{\rho_\theta}$,
+                       imaginary-time integral \\[6pt]
+  Quantum CD & $\Delta\theta_a
+               \propto \langle O_a\rangle_{\mathrm{data}}
+                       - \langle O_a\rangle_{\rho_k}$
+\end{tabular}
+
+\medskip
+The quantum CD objective replaces KL divergence with quantum relative entropy:
+\[
+  \mathrm{QCD}_k(\theta)
+  = S(\rho_0\|\rho_\theta) - S(\rho_k\|\rho_\theta).
+\]
+\end{frame}
+
+\begin{frame}{Final Take-Home Message}
+\[
+  \boxed{
+    \mathrm{CD}_k
+    = \DKL(p_{\mathrm{data}}\|\pmodel)
+      - \DKL(p_k\|\pmodel)
+  }
+\]
+
+The learning rule contrasts
+\[
+  \text{data-driven expectations}
+  \quad\text{with}\quad
+  \text{short-run reconstructed expectations},
+\]
+eliminating the need to evaluate the partition function.
+
+\medskip
+This single idea unifies:
+\begin{enumerate}
+  \item Classical EBMs and BMs (Gibbs sampling approximation),
+  \item RBMs (efficient block Gibbs with factored conditionals),
+  \item QBMs (quantum relative entropy, Duhamel formula, imaginary-time correlators),
+  \item Persistent CD / SML (global approximation to the model distribution).
+\end{enumerate}
+\end{frame}
+
+\end{document}
