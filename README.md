@@ -140,7 +140,8 @@ themes can be covered:
   - Basics of quantum machine learning (QML) 
   - Quantum neural networks (QNN) and links to QAOA and other methods
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week14, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
-
+  - Video of lecture at https://youtu.be/0iTYdjBgQcA
+  
 ## May 4-8, 2026 Quantum Machine Learning
   - Quantum neural networks and Quantum Physics Informed Neural Networks (QPINNs)
   - Sovling differential equations with QPINNs
