@@ -1,0 +1,876 @@
+\documentclass{beamer}
+
+\usepackage{amsmath,amsfonts,amssymb,bm}
+\usepackage{physics}
+\usepackage{mathtools}
+
+\usetheme{Madrid}
+
+\title{Fisher Information:\\ From Classical Statistics to Quantum Neural Networks}
+\author{Graduate Lecture Notes}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%------------------------------------------------
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Classical Fisher Information}
+
+\begin{frame}{Statistical Model}
+Consider a parametric probability distribution:
+\[
+p(x|\theta), \quad \theta \in \mathbb{R}^d
+\]
+
+Goal:
+\begin{itemize}
+\item Estimate $\theta$ from data
+\item Quantify sensitivity of distribution to $\theta$
+\end{itemize}
+
+\pause
+
+Key object:
+\[
+\textbf{Score function:} \quad 
+\ell_\theta(x) = \partial_\theta \log p(x|\theta)
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Definition of Fisher Information}
+The Fisher Information is defined as:
+
+\[
+\mathcal{I}(\theta) 
+= \mathbb{E}_{x \sim p(x|\theta)} 
+\left[ (\partial_\theta \log p(x|\theta))^2 \right]
+\]
+
+\pause
+
+Equivalent form:
+
+\[
+\mathcal{I}(\theta)
+= - \mathbb{E}\left[\partial_\theta^2 \log p(x|\theta)\right]
+\]
+
+\pause
+
+Interpretation:
+\begin{itemize}
+\item Measures curvature of likelihood
+\item Quantifies distinguishability of nearby distributions
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Derivation of Equivalent Form}
+Start with normalization:
+\[
+\int p(x|\theta) dx = 1
+\]
+
+Differentiate:
+\[
+\partial_\theta \int p(x|\theta) dx = 0
+\]
+
+\[
+\int \partial_\theta p(x|\theta) dx = 0
+\]
+
+\pause
+
+Using:
+\[
+\partial_\theta p = p \partial_\theta \log p
+\]
+
+we obtain:
+\[
+\mathbb{E}[\partial_\theta \log p] = 0
+\]
+
+\pause
+
+Second derivative leads to:
+\[
+\mathcal{I}(\theta)
+= -\mathbb{E}[\partial_\theta^2 \log p]
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Cramér–Rao Bound}
+For an unbiased estimator $\hat{\theta}$:
+
+\[
+\mathrm{Var}(\hat{\theta}) \geq \frac{1}{\mathcal{I}(\theta)}
+\]
+
+\pause
+
+Implication:
+\begin{itemize}
+\item Fisher information sets fundamental precision limit
+\item High $\mathcal{I}(\theta)$ → better estimability
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\section{Fisher Information in Optimization}
+
+\begin{frame}{Likelihood Optimization}
+Maximum likelihood:
+\[
+\theta^* = \arg\max_\theta \sum_i \log p(x_i|\theta)
+\]
+
+\pause
+
+Gradient:
+\[
+\nabla_\theta L = \sum_i \partial_\theta \log p(x_i|\theta)
+\]
+
+\pause
+
+Hessian:
+\[
+H \approx - \mathcal{I}(\theta)
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Natural Gradient}
+Standard gradient descent:
+\[
+\theta_{t+1} = \theta_t - \eta \nabla_\theta L
+\]
+
+\pause
+
+Problem:
+\begin{itemize}
+\item Not invariant under reparametrization
+\end{itemize}
+
+\pause
+
+Natural gradient:
+\[
+\theta_{t+1} 
+= \theta_t - \eta \, \mathcal{I}(\theta)^{-1} \nabla_\theta L
+\]
+
+\pause
+
+Interpretation:
+\begin{itemize}
+\item Geometry-aware update
+\item Uses information metric
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Information Geometry}
+Fisher information defines a Riemannian metric:
+
+\[
+ds^2 = \sum_{ij} \mathcal{I}_{ij} d\theta_i d\theta_j
+\]
+
+\pause
+
+Interpretation:
+\begin{itemize}
+\item Parameter space becomes curved manifold
+\item Natural gradient = steepest descent on manifold
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\section{Quantum Fisher Information}
+
+\begin{frame}{Quantum States}
+Quantum statistical model:
+\[
+\rho(\theta)
+\]
+
+Pure state:
+\[
+\rho = \ket{\psi(\theta)}\bra{\psi(\theta)}
+\]
+
+\pause
+
+Goal:
+\begin{itemize}
+\item Estimate parameter encoded in quantum state
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Fisher Information Definition}
+Defined via Symmetric Logarithmic Derivative (SLD):
+
+\[
+\partial_\theta \rho 
+= \frac{1}{2}(L_\theta \rho + \rho L_\theta)
+\]
+
+\pause
+
+Quantum Fisher Information:
+
+\[
+F_Q(\theta) = \mathrm{Tr}[\rho L_\theta^2]
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{QFI for Pure States}
+For $\ket{\psi(\theta)}$:
+
+\[
+F_Q = 4 \left(
+\langle \partial_\theta \psi | \partial_\theta \psi \rangle
+- |\langle \psi | \partial_\theta \psi \rangle|^2
+\right)
+\]
+
+\pause
+
+Key property:
+\begin{itemize}
+\item Measures distinguishability of quantum states
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Cramér–Rao Bound}
+\[
+\mathrm{Var}(\hat{\theta}) \geq \frac{1}{F_Q}
+\]
+
+\pause
+
+Important:
+\begin{itemize}
+\item $F_Q \geq \mathcal{I}_{\text{classical}}$
+\item Quantum measurements can saturate this bound
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\section{QFI in Quantum Neural Networks}
+
+\begin{frame}{Parameterized Quantum Circuits}
+Quantum neural network:
+
+\[
+\ket{\psi(\theta)} = U(\theta)\ket{0}
+\]
+
+\pause
+
+Output expectation:
+\[
+L(\theta) = \langle \psi(\theta) | O | \psi(\theta) \rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Gradient Structure}
+Gradient:
+
+\[
+\partial_\theta L 
+= 2 \, \mathrm{Re} \left(
+\langle \partial_\theta \psi | O | \psi \rangle
+\right)
+\]
+
+\pause
+
+Relates directly to QFI structure:
+\[
+F_Q \sim \langle \partial_\theta \psi | \partial_\theta \psi \rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Natural Gradient}
+Update rule:
+
+\[
+\theta_{t+1}
+= \theta_t - \eta \, F_Q^{-1} \nabla_\theta L
+\]
+
+\pause
+
+Advantages:
+\begin{itemize}
+\item Avoids barren plateaus
+\item Geometry-aware optimization
+\item Faster convergence
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Fubini–Study Metric}
+QFI induces metric:
+
+\[
+ds^2 = \frac{1}{4} F_Q d\theta^2
+\]
+
+\pause
+
+Equivalent to:
+\begin{itemize}
+\item Fubini–Study metric on Hilbert space
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Example: Single-Qubit Circuit}
+\[
+\ket{\psi(\theta)} = e^{-i\theta \sigma_y/2}\ket{0}
+\]
+
+\pause
+
+Compute:
+\[
+F_Q = 1
+\]
+
+\pause
+
+Implication:
+\begin{itemize}
+\item Uniform sensitivity
+\item No barren plateau
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Barren Plateaus and QFI}
+Observation:
+\begin{itemize}
+\item Vanishing gradients $\Rightarrow$ small QFI
+\end{itemize}
+
+\pause
+
+Thus:
+\[
+F_Q \approx 0 \Rightarrow \text{hard training}
+\]
+
+\pause
+
+Design principle:
+\begin{itemize}
+\item Circuits should maintain large QFI
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Summary}
+\begin{itemize}
+\item Fisher information = curvature of likelihood
+\item Natural gradient uses Fisher metric
+\item Quantum Fisher information generalizes this
+\item QFI governs optimization in quantum neural networks
+\item Key role in avoiding barren plateaus
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\end{document}
+
+
+%------------------------------------------------
+\section{Parameter-Shift Rule and QFI}
+
+\begin{frame}{Parameterized Quantum Gates}
+Consider a unitary with generator $G$:
+\[
+U(\theta) = e^{-i \theta G}
+\]
+
+\pause
+
+State:
+\[
+\ket{\psi(\theta)} = U(\theta)\ket{0}
+\]
+
+\pause
+
+Generator properties:
+\begin{itemize}
+\item Hermitian: $G = G^\dagger$
+\item Often Pauli strings: $G^2 = I$
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Parameter-Shift Rule}
+For expectation value:
+\[
+L(\theta) = \langle \psi(\theta) | O | \psi(\theta) \rangle
+\]
+
+\pause
+
+Gradient:
+\[
+\partial_\theta L 
+= \frac{1}{2}\left[
+L\left(\theta + \frac{\pi}{2}\right) 
+- L\left(\theta - \frac{\pi}{2}\right)
+\right]
+\]
+
+\pause
+
+Key:
+\begin{itemize}
+\item Exact (no approximation)
+\item Uses shifted circuits only
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Derivative of Quantum State}
+Derivative:
+\[
+\partial_\theta \ket{\psi(\theta)} = -i G \ket{\psi(\theta)}
+\]
+
+\pause
+
+Thus:
+\[
+\langle \partial_\theta \psi | \partial_\theta \psi \rangle 
+= \langle \psi | G^2 | \psi \rangle
+\]
+
+\[
+\langle \psi | \partial_\theta \psi \rangle 
+= -i \langle G \rangle
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{QFI from Generator}
+Insert into QFI formula:
+\[
+F_Q = 4 \left( 
+\langle G^2 \rangle - \langle G \rangle^2
+\right)
+\]
+
+\pause
+
+Thus:
+\[
+F_Q = 4 \, \mathrm{Var}(G)
+\]
+
+\pause
+
+Interpretation:
+\begin{itemize}
+\item QFI = fluctuations of generator
+\item Large variance $\Rightarrow$ high sensitivity
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Parameter-Shift}
+Parameter-shift evaluates:
+\[
+\partial_\theta L = \langle \psi | i[G,O] | \psi \rangle
+\]
+
+\pause
+
+QFI involves:
+\[
+\langle G^2 \rangle - \langle G \rangle^2
+\]
+
+\pause
+
+Key link:
+\begin{itemize}
+\item Gradient depends on commutator $[G,O]$
+\item QFI depends on variance of $G$
+\item Both controlled by generator structure
+\end{itemize}
+
+\pause
+
+Conclusion:
+\begin{itemize}
+\item Parameter-shift samples geometry encoded in QFI
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Geometric Tensor}
+Define:
+\[
+\chi_{ij} = \langle \partial_i \psi | \partial_j \psi \rangle 
+- \langle \partial_i \psi | \psi \rangle 
+\langle \psi | \partial_j \psi \rangle
+\]
+
+\pause
+
+Decomposition:
+\[
+\chi_{ij} = \frac{1}{4}F_{ij} + i \Omega_{ij}
+\]
+
+\pause
+
+\begin{itemize}
+\item Real part = QFI
+\item Imaginary part = Berry curvature
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\section{Quantum Boltzmann Machines}
+
+\begin{frame}{Classical Boltzmann Machine}
+Energy-based model:
+\[
+p(x) = \frac{1}{Z} e^{-E(x)}
+\]
+
+\pause
+
+Training:
+\[
+\nabla_\theta \log p(x)
+= -\langle \partial_\theta E \rangle_{\text{data}}
++ \langle \partial_\theta E \rangle_{\text{model}}
+\]
+
+\pause
+
+Contrastive divergence appears naturally
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Boltzmann Machine}
+Quantum version:
+\[
+\rho(\theta) = \frac{e^{-H(\theta)}}{Z}
+\]
+
+\pause
+
+Or variational form:
+\[
+\ket{\psi(\theta)} = U(\theta)\ket{0}
+\]
+
+\pause
+
+Loss:
+\[
+\mathcal{L} = D_{\mathrm{KL}}(p_{\text{data}} || p_\theta)
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Gradient in VQBM}
+Gradient:
+\[
+\partial_\theta \mathcal{L}
+= \langle \partial_\theta H \rangle_{\text{model}} 
+- \langle \partial_\theta H \rangle_{\text{data}}
+\]
+
+\pause
+
+Using parameter-shift:
+\[
+\partial_\theta \langle O \rangle 
+\rightarrow \text{shifted circuits}
+\]
+
+\pause
+
+Thus:
+\begin{itemize}
+\item Training reduces to expectation estimation
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{QFI in VQBM Training}
+Natural gradient:
+\[
+\dot{\theta} = - F_Q^{-1} \nabla_\theta \mathcal{L}
+\]
+
+\pause
+
+Interpretation:
+\begin{itemize}
+\item QFI defines learning metric
+\item Equivalent to quantum information geometry
+\end{itemize}
+
+\pause
+
+Important:
+\begin{itemize}
+\item Stabilizes training
+\item Reduces vanishing gradients
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Contrastive Divergence}
+Classical CD:
+\[
+\nabla_\theta D_{\mathrm{KL}}
+\]
+
+\pause
+
+Quantum case:
+\[
+\nabla_\theta D_{\mathrm{KL}} 
+\sim \text{QFI-weighted gradient}
+\]
+
+\pause
+
+Thus:
+\begin{itemize}
+\item CD implicitly uses information geometry
+\item QFI provides optimal metric correction
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\section{Quantum Sensing and QFI}
+
+\begin{frame}{Quantum Parameter Estimation}
+Parameter encoded in unitary:
+\[
+U(\theta) = e^{-i \theta H}
+\]
+
+\pause
+
+State:
+\[
+\ket{\psi(\theta)} = U(\theta)\ket{\psi_0}
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{QFI for Sensing}
+\[
+F_Q = 4 (\langle H^2 \rangle - \langle H \rangle^2)
+\]
+
+\pause
+
+Thus:
+\begin{itemize}
+\item QFI depends on energy variance
+\end{itemize}
+
+\pause
+
+Maximize:
+\[
+\mathrm{Var}(H)
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Standard Quantum Limit vs Heisenberg Limit}
+For $N$ probes:
+
+\[
+F_Q \sim N \quad (\text{SQL})
+\]
+
+\[
+F_Q \sim N^2 \quad (\text{Heisenberg})
+\]
+
+\pause
+
+Achieved via:
+\begin{itemize}
+\item Entanglement
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Role of Entanglement}
+Separable states:
+\[
+F_Q \leq N
+\]
+
+\pause
+
+Entangled states:
+\[
+F_Q \sim N^2
+\]
+
+\pause
+
+Thus:
+\begin{itemize}
+\item QFI quantifies metrological usefulness
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Example: Two-Qubit Sensor}
+Hamiltonian:
+\[
+H = \sigma_z^{(1)} + \sigma_z^{(2)}
+\]
+
+\pause
+
+Bell state:
+\[
+\frac{1}{\sqrt{2}}(\ket{00} + \ket{11})
+\]
+
+\pause
+
+Gives enhanced QFI:
+\[
+F_Q = 4N^2
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Optimization of Quantum Sensors}
+Goal:
+\[
+\max_\theta F_Q(\theta)
+\]
+
+\pause
+
+Use variational circuit:
+\[
+\ket{\psi(\theta)}
+\]
+
+\pause
+
+Optimization:
+\[
+\theta^* = \arg\max F_Q(\theta)
+\]
+
+\pause
+
+Uses:
+\begin{itemize}
+\item Parameter-shift gradients
+\item Quantum natural gradient
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Quantum Neural Networks}
+Same structure:
+\[
+\ket{\psi(\theta)} = U(\theta)\ket{0}
+\]
+
+\pause
+
+\begin{itemize}
+\item QNN → optimize loss
+\item Sensor → optimize QFI
+\end{itemize}
+
+\pause
+
+Unified view:
+\begin{itemize}
+\item Optimization on quantum manifold
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Summary of Advanced Connections}
+\begin{itemize}
+\item Parameter-shift gives exact gradients
+\item QFI = variance of generator
+\item Natural gradient uses QFI inverse
+\item VQBM training benefits from QFI geometry
+\item Quantum sensing = QFI maximization
+\end{itemize}
+
+\end{frame}
