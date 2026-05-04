@@ -144,7 +144,7 @@ themes can be covered:
   
 ## May 4-8, 2026 Quantum Machine Learning
   - Quantum neural networks and Quantum Physics Informed Neural Networks (QPINNs)
-  - Sovling differential equations with QPINNs
+  - Solving differential equations with QPINNs
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week15, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
 
 ## May 11-15, 2026
@@ -152,4 +152,4 @@ themes can be covered:
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week16, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file
 
 ## May 18-22, 2026
-  - Summary of course and discussion of and work on project 2
+  - Quantum Boltzmann machines (continued from previous week) and summary of course and discussion of and work on project 2
