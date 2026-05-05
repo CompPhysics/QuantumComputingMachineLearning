@@ -1,0 +1,977 @@
+%% ============================================================
+%%  fisher.tex  (revised)
+%%  Fisher Information: From Classical Statistics to
+%%  Quantum Neural Networks
+%%
+%%  Revised to align with week15_merged.tex:
+%%    Slide 5  -- QFI Matrix, Fubini-Study, covariance form,
+%%               circuit formula, parameter-shift connection
+%%    Slide 13 -- Natural Gradient and TDVP
+%%    Slide 14 -- Effective Dimension and Expressivity
+%%    Slide 15 -- Barren Plateaus: Definition and Origin
+%%
+%%  Notation and macros follow week15_merged.tex exactly.
+%% ============================================================
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+%% ── Theme & colours ──────────────────────────────────────────
+\usetheme{Madrid}
+\usecolortheme{default}
+\usefonttheme[onlymath]{serif}
+
+\setbeamercolor{frametitle}{bg=blue!12!white,fg=blue!60!black}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{block title}{bg=blue!18!white,fg=blue!60!black}
+\setbeamercolor{block body}{bg=blue!4!white}
+\setbeamercolor{alerted text}{fg=red!65!black}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,center]
+        {author in head/foot}\usebeamerfont{author in head/foot}
+        \insertshortauthor
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.50\paperwidth,ht=2.25ex,dp=1ex,center]
+        {title in head/foot}\usebeamerfont{title in head/foot}
+        \insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,right]
+        {date in head/foot}\usebeamerfont{date in head/foot}
+        \insertframenumber{}/\inserttotalframenumber\hspace*{1ex}
+    \end{beamercolorbox}}%
+  \vskip0pt}
+
+%% ── Packages ─────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+%% ── Macros (identical to week15_merged.tex) ──────────────────
+\newcommand{\btheta}{\boldsymbol{\theta}}
+\newcommand{\bTheta}{\boldsymbol{\Theta}}
+\newcommand{\QFI}{\mathbf{F}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Variance}{\mathrm{Var}}
+\newcommand{\manifold}{\mathcal{M}}
+\newcommand{\id}{\mathbb{1}}
+\newcommand{\Tr}{\operatorname{Tr}}
+\newcommand{\half}{\tfrac{1}{2}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\hilb}{\mathcal{H}}
+\newcommand{\FI}{\mathcal{I}}    % classical FI (scalar/matrix)
+
+%% ── Metadata ──────────────────────────────────────────────────
+\title[Fisher Information and QNNs]{%
+  Fisher Information: From Classical Statistics\\
+  to Quantum Neural Networks}
+\subtitle{Mathematical Foundations, the QFI Matrix,
+  and Optimisation Geometry}
+\author[Graduate Lecture Notes]{Morten Hjorth-Jensen}
+\institute{Department of Physics, University of Oslo, Norway}
+\date{May 6, 2026}
+
+%% ============================================================
+\begin{document}
+%% ============================================================
+
+\begin{frame}[plain]\titlepage\end{frame}
+
+\begin{frame}[allowframebreaks]{Outline}
+  \scriptsize\tableofcontents[hidesubsections]
+\end{frame}
+
+%% ============================================================
+\section{Classical Fisher Information}
+%% ============================================================
+
+\begin{frame}{Statistical Model and the Score Function}
+  Parametric probability distribution $p(x|\theta)$,
+  $\theta\in\R^d$.
+
+  \medskip
+  \textbf{Score function:}
+  $s(x;\theta) = \partial_\theta \log p(x|\theta).$
+
+  Key identity from $\int p\,dx=1$:
+  $\E_{x\sim p}[s(x;\theta)] = 0.$
+  The score has zero mean; its variance is the Fisher information.
+
+  \medskip
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Goals}
+    \begin{itemize}\itemsep2pt
+      \item Estimate $\theta$ from data
+      \item Quantify sensitivity of $p$ to $\theta$
+      \item Define a geometry on parameter space
+    \end{itemize}
+  \column{0.45\textwidth}
+    \begin{block}{Intuition}
+      \footnotesize
+      High sensitivity $\Rightarrow$ nearby distributions
+      are distinguishable $\Rightarrow$ more information
+      about $\theta$ in a single observation.
+    \end{block}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Definition and Equivalent Forms}
+  \textbf{Fisher Information} (scalar $\theta$):
+  \[
+    \FI(\theta)
+    = \E_{x\sim p}\!\left[
+        \bigl(\partial_\theta \log p(x|\theta)\bigr)^2
+      \right]
+    = \Variance[s(x;\theta)].
+  \]
+
+  \textbf{Equivalent form:}
+  \[
+    \FI(\theta) = -\,\E\!\left[\partial_\theta^2 \log p(x|\theta)\right].
+  \]
+
+  \textbf{Matrix version} for $\theta\in\R^d$:
+  \[
+    \FI_{jk}(\theta)
+    = \E\!\left[
+        \frac{\partial\log p}{\partial\theta_j}
+        \frac{\partial\log p}{\partial\theta_k}
+      \right]
+    = -\,\E\!\left[
+        \frac{\partial^2\log p}{\partial\theta_j\partial\theta_k}
+      \right].
+  \]
+
+  \begin{block}{Derivation sketch}
+    Differentiate $\E[\partial_\theta\log p]=0$ once more:
+    $\E[\partial_\theta^2\log p]+\E[(\partial_\theta\log p)^2]=0$,
+    giving the equivalence immediately.
+  \end{block}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Cramér--Rao Bound and Natural Gradient}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Cramér--Rao bound:}
+    for any unbiased $\hat\theta$,
+    \[
+      \Variance(\hat\theta) \geq \frac{1}{\FI(\theta)}.
+    \]
+    Matrix version: $\mathrm{Cov}(\hat\theta)\geq\FI(\theta)^{-1}$
+    (Löwner order).
+    \begin{itemize}\itemsep2pt
+      \item $\FI$ sets a fundamental precision limit
+      \item High $\FI$ $\Rightarrow$ sharper inference
+      \item MLEs saturate the bound asymptotically
+    \end{itemize}
+  \column{0.45\textwidth}
+    \textbf{Natural gradient} (Amari 1998):
+    steepest descent on the manifold $(\R^d,\FI)$:
+    \[
+      \theta_{t+1}
+      = \theta_t - \eta\,\FI(\theta)^{-1}\,\nabla_\theta L.
+    \]
+    \begin{block}{Fisher--Rao metric}
+      \[
+        ds^2 = \sum_{jk}\FI_{jk}\,d\theta_j\,d\theta_k.
+      \]
+      Reparameterisation-invariant;
+      steepest descent on information-geometric manifold.
+    \end{block}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Quantum Fisher Information}
+%% ============================================================
+
+\begin{frame}{From Classical to Quantum}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    Classical: $p(x|\theta) \to$ density matrix
+    $\rho(\btheta)$.
+
+    \medskip
+    \textbf{Pure variational state:}
+    \[
+      |\psi(\btheta)\rangle = U(\btheta)|0\rangle^{\otimes n},
+      \quad
+      \rho = |\psi\rangle\langle\psi|.
+    \]
+    \textbf{Observable expectation:}
+    \[
+      f(\btheta)
+      = \langle\psi(\btheta)|\,\hat{O}\,|\psi(\btheta)\rangle.
+    \]
+    \textbf{SLD} (Symmetric Logarithmic Derivative):
+    \[
+      \partial_\theta\rho
+      = \frac{1}{2}(L_\theta\rho + \rho L_\theta).
+    \]
+    \textbf{QFI (mixed state):}
+    $F_Q = \Tr[\rho\,L_\theta^2].$
+  \column{0.45\textwidth}
+    \begin{block}{Quantum Cramér--Rao bound}
+      For any measurement strategy:
+      \[
+        \Variance(\hat\theta)\geq \frac{1}{F_Q(\theta)}.
+      \]
+      $F_Q\geq\FI_{\rm classical}$ for every measurement.
+      The QFI maximises over all quantum measurements.
+    \end{block}
+    \begin{alertblock}{Key difference}
+      The classical FI depends on a measurement choice.
+      The QFI is the \emph{maximum} over all possible
+      quantum measurements---the ultimate precision limit.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{QFI for Pure States and the Generator Formula}
+  For $|\psi(\theta)\rangle$ (single parameter):
+  \[
+    F_Q(\theta)
+    = 4\Bigl(
+        \langle\partial_\theta\psi|\partial_\theta\psi\rangle
+       -\bigl|\langle\psi|\partial_\theta\psi\rangle\bigr|^2
+      \Bigr).
+  \]
+
+  \textbf{Generator form.}
+  If $|\psi(\theta)\rangle = e^{-i\theta G}|\psi_0\rangle$
+  with Hermitian generator $G$ ($G^\dagger=G$), then
+  $\partial_\theta|\psi\rangle = -iG|\psi\rangle$ and:
+  \[
+    F_Q = 4\,\Variance_{|\psi\rangle}(G)
+        = 4\bigl(\langle G^2\rangle - \langle G\rangle^2\bigr).
+  \]
+
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Example: single qubit.}
+    $|\psi(\theta)\rangle = e^{-i\theta\sigma_y/2}|0\rangle$,
+    $G=\sigma_y/2$, eigenvalues $\pm\tfrac12$:
+    \[
+      F_Q = 4\,\Variance(\sigma_y/2)
+          = 4\cdot\tfrac14 = 1.
+    \]
+    Uniform sensitivity; no barren plateau.
+
+    \textbf{Metrological scaling:}
+    for $N$ separable qubits $F_Q\leq N$ (SQL);
+    with entanglement $F_Q\sim N^2$ (Heisenberg limit).
+  \column{0.45\textwidth}
+    \begin{alertblock}{Interpretation}
+      $F_Q = 4\,\Variance(G)$: large generator fluctuations
+      mean the state is highly sensitive to $\theta$;
+      information about $\theta$ is efficiently encoded.
+      Maximising $\Variance(G)$ is the task of
+      quantum metrology.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{The QFI Matrix in QNNs}
+%% ============================================================
+
+%% ─── Aligns with week15.tex Slide 5 ─────────────────────────
+\begin{frame}{The QFI Matrix: Definition and Geometric Meaning}
+\small
+  For a variational state $|\psi(\btheta)\rangle$,
+  $\btheta\in\R^p$, the QFI is a
+  \emph{real symmetric $p\times p$ matrix}:
+  \[
+    \boxed{
+      F_{jk}(\btheta)
+      = 4\,\mathrm{Re}\!\Bigl(
+          \langle\partial_j\psi|\partial_k\psi\rangle
+         -\langle\partial_j\psi|\psi\rangle
+          \langle\psi|\partial_k\psi\rangle
+        \Bigr)
+    }
+  \]
+  $|\partial_j\psi\rangle
+    \equiv \partial|\psi(\btheta)\rangle/\partial\theta_j$.
+
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Geometric meaning.}
+    $\QFI$ is the \textbf{Fubini--Study metric}
+    on the variational manifold $\manifold$:
+    \[
+      ds^2 = \sum_{jk} F_{jk}\,d\theta_j\,d\theta_k.
+    \]
+    Measures information-geometric distance between
+    neighbouring quantum states in $\hilb$.
+
+    \medskip
+    \textbf{Covariance form}
+    (product-of-rotations circuit
+    $U(\btheta)=\prod_j e^{-i\theta_j P_j/2}$):
+    \[
+      F_{jk} = 4\,\mathrm{Cov}_{|\psi\rangle}(G_j, G_k),
+      \quad G_j = P_j/2.
+    \]
+  \column{0.45\textwidth}
+    \begin{block}{Circuit formula (two-fold shifts)}
+      State-overlap function:
+      $\mathcal{O}(\btheta)
+        = |\langle\psi_{\rm ref}|\psi(\btheta)\rangle|^2$.
+      \begin{align*}
+        F_{jk} &= \tfrac12\bigl[
+          \mathcal{O}_{j+,k+}
+         -\mathcal{O}_{j+,k-}\\
+         &\qquad -\mathcal{O}_{j-,k+}
+         +\mathcal{O}_{j-,k-}\bigr],
+      \end{align*}
+      $\mathcal{O}_{j\pm,k\pm}$: shift
+      $\theta_j\to\theta_j\pm\tfrac\pi2$,
+      $\theta_k\to\theta_k\pm\tfrac\pi2$.
+      Cost: $O(p^2)$ circuit evaluations.
+    \end{block}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Derivation of the Covariance Form}
+  For $U(\btheta)=\prod_j e^{-i\theta_j P_j/2}$
+  in the single-layer case:
+  $\partial_j|\psi\rangle = -\tfrac{i}{2}P_j|\psi\rangle$.
+
+  \medskip
+  Compute each term in the QFI formula:
+  \begin{align*}
+    \langle\partial_j\psi|\partial_k\psi\rangle
+    &= \tfrac{1}{4}\langle\psi|P_j P_k|\psi\rangle, \\
+    \langle\partial_j\psi|\psi\rangle
+    &= \tfrac{i}{2}\langle P_j\rangle, \quad
+    \langle\psi|\partial_k\psi\rangle
+    = -\tfrac{i}{2}\langle P_k\rangle.
+  \end{align*}
+
+  Insert and take the real part:
+  \[
+    F_{jk}
+    = 4\,\mathrm{Re}\!\left(
+        \tfrac{1}{4}\langle P_j P_k\rangle
+       -\tfrac{i}{2}\langle P_j\rangle\cdot
+        \tfrac{i}{2}\langle P_k\rangle
+      \right)
+    = \langle P_j P_k\rangle
+      - \langle P_j\rangle\langle P_k\rangle
+    = 4\,\mathrm{Cov}(G_j,G_k). \quad\square
+  \]
+
+  \begin{alertblock}{Multi-layer extension}
+    For $L$-layer circuits, commutators between generators
+    of different layers contribute.
+    The two-fold shift circuit formula handles all layers
+    exactly at cost $O(p^2)$.
+  \end{alertblock}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Parameter-Shift Rule and the QFI Connection}
+  \textbf{Parameter-shift rule} for
+  $f(\btheta)=\langle\psi(\btheta)|\hat{O}|\psi(\btheta)\rangle$
+  with generator eigenvalues $\pm\tfrac12$:
+  \[
+    \frac{\partial f}{\partial\theta_j}
+    = \frac{1}{2}\!\left[
+        f\!\left(\theta_j+\tfrac\pi2\right)
+       -f\!\left(\theta_j-\tfrac\pi2\right)
+      \right].
+  \]
+  Exact, no approximation; 2 circuit evaluations per parameter.
+
+  \medskip
+  \textbf{Commutator form:}
+  $\partial_{\theta_j}f
+   = \langle\psi|i[G_j,\hat{O}]|\psi\rangle$.
+
+  \medskip
+  \textbf{Diagonal QFI entry:}
+  $F_{jj} = 4\,\Variance_{|\psi\rangle}(G_j)$.
+
+  \medskip
+  \begin{block}{Cauchy--Schwarz bound (gradient--QFI)}
+    \[
+      \left|\frac{\partial f}{\partial\theta_j}\right|^2
+      \leq F_{jj}\cdot\Variance_{|\psi\rangle}(\hat{O}).
+    \]
+    Small generator variance $\Rightarrow$ small $F_{jj}$
+    $\Rightarrow$ all gradients of all observables are small
+    $\Rightarrow$ barren plateau for parameter $\theta_j$.
+  \end{block}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Quantum Geometric Tensor}
+  The \textbf{Quantum Geometric Tensor (QGT)}:
+  \[
+    \chi_{jk}
+    = \langle\partial_j\psi|\partial_k\psi\rangle
+     -\langle\partial_j\psi|\psi\rangle
+      \langle\psi|\partial_k\psi\rangle.
+  \]
+
+  Decomposition: $\chi_{jk} = \frac{1}{4}F_{jk} + i\,\Omega_{jk}$,
+  \begin{itemize}\itemsep2pt
+    \item $F_{jk} = 4\,\mathrm{Re}(\chi_{jk})$:
+          \textbf{QFI matrix} (Fubini--Study metric)
+    \item $\Omega_{jk} = \mathrm{Im}(\chi_{jk})$:
+          \textbf{Berry curvature} (geometric phase)
+  \end{itemize}
+
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Geometric significance.}
+    $\chi$ is the pullback of the Fubini--Study form on
+    $\mathbb{P}(\hilb)$ via $\btheta\mapsto|\psi(\btheta)\rangle$.
+    It unifies information geometry (real part) and
+    symplectic geometry (imaginary part).
+  \column{0.45\textwidth}
+    \begin{alertblock}{Connection to Berry phase}
+      The Berry phase around a loop $\gamma$
+      in parameter space is:
+      \[
+        \varphi_B = \oint_\gamma
+          \mathrm{Im}\langle\psi|d|\psi\rangle
+        = \iint_\Sigma \Omega_{jk}\,d\theta_j\wedge d\theta_k.
+      \]
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Natural Gradient and TDVP}
+%% ============================================================
+
+%% ─── Aligns with week15.tex Slide 13 ────────────────────────
+\begin{frame}{Natural Gradient in Quantum Circuits}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Natural gradient} (Amari 1998; Stokes et al.\ 2020):
+    \[
+      \btheta \;\leftarrow\; \btheta
+        - \eta\,\QFI(\btheta)^{+}\,\nabla_\theta C.
+    \]
+    $\QFI^+$: Moore--Penrose pseudoinverse
+    (needed when $\QFI$ is rank-deficient).
+
+    \medskip
+    \textbf{Derivation.}
+    Minimise $C(\btheta+\delta\btheta)$ subject to
+    fixed Bures distance:
+    \[
+      \delta\btheta^\top\QFI\,\delta\btheta = \varepsilon^2.
+    \]
+    Lagrange multipliers give
+    $\delta\btheta\propto-\QFI^{-1}\nabla C$.
+
+    \medskip
+    The update is \emph{reparameterisation-invariant}:
+    it always descends the steepest direction on $\manifold$.
+  \column{0.44\textwidth}
+    \begin{block}{TDVP equations of motion}
+      Dirac--Frenkel variational principle:
+      project $(i\partial_t - H)|\psi\rangle = 0$
+      onto $\mathcal{T}_{\btheta}\manifold
+        = \mathrm{span}\{|\partial_j\psi\rangle\}$:
+      \[
+        \sum_k F_{jk}\,\dot{\theta}_k
+        = 2\,\mathrm{Im}\langle\partial_j\psi|H|\psi\rangle.
+      \]
+      This is the Time-Dependent Variational Principle
+      for VQAs.
+    \end{block}
+    \begin{alertblock}{Imaginary-time TDVP $=$ natural gradient VQE}
+      Substituting $t\to-i\tau$:
+      $\dot{\btheta} = -\QFI^{-1}\nabla_\theta E(\btheta)$.
+      Equivalent to \textbf{Stochastic Reconfiguration} in VMC.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Computing the Natural Gradient and SR Connection}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Exact cost}: $O(p^2)$ circuit evaluations plus
+    $O(p^3)$ matrix inversion. Expensive for $p\sim10^3$.
+
+    \medskip
+    \textbf{Practical approximations:}
+    \begin{enumerate}\itemsep2pt
+      \item \textbf{Diagonal}: use only $F_{jj}$;
+            $O(p)$ evaluations.
+      \item \textbf{Block-diagonal}: group by layer;
+            $O(p^2/L)$ cost.
+      \item \textbf{Regularised}: replace $\QFI$ by
+            $\QFI+\lambda I$.
+    \end{enumerate}
+
+    \medskip
+    \textbf{SR connection (Sorella 1998):}
+    \[
+      \theta_j \leftarrow \theta_j
+        - \eta\sum_k S_{jk}^{-1} g_k,
+    \]
+    with $S_{jk} = \langle\partial_j\psi|\partial_k\psi\rangle
+                 - \langle\partial_j\psi|\psi\rangle
+                   \langle\psi|\partial_k\psi\rangle
+                 = F_{jk}/4$.
+    SR is the natural gradient w.r.t.\ the Fubini--Study metric.
+  \column{0.45\textwidth}
+    \begin{block}{Regularised update rule}
+      \[
+        \btheta \leftarrow \btheta
+          - \eta\,(\QFI + \lambda I)^{-1}\,\nabla_\theta C.
+      \]
+      \begin{itemize}\itemsep2pt
+        \item $\lambda\to 0$: pure natural gradient
+        \item $\lambda\to\infty$: standard gradient
+        \item $\lambda = \|\nabla C\|$: adaptive
+      \end{itemize}
+    \end{block}
+    \begin{alertblock}{Quantum advantage}
+      The QFI matrix elements $F_{jk}$ can be measured
+      on a quantum device via the two-fold shift formula,
+      without classical density-matrix simulation.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Effective Dimension and Expressivity}
+%% ============================================================
+
+%% ─── Aligns with week15.tex Slide 14 ────────────────────────
+\begin{frame}{Effective Dimension via the QFI}
+  \textbf{Abbas et al.\ (2021)}: define the
+  \textbf{effective dimension} via the average log-volume
+  of the QFI:
+  \[
+    d_{\rm eff}
+    = \frac{2}{\log N}
+      \log\!\left[\frac{1}{V}\int_{\btheta}
+        \sqrt{\det\!\left(
+          I + \frac{N}{2\pi\ln N}\,\QFI(\btheta)
+        \right)}\,d\btheta\right],
+  \]
+  where $N$ is the number of training samples.
+
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Properties}
+    \begin{itemize}\itemsep1pt
+      \item High $d_{\rm eff}$: large effective capacity.
+      \item Some QNNs exceed $d_{\rm eff}$ of classical
+            networks at equal parameter count.
+      \item $\QFI\approx 0$: redundant parameters;
+            flat loss directions.
+      \item $d_{\rm eff}\to 0$ as $\QFI\to 0$: model
+            collapses.
+      \item Maximal expressibility (Haar) gives high
+            $d_{\rm eff}$ \emph{but also barren plateaus}.
+    \end{itemize}
+  \column{0.44\textwidth}
+    \begin{block}{QFI as trainability indicator}
+      Cauchy--Schwarz on the Fubini--Study metric:
+      \[
+        \left|\frac{\partial C}{\partial\theta_j}\right|^2
+        \leq
+        \lambda_{\max}(\QFI)
+        \cdot
+        \Variance_{|\psi\rangle}(\hat{B}).
+      \]
+      Small $\lambda_{\max}(\QFI)$
+      $\Leftrightarrow$ all gradients small
+      $\Leftrightarrow$ barren plateau.
+      Monitor $\QFI$ spectrum as an early-warning diagnostic.
+    \end{block}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{QFI Rank, Redundant Parameters, and Expressibility}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Rank deficiency.}
+    If $\mathrm{rank}(\QFI)<p$, there exist directions
+    $\mathbf{v}$ with $\mathbf{v}^\top\QFI\,\mathbf{v}=0$:
+    moving along $\mathbf{v}$ does not change the quantum state
+    $\Rightarrow$ \emph{redundant parameters}.
+
+    \medskip
+    \textbf{Consequences:}
+    \begin{itemize}\itemsep2pt
+      \item Flat loss directions (pseudo-barren)
+      \item Can aid optimisation (escape local minima)
+      \item Inflate circuit depth needlessly
+      \item Use $\mathrm{rank}(\QFI)$ to prune circuits
+    \end{itemize}
+
+    \medskip
+    \textbf{Expressibility} (Meyer et al.\ 2021):
+    measures how uniformly the circuit covers $U(2^n)$.
+    High expressibility $\Leftrightarrow$ large
+    $\det(\QFI)$ on average $\Leftrightarrow$ high $d_{\rm eff}$.
+  \column{0.45\textwidth}
+    \begin{alertblock}{The expressibility--trainability trade-off}
+      \begin{center}
+      \begin{tabular}{lcc}
+        \toprule
+        Circuit & $d_{\rm eff}$ & Trainable? \\
+        \midrule
+        Shallow, structured & Low & Yes \\
+        Medium depth & Medium & Often \\
+        Deep random & High & No (BP) \\
+        \bottomrule
+      \end{tabular}
+      \end{center}
+      Optimal VQAs balance expressibility with
+      structured ans\"{a}tze that avoid the
+      Haar-random concentration of measure.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Barren Plateaus and the QFI}
+%% ============================================================
+
+%% ─── Aligns with week15.tex Slide 15 ────────────────────────
+\begin{frame}{Barren Plateaus: Definition and Mathematical Origin}
+\small
+  \begin{block}{Definition (McClean et al.\ 2018)}
+    A circuit family $\{U(\btheta)\}$ has a
+    \textbf{barren plateau} if:
+    \[
+      \E_{\btheta}\!\left[\partial_{\theta_j}C\right] = 0,
+      \qquad
+      \Variance_{\btheta}\!\left[\partial_{\theta_j}C\right]
+      = O(b^{-n}),\quad b>1.
+    \]
+  \end{block}
+
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Mathematical origin.}
+    For Haar-random $U$ on $\mathrm{SU}(2^n)$:
+    \[
+      \E_U[\langle\hat{O}\rangle]
+      = \tfrac{\Tr\hat{O}}{2^n},\;
+      \Variance[\partial_{\theta_j}C]
+      \sim \tfrac{\Tr\hat{O}^2}{4^n}.
+    \]
+    For $\hat{O}=Z_k$: $\Variance\sim 1/2^n$.
+    Concentration of measure (Lévy's lemma):
+    functions concentrate near their mean with prob.\
+    $\geq 1-2e^{-\Omega(2^{2n}\varepsilon^2)}$.
+    \begin{alertblock}{Consequence}
+      Deep random circuits:
+      $C(\btheta)\approx\Tr\hat{O}/2^n$ almost everywhere.
+      Flat landscape. \emph{Not} a local-minima problem.
+    \end{alertblock}
+  \column{0.44\textwidth}
+    \begin{block}{Direct QFI link}
+      Cauchy--Schwarz:
+      $\Variance[\partial_{\theta_j}C]
+        \leq \tfrac{1}{4}F_{jj}\Variance(\hat{O})$.
+
+      For Haar-random circuits:
+      $F_{jj}\sim 1/2^n\to 0$.
+
+      Therefore:
+      $F_{jj}\to 0 \Longleftrightarrow \text{barren plateau.}$
+
+      Monitoring $F_{jj}$ before and during training
+      gives an \emph{early warning} of trainability collapse.
+    \end{block}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Noise-Induced Barren Plateaus and Mitigation}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Hardware noise} (Wang et al.\ 2021):
+    depolarising noise rate $\varepsilon$ per gate:
+    \[
+      |\langle\hat{O}\rangle_{\rm noisy}|
+      \leq (1-\varepsilon)^{pd}\,
+      |\langle\hat{O}\rangle_{\rm ideal}|,
+    \]
+    \[
+      \Variance[\partial_{\theta_j}C_{\rm noisy}]
+      \sim (1-\varepsilon)^{2pd}
+           \,\Variance[\partial_{\theta_j}C_{\rm ideal}].
+    \]
+    Affects even \emph{shallow} circuits;
+    cannot be fixed by initialisation.
+  \column{0.44\textwidth}
+    \begin{block}{Mitigation strategies}
+      \footnotesize
+      \begin{tabular}{ll}
+        \toprule
+        \textbf{Strategy} & \textbf{Mechanism} \\
+        \midrule
+        Local cost function & poly$(n)$ gradient scaling \\
+        Problem ansatz & exploit symmetries \\
+        Layer-wise training & $O(1)$ depth locally \\
+        Identity initialisation & $O(1)$ initial gradients \\
+        Natural gradient & QFI-respecting steps \\
+        Shallow circuits & avoid Haar regime \\
+        \bottomrule
+      \end{tabular}
+    \end{block}
+    \begin{alertblock}{Physics-inspired ansätze}
+      Circuits mirroring Hamiltonian structure (QPINNs)
+      naturally avoid the Haar regime and mitigate BPs
+      without additional overhead.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Entanglement, QNTK, and Training Regimes}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Entanglement entropy and trainability.}
+    $S(\rho_A)=-\Tr(\rho_A\log\rho_A)$:
+
+    \medskip
+    \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      Regime & $S(\rho_A)$ & Training \\
+      \midrule
+      Low & $\approx 0$ & Classically simulable \\
+      Volume-law & $\Theta(n)$ & Barren plateaus \\
+      Area-law & $O(|\partial A|)$ & Trainable \\
+      \bottomrule
+    \end{tabular}
+    \end{center}
+    Area-law (shallow circuits, MERA) is the sweet spot
+    for VQA trainability.
+  \column{0.44\textwidth}
+    \begin{block}{Quantum Neural Tangent Kernel (QNTK)}
+      \[
+        \Theta(\mathbf{x},\mathbf{x}')
+        = \sum_j
+          \frac{\partial f(\mathbf{x};\btheta)}{\partial\theta_j}
+          \frac{\partial f(\mathbf{x}';\btheta)}{\partial\theta_j}.
+      \]
+      \begin{itemize}\itemsep2pt
+        \item Governs linearised training dynamics
+        \item At a barren plateau:
+              $\Theta\approx 0$ for all $\mathbf{x},\mathbf{x}'$
+        \item Bound: $\Theta(\mathbf{x},\mathbf{x})
+              \leq\lambda_{\max}(\QFI)$
+        \item Connects QNN training to quantum kernel SVMs
+      \end{itemize}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+%% ============================================================
+\section{Summary}
+%% ============================================================
+
+\begin{frame}{Key Equations at a Glance}
+  \small
+  \begin{center}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{p{3.8cm}p{7.2cm}}
+    \toprule
+    \textbf{Concept} & \textbf{Formula} \\
+    \midrule
+    Classical FI &
+      $\FI(\theta)=\E[(\partial_\theta\log p)^2]
+                 =-\E[\partial_\theta^2\log p]$ \\
+    Cramér--Rao &
+      $\Variance(\hat\theta)\geq 1/\FI(\theta)$ \\
+    Classical nat.\ grad. &
+      $\theta\leftarrow\theta-\eta\,\FI^{-1}\nabla L$ \\
+    QFI matrix &
+      $F_{jk}=4\,\mathrm{Re}(\langle\partial_j\psi|\partial_k\psi\rangle
+             -\langle\partial_j\psi|\psi\rangle
+              \langle\psi|\partial_k\psi\rangle)$ \\
+    Covariance form &
+      $F_{jk}=4\,\mathrm{Cov}_{|\psi\rangle}(G_j,G_k)$ \\
+    Generator variance &
+      $F_Q=4\,\Variance_{|\psi\rangle}(G)$ \\
+    Fubini--Study metric &
+      $ds^2=\sum_{jk}F_{jk}\,d\theta_j d\theta_k$ \\
+    Quantum geometric tensor &
+      $\chi_{jk}=\frac{1}{4}F_{jk}+i\Omega_{jk}$ \\
+    Parameter-shift &
+      $\partial_{\theta_j}f=\frac{1}{2}[f(\theta_j+\frac\pi2)
+                                       -f(\theta_j-\frac\pi2)]$ \\
+    Gradient--QFI bound &
+      $|\partial_{\theta_j}C|^2\leq\lambda_{\max}(\QFI)\cdot\Variance(\hat{O})$ \\
+    Natural grad.\ (quantum) &
+      $\btheta\leftarrow\btheta-\eta\,\QFI^+\nabla C$ \\
+    TDVP &
+      $\sum_k F_{jk}\dot\theta_k=2\,\mathrm{Im}\langle\partial_j\psi|H|\psi\rangle$ \\
+    Barren plateau &
+      $\Variance[\partial_{\theta_j}C]\sim 1/2^n$,
+      $F_{jj}\sim 1/2^n$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Summary}
+  \begin{columns}[T]
+  \column{0.52\textwidth}
+    \textbf{Classical Fisher information}
+    \begin{itemize}\itemsep2pt
+      \item Variance of the score function
+      \item Cramér--Rao precision limit
+      \item Fisher--Rao Riemannian metric
+      \item Natural gradient: reparameterisation-invariant
+            descent
+    \end{itemize}
+    \textbf{Quantum generalisation}
+    \begin{itemize}\itemsep2pt
+      \item QFI $=$ maximum FI over all measurements
+      \item Pure-state formula via state overlaps
+      \item QFI matrix $=$ Fubini--Study metric on $\manifold$
+      \item Covariance of generators; exact circuit formula
+      \item QGT: QFI (metric) + Berry curvature (symplectic)
+    \end{itemize}
+  \column{0.45\textwidth}
+    \textbf{QFI in QNN optimisation}
+    \begin{itemize}\itemsep2pt
+      \item Natural gradient $= \QFI^{-1}\nabla C$:
+            geometry-aware, invariant
+      \item TDVP: imaginary-time $=$ natural gradient VQE
+            $=$ stochastic reconfiguration
+      \item Effective dimension via $\det(\QFI)$:
+            quantifies model capacity
+      \item Barren plateaus: $F_{jj}\sim 1/2^n$;
+            QFI spectrum is an early-warning diagnostic
+    \end{itemize}
+    \begin{alertblock}{Central message}
+      The QFI is simultaneously the
+      \emph{optimisation metric},
+      the \emph{expressivity measure}, and the
+      \emph{barren-plateau detector}
+      for quantum neural networks.
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}{Exercises}
+  \begin{enumerate}\itemsep3pt
+    \item \textbf{Score identity.}
+          Verify $\E[\partial_\theta\log p]=0$ for
+          $p(x|\theta)=\mathcal{N}(x;\theta,1)$;
+          compute $\FI(\theta)$.
+
+    \item \textbf{QFI of a single qubit.}
+          For $|\psi(\theta)\rangle=R_y(\theta)|0\rangle$,
+          compute $F_{11}$ via the Fubini--Study formula
+          and via $4\,\Variance(G)$.
+          Verify $F_{11}=1$.
+
+    \item \textbf{Two-parameter covariance form.}
+          For $U(\theta_1,\theta_2)
+            =e^{-i\theta_1 Z/2}e^{-i\theta_2 X/2}$,
+          compute the full $2\times 2$ matrix
+          $F_{jk}=4\,\mathrm{Cov}(G_j,G_k)$.
+
+    \item \textbf{Circuit formula verification.}
+          Verify the two-fold shift formula for $F_{12}$
+          numerically for the above circuit on $|0\rangle$.
+
+    \item \textbf{Barren plateau scaling.}
+          Estimate
+          $\Variance[\partial C/\partial\theta_j]$ for
+          $n=2,\ldots,8$ qubit random circuits of depth $2n$.
+          Compare with diagonal $F_{jj}$.
+
+    \item \textbf{Natural gradient vs.\ Adam.}
+          Implement both for a two-qubit VQE problem;
+          compare convergence curves.
+  \end{enumerate}
+\end{frame}
+
+%% ─────────────────────────────────────────────────────────────
+\begin{frame}[allowframebreaks]{References}
+  \begin{columns}[T]
+  \column{0.50\textwidth}
+    \textbf{Classical Fisher information}
+    \begin{enumerate}\scriptsize
+      \item S.\ Amari,
+            \emph{Natural gradient works efficiently in learning},
+            Neural Comput.\ \textbf{10}, 251 (1998).
+      \item S.\ Amari \& H.\ Nagaoka,
+            \emph{Methods of Information Geometry},
+            AMS/Oxford (2000).
+    \end{enumerate}
+    \textbf{Quantum Fisher information}
+    \begin{enumerate}\scriptsize\setcounter{enumi}{2}
+      \item S.\ L.\ Braunstein \& C.\ M.\ Caves,
+            \emph{Statistical distance and geometry of
+            quantum states},
+            PRL \textbf{72}, 3439 (1994).
+      \item M.\ G.\ A.\ Paris,
+            \emph{Quantum estimation for quantum technology},
+            Int.\ J.\ Quantum Inf.\ \textbf{7}, 125 (2009).
+    \end{enumerate}
+    \textbf{QFI in variational algorithms}
+    \begin{enumerate}\scriptsize\setcounter{enumi}{4}
+      \item J.\ Stokes et al.,
+            \emph{Quantum natural gradient},
+            Quantum \textbf{4}, 269 (2020).
+      \item A.\ Abbas et al.,
+            \emph{The power of quantum neural networks},
+            Nat.\ Comput.\ Sci.\ \textbf{1}, 403 (2021).
+      \item S.\ Sorella,
+            \emph{Stochastic reconfiguration},
+            PRL \textbf{80}, 4558 (1998).
+    \end{enumerate}
+  \column{0.46\textwidth}
+    \textbf{Barren plateaus}
+    \begin{enumerate}\scriptsize\setcounter{enumi}{7}
+      \item J.\ R.\ McClean et al.,
+            \emph{Barren plateaus in QNN training landscapes},
+            Nat.\ Commun.\ \textbf{9}, 4812 (2018).
+      \item M.\ Cerezo et al.,
+            \emph{Cost-function-dependent barren plateaus},
+            Nat.\ Commun.\ \textbf{12}, 1791 (2021).
+      \item S.\ Wang et al.,
+            \emph{Noise-induced barren plateaus},
+            Nat.\ Commun.\ \textbf{12}, 6961 (2021).
+    \end{enumerate}
+    \textbf{QNN expressivity and geometry}
+    \begin{enumerate}\scriptsize\setcounter{enumi}{10}
+      \item M.\ Cerezo et al.,
+            \emph{Variational quantum algorithms},
+            Nat.\ Rev.\ Phys.\ \textbf{3}, 625 (2021).
+      \item A.\ P\'erez-Salinas et al.,
+            \emph{Data re-uploading for a universal
+            quantum classifier},
+            Quantum \textbf{4}, 226 (2020).
+      \item M.\ Schuld et al.,
+            \emph{Effect of data encoding on expressivity},
+            PRA \textbf{103}, 032430 (2021).
+    \end{enumerate}
+  \end{columns}
+\end{frame}
+
+\end{document}
