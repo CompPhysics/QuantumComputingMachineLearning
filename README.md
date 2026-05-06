@@ -129,7 +129,7 @@ themes can be covered:
   - The HHL algorithm, codes and algorithms
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week12, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
   - Video of lecture at https://youtu.be/e70HFOTKKMg
-  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek112pdf  
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek12pdf  
 
 ## April 20-24, 2026 Quantum Machine Learning
   - QAOA algorithm and implementation
@@ -145,7 +145,9 @@ themes can be covered:
 ## May 4-8, 2026 Quantum Machine Learning
   - Quantum neural networks and Quantum Physics Informed Neural Networks (QPINNs)
   - Solving differential equations with QPINNs
-  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week15, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file  
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week15, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file
+  - Video of lecture at https://youtu.be/WSlS4-xRwCI
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek15.pdf
 
 ## May 11-15, 2026
   - Quantum neural networks and quantum Boltzmann machines
