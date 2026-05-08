@@ -1,0 +1,429 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{physics}
+
+\title{Why Does One Use $\log p(x)$ as a Score Function?}
+\author{Morten Hjorth-Jensen}
+\date{May 2026}
+
+\begin{document}
+
+%------------------------------------------------
+\begin{frame}
+\titlepage
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Motivation}
+In statistics, machine learning, information theory, and statistical physics, the quantity
+\[
+\log p(x)
+\]
+appears everywhere.
+
+\medskip
+
+Examples:
+\begin{itemize}
+\item Maximum likelihood estimation
+\item Fisher information
+\item Cross-entropy loss
+\item Entropy
+\item Bayesian inference
+\item Statistical mechanics
+\item Variational inference
+\end{itemize}
+
+\medskip
+
+Why is the logarithm of the probability so fundamental?
+\end{frame}
+
+%------------------------------------------------
+\section{Likelihood and Log-Likelihood}
+
+\begin{frame}{Likelihood Function}
+Suppose we observe independent data:
+\[
+x_1,x_2,\dots,x_N.
+\]
+
+Assume probability model:
+\[
+p(x|\theta).
+\]
+
+The probability of the full dataset is:
+\[
+P(D|\theta)
+=
+\prod_{i=1}^N p(x_i|\theta).
+\]
+
+This is called the likelihood.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Problem with Products}
+Products are mathematically inconvenient:
+\begin{itemize}
+\item numerically unstable,
+\item often extremely small,
+\item difficult to differentiate,
+\item difficult to interpret geometrically.
+\end{itemize}
+
+\pause
+
+Taking the logarithm:
+\[
+\log P(D|\theta)
+=
+\sum_{i=1}^N \log p(x_i|\theta).
+\]
+
+\pause
+
+The logarithm converts products into sums.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Logarithm Preserves Maxima}
+Since the logarithm is monotonic:
+\[
+\arg\max_\theta P(D|\theta)
+=
+\arg\max_\theta \log P(D|\theta).
+\]
+
+\pause
+
+Thus:
+\begin{itemize}
+\item maximizing likelihood
+\item maximizing log-likelihood
+\end{itemize}
+
+are completely equivalent.
+\end{frame}
+
+%------------------------------------------------
+\section{Score Function}
+
+\begin{frame}{Definition of the Score Function}
+The statistical score is defined as:
+\[
+s(\theta)
+=
+\partial_\theta \log p(x|\theta).
+\]
+
+\pause
+
+Using:
+\[
+\partial_\theta \log p
+=
+\frac{1}{p}\partial_\theta p,
+\]
+
+the score measures the \emph{relative sensitivity} of the probability distribution.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Relative Versus Absolute Changes}
+Suppose:
+\[
+p(x) \ll 1.
+\]
+
+A small absolute change in probability may still correspond to a large relative change.
+
+\pause
+
+The logarithmic derivative measures:
+\[
+\frac{\delta p}{p}.
+\]
+
+\pause
+
+This is the natural geometry of probability distributions.
+\end{frame}
+
+%------------------------------------------------
+\section{Fisher Information}
+
+\begin{frame}{Fisher Information}
+The Fisher information is:
+\[
+\mathcal I(\theta)
+=
+\mathbb E
+\left[
+(\partial_\theta \log p)^2
+\right].
+\]
+
+\pause
+
+Interpretation:
+\begin{itemize}
+\item Measures distinguishability of nearby probability distributions
+\item Measures curvature of the likelihood
+\item Defines a metric on parameter space
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Important Identities}
+The score function satisfies:
+\[
+\mathbb E[\partial_\theta \log p]=0.
+\]
+
+\pause
+
+Second derivative identity:
+\[
+\mathcal I(\theta)
+=
+-
+\mathbb E
+\left[
+\partial_\theta^2 \log p
+\right].
+\]
+
+\pause
+
+These elegant identities emerge naturally only when using logarithms.
+\end{frame}
+
+%------------------------------------------------
+\section{Information Theory}
+
+\begin{frame}{Entropy}
+Entropy is defined as:
+\[
+S
+=
+-
+\sum_x p(x)\log p(x).
+\]
+
+\pause
+
+Why does $\log p$ appear?
+
+\medskip
+
+Because logarithms convert multiplicative probabilities into additive information.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Additivity of Information}
+Independent events satisfy:
+\[
+p(A,B)=p(A)p(B).
+\]
+
+\pause
+
+Taking logarithms:
+\[
+\log p(A,B)
+=
+\log p(A)+\log p(B).
+\]
+
+\pause
+
+Thus information becomes additive.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Information Content}
+Define information:
+\[
+I(x)=-\log p(x).
+\]
+
+\pause
+
+Rare events:
+\[
+p(x)\ll1
+\]
+
+produce large information.
+
+\pause
+
+Common events produce little information.
+\end{frame}
+
+%------------------------------------------------
+\section{Statistical Mechanics}
+
+\begin{frame}{Boltzmann Distribution}
+In statistical mechanics:
+\[
+p(x)
+=
+\frac{e^{-\beta E(x)}}{Z}.
+\]
+
+\pause
+
+Taking logarithms:
+\[
+\log p(x)
+=
+-\beta E(x)-\log Z.
+\]
+
+\pause
+
+Therefore:
+\[
+E(x)
+=
+-\frac1\beta \log p(x)+\text{const}.
+\]
+
+\pause
+
+Energy is proportional to logarithmic probability.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Machine Learning}
+Many machine learning models are based on logarithmic probabilities:
+
+\begin{itemize}
+\item Boltzmann machines
+\item Variational autoencoders
+\item Diffusion models
+\item Bayesian neural networks
+\item GAN discriminators
+\end{itemize}
+
+\pause
+
+The logarithm naturally appears because probabilities multiply while optimization prefers additive structures.
+\end{frame}
+
+%------------------------------------------------
+\section{Deep Learning}
+
+\begin{frame}{Cross-Entropy Loss}
+Classification networks often use:
+\[
+L
+=
+-
+\sum_i y_i \log p_i.
+\]
+
+\pause
+
+This is the negative log-likelihood of the observed labels.
+
+\pause
+
+Thus cross-entropy follows directly from probability theory.
+\end{frame}
+
+%------------------------------------------------
+\section{Geometric Interpretation}
+
+\begin{frame}{Geometry of Probability Space}
+Probability distributions form a curved manifold.
+
+\pause
+
+The logarithm transforms probabilities into coordinates where:
+\begin{itemize}
+\item gradients,
+\item distances,
+\item curvatures,
+\item information measures
+\end{itemize}
+
+become mathematically tractable.
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Information Geometry}
+The Fisher information metric:
+\[
+ds^2
+=
+\sum_{ij}
+\mathcal I_{ij}
+d\theta_i d\theta_j
+\]
+
+defines the geometry of statistical models.
+
+\pause
+
+The tangent vectors are:
+\[
+\partial_\theta \log p(x|\theta).
+\]
+
+Thus the score function defines directions in probability space.
+\end{frame}
+
+%------------------------------------------------
+\section{Summary}
+
+\begin{frame}{Summary}
+We use:
+\[
+\log p(x)
+\]
+
+because:
+
+\begin{itemize}
+\item probabilities multiply,
+\item logarithms convert products into sums,
+\item optimization becomes stable,
+\item gradients become relative sensitivities,
+\item information becomes additive,
+\item entropy emerges naturally,
+\item statistical mechanics takes exponential form,
+\item geometry becomes tractable.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Final Perspective}
+The score function:
+\[
+\partial_\theta \log p(x|\theta)
+\]
+
+measures how rapidly the \emph{information content} of an observation changes with model parameters.
+
+\medskip
+
+It therefore lies at the foundation of:
+\begin{itemize}
+\item statistics,
+\item machine learning,
+\item Bayesian inference,
+\item information theory,
+\item statistical physics,
+\item modern AI.
+\end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\end{document}
