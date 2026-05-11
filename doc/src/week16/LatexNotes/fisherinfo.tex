@@ -1,0 +1,798 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage{booktabs}
+
+\title{Stochastic Reconfiguration in Quantum Monte Carlo}
+\author{Morten Hjorth-Jensen}
+\date{FYS5419/9419, May 13, 2026}
+
+\newcommand{\Eloc}{E_{\mathrm{loc}}}
+\newcommand{\dkl}{D_{\mathrm{KL}}}
+
+\begin{document}
+
+\frame{\titlepage}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  CONTENT
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{frame}{Content}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Stochastic reconfiguration}
+\begin{itemize}
+  \item imaginary-time evolution and variational projection
+  \item tangent-space expansion of the trial state
+  \item derivation of \(S\,\delta\bm{\alpha}=-\delta\tau\,\bm{g}\)
+  \item logarithmic derivatives, metric matrix, force vector
+  \item regularization and algorithmic summary
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{The score function and Fisher information}
+\begin{itemize}
+  \item why we use \(\log p(x)\)
+  \item likelihood, log-likelihood, and the score
+  \item relative sensitivity and information content
+  \item entropy, additivity, and information geometry
+  \item Fisher information matrix; quantum FIM \(F_{ij}=4S_{ij}\)
+  \item natural gradient; three-way equivalence with SR
+  \item Cram\'er--Rao bound and regularization
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  PART I  –  STOCHASTIC RECONFIGURATION
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Setup and notation}
+We consider a variational wave function
+\[
+\ket{\Psi(\bm{\alpha})},
+\qquad
+\bm{\alpha}=(\alpha_1,\alpha_2,\dots,\alpha_p),
+\]
+depending on \(p\) real parameters.
+
+\medskip
+
+The normalized state is
+\[
+\ket{\overline{\Psi}(\bm{\alpha})}
+=
+\frac{\ket{\Psi(\bm{\alpha})}}
+     {\sqrt{\braket{\Psi(\bm{\alpha})}{\Psi(\bm{\alpha})}}}.
+\]
+
+We wish to optimize the parameters such that the energy
+\[
+E(\bm{\alpha})
+=
+\frac{\bra{\Psi(\bm{\alpha})}H\ket{\Psi(\bm{\alpha})}}
+     {\braket{\Psi(\bm{\alpha})}{\Psi(\bm{\alpha})}}
+\]
+is minimized.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Imaginary-time evolution as a route to the ground state}
+The exact imaginary-time evolution is
+\[
+\ket{\Psi(\tau)}=e^{-\tau H}\ket{\Psi(0)}.
+\]
+
+Expanding in energy eigenstates \(H\ket{n}=E_n\ket{n}\):
+\[
+\ket{\Psi(\tau)}=\sum_n c_n\,e^{-\tau E_n}\ket{n}.
+\]
+
+If \(c_0\neq 0\), then for large \(\tau\),
+\[
+\ket{\Psi(\tau)} \propto e^{-\tau E_0}\ket{0},
+\]
+so imaginary-time propagation filters out the ground state.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Why a variational projection is needed}
+In Variational Monte Carlo we restrict to the variational manifold
+\[
+\mathcal{M}
+=\left\{\ket{\Psi(\bm{\alpha})}\;\middle|\;\bm{\alpha}\in\mathbb{R}^p\right\}.
+\]
+
+The exact state
+\(
+(1-\delta\tau H)\ket{\Psi(\bm{\alpha})}
+\)
+will in general \emph{not} belong to \(\mathcal{M}\).
+
+\medskip
+
+Idea of stochastic reconfiguration:
+\begin{itemize}
+  \item apply one infinitesimal imaginary-time step,
+  \item project the resulting state back onto \(\mathcal{M}\),
+  \item interpret the projection as a parameter update
+        \(\bm{\alpha}\to\bm{\alpha}+\delta\bm{\alpha}\).
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{First-order imaginary-time step}
+For a small time step \(\delta\tau\),
+\(
+e^{-\delta\tau H}=1-\delta\tau H+\mathcal{O}(\delta\tau^2).
+\)
+
+A convenient norm-preserving first-order approximation is
+\[
+\ket{\Psi_{\mathrm{exact}}'}
+\approx
+\left[1-\delta\tau\bigl(H-E(\bm{\alpha})\bigr)\right]\ket{\Psi(\bm{\alpha})}.
+\]
+
+Since \(\bra{\Psi}(H-E)\ket{\Psi}=0\), the vector \((H-E)\ket{\Psi}\)
+is orthogonal to \(\ket{\Psi}\) to first order, so subtracting
+\(E(\bm{\alpha})\) removes the trivial norm-rescaling component and
+moves the state tangentially in projective Hilbert space.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Tangent-space expansion and projection}
+The variational state at shifted parameters is
+\[
+\ket{\Psi(\bm{\alpha}+\delta\bm{\alpha})}
+=\ket{\Psi}+\sum_k\delta\alpha_k\ket{\Psi_k}+\mathcal{O}(\delta\alpha^2),
+\qquad
+\ket{\Psi_k}\equiv\pdv{}{\alpha_k}\ket{\Psi}.
+\]
+
+The \textbf{mismatch vector}
+\(\ket{\Delta}=\ket{\Psi_{\mathrm{var}}'}-\ket{\Psi_{\mathrm{exact}}'}\)
+has to first order
+\[
+\ket{\Delta}
+=\sum_k\delta\alpha_k\ket{\Psi_k}+\delta\tau(H-E)\ket{\Psi}.
+\]
+
+Minimizing \(\mathcal{D}=\braket{\Delta}{\Delta}\) and differentiating
+with respect to \(\delta\alpha_i\):
+\[
+\sum_j\braket{\Psi_i}{\Psi_j}\,\delta\alpha_j
+=-\delta\tau\,\Re\bra{\Psi_i}(H-E)\ket{\Psi}.
+\]
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Logarithmic derivatives and the SR matrix}
+In configuration space define the \textbf{logarithmic derivative}:
+\[
+O_k(x)
+=\frac{1}{\Psi(x)}\pdv{\Psi(x)}{\alpha_k}
+=\pdv{\ln\Psi(x)}{\alpha_k}.
+\]
+
+Monte Carlo expectation values:
+\(
+\langle A\rangle=N_s^{-1}\sum_\ell A(x^{(\ell)})
+\),
+\;
+\(
+P(x)=|\Psi(x)|^2/\braket{\Psi}{\Psi}
+\).
+
+\medskip
+
+Working with normalized states, for real \(\Psi\):
+\[
+S_{ij}
+=\langle O_i O_j\rangle-\langle O_i\rangle\langle O_j\rangle
+\quad\text{(covariance of log-derivatives)},
+\]
+\[
+g_i
+=\langle O_i\Eloc\rangle-\langle O_i\rangle\langle\Eloc\rangle
+\quad\text{(covariance with local energy)},
+\]
+where \(\Eloc(x)=(H\Psi)(x)/\Psi(x)\).
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Final SR linear system}
+Collecting everything:
+\[
+\boxed{
+S\,\delta\bm{\alpha}=-\delta\tau\,\bm{g},
+\qquad
+\delta\bm{\alpha}=-\delta\tau\,S^{-1}\bm{g},
+}
+\]
+\[
+S_{ij}=\langle O_iO_j\rangle-\langle O_i\rangle\langle O_j\rangle,
+\qquad
+g_i=\langle O_i\Eloc\rangle-\langle O_i\rangle\langle\Eloc\rangle.
+\]
+
+\medskip
+
+\textbf{Comparison with gradient descent:}
+ordinary GD uses \(\delta\bm{\alpha}_{\mathrm{GD}}=-\eta\,\bm{g}\);
+SR uses \(\delta\bm{\alpha}_{\mathrm{SR}}=-\eta\,S^{-1}\bm{g}\).
+The inverse metric rescales and mixes parameter directions according
+to the geometry of the wave-function manifold, giving better conditioning
+and a direct connection to imaginary-time evolution.
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  PART II  –  THE SCORE FUNCTION AND FISHER INFORMATION
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{}
+\vfill
+\begin{center}
+{\Large\bfseries Part~II}\\[10pt]
+{\large The Score Function, Fisher Information,\\[4pt]
+and Their Equivalence with Stochastic Reconfiguration}
+\end{center}
+\vfill
+\end{frame}
+
+% ── Why log p? ────────────────────────────────────────────────────────────────
+
+\begin{frame}{Why does \(\log p(x)\) appear everywhere?}
+In statistics, machine learning, information theory, and statistical
+physics, the quantity \(\log p(x)\) is ubiquitous.
+
+\medskip
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Where it appears}
+\begin{itemize}
+  \item Maximum likelihood estimation
+  \item Fisher information
+  \item Cross-entropy loss
+  \item Shannon entropy
+  \item Bayesian inference
+  \item Statistical mechanics
+  \item Variational inference
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{One-sentence answer}
+
+Probabilities \emph{multiply} while optimisation prefers
+\emph{additive} structures.
+The logarithm converts products into sums and relative
+changes into absolute ones.
+
+\medskip
+
+The following slides make this precise.
+\end{column}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Likelihood and why we take its logarithm}
+Observe independent data \(x_1,\dots,x_N\) drawn from \(p(x|\theta)\).
+The \textbf{likelihood} is
+\[
+P(D|\theta)=\prod_{i=1}^N p(x_i|\theta).
+\]
+
+Products are inconvenient: numerically unstable, exponentially small,
+hard to differentiate.  Taking the logarithm:
+\[
+\log P(D|\theta)=\sum_{i=1}^N \log p(x_i|\theta).
+\]
+
+Because \(\log\) is monotonic,
+\[
+\arg\max_\theta P(D|\theta)
+=\arg\max_\theta \log P(D|\theta),
+\]
+so maximising the likelihood and the log-likelihood are \emph{equivalent}.
+The log-likelihood is far easier to work with analytically and numerically.
+\end{frame}
+
+% ── Score function ────────────────────────────────────────────────────────────
+
+\begin{frame}{The score function}
+The \textbf{score function} is the gradient of the log-likelihood:
+\[
+s(\theta)
+=\partial_\theta \log p(x|\theta)
+=\frac{1}{p(x|\theta)}\,\partial_\theta\, p(x|\theta).
+\]
+
+The second form shows that the score measures the
+\textbf{relative sensitivity} of the distribution to the parameter:
+\[
+s(\theta)=\frac{\delta p\,/\,\partial\theta}{p}.
+\]
+
+\medskip
+
+\textbf{Why relative, not absolute?}
+Suppose \(p(x)\ll 1\).  A small absolute change in \(p\) may
+correspond to a large relative change — and it is the relative
+change that matters for distinguishability.
+The logarithmic derivative \(\delta p/p\) captures the natural
+geometry of probability distributions.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Key identities of the score function}
+\textbf{Identity 1 — zero mean.}
+Differentiating the normalisation \(\int p(x|\theta)\,dx=1\):
+\[
+\mathbb{E}[\partial_\theta \log p]
+=\int p\,\frac{\partial_\theta p}{p}\,dx
+=\partial_\theta\!\int p\,dx=0.
+\]
+
+\textbf{Identity 2 — Hessian form of Fisher information.}
+Differentiating the zero-mean identity again:
+\[
+\mathbb{E}\bigl[(\partial_\theta \log p)^2\bigr]
+=-\mathbb{E}\bigl[\partial_\theta^2 \log p\bigr].
+\]
+
+\medskip
+
+These two identities hold for any smooth parametric family and rely
+crucially on the logarithm.  They are the foundation of both maximum
+likelihood theory and the Fisher information matrix.
+\end{frame}
+
+% ── Information theory ────────────────────────────────────────────────────────
+
+\begin{frame}{Information content and entropy}
+Define the \textbf{information content} of an event \(x\):
+\[
+I(x)=-\log p(x).
+\]
+
+Rare events (\(p(x)\ll 1\)) carry large information;
+common events carry little.
+
+\medskip
+
+For independent events \(A\) and \(B\), probabilities multiply
+but information \emph{adds}:
+\[
+p(A,B)=p(A)\,p(B)
+\quad\Longrightarrow\quad
+I(A,B)=I(A)+I(B).
+\]
+
+The \textbf{Shannon entropy} is the expected information content:
+\[
+S=-\sum_x p(x)\log p(x)=\mathbb{E}[I(x)].
+\]
+
+Entropy measures the average surprise of the distribution.
+The logarithm is the \emph{unique} function (up to a constant)
+that makes information additive for independent events.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Connection to statistical mechanics and machine learning}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Statistical mechanics}\\[4pt]
+The Boltzmann distribution is
+\[
+p(x)=\frac{e^{-\beta E(x)}}{Z}.
+\]
+Taking logarithms:
+\[
+\log p(x)=-\beta E(x)-\log Z,
+\]
+so energy is \emph{proportional} to log-probability.
+This makes the connection to thermodynamics exact
+and allows free-energy calculations via log-likelihoods.
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Machine learning}\\[4pt]
+Many generative models are built on log-probabilities:
+\begin{itemize}
+  \item cross-entropy loss:
+        \(L=-\sum_i y_i\log p_i\)
+  \item variational autoencoders
+  \item diffusion models
+  \item Boltzmann machines
+  \item Bayesian neural networks
+\end{itemize}
+In each case the logarithm converts the product structure of
+joint probabilities into an additive, differentiable objective.
+\end{column}
+\end{columns}
+\end{frame}
+
+% ── Fisher information matrix ─────────────────────────────────────────────────
+
+\begin{frame}{Fisher information matrix — definition}
+Let \(p(x;\bm{\alpha})\) be a parametric family of distributions
+and \(s_k=\partial_{\alpha_k}\log p(x;\bm{\alpha})\) the score.
+Because \(\mathbb{E}_p[s_k]=0\), the \textbf{Fisher information
+matrix} (FIM) equals the covariance of the score:
+\[
+\boxed{
+F_{ij}
+=\mathbb{E}_p[s_i\,s_j]
+=\mathrm{Cov}_p(s_i,s_j)
+=-\mathbb{E}_p\!\left[
+  \frac{\partial^2\log p}{\partial\alpha_i\,\partial\alpha_j}
+\right].}
+\]
+
+\medskip
+
+Interpretations:
+\begin{itemize}
+  \item \textbf{Curvature of the log-likelihood:} large \(F_{ii}\)
+        means the likelihood surface is sharply curved around
+        the parameter \(\alpha_i\).
+  \item \textbf{Distinguishability:} large \(F_{ii}\) means nearby
+        distributions are easy to tell apart.
+  \item \textbf{Riemannian metric:} \(F\) defines distances between
+        distributions via \(ds^2=d\bm{\alpha}^\top F\,d\bm{\alpha}\).
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Fisher information as the curvature of KL divergence}
+\textbf{Theorem.}  For \(\bm{\alpha}'=\bm{\alpha}+d\bm{\alpha}\),
+\[
+\dkl\!\bigl(p(\cdot;\bm{\alpha})\,\|\,p(\cdot;\bm{\alpha}')\bigr)
+=\frac{1}{2}\,d\bm{\alpha}^\top F(\bm{\alpha})\,d\bm{\alpha}
++\mathcal{O}(d\alpha^3).
+\]
+
+\textbf{Proof sketch.}  Taylor-expand the KL divergence to
+second order in \(d\bm{\alpha}\):
+\begin{multline*}
+\dkl(p\|p')
+=-\mathbb{E}_p\!\biggl[\sum_k d\alpha_k\,s_k
++\tfrac{1}{2}\sum_{kl}d\alpha_k d\alpha_l
+\frac{\partial^2\log p}{\partial\alpha_k\partial\alpha_l}
+\biggr]+\mathcal{O}(d\alpha^3).
+\end{multline*}
+The first-order term vanishes because \(\mathbb{E}_p[s_k]=0\).
+The second-order term gives \(\tfrac{1}{2}d\bm{\alpha}^\top F\,d\bm{\alpha}\)
+by the Hessian form. \(\square\)
+Therefore \(F\) is the \textbf{Fisher--Rao metric} — the Riemannian
+metric on the statistical manifold induced by the KL divergence.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Geometry of probability space}
+Probability distributions form a \textbf{curved statistical manifold}.
+
+\medskip
+
+The score function \(\partial_\theta\log p(x|\theta)\) defines
+the tangent vectors to this manifold: they measure how the
+information content of an observation changes with model parameters.
+
+\medskip
+
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+The \textbf{Fisher--Rao metric}
+\[
+ds^2=\sum_{ij}F_{ij}\,d\alpha_i\,d\alpha_j
+\]
+makes this manifold Riemannian.
+Distances, curvatures, and information measures become
+mathematically tractable in these coordinates.
+\end{column}
+\begin{column}{0.40\textwidth}
+\textbf{Why logarithms?}
+
+The logarithm transforms the positivity
+constraint \(p\geq0\) and normalisation
+\(\int p\,dx=1\) into an unconstrained,
+geometrically flat coordinate system
+where gradients measure relative changes.
+\end{column}
+\end{columns}
+\end{frame}
+
+% ── Quantum Fisher information ────────────────────────────────────────────────
+
+\begin{frame}{Score for the VMC distribution}
+In VMC the sampling distribution is
+\(p(x;\bm{\alpha})=|\Psi(x;\bm{\alpha})|^2/Z(\bm{\alpha})\).
+
+\medskip
+
+\textbf{Lemma.}  Differentiating \(Z=\int|\Psi|^2\,dx\):
+\[
+\partial_{\alpha_k}\ln Z=2\langle O_k\rangle.
+\]
+
+Therefore the score for the VMC distribution is
+\[
+s_k(x;\bm{\alpha})
+=\partial_{\alpha_k}\log p
+=2\bigl(O_k(x)-\langle O_k\rangle\bigr)
+\quad\text{(for real }\Psi\text{)}.
+\]
+
+The score is the \textbf{centred logarithmic derivative}
+\(O_k=\partial_{\alpha_k}\ln\Psi\) — the same object that enters
+the SR matrix through \(S_{ij}=\langle O_iO_j\rangle-\langle O_i\rangle\langle O_j\rangle\).
+This is the key bridge between the SR and FIM formalisms.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Quantum Fisher information matrix equals \(4S\)}
+Substituting the VMC score into the FIM definition:
+\[
+F_{ij}
+=\mathbb{E}_p[s_i\,s_j]
+=4\,\mathbb{E}_p\bigl[(O_i-\langle O_i\rangle)(O_j-\langle O_j\rangle)\bigr]
+=4\bigl(\langle O_iO_j\rangle-\langle O_i\rangle\langle O_j\rangle\bigr).
+\]
+
+\[
+\boxed{F_{ij}=4\,S_{ij}.}
+\]
+
+The factor of four arises from the squared coefficient in the score.
+The SR matrix \(S\) is therefore \textbf{one quarter of the Fisher
+information matrix} of the Born distribution \(p(x;\bm{\alpha})\).
+
+\medskip
+
+The Fubini--Study metric (natural distance on quantum state space)
+gives the same result: for real \(\Psi\),
+\(
+ds^2_{\mathrm{FS}}=d\bm{\alpha}^\top S\,d\bm{\alpha},
+\)
+confirming that \(S\) governs both the quantum-state distance and
+the KL distance between Born distributions.
+\end{frame}
+
+% ── Natural gradient ──────────────────────────────────────────────────────────
+
+\begin{frame}{Natural gradient: derivation via constrained optimisation}
+The \textbf{natural gradient} is the steepest-descent direction
+in the Fisher--Rao metric: minimize \(\mathcal{L}\) subject to a
+fixed KL step size,
+\[
+\min_{\delta\bm{\alpha}}\;\bm{g}^\top\delta\bm{\alpha}
+\quad\text{s.t.}\quad
+\delta\bm{\alpha}^\top F\,\delta\bm{\alpha}=\varepsilon^2.
+\]
+
+Lagrange multiplier \(\mu\) gives
+\(\bm{g}-2\mu F\,\delta\bm{\alpha}=\bm{0}\), hence
+\[
+\boxed{\delta\bm{\alpha}_{\mathrm{NG}}=-\eta\,F^{-1}\bm{g}.}
+\]
+
+Plain gradient descent is the special case \(F=I\)
+(Euclidean metric on parameter space).
+
+\medskip
+
+\textbf{Reparameterisation covariance.}
+Under \(\bm{\beta}=f(\bm{\alpha})\) with Jacobian \(J\),
+the FIM transforms as \(F^{(\beta)}=J^\top F^{(\alpha)}J\),
+so \(\delta\bm{\beta}_{\mathrm{NG}}=J^{-1}\delta\bm{\alpha}_{\mathrm{NG}}\):
+the natural-gradient update is \emph{covariant}.
+Plain gradient descent is not.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Three-way equivalence}
+Since \(F_{ij}=4S_{ij}\), the natural gradient update
+\(\delta\bm{\alpha}_{\mathrm{NG}}=-\eta F^{-1}\bm{g}=-\frac{\eta}{4}S^{-1}\bm{g}\)
+recovers the SR update when \(\eta/4=\delta\tau\).
+All three descriptions are the \emph{same} update:
+
+\medskip
+
+\begin{center}
+\renewcommand{\arraystretch}{1.8}
+\begin{tabular}{c@{\quad}c@{\quad}c}
+\textbf{Projected imaginary time} & & \textbf{Natural gradient (statistics)} \\
+\(S\,\delta\bm{\alpha}=-\delta\tau\,\bm{g}\)
+& \(\boldsymbol{\Longleftrightarrow}\) &
+\(\delta\bm{\alpha}=-\dfrac{\delta\tau}{4}\,F^{-1}\bm{g}\) \\[6pt]
+\multicolumn{3}{c}{\(\boldsymbol{\Updownarrow}\)} \\[2pt]
+\multicolumn{3}{c}{\textbf{Natural gradient (quantum geometry)}} \\
+\multicolumn{3}{c}{\(\delta\bm{\alpha}=-\delta\tau\,S^{-1}\bm{g}\)}
+\end{tabular}
+\end{center}
+
+\smallskip
+
+Quantum mechanics (ITE projection), information geometry (steepest
+descent on the statistical manifold), and optimisation theory
+(natural gradient) all say the same thing.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Cram\'er--Rao bound and principled regularization}
+The FIM controls \textbf{how precisely parameters can be estimated}.
+
+\medskip
+
+\textbf{Cram\'er--Rao bound:} for any unbiased estimator
+\(\hat{\bm{\alpha}}\) from \(N_s\) i.i.d.\ samples,
+\[
+\mathrm{Cov}(\hat{\bm{\alpha}})\succeq\frac{1}{N_s}F(\bm{\alpha})^{-1}.
+\]
+
+In VMC: directions with large \(F_{kk}\) can be estimated precisely
+and updated aggressively; directions with small \(F_{kk}\) cannot be
+estimated beyond the CR limit and should be damped.
+
+\medskip
+
+This gives a \textbf{principled interpretation of regularization}:
+\[
+(S+\lambda I)^{-1}=\bigl(\tfrac{1}{4}F+\lambda I\bigr)^{-1}
+\]
+damps parameter directions below the Cram\'er--Rao estimation floor,
+interpolating between SR (\(\lambda\to 0\)) and plain gradient
+descent (\(\lambda\to\infty\)).
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Geometry and connections summary}
+\begin{center}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Object} & \textbf{Expression} & \textbf{Geometric / statistical role} \\
+\midrule
+Score function
+  & \(s_k=\partial_{\alpha_k}\log p\)
+  & relative sensitivity; tangent to stat.\ manifold \\
+Information content
+  & \(I(x)=-\log p(x)\)
+  & additive; large for rare events \\
+Shannon entropy
+  & \(S=-\mathbb{E}[\log p]\)
+  & expected information content \\
+Fisher information matrix
+  & \(F_{ij}=\mathbb{E}[s_is_j]\)
+  & curvature of log-likelihood \\
+Fisher--Rao metric
+  & \(ds^2=d\bm{\alpha}^\top F\,d\bm{\alpha}\)
+  & distance on statistical manifold \\
+KL divergence (2nd order)
+  & \(\dkl\approx\tfrac{1}{2}d\bm{\alpha}^\top F\,d\bm{\alpha}\)
+  & KL curvature \(\equiv\) Fisher metric \\
+VMC score
+  & \(s_k=2(O_k-\langle O_k\rangle)\)
+  & centred log-derivative \\
+SR matrix vs FIM
+  & \(F_{ij}=4S_{ij}\)
+  & quantum Fisher = 4\(\times\) SR metric \\
+Fubini--Study metric
+  & \(ds^2_{\mathrm{FS}}=d\bm{\alpha}^\top S\,d\bm{\alpha}\)
+  & quantum state distance \\
+Natural gradient
+  & \(\delta\bm{\alpha}=-\eta F^{-1}\bm{g}\)
+  & steepest descent on stat.\ manifold \\
+SR update
+  & \(S\,\delta\bm{\alpha}=-\delta\tau\,\bm{g}\)
+  & projected ITE \(\equiv\) natural gradient \\
+Cram\'er--Rao bound
+  & \(\mathrm{Cov}(\hat{\bm{\alpha}})\succeq(N_sF)^{-1}\)
+  & estimation precision limit \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  PART III  –  REGULARIZATION AND ALGORITHM
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Regularization and practical solution}
+In practice \(S\) may be singular or ill-conditioned because it is
+estimated from a finite Monte Carlo sample.
+
+A standard fix is diagonal regularization:
+\[
+S\;\to\;S+\lambda I,\qquad\lambda>0.
+\]
+
+Then solve
+\[
+(S+\lambda I)\,\delta\bm{\alpha}=-\delta\tau\,\bm{g}.
+\]
+
+Interpretation:
+\begin{itemize}
+  \item stabilizes inversion,
+  \item damps directions with negligible Fisher information
+        (flat directions of the statistical manifold),
+  \item interpolates between SR (\(\lambda\to 0\)) and ordinary
+        gradient descent (\(\lambda\to\infty\)).
+\end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Algorithmic summary}
+At each iteration:
+\begin{enumerate}
+  \item Sample configurations \(x^{(\ell)}\) from
+        \(P(x)=|\Psi(x)|^2/\braket{\Psi}{\Psi}\).
+  \item Compute logarithmic derivatives
+        \(O_k(x^{(\ell)})=\partial_{\alpha_k}\ln\Psi(x^{(\ell)})\).
+  \item Compute local energies
+        \(\Eloc(x^{(\ell)})=(H\Psi)(x^{(\ell)})/\Psi(x^{(\ell)})\).
+  \item Estimate
+  \[
+  S_{ij}=\langle O_iO_j\rangle-\langle O_i\rangle\langle O_j\rangle,
+  \qquad
+  g_i=\langle O_i\Eloc\rangle-\langle O_i\rangle\langle\Eloc\rangle.
+  \]
+  \item Solve \((S+\lambda I)\,\delta\bm{\alpha}=-\delta\tau\,\bm{g}\).
+  \item Update \(\bm{\alpha}\leftarrow\bm{\alpha}+\delta\bm{\alpha}\).
+\end{enumerate}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Summary}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Stochastic reconfiguration}
+\begin{itemize}\setlength\itemsep{3pt}
+  \item ITE selects the ground state;
+        projecting onto \(\mathcal{M}\) gives
+        \(S\,\delta\bm{\alpha}=-\delta\tau\,\bm{g}\).
+  \item \(S_{ij}\): covariance of log-derivatives.
+  \item \(g_i\): covariance with the local energy.
+\end{itemize}
+
+\textbf{Why \(\log p(x)\) is fundamental}
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Converts products into sums.
+  \item Measures relative sensitivity \(\delta p/p\).
+  \item Makes information additive.
+  \item Connects energy to probability (stat.\ mech.).
+  \item Defines the natural geometry on
+        probability space.
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Fisher information and natural gradient}
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Score \(s_k=\partial_{\alpha_k}\log p\)
+        has zero mean; its covariance is the FIM.
+  \item FIM = curvature of KL divergence
+        = Fisher--Rao metric.
+  \item For VMC: \(F_{ij}=4S_{ij}\);
+        SR matrix \(S\) is \(\tfrac{1}{4}\) of the FIM.
+  \item SR update = natural gradient
+        = projected imaginary-time evolution.
+  \item Natural gradient is reparameterisation-covariant;
+        GD is not.
+  \item Regularization \((S{+}\lambda I)^{-1}\) damps
+        directions below the Cram\'er--Rao floor.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\end{document}
