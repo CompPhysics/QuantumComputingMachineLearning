@@ -152,6 +152,9 @@ themes can be covered:
 ## May 11-15, 2026
   - Quantum neural networks and quantum Boltzmann machines
   - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week16, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file
+  - Video of lecture at https://youtu.be/PaBRCA3icW4
+  - Whiteboard notes at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/HandWrittenNotes/2026/Lectureweek16.pdf
+  
 
 ## May 18-22, 2026
   - Quantum Boltzmann machines (continued from previous week) and summary of course and discussion of and work on project 2
