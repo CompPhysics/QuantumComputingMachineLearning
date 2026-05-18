@@ -61,8 +61,8 @@
 \newcommand{\Hilbert}{\mathcal{H}}
 
 %% ── Metadata ────────────────────────────────────────────────────
-\title[Quantum Boltzmann Machines]{Quantum Boltzmann Machines}
-\subtitle{From Quantum Neural Networks to Quantum Generative Models}
+\title[Quantum Boltzmann Machines]{Quantum Boltzmann Machines and Summary of Course}
+%\subtitle{From Quantum Neural Networks to Quantum Generative Models}
 \author[M.~Hjorth-Jensen]{Morten Hjorth-Jensen}
 \institute[UiO]{Department of Physics \& CCSE\\University of Oslo}
 \date{May 20, 2026}
@@ -578,9 +578,6 @@
        Bottom: thermofield double (ancilla + system).}
   \end{columns}
 \end{frame}
-
-%% ============================================================
-\section{Thermofield Double and Purification}
 %% ============================================================
 
 \begin{frame}{Purification and the Thermofield Double State}
@@ -1140,9 +1137,6 @@
   \end{columns}
 \end{frame}
 
-%% ============================================================
-\section{Expressivity and Quantum Advantage}
-%% ============================================================
 
 \begin{frame}{Expressivity of QBMs vs.\ Classical BMs}
   \begin{columns}[T]
@@ -1239,107 +1233,6 @@
   \end{columns}
 \end{frame}
 
-%% ============================================================
-\section{Practical Implementation}
-%% ============================================================
-
-\begin{frame}[fragile]{NumPy Simulation of a Small QBM}
-  \begin{lstlisting}
-import numpy as np
-from scipy.linalg import expm
-
-def gibbs_state(H, beta=1.0):
-    """Exact Gibbs state rho = exp(-beta*H) / Tr[exp(-beta*H)]."""
-    evals, evecs = np.linalg.eigh(H)
-    weights = np.exp(-beta * evals)
-    weights /= weights.sum()
-    rho = sum(w * np.outer(v, v.conj())
-              for w, v in zip(weights, evecs.T))
-    return rho
-
-def qbm_hamiltonian(theta_z, theta_x, W, n_v, n_h):
-    """Transverse-field Ising RBM Hamiltonian."""
-    n = n_v + n_h
-    I2 = np.eye(2); Z = np.diag([1., -1.]); X = np.array([[0.,1.],[1.,0.]])
-    def kron_op(gate, i):
-        ops = [gate if j == i else I2 for j in range(n)]
-        M = ops[0]
-        for op in ops[1:]: M = np.kron(M, op)
-        return M
-    H = np.zeros((2**n, 2**n), dtype=complex)
-    for i in range(n):     H -= theta_z[i] * kron_op(Z, i)
-    for i in range(n):     H -= theta_x[i] * kron_op(X, i)
-    for i in range(n_v):
-        for j in range(n_h):
-            H -= W[i, j] * kron_op(Z, i) @ kron_op(Z, n_v + j)
-    return H
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{QBM Training Loop (NumPy)}
-  \begin{lstlisting}
-def qbm_gradient(theta_z, theta_x, W, data, n_v, n_h, beta=1.0):
-    """Estimate gradient of negative log-likelihood."""
-    n = n_v + n_h
-    I2 = np.eye(2); Z = np.diag([1., -1.])
-    H = qbm_hamiltonian(theta_z, theta_x, W, n_v, n_h)
-    rho_free = gibbs_state(H, beta)
-
-    dW = np.zeros_like(W)
-    for v_sample in data:
-        # Clamp visible qubits to data sample
-        H_clamp = clamp_hamiltonian(H, v_sample, n_v)
-        rho_clamp = gibbs_state(H_clamp, beta)
-        for i in range(n_v):
-            for j in range(n_h):
-                ZZ = kron_op(Z, i, n) @ kron_op(Z, n_v+j, n)
-                pos = np.real(np.trace(ZZ @ rho_clamp))
-                neg = np.real(np.trace(ZZ @ rho_free))
-                dW[i, j] += beta * (pos - neg)
-    return dW / len(data)
-
-# Training loop
-lr = 0.05
-for step in range(200):
-    grad_W = qbm_gradient(theta_z, theta_x, W, data, n_v, n_h)
-    W += lr * grad_W
-    if step % 50 == 0:
-        loss = kl_divergence(data_dist, model_dist(W, theta_z, theta_x))
-        print(f"Step {step:4d}  KL = {loss:.4f}")
-  \end{lstlisting}
-\end{frame}
-
-\begin{frame}{Exercises}
-  \begin{enumerate}\itemsep4pt
-    \item \textbf{Classical limit.} Set $\theta_i^x = 0$ for all $i$
-          in the RQBM. Show that the Gibbs state becomes diagonal in
-          the $Z$-basis and the gradient reduces to the classical CD update.
-
-    \item \textbf{Free energy minimisation.} For a single qubit with
-          $H = -\theta^x X - \theta^z Z$, compute the exact Gibbs state
-          $\rho(\beta)$, the free energy $\mathcal{F}(\rho,H)$, and verify
-          that $\rho(\beta)$ minimises $\mathcal{F}$ over all single-qubit
-          density matrices.
-
-    \item \textbf{TFD circuit.} Implement the TFD preparation circuit
-          for $n=2$ qubits using NumPy. Verify that tracing out the ancilla
-          reproduces the Gibbs state up to circuit approximation error.
-
-    \item \textbf{Bures vs.\ Fubini-Study.} For a pure state
-          $\rho = \ket{\psi}\bra{\psi}$ show analytically that
-          $F^B_{ij} = \Tr[\rho\mathcal{L}_i\mathcal{L}_j]$ reduces to
-          $F^{\rm FS}_{ij} = 4\,\mathrm{Re}(\langle\partial_i\psi|\partial_j\psi\rangle -
-          \langle\partial_i\psi|\psi\rangle\langle\psi|\partial_j\psi\rangle)$.
-
-    \item \textbf{Quantum advantage.} Construct a 2-qubit density matrix
-          $\rho$ with off-diagonal coherences not representable by any
-          classical BM. What is the minimum number of hidden qubits needed?
-  \end{enumerate}
-\end{frame}
-
-%% ============================================================
-\section{Outlook and References}
-%% ============================================================
 
 \begin{frame}{Outlook: Open Problems and Future Directions}
   \begin{columns}[T]
@@ -1465,5 +1358,658 @@ for step in range(200):
       \end{enumerate}
   \end{columns}
 \end{frame}
+
+
+\section{Summary and perspective for future studies}
+
+% ---- Course philosophy -------------------------------------
+\begin{frame}{Course Philosophy and Structure}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{Two main parts}
+        \begin{enumerate}
+          \item \textbf{Quantum Computing} (Jan--Mar)\\
+                Many-body quantum systems, VQE,\\
+                fault-tolerant algorithms
+          \item \textbf{Quantum Machine Learning} (Apr--May)\\
+                NISQ-era variational methods,\\
+                QNNs, QPINNs, Boltzmann machines
+        \end{enumerate}
+      \end{block}
+      \vspace{4pt}
+      \begin{alertblock}{Central Algorithm}
+        The \textbf{Variational Quantum Eigensolver (VQE)}
+        links both halves of the course.
+      \end{alertblock}
+    \column{0.42\textwidth}
+      \begin{block}{Key Themes}
+        \begin{itemize}
+          \item Hilbert spaces \& quantum states
+          \item Entanglement \& measurement
+          \item Variational circuits (NISQ)
+          \item Fault-tolerant algorithms
+          \item Quantum-enhanced ML
+          \item Solving ODEs/PDEs with quantum methods
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Week 1 ------------------------------------------------
+\begin{frame}{\week{Week 1 (Jan 19--23)} \ Basic Notions of Quantum Mechanics}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Mathematical Framework}
+        \begin{itemize}
+          \item Linear algebra reminder
+          \item Hilbert spaces and operators
+          \item Bra-ket notation: $\ket{\psi}$, $\bra{\phi}$
+          \item Inner products \& norms
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Quantum States}
+        \begin{itemize}
+          \item One-qubit systems
+          \item Pure states vs.\ mixed states
+          \item Composite systems
+          \item Operator algebra on Hilbert spaces
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{8pt}
+  \begin{alertblock}{Foundation}
+    Establish the mathematical language used throughout
+    the entire course.
+  \end{alertblock}
+\end{frame}
+
+% ---- Weeks 2--3 --------------------------------------------
+\begin{frame}{\week{Weeks 2--3 (Jan 26 -- Feb 6)} \ Composite Systems, Density Matrices \& Measurements}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Week 2: Tensor Products \& Entanglement}
+        \begin{itemize}
+          \item Spectral decomposition
+          \item Measurement formalism
+          \item Density matrices $\rho = \sum_i p_i \ket{\psi_i}\bra{\psi_i}$
+          \item Entanglement: pure \& mixed states
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Week 3: Density Matrices in Depth}
+        \begin{itemize}
+          \item Reduced density matrices
+          \item Partial traces
+          \item Von Neumann entropy
+          \item Entanglement measures
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{6pt}
+  \begin{block}{Key Concept: Entanglement}
+    \[
+      \ket{\Phi^+} = \frac{1}{\sqrt{2}}\bigl(\ket{00}+\ket{11}\bigr)
+      \quad\Rightarrow\quad S(\rho_A) = \log 2
+    \]
+  \end{block}
+\end{frame}
+
+% ---- Week 4 ------------------------------------------------
+\begin{frame}{\week{Week 4 (Feb 9--13)} \ Entanglement, Entropies \& Quantum Gates}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Entanglement \& Entropies}
+        \begin{itemize}
+          \item Review of density matrices
+          \item Entanglement entropies
+          \item Separability criteria
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Quantum Gates (Introduction)}
+        \begin{itemize}
+          \item Single-qubit gates: $X$, $Y$, $Z$, $H$, $S$, $T$
+          \item Two-qubit gates: CNOT, CZ, SWAP
+          \item Gate universality
+          \item Simple Hamiltonian systems
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{6pt}
+  \begin{alertblock}{Bridge to VQE}
+    Understanding gates and Hamiltonians prepares for the VQE algorithm.
+  \end{alertblock}
+\end{frame}
+
+% ---- Week 5 ------------------------------------------------
+\begin{frame}{\week{Week 5 (Feb 16--20)} \ Getting Started with the VQE Algorithm}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{Quantum Gates \& Simple Algorithms}
+        \begin{itemize}
+          \item Quantum circuit model
+          \item Parameterised circuits (ansätze)
+          \item Gate decompositions
+          \item One- \& two-qubit Hamiltonians
+        \end{itemize}
+      \end{block}
+      \vspace{4pt}
+      \begin{block}{VQE Overview}
+        \[
+          E(\bm{\theta}) = \bra{\psi(\bm{\theta})}H\ket{\psi(\bm{\theta})}
+          \;\geq\; E_0
+        \]
+        Minimise $E(\bm\theta)$ over circuit parameters $\bm\theta$.
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{alertblock}{Project 1}
+        Implement VQE for simple\\
+        one- and two-qubit Hamiltonians.\\[4pt]
+        \textbf{Key tasks:}
+        \begin{itemize}
+          \item Design ansatz circuit
+          \item Evaluate energy expectation
+          \item Classical optimisation loop
+        \end{itemize}
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+% ---- Week 6 ------------------------------------------------
+\begin{frame}{\week{Week 6 (Feb 23--27)} \ Implementing VQE: Measurements \& Gradients}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{Advanced VQE Topics}
+        \begin{itemize}
+          \item \textbf{Parameter-shift rule} for gradients:
+                \[
+                  \partial_\theta E = \tfrac{E(\theta+\frac\pi2)-E(\theta-\frac\pi2)}{2}
+                \]
+          \item Adaptive VQE (ADAPT-VQE)
+          \item Shot-noise and measurement strategies
+          \item Simulation codes and debugging
+        \end{itemize}
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{block}{Hamiltonians Explored}
+        \begin{itemize}
+          \item One-qubit spin models
+          \item Two-qubit interacting systems
+          \item Mapping physics to qubits
+          \item Introduction to the\\
+                \textbf{Lipkin model}
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Weeks 7--8 --------------------------------------------
+\begin{frame}{\week{Weeks 7--8 (Mar 2--13)} \ VQE for the Lipkin Model \& Jordan-Wigner}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Week 7: Lipkin Model VQE}
+        \begin{itemize}
+          \item Two-qubit Hamiltonian implementation
+          \item Full VQE pipeline for the\\
+                Lipkin collective model
+          \item Benchmarking against exact diagonalisation
+          \item Circuit optimisation strategies
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Week 8: Fermionic Hamiltonians}
+        \begin{itemize}
+          \item Lipkin model: final results
+          \item \textbf{Jordan-Wigner transformation}:
+                \[
+                  a_j \;\rightarrow\; Z^{\otimes j}\otimes\sigma^-
+                \]
+          \item Mapping fermionic operators to qubits
+          \item Beyond the Lipkin model
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{4pt}
+  \begin{alertblock}{Milestone}
+    Project 1 results in a working VQE solver.
+  \end{alertblock}
+\end{frame}
+
+% ---- Week 9 ------------------------------------------------
+\begin{frame}{\week{Week 9 (Mar 16--20)} \ Quantum Fourier Transforms}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{From NISQ to Fault-Tolerant Algorithms}
+        \begin{itemize}
+          \item Discrete Fourier Transform review
+          \item \textbf{Quantum Fourier Transform (QFT)}:
+                \[
+                  \mathrm{QFT}\ket{j} = \frac{1}{\sqrt{N}}
+                  \sum_{k=0}^{N-1} e^{2\pi i jk/N}\ket{k}
+                \]
+          \item Circuit decomposition: $O(n^2)$ gates vs.\ $O(n\,2^n)$
+        \end{itemize}
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{block}{QFT Circuit Structure}
+        \begin{itemize}
+          \item Hadamard gates
+          \item Controlled phase rotations $R_k$
+          \item Bit-reversal permutation
+          \item Exponential speedup over classical FFT
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Weeks 10--11 ------------------------------------------
+\begin{frame}{\week{Weeks 10--11 (Mar 23 -- Apr 10)} \ QFT, Quantum Phase Estimation \& HHL}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Quantum Phase Estimation (QPE)}
+        \begin{itemize}
+          \item QFT as subroutine
+          \item Estimating eigenvalues of $U$:
+                \[
+                  U\ket{u} = e^{2\pi i\varphi}\ket{u}
+                \]
+          \item Circuit construction \& precision
+          \item Applications to chemistry \& physics
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{HHL Algorithm (Linear Systems)}
+        \begin{itemize}
+          \item Solving $A\bm{x}=\bm{b}$ on a quantum computer
+          \item Uses QPE as subroutine
+          \item Exponential speedup (sparse, well-conditioned $A$)
+          \item Implementation and codes
+          \item Limitations and caveats
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Week 12 -----------------------------------------------
+\begin{frame}{\week{Week 12 (Apr 13--17)} \ HHL Algorithm: Codes \& Implementation}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{Deep Dive into HHL}
+        \begin{itemize}
+          \item Full circuit implementation
+          \item Ancilla qubit rotation: eigenvalue inversion
+          \item Amplitude encoding of $\bm{b}$
+          \item Uncomputation and measurement
+          \item Error analysis and success probability
+        \end{itemize}
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{alertblock}{HHL Complexity}
+        \[
+          \mathcal{O}\!\left(\log N \cdot \kappa^2 \cdot \frac{1}{\epsilon}\right)
+        \]
+        vs.\ classical $\mathcal{O}(N^3)$\\[4pt]
+        where $\kappa$ = condition number,\\
+        $\epsilon$ = precision,\\
+        $N$ = matrix dimension.
+      \end{alertblock}
+    \end{columns}
+    \vspace{4pt}
+    \begin{block}{Transition to Quantum Machine Learning}
+      With QFT, QPE and HHL covered, we now turn to the
+      \textbf{NISQ-era QML} methods for the remainder of the course.
+    \end{block}
+\end{frame}
+
+% ---- Week 13 -----------------------------------------------
+\begin{frame}{\week{Week 13 (Apr 20--24)} \ QAOA: Quantum Approximate Optimisation}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{QAOA Algorithm}
+        \begin{itemize}
+          \item Combinatorial optimisation problems
+          \item Alternating cost and mixer unitaries:
+                \[
+                  \ket{\bm\gamma,\bm\beta}
+                  = U_M(\beta_p)\,U_C(\gamma_p)\cdots
+                    U_M(\beta_1)\,U_C(\gamma_1)\ket{+}^{\otimes n}
+                \]
+          \item Classical outer-loop optimisation
+          \item Depth-$p$ approximation ratio
+        \end{itemize}
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{block}{Implementation Focus}
+        \begin{itemize}
+          \item Mapping problems to Ising Hamiltonians
+          \item Circuit construction
+          \item Gradient evaluation
+          \item Benchmarking on toy instances
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{4pt}
+  \begin{alertblock}{Connection}
+    QAOA is the optimisation counterpart to VQE and serves as
+    a gateway into Quantum Machine Learning methods.
+  \end{alertblock}
+\end{frame}
+
+% ---- Week 14 -----------------------------------------------
+\begin{frame}{\week{Week 14 (Apr 27 -- May 1)} \ Quantum Machine Learning: Foundations}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{QML Basics}
+        \begin{itemize}
+          \item What is QML? Taxonomy of approaches
+          \item Data encoding strategies:\\
+                amplitude, angle, IQP, etc.
+          \item Parameterised quantum circuits as models
+          \item Expressibility and entangling capacity
+          \item Barren plateaus and trainability
+        \end{itemize}
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{block}{Quantum Neural Networks}
+        \begin{itemize}
+          \item QNN architecture overview
+          \item Layered variational circuits
+          \item Loss functions \& gradients
+          \item Links to classical deep learning
+          \item Connections to QAOA
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Weeks 15--16 ------------------------------------------
+\begin{frame}{\week{Weeks 15--16 (May 4--15)} \ QPINNs: Solving Differential Equations}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Physics-Informed QNNs}
+        \begin{itemize}
+          \item Classical PINNs review
+          \item \textbf{Quantum PINNs (QPINNs)}:
+                replace neural network with\\
+                a parameterised quantum circuit
+          \item Encoding PDEs as loss functions
+          \item Automatic differentiation on circuits
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Applications \& Implementation}
+        \begin{itemize}
+          \item Solving ODEs and PDEs:\\
+                Schrödinger, heat, Poisson
+          \item Boundary condition encoding
+          \item Gradient computation via\\
+                parameter-shift rule
+          \item Discussion of codes
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{4pt}
+  \begin{alertblock}{Key Idea}
+    QPINNs marry the physics-informed training paradigm with
+    the expressive power of quantum circuits to solve differential
+    equations on near-term hardware.
+  \end{alertblock}
+\end{frame}
+
+% ---- Week 17 -----------------------------------------------
+\begin{frame}{\week{Week 17 (May 18--22)} \ Quantum Boltzmann Machines}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{Quantum Boltzmann Machines (QBM)}
+        \begin{itemize}
+          \item Classical RBM / BM recap
+          \item Quantum generalisation:\\
+                thermal states as model distributions
+          \item Training via quantum log-likelihood gradients
+          \item Transverse-field Hamiltonians as model parameters
+          \item Restricted QBM (RQBM) architecture
+        \end{itemize}
+      \end{block}
+    \column{0.42\textwidth}
+      \begin{block}{Connections \& Outlook}
+        \begin{itemize}
+          \item Links to VQE and variational circuits
+          \item Generative quantum models
+          \item Applications in physics \& optimisation
+          \item Open research problems
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{4pt}
+  \begin{alertblock}{Course Conclusion}
+    QBMs illustrate how quantum statistical mechanics and
+    machine learning merge
+  \end{alertblock}
+\end{frame}
+
+% ---- Course map: Part 1 ------------------------------------
+\begin{frame}{Course Road Map --- Part 1: Quantum Computing}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.28}
+  \begin{tabular}{@{}llp{8.0cm}@{}}
+    \toprule
+    \textbf{Weeks} & \textbf{Dates} & \textbf{Topics} \\
+    \midrule
+    1     & Jan 19--23     & Basic quantum mechanics, Hilbert spaces, qubits \\
+    2--3  & Jan 26--Feb 6  & Composite systems, density matrices, entanglement \\
+    4     & Feb 9--13      & Entanglement entropies, quantum gates \\
+    5--6  & Feb 16--27     & VQE: algorithm, measurements, gradients (Project 1) \\
+    7--8  & Mar 2--13      & VQE for Lipkin model, Jordan-Wigner transform \\
+    9     & Mar 16--20     & Quantum Fourier Transform \\
+    10--11& Mar 23--Apr 10 & QPE and HHL algorithm \\
+    12    & Apr 13--17     & HHL codes and implementation \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+% ---- Course map: Part 2 ------------------------------------
+\begin{frame}{Course Road Map --- Part 2: Quantum Machine Learning}
+  \begin{center}
+  \small
+  \renewcommand{\arraystretch}{1.28}
+  \begin{tabular}{@{}llp{8.0cm}@{}}
+    \toprule
+    \textbf{Weeks} & \textbf{Dates} & \textbf{Topics} \\
+    \midrule
+    13    & Apr 20--24     & QAOA: quantum approximate optimisation \\
+    14    & Apr 27--May 1  & QML foundations, Quantum Neural Networks \\
+    15--16& May 4--15      & QPINNs: solving differential equations \\
+    17    & May 18--22     & Quantum Boltzmann Machines and course summary \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{6pt}
+  \begin{alertblock}{Overarching Goal}
+    Equip participants with the theoretical foundations and practical
+    implementation skills to design, analyse, and run quantum algorithms
+    on near-term and fault-tolerant hardware.
+  \end{alertblock}
+\end{frame}
+
+% ---- Closing -----------------------------------------------
+\begin{frame}{Summary: What we have done}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Part 1 -- Quantum Computing}
+        \begin{itemize}
+          \item Formalism of quantum mechanics
+          \item Entanglement \& density matrices
+          \item Variational algorithms (VQE)
+          \item Fault-tolerant algorithms:\\
+                QFT, QPE, HHL
+          \item Physical models: Lipkin, Pairing
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Part 2 -- Quantum ML}
+        \begin{itemize}
+          \item QAOA for optimisation
+          \item Quantum Neural Networks
+          \item Physics-Informed QNNs\\
+                (QPINNs)
+          \item Quantum Boltzmann Machines
+          \item Connections to classical ML
+        \end{itemize}
+      \end{block}
+  \end{columns}
+  \vspace{8pt}
+  \begin{alertblock}{Overarching Goal}
+    Equip course participants with the theoretical foundations
+    and practical implementation skills to design, analyse, and run
+    quantum algorithms on near-term and fault-tolerant hardware.
+  \end{alertblock}
+\end{frame}
+
+% ============================================================
+%  PERSPECTIVES — QUANTUM COMPUTING: FUTURE DIRECTIONS
+% ============================================================
+
+% ---- Perspectives: section divider -------------------------
+\begin{frame}[plain]
+  \begin{center}
+    \vspace{1.4cm}
+    {\Huge\bfseries\color{qblue} Perspectives}\\[0.5em]
+    {\Large\color{black} Future Directions in Quantum Computing}\\[0.3em]
+    {\normalsize\color{gray} Algorithms, Hardware, and Scientific Applications}
+  \end{center}
+\end{frame}
+
+% ---- Perspectives 1: NISQ & fault-tolerant algorithms ------
+\begin{frame}{Perspectives --- Algorithms: NISQ and Fault-Tolerant}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Near-Term (NISQ) Algorithms}
+        \begin{itemize}\small\itemsep1pt
+          \item \textbf{Improved VQE ans\"{a}tze:}
+                hardware-efficient, UCC and ADAPT-VQE,
+                symmetry-preserving circuits
+          \item \textbf{Quantum error mitigation:}
+                zero-noise extrapolation,
+                probabilistic error cancellation
+          \item \textbf{Barren plateau remedies:}
+                layerwise training, local cost
+                functions, better initialisation
+          \item \textbf{Quantum advantage benchmarks:}
+                tasks where NISQ devices
+                outperform classical methods
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Fault-Tolerant Algorithms}
+        \begin{itemize}\small\itemsep1pt
+          \item \textbf{Quantum simulation:}
+                Trotterisation, qubitisation,
+                linear combination of unitaries (LCU)
+          \item \textbf{Improved QPE:}
+                randomised and Bayesian phase
+                estimation with fewer qubits
+          \item \textbf{Beyond HHL:}
+                quantum linear algebra (QSVM,
+                quantum PCA), dequantisation
+          \item \textbf{Quantum walks and search:}
+                Grover speedups, walk-based
+                graph algorithms, Monte Carlo
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Perspectives 2: Physical sciences applications --------
+\begin{frame}{Perspectives --- Applications in the Physical Sciences}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+      \begin{block}{Quantum Chemistry and Nuclear Physics}
+        \begin{itemize}\small\itemsep1pt
+          \item \textbf{Electronic structure:}
+                VQE and QPE for ground and excited
+                states beyond coupled-cluster reach
+          \item \textbf{Nuclear structure:}
+                ab initio calculations using Lipkin,
+                pairing, and shell-model Hamiltonians
+          \item \textbf{Quantum advantage:}
+                fault-tolerant simulation of strongly
+                correlated systems (e.g.\ FeMoco)
+          \item \textbf{Imaginary-time evolution:}
+                thermal states and finite-temperature
+                properties on quantum hardware
+        \end{itemize}
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{block}{Condensed Matter and High-Energy Physics}
+        \begin{itemize}\small\itemsep1pt
+          \item \textbf{Lattice gauge theories:}
+                quantum simulation of QED, QCD,
+                and the Hubbard model
+          \item \textbf{Topological phases:}
+                preparation and detection of
+                topological order and anyons
+          \item \textbf{Quantum gravity:}
+                holographic duality (AdS/CFT)
+                encoded on quantum circuits
+          \item \textbf{Quantum sensing:}
+                Heisenberg-limited parameter
+                estimation, magnetometry,
+                gravimetry
+        \end{itemize}
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---- Perspectives 3: QML, hardware, open challenges --------
+\begin{frame}{Perspectives --- Quantum ML, Hardware, and Open Challenges}
+  \begin{columns}[T]
+    \column{0.54\textwidth}
+      \begin{block}{Quantum Machine Learning Frontiers}
+        \begin{itemize}\small\itemsep1pt
+          \item \textbf{Quantum generative models:}
+                quantum GANs, quantum diffusion,
+                and QBMs beyond the RQBM
+          \item \textbf{Quantum reinforcement learning:}
+                RL on quantum hardware for
+                quantum control and
+                agentic scientific workflows
+          \item \textbf{Classical--quantum hybrid:}
+                tensor networks and classical
+                circuit simulation as a
+                guide for algorithm design
+          \item \textbf{Certification:}
+                classical shadow tomography
+                and cross-entropy benchmarking
+        \end{itemize}
+      \end{block}
+    \column{0.43\textwidth}
+      \begin{block}{Hardware and Open Challenges}
+        \begin{itemize}\small\itemsep1pt
+          \item \textbf{Qubit platforms:}
+                superconducting, trapped-ion,
+                photonic, neutral-atom arrays
+          \item \textbf{Error correction:}
+                surface and color codes;
+                logical fault-tolerant qubits
+          \item \textbf{Scalability:}
+                how many logical qubits for
+                quantum advantage on
+                real-world problems?
+        \end{itemize}
+      \end{block}
+      \begin{alertblock}{Key Insight}
+        Quantum advantage requires both
+        better algorithms \emph{and}
+        better hardware in tandem.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\end{document}
+
+
 
 \end{document}
