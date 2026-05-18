@@ -369,45 +369,34 @@
 \begin{frame}{The QBM Training Objective}
   \begin{columns}[T]
     \column{0.52\textwidth}
-      Given a dataset with empirical distribution $\pi(\mathbf{v})$,
-      we want $p_\theta(\mathbf{v})\approx\pi(\mathbf{v})$.
-
-      \textbf{Minimise the KL divergence:}
+      Given empirical distribution $\pi(\mathbf{v})$, minimise
+      the KL divergence $\mathcal{L}(\theta)=\KL{\pi}{p_\theta}$:
       \[
         \mathcal{L}(\theta)
-        = \KL{\pi}{p_\theta}
         = \sum_\mathbf{v}\pi(\mathbf{v})\ln\frac{\pi(\mathbf{v})}{p_\theta(\mathbf{v})}
       \]
-
-      Expanding using $p_\theta(\mathbf{v}) = \bra{\mathbf{v}}\rho_v\ket{\mathbf{v}}$:
+      Expanding with $p_\theta(\mathbf{v})=\bra{\mathbf{v}}\rho_v\ket{\mathbf{v}}$
+      and $\sigma_{\rm data}=\sum_\mathbf{v}\pi(\mathbf{v})\ket{\mathbf{v}}\bra{\mathbf{v}}$:
       \[
         \mathcal{L}(\theta)
-        = -\sum_\mathbf{v}\pi(\mathbf{v})\ln p_\theta(\mathbf{v})
-          + \mathrm{const}
-      \]
-      \[
         = -\Tr[\sigma_{\rm data}\ln\rho_v(\theta)] + \mathrm{const}
       \]
-      where $\sigma_{\rm data} = \sum_\mathbf{v}\pi(\mathbf{v})\ket{\mathbf{v}}\bra{\mathbf{v}}$.
     \column{0.44\textwidth}
       \begin{alertblock}{Quantum relative entropy}
-        The training objective is the \textbf{quantum relative entropy}:
+        The objective equals the quantum relative entropy:
         \[
           \mathcal{L} = S(\sigma_{\rm data}\,\|\,\rho_v(\theta))
         \]
         \[
           = \Tr[\sigma_{\rm data}(\ln\sigma_{\rm data} - \ln\rho_v)]
         \]
-        This reduces to the classical KL divergence when both
-        states are diagonal.
+        Reduces to classical KL when both states are diagonal.
       \end{alertblock}
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \begin{block}{Full QBM objective}
-        Use the \emph{total} quantum relative entropy:
-        \[
-          \mathcal{L} = S(\rho_{\rm target}\,\|\,\rho(\theta))
-        \]
-        when the target is itself a quantum state.
+        For a quantum target state, use the total quantum
+        relative entropy:
+        $\mathcal{L} = S(\rho_{\rm target}\,\|\,\rho(\theta))$.
       \end{block}
   \end{columns}
 \end{frame}
@@ -415,47 +404,42 @@
 \begin{frame}{Gradient of the Log-Likelihood}
   \begin{columns}[T]
     \column{0.55\textwidth}
-      The gradient of the negative log-likelihood w.r.t.\
-      parameter $\theta_\mu$ is:
+      The gradient of the NLL w.r.t.\ $\theta_\mu$, where
+      $H(\theta)=\sum_\mu\theta_\mu\Lambda_\mu$:
       \[
         \frac{\partial\mathcal{L}}{\partial\theta_\mu}
         = \langle\Lambda_\mu\rangle_{\rho_{\rm clamp}}
           - \langle\Lambda_\mu\rangle_{\rho(\theta)}
       \]
-      where $\Lambda_\mu$ is the \textbf{generalised force}
-      (operator conjugate to $\theta_\mu$) defined by:
-      \[
-        H(\theta) = \sum_\mu \theta_\mu \Lambda_\mu
-      \]
-      and the two expectation values are:
+      The two expectation values ($\Lambda_\mu$ = generalised force):
       \begin{align*}
         \langle\Lambda_\mu\rangle_{\rm clamp}
-        &= \Tr\!\left[\Lambda_\mu\,\rho_{\rm clamp}\right]
-           \quad\text{(data-dependent)}\\
+        &= \Tr[\Lambda_\mu\,\rho_{\rm clamp}]
+           \;\text{(data-dependent)}\\
         \langle\Lambda_\mu\rangle_\theta
-        &= \Tr\!\left[\Lambda_\mu\,\rho(\theta)\right]
-           \quad\text{(model-dependent)}
+        &= \Tr[\Lambda_\mu\,\rho(\theta)]
+           \;\text{(model-dependent)}
       \end{align*}
     \column{0.41\textwidth}
       \begin{block}{Clamped state}
-        $\rho_{\rm clamp}$ is the Gibbs state of the \emph{same}
-        Hamiltonian but with visible qubits clamped to a data sample:
+        $\rho_{\rm clamp}$ = Gibbs state with visible qubits
+        clamped to a data sample:
         \[
           \rho_{\rm clamp}
           = \frac{e^{-\beta H^{(v)}}}{Z^{(v)}}
         \]
-        where $H^{(v)}$ is $H(\theta)$ with visible-qubit
-        operators replaced by their classical values.
+        $H^{(v)}$: $H(\theta)$ with visible operators
+        replaced by classical values.
       \end{block}
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \begin{alertblock}{Classical analogy}
-        This is the quantum analogue of:
+        Quantum analogue of:
         \[
           \frac{\partial\ln p}{\partial W_{ij}}
           = \langle v_ih_j\rangle_{\rm data}
           - \langle v_ih_j\rangle_{\rm model}
         \]
-        Two thermal averages; one clamped, one free.
+        Two thermal averages: clamped and free.
       \end{alertblock}
   \end{columns}
 \end{frame}
@@ -495,21 +479,17 @@
   \begin{columns}[T]
     \column{0.52\textwidth}
       \begin{alertblock}{The intractability problem}
-        Computing $\langle\Lambda_\mu\rangle_\theta = \Tr[\Lambda_\mu\rho(\theta)]$
-        requires:
-        \[
-          \rho(\theta) = \frac{e^{-\beta H(\theta)}}{\Tr[e^{-\beta H(\theta)}]}
-        \]
-        \begin{itemize}
-          \item Diagonalising an $2^n\times 2^n$ matrix —
+        Computing $\langle\Lambda_\mu\rangle_\theta=\Tr[\Lambda_\mu\rho(\theta)]$
+        requires $\rho(\theta)=e^{-\beta H(\theta)}/\Tr[e^{-\beta H(\theta)}]$:
+        \begin{itemize}\itemsep0pt
+          \item Diagonalising a $2^n\times 2^n$ matrix —
                 exponential cost classically
           \item Computing the matrix exponential and its trace
           \item Repeated for every gradient step
         \end{itemize}
       \end{alertblock}
-
       \textbf{Three main approaches:}
-      \begin{enumerate}
+      \begin{enumerate}\itemsep0pt
         \item Quantum hardware sampling
         \item Variational approximation of $\rho(\theta)$
         \item Semiclassical / mean-field approximations
@@ -521,14 +501,14 @@
         Measuring $\Tr[\Lambda_\mu\rho]$ requires only
         $O(\varepsilon^{-2})$ shots — no diagonalisation.
       \end{block}
-      \vspace{0.3cm}
+      \vspace{0.1cm}
       \begin{block}{Variational approach}
-        Approximate the Gibbs state by a variational ansatz:
+        Approximate the Gibbs state:
         \[
           \rho(\theta)\approx\rho_\phi
           = U(\phi)\rho_0 U^\dagger(\phi)
         \]
-        Jointly optimise $(\theta,\phi)$ — this is the
+        Jointly optimise $(\theta,\phi)$ — the
         \textbf{Quantum-Classical Boltzmann Machine}.
       \end{block}
   \end{columns}
@@ -537,39 +517,31 @@
 \begin{frame}{Preparing the Gibbs State on a Quantum Computer}
   \begin{columns}[T]
     \column{0.54\textwidth}
-      \textbf{Method 1: Quantum imaginary-time evolution (QITE)}
-
-      Evolve with the non-unitary operator $e^{-\Delta\tau H}$,
-      approximated by a sequence of unitary gates using TDVP:
+      \textbf{Method 1: Quantum imaginary-time evolution (QITE)}\\
+      Evolve with $e^{-\Delta\tau H}$ approximated by unitaries (TDVP):
       \[
-        \rho(\tau) = \frac{e^{-\tau H}}{Z(\tau)},
-        \quad \tau = \beta/2
+        \rho(\tau) = \frac{e^{-\tau H}}{Z(\tau)},\quad \tau = \beta/2
       \]
-      Each QITE step:
-      \[
-        e^{-\Delta\tau H}\ket{\psi} \approx U_{\rm QITE}\ket{\psi}
-      \]
-      where $U_{\rm QITE}$ is a local unitary found by solving
-      the TDVP linear system $\sum_j F_{ij}\dot\theta_j = C_i$.
+      Each step: $e^{-\Delta\tau H}\ket{\psi}\approx U_{\rm QITE}\ket{\psi}$
+      where $U_{\rm QITE}$ solves $\sum_j F_{ij}\dot\theta_j = C_i$.
 
-      \medskip
+      \smallskip
       \textbf{Method 2: Variational thermal ansatz}
       \[
         \rho_\phi = \Tr_A\!\left[U(\phi)\ket{0}_{SA}\bra{0}U^\dagger(\phi)\right]
       \]
-      Use ancilla qubits $A$ to purify the mixed state $\rho$
-      via a \emph{thermofield double} state.
+      Ancilla qubits $A$ purify $\rho$ via the thermofield double.
     \column{0.42\textwidth}
       \begin{center}
-      \begin{quantikz}[row sep=0.4cm, column sep=0.35cm]
+      \begin{quantikz}[row sep=0.32cm, column sep=0.3cm]
         \lstick{$\ket{0}_1$} & \gate[3]{U(\phi)} & \qw \\
         \lstick{$\ket{0}_2$} &                   & \qw \\
         \lstick{$\ket{0}_3$} & \qw               & \qw
       \end{quantikz}
 
-      \vspace{0.4cm}
+      \vspace{0.2cm}
 
-      \begin{quantikz}[row sep=0.4cm, column sep=0.35cm]
+      \begin{quantikz}[row sep=0.28cm, column sep=0.3cm]
         \lstick{$\ket{0}_{A_1}$} & \gate[6]{V(\phi)} & \qw \\
         \lstick{$\ket{0}_{A_2}$} & \qw               & \qw \\
         \lstick{$\ket{0}_{A_3}$} & \qw               & \qw \\
@@ -587,40 +559,32 @@
 \begin{frame}{Purification and the Thermofield Double State}
   \begin{columns}[T]
     \column{0.52\textwidth}
-      Any mixed state $\rho$ on a system $S$ can be
-      \textbf{purified}: there exists a pure state
-      $\ket{\Psi}_{SA}$ on $S\otimes A$ such that:
-      \[
-        \rho_S = \Tr_A\!\left[\ket{\Psi}\bra{\Psi}\right]
-      \]
-      For the Gibbs state, the canonical purification is the
+      Any mixed state $\rho_S$ can be \textbf{purified}: there exists
+      $\ket{\Psi}_{SA}$ with $\rho_S = \Tr_A[\ket{\Psi}\bra{\Psi}]$.
+
+      For the Gibbs state the canonical purification is the
       \textbf{thermofield double} (TFD):
       \[
         \ket{\mathrm{TFD}(\beta)}
         = \frac{1}{\sqrt{Z(\beta)}}
           \sum_k e^{-\beta\epsilon_k/2}\ket{\epsilon_k}_S\ket{\epsilon_k}_A
       \]
-      Tracing out $A$:
-      \[
-        \Tr_A\!\left[\ket{\mathrm{TFD}}\bra{\mathrm{TFD}}\right]
-        = \rho(\beta)
-      \]
+      Tracing out $A$ recovers
+      $\Tr_A[\ket{\mathrm{TFD}}\bra{\mathrm{TFD}}]=\rho(\beta)$.
     \column{0.44\textwidth}
       \begin{block}{TFD as a QNN circuit}
-        The TFD state can be prepared by a parametrised circuit
-        on $2n$ qubits ($n$ system + $n$ ancilla):
+        Prepare with a $2n$-qubit variational circuit:
         \[
           \ket{\mathrm{TFD}(\beta)} \approx V(\phi)\ket{0}^{\otimes 2n}
         \]
-        with $V(\phi)$ trained to minimise the free energy:
+        $V(\phi)$ trained to minimise the free energy:
         \[
           \mathcal{F}(\phi) = \langle H\rangle_\phi
                              - \beta^{-1}S_{\rm vN}(\rho_\phi)
         \]
-        where $S_{\rm vN}(\rho) = -\Tr[\rho\ln\rho]$ is the
-        von Neumann entropy.
+        where $S_{\rm vN}(\rho)=-\Tr[\rho\ln\rho]$.
       \end{block}
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \begin{alertblock}{Key connection}
         Preparing the TFD $\equiv$ training a variational QNN
         to minimise the free energy of $H(\theta)$.
@@ -629,11 +593,9 @@
 \end{frame}
 
 \begin{frame}{TFD Circuit: Quantikz Diagram}
-  The thermofield double state prepared on $n=3$ system qubits
-  + $3$ ancilla qubits:
-  \vspace{0.1cm}
+  The thermofield double on $n=3$ system + $3$ ancilla qubits:
   \begin{center}
-  \begin{quantikz}[row sep=0.36cm, column sep=0.38cm]
+  \begin{quantikz}[row sep=0.26cm, column sep=0.34cm]
     \lstick{$\ket{0}_{A_1}$}
       & \gate{H} & \ctrl{3} & \qw & \qw & \qw & \qw \\
     \lstick{$\ket{0}_{A_2}$}
@@ -651,15 +613,14 @@
       & \qw & \qw
   \end{quantikz}
   \end{center}
-  \vspace{0.1cm}
-  \begin{itemize}\itemsep2pt
-    \item \textbf{Step 1:} $H^{\otimes n}$ on ancillas $\to$
-          uniform superposition
-    \item \textbf{Step 2:} CNOT from each ancilla to its
-          system partner $\to$ maximally entangled Bell pairs
-    \item \textbf{Step 3:} Variational circuit $W(\phi)$ on system
-          qubits tilts toward the correct thermal distribution
-    \item Final state: $\rho_S = \Tr_A[\cdot]\approx\rho(\beta)$
+  \begin{itemize}\itemsep1pt
+    \item \textbf{Step 1:} $H^{\otimes n}$ on ancillas
+          $\to$ uniform superposition
+    \item \textbf{Step 2:} CNOT from each ancilla to its system partner
+          $\to$ maximally entangled Bell pairs
+    \item \textbf{Step 3:} $W(\phi)$ on system qubits tilts toward
+          the correct thermal distribution
+    \item Final: $\rho_S = \Tr_A[\cdot]\approx\rho(\beta)$
   \end{itemize}
 \end{frame}
 
@@ -897,26 +858,22 @@
 \begin{frame}{QBM and the Variational Principle}
   \begin{columns}[T]
     \column{0.52\textwidth}
-      The QBM free-energy objective
+      The QBM free-energy objective is an
+      \textbf{upper bound on the free energy} of $H(\theta)$:
       \[
         \mathcal{F}(\rho_\phi,H(\theta))
         = \Tr[H(\theta)\rho_\phi]
           - \beta^{-1}S_{\rm vN}(\rho_\phi)
         \ge \mathcal{F}_{\rm exact}
       \]
-      provides an \textbf{upper bound on the free energy}
-      of $H(\theta)$.
-
-      \textbf{Connection to VQE:}\\
-      VQE minimises $\langle H\rangle_\psi$ over pure states
-      (zero-temperature limit $\beta\to\infty$).
-      QBM minimises $\mathcal{F}(\rho,H)$ over mixed states
-      (finite temperature).
-
+      \textbf{Connection to VQE:}
+      VQE ($\beta\to\infty$) minimises $\langle H\rangle_\psi$
+      over pure states; QBM minimises $\mathcal{F}(\rho,H)$ over
+      mixed states (finite $T$). Schematically:
       \[
-        \underbrace{\min_\psi\langle\psi|H|\psi\rangle}_{\text{VQE / ground state}}
+        \min_\psi\langle\psi|H|\psi\rangle
         \;\subset\;
-        \underbrace{\min_\rho\mathcal{F}(\rho,H)}_{\text{QBM / thermal state}}
+        \min_\rho\mathcal{F}(\rho,H)
       \]
     \column{0.44\textwidth}
       \begin{block}{TDVP connection}
@@ -925,20 +882,15 @@
           \sum_j F_{ij}^{(\phi)}\dot\phi_j
           = -\partial_{\phi_i}\mathcal{F}
         \]
-        is the \emph{imaginary-time TDVP} — the same
-        equation used in Stochastic Reconfiguration (SR).
-
+        is the \emph{imaginary-time TDVP} used in
+        Stochastic Reconfiguration (SR).\\[2pt]
         QBM training $\equiv$ SR at finite temperature.
       \end{block}
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \begin{alertblock}{$\beta\to\infty$ limit}
-        As $\beta\to\infty$:
-        \[
-          \rho(\beta)\to\ket{E_0}\bra{E_0}
-        \]
-        QBM $\to$ VQE.
-        The QBM training objective reduces to pure-state
-        variational minimisation.
+        $\rho(\beta)\to\ket{E_0}\bra{E_0}$, so
+        QBM $\to$ VQE: the objective reduces to
+        pure-state variational minimisation.
       \end{alertblock}
   \end{columns}
 \end{frame}
@@ -946,46 +898,41 @@
 \begin{frame}{Quantum Natural Gradient for QBMs}
   \begin{columns}[T]
     \column{0.52\textwidth}
-      For the thermal circuit parameters $\phi$, the optimal
-      update direction is the \textbf{quantum natural gradient}:
-      \[
-        \Delta\phi = -\eta\,F^{-1}(\phi)\,\nabla_\phi\mathcal{F}
-      \]
-      where the QFI metric for \emph{mixed states} is:
+      Optimal update: $\Delta\phi = -\eta F^{-1}(\phi)\nabla_\phi\mathcal{F}$,
+      where the \textbf{mixed-state QFI} (Bures metric) is:
       \[
         F_{ij}^{(\phi)}
         = \Tr\!\left[\rho_\phi \mathcal{L}_i\mathcal{L}_j\right]
       \]
-      with $\mathcal{L}_i$ the \textbf{symmetric logarithmic derivative}:
+      with symmetric logarithmic derivative $\mathcal{L}_i$ defined by:
       \[
         \frac{\partial\rho_\phi}{\partial\phi_i}
-        = \frac{1}{2}(\rho_\phi\mathcal{L}_i + \mathcal{L}_i\rho_\phi)
+        = \tfrac{1}{2}(\rho_\phi\mathcal{L}_i + \mathcal{L}_i\rho_\phi)
       \]
-
-      This is the \textbf{mixed-state QFI} (Bures metric), which
-      generalises the pure-state QFI from week15.
+      This generalises the pure-state QFI (week 15).
     \column{0.44\textwidth}
-      \begin{block}{Bures metric vs.\ Fubini-Study}
+      \begin{block}{Bures vs.\ Fubini-Study metric}
+        \small
+        \renewcommand{\arraystretch}{1.15}
         \begin{tabular}{ll}
           \toprule
-          State type & Metric \\
+          State & Metric \\
           \midrule
-          Pure $\ket{\psi}$ & Fubini-Study \\
-                            & $F_{ij}^{\rm FS} = 4\,\mathrm{Re}(\ldots)$ \\
-          Mixed $\rho$ & Bures \\
-                       & $F_{ij}^{\rm B} = \Tr[\rho\mathcal{L}_i\mathcal{L}_j]$ \\
+          Pure $\ket{\psi}$ & Fubini-Study\\
+                            & $F_{ij}^{\rm FS}=4\,\mathrm{Re}(\ldots)$ \\
+          Mixed $\rho$      & Bures \\
+                            & $F_{ij}^{\rm B}=\Tr[\rho\mathcal{L}_i\mathcal{L}_j]$ \\
           \bottomrule
         \end{tabular}
-        \vspace{0.2cm}
+        \vspace{0.1cm}
 
-        The Bures metric reduces to the Fubini-Study metric
-        for pure states: $F_{ij}^B = F_{ij}^{\rm FS}$ when
-        $\rho = \ket{\psi}\bra{\psi}$.
+        Bures $\to$ Fubini-Study when
+        $\rho=\ket{\psi}\bra{\psi}$.
       \end{block}
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \begin{alertblock}{Practical computation}
-        $F^B_{ij}$ requires the SLD $\mathcal{L}_i$, which is
-        expensive classically but can be estimated via
+        $F^B_{ij}$ requires the SLD $\mathcal{L}_i$:
+        expensive classically, but estimable via
         Hadamard-test circuits.
       \end{alertblock}
   \end{columns}
@@ -1138,41 +1085,35 @@
   \begin{columns}[T]
     \column{0.52\textwidth}
       \begin{block}{What a classical RBM can represent}
-        \begin{itemize}
-          \item Any probability distribution over $\{0,1\}^n$
+        \begin{itemize}\itemsep0pt
+          \item Any distribution over $\{0,1\}^n$
                 with sufficiently many hidden units
-          \item But: requires exponentially many hidden units
+          \item But: exponentially many hidden units needed
                 to replicate some quantum distributions
-          \item Limited to distributions arising from
-                diagonal (classical) Hamiltonians
+          \item Limited to diagonal (classical) Hamiltonians
         \end{itemize}
       \end{block}
-      \vspace{0.2cm}
+      \vspace{0.08cm}
       \begin{alertblock}{What a QBM adds}
-        \begin{itemize}
-          \item Off-diagonal density matrix elements
-                $\Rightarrow$ coherences
+        \begin{itemize}\itemsep0pt
+          \item Off-diagonal elements $\Rightarrow$ coherences
           \item Entangled marginals over visible qubits
-          \item \emph{Quantum-correlated} probability
-                distributions — not realisable by any
-                classical latent variable model
+          \item Quantum-correlated distributions not realisable
+                by any classical latent variable model
         \end{itemize}
       \end{alertblock}
     \column{0.44\textwidth}
-      \textbf{Formal expressivity result:}\\
-      Any $n$-qubit density matrix $\rho$ can be expressed as
-      the Gibbs state of some $n$-qubit Hamiltonian:
+      \textbf{Formal expressivity result:}
+      Any $n$-qubit $\rho$ is the Gibbs state of some $H$:
       \[
         \rho = \frac{e^{-\beta H}}{Z},\quad
         H = -\beta^{-1}\ln(Z\rho)
       \]
-      \textbf{Key consequence:} the QBM is a
-      \emph{universal} model for quantum states.
-
-      \vspace{0.3cm}
+      $\Rightarrow$ QBM is a \emph{universal} model for
+      quantum states.
+      \vspace{0.1cm}
       \begin{block}{Sample complexity}
-        Learning $\rho$ to within $\varepsilon$
-        in trace distance requires:
+        Learning $\rho$ to within $\varepsilon$ requires:
         \[
           N = O\!\left(\frac{n}{\varepsilon^2}\right)
           \text{ samples}
