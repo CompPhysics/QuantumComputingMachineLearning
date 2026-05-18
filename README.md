@@ -158,3 +158,4 @@ themes can be covered:
 
 ## May 18-22, 2026
   - Quantum Boltzmann machines (continued from previous week) and summary of course and discussion of and work on project 2
+  - Teaching material in different formats at https://github.com/CompPhysics/QuantumComputingMachineLearning/tree/gh-pages/doc/pub/week17, see PDF file and jupyter-notebook. The jupyter-notebook is a companion to the PDF file
