@@ -59,6 +59,10 @@
 %% ── Convenience macros ──────────────────────────────────────────
 \newcommand{\KL}[2]{D_{\mathrm{KL}}\!\left(#1\,\|\,#2\right)}
 \newcommand{\Hilbert}{\mathcal{H}}
+%% \week used in the course-summary section
+\newcommand{\week}[1]{\textcolor{blue!60!black}{\textbf{#1}}}
+%% colour alias used in the perspectives divider
+\colorlet{qblue}{blue!50!black}
 
 %% ── Metadata ────────────────────────────────────────────────────
 \title[Quantum Boltzmann Machines]{Quantum Boltzmann Machines and Summary of Course}
@@ -666,46 +670,38 @@
 \begin{frame}{Variational QBM: Full Algorithm}
   \begin{columns}[T]
     \column{0.55\textwidth}
-      The \textbf{Variational QBM} jointly optimises:
-      \begin{enumerate}\itemsep1pt
-        \item \textbf{Model parameters} $\theta$:
-              couplings in $H(\theta)$
-        \item \textbf{Thermal circuit parameters} $\phi$:
-              prepares $\rho(\beta,\theta)\approx\rho_\phi$
+      {\small The \textbf{Variational QBM} jointly optimises:}
+      \begin{enumerate}\small\itemsep0pt
+        \item \textbf{Model params} $\theta$: couplings in $H(\theta)$
+        \item \textbf{Circuit params} $\phi$:
+              prepares $\rho_\phi\approx\rho(\beta,\theta)$
       \end{enumerate}
-
-      \textbf{Algorithm (one step):}
-      \begin{enumerate}\itemsep1pt
+      {\small\textbf{Algorithm (one step):}}
+      \begin{enumerate}\small\itemsep0pt
         \item Sample $\mathbf{v}$ from dataset
-        \item Run TFD circuit $V(\phi)$ to get
-              $\rho_\phi\approx\rho(\theta,\beta)$
-        \item Clamp visible qubits to $\mathbf{v}$;
-              run $V_{\rm clamp}(\phi)$ to get $\rho_{\rm clamp}$
+        \item Run TFD circuit $V(\phi)$; get $\rho_\phi$
+        \item Clamp visible qubits; get $\rho_{\rm clamp}$
         \item Estimate $\langle\Lambda_\mu\rangle_\phi$
               and $\langle\Lambda_\mu\rangle_{\rm clamp}$
-              by sampling
         \item Update $\theta$ by gradient descent
         \item Update $\phi$ by imaginary-time TDVP
       \end{enumerate}
     \column{0.41\textwidth}
       \begin{alertblock}{Two nested optimisations}
-        \[
-          \min_\theta\,\mathcal{L}(\theta)
-          = \KL{\pi}{p_\theta}
-        \]
-        \[
-          \min_\phi\,\mathcal{F}(\phi,\theta)
-          = \langle H(\theta)\rangle_\phi
-            - \beta^{-1}S_{\rm vN}(\rho_\phi)
-        \]
-        Inner: $\phi$ tracks thermal state of $H(\theta)$.\\
-        Outer: $\theta$ reduces KL divergence.
+        \small
+        \vspace{-4pt}
+        \[ \min_\theta\;\mathcal{L}(\theta)=\KL{\pi}{p_\theta} \]
+        \[ \min_\phi\;\mathcal{F}(\phi,\theta)
+           =\langle H\rangle_\phi-\beta^{-1}S_{\rm vN} \]
+        \vspace{-6pt}
+        Inner: $\phi$ tracks thermal state.\\
+        Outer: $\theta$ reduces KL.
       \end{alertblock}
-      \vspace{0.15cm}
+      \vspace{0.08cm}
       \begin{block}{Free-energy minimisation}
-        $\mathcal{F}$ is minimised when
-        $\rho_\phi = \rho(\beta,\theta)$ exactly —
-        the quantum analogue of the EM algorithm.
+        {\small $\mathcal{F}$ minimised when
+        $\rho_\phi=\rho(\beta,\theta)$ —
+        quantum analogue of the EM algorithm.}
       \end{block}
   \end{columns}
 \end{frame}
@@ -1190,45 +1186,38 @@
   \begin{columns}[T]
     \column{0.52\textwidth}
       \textbf{Theoretical separation:}
-      \begin{enumerate}\itemsep2pt
+      \begin{enumerate}\small\itemsep1pt
         \item \textbf{Quantum data} (molecular wavefunctions,
-              lattice gauge configs): target is inherently
-              quantum; a QBM learns it directly.
+              lattice gauge configs): QBM learns directly.
         \item \textbf{Long-range entanglement:}
               exponentially many classical hidden units needed;
               $O(n)$ quantum hidden qubits suffice.
         \item \textbf{Partition function estimation:}
-              classical Monte Carlo suffers sign problems for
+              classical MC suffers sign problems for
               fermionic systems; QBM avoids this.
       \end{enumerate}
-
       \textbf{Practical regime (NISQ):}
-      \begin{itemize}\itemsep1pt
+      \begin{itemize}\small\itemsep0pt
         \item Small $n$ ($\lesssim 30$ qubits)
-        \item Shallow thermal circuits (short imaginary time)
+        \item Shallow thermal circuits
         \item Heuristic advantage — not yet provable
       \end{itemize}
     \column{0.44\textwidth}
       \begin{alertblock}{Caution: no-go results}
         For \emph{classical} data distributions:
-        \begin{itemize}\itemsep1pt
-          \item Any QBM can be dequantised
-                (matched by a classical BM) if the
+        \begin{itemize}\small\itemsep1pt
+          \item Any QBM can be dequantised if
                 quantum correlations of $\rho$ are weak.
-          \item Advantage requires $\rho$ to have
-                genuinely quantum off-diagonal structure.
+          \item Advantage requires genuinely
+                quantum off-diagonal structure.
         \end{itemize}
       \end{alertblock}
-      \vspace{0.15cm}
+      \vspace{0.1cm}
       \begin{block}{Barren plateaus in QBMs}
-        Like QNNs, deep QBM circuits suffer exponentially
-        vanishing gradients:
-        \[
-          \mathrm{Var}\!\left(\nabla_\theta\mathcal{L}\right)
-          \sim 2^{-n}
-        \]
-        Mitigation: shallow circuits and problem-inspired
-        Hamiltonian structure.
+        {\small Like QNNs, deep circuits suffer
+        $\mathrm{Var}(\nabla_\theta\mathcal{L})\sim 2^{-n}$.\\
+        Mitigation: shallow circuits and
+        problem-inspired Hamiltonian structure.}
       \end{block}
   \end{columns}
 \end{frame}
@@ -1238,7 +1227,7 @@
   \begin{columns}[T]
     \column{0.50\textwidth}
       \begin{block}{Near-term (NISQ) focus}
-        \begin{itemize}\itemsep1pt
+        \begin{itemize}\small\itemsep0pt
           \item Small QBMs ($n\lesssim 30$) on current hardware
           \item Hybrid: quantum sampling + classical update
           \item Applications: quantum chemistry, finance,
@@ -1246,76 +1235,59 @@
           \item Error mitigation for thermal state preparation
         \end{itemize}
       \end{block}
-      \vspace{0.1cm}
+      \vspace{0.05cm}
       \begin{alertblock}{Key open questions}
-        \begin{itemize}\itemsep1pt
+        \begin{itemize}\small\itemsep0pt
           \item Can QBMs learn classically hard-to-sample
                 distributions efficiently?
           \item Can barren plateaus be avoided with
                 problem-inspired structure?
-          \item What is the quantum sample complexity
-                advantage over classical BMs?
+          \item Quantum sample complexity advantage?
         \end{itemize}
       \end{alertblock}
     \column{0.46\textwidth}
       \begin{block}{Long-term directions}
-        \begin{itemize}\itemsep1pt
+        \begin{itemize}\small\itemsep0pt
           \item \textbf{Fault-tolerant QBMs:} exact Gibbs
-                state prep via quantum signal processing
+                state via quantum signal processing
           \item \textbf{Quantum GANs:} replace discriminator
                 or generator with a QBM
-          \item \textbf{Physics:} learn Hamiltonians from
-                tomographic data; phase diagram estimation;
-                sign-problem-free MC via QBM proposals
+          \item \textbf{Physics:} learn Hamiltonians from data;
+                phase diagrams; sign-problem-free MC
           \item \textbf{Tensor networks:}
-                finite-$T$ DMRG $\leftrightarrow$
-                shallow QBM circuits
+                finite-$T$ DMRG $\leftrightarrow$ QBM circuits
         \end{itemize}
       \end{block}
-      \vspace{0.1cm}
-      \textbf{Quantum advantage landscape:}
-      \[
-        \underbrace{\text{Classical BM}}_{\text{classical data}}
-        \subset
-        \underbrace{\text{QBM}}_{\text{quantum data}}
-        \subset
-        \underbrace{\text{Full QC}}_{\text{fault-tolerant}}
-      \]
+      \vspace{0.05cm}
+      {\small\textbf{Quantum advantage landscape:}\\
+      $\text{Classical BM}\subset\text{QBM}\subset\text{Full QC}$}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Summary: QBM in Context}
   \begin{center}
-  \renewcommand{\arraystretch}{1.15}
-  \begin{tabular}{p{2.8cm}p{3.2cm}p{3.2cm}p{3.2cm}}
+  \small
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{p{2.5cm}p{3.0cm}p{3.0cm}p{3.0cm}}
     \toprule
     & \textbf{Classical BM} & \textbf{QNN} & \textbf{QBM} \\
     \midrule
-    State & Distribution $p(\mathbf{v})$ & Pure $\ket{\psi(\theta)}$
-          & Mixed $\rho(\theta)$ \\
-    Model & $e^{-\beta E}/Z$ & $U(\theta)\ket{0}$
-          & $e^{-\beta H(\theta)}/Z$ \\
-    Gradient & CD (biased) & Param-shift (exact)
-             & Thermal avg.\ (exact on QC) \\
-    Geometry & Euclidean & Fubini-Study QFI
-             & Bures metric \\
-    Training & Gibbs sampling & TDVP (real time)
-             & TDVP (imag.\ time) \\
-    Expressivity & Classical dists. & Pure states
-                 & All quantum states \\
-    Advantage & Tractable & Discriminative & Generative \\
+    State      & $p(\mathbf{v})$      & Pure $\ket{\psi(\theta)}$  & Mixed $\rho(\theta)$ \\
+    Model      & $e^{-\beta E}/Z$     & $U(\theta)\ket{0}$         & $e^{-\beta H(\theta)}/Z$ \\
+    Gradient   & CD (biased)          & Param-shift                & Thermal avg. \\
+    Geometry   & Euclidean            & Fubini-Study QFI           & Bures metric \\
+    Training   & Gibbs sampling       & TDVP (real time)           & TDVP (imag.\ time) \\
+    Expressiv. & Classical dists.     & Pure states                & All quantum states \\
+    Advantage  & Tractable            & Discriminative             & Generative \\
     \bottomrule
   \end{tabular}
   \end{center}
-
-  \vspace{0.1cm}
+  \vspace{0.05cm}
   \begin{alertblock}{The central message}
-    A Quantum Boltzmann Machine is a \textbf{thermal QNN}:
-    it replaces the pure-state variational ansatz with a
-    Gibbs (mixed) state, enabling universal generative
-    modelling of quantum distributions with a natural
-    connection to statistical mechanics and the
-    variational principle.
+    \small
+    A QBM is a \textbf{thermal QNN}: it replaces the pure-state ansatz
+    with a Gibbs state, enabling generative modelling of quantum
+    distributions with a natural connection to statistical mechanics.
   \end{alertblock}
 \end{frame}
 
@@ -1887,9 +1859,9 @@
   \begin{columns}[T]
     \column{0.48\textwidth}
       \begin{block}{Near-Term (NISQ) Algorithms}
-        \begin{itemize}\small\itemsep1pt
+        \begin{itemize}\footnotesize\itemsep1pt
           \item \textbf{Improved VQE ans\"{a}tze:}
-                hardware-efficient, UCC and ADAPT-VQE,
+                hardware-efficient, UCC, ADAPT-VQE,
                 symmetry-preserving circuits
           \item \textbf{Quantum error mitigation:}
                 zero-noise extrapolation,
@@ -1897,14 +1869,14 @@
           \item \textbf{Barren plateau remedies:}
                 layerwise training, local cost
                 functions, better initialisation
-          \item \textbf{Quantum advantage benchmarks:}
+          \item \textbf{Advantage benchmarks:}
                 tasks where NISQ devices
                 outperform classical methods
         \end{itemize}
       \end{block}
     \column{0.48\textwidth}
       \begin{block}{Fault-Tolerant Algorithms}
-        \begin{itemize}\small\itemsep1pt
+        \begin{itemize}\footnotesize\itemsep1pt
           \item \textbf{Quantum simulation:}
                 Trotterisation, qubitisation,
                 linear combination of unitaries (LCU)
@@ -1914,7 +1886,7 @@
           \item \textbf{Beyond HHL:}
                 quantum linear algebra (QSVM,
                 quantum PCA), dequantisation
-          \item \textbf{Quantum walks and search:}
+          \item \textbf{Quantum walks \& search:}
                 Grover speedups, walk-based
                 graph algorithms, Monte Carlo
         \end{itemize}
@@ -1927,7 +1899,7 @@
   \begin{columns}[T]
     \column{0.48\textwidth}
       \begin{block}{Quantum Chemistry and Nuclear Physics}
-        \begin{itemize}\small\itemsep1pt
+        \begin{itemize}\footnotesize\itemsep1pt
           \item \textbf{Electronic structure:}
                 VQE and QPE for ground and excited
                 states beyond coupled-cluster reach
@@ -1944,7 +1916,7 @@
       \end{block}
     \column{0.48\textwidth}
       \begin{block}{Condensed Matter and High-Energy Physics}
-        \begin{itemize}\small\itemsep1pt
+        \begin{itemize}\footnotesize\itemsep1pt
           \item \textbf{Lattice gauge theories:}
                 quantum simulation of QED, QCD,
                 and the Hubbard model
@@ -1968,18 +1940,16 @@
   \begin{columns}[T]
     \column{0.54\textwidth}
       \begin{block}{Quantum Machine Learning Frontiers}
-        \begin{itemize}\small\itemsep1pt
+        \begin{itemize}\footnotesize\itemsep1pt
           \item \textbf{Quantum generative models:}
                 quantum GANs, quantum diffusion,
                 and QBMs beyond the RQBM
           \item \textbf{Quantum reinforcement learning:}
                 RL on quantum hardware for
-                quantum control and
-                agentic scientific workflows
+                quantum control and agentic workflows
           \item \textbf{Classical--quantum hybrid:}
                 tensor networks and classical
-                circuit simulation as a
-                guide for algorithm design
+                circuit simulation as a guide
           \item \textbf{Certification:}
                 classical shadow tomography
                 and cross-entropy benchmarking
@@ -1987,7 +1957,7 @@
       \end{block}
     \column{0.43\textwidth}
       \begin{block}{Hardware and Open Challenges}
-        \begin{itemize}\small\itemsep1pt
+        \begin{itemize}\footnotesize\itemsep1pt
           \item \textbf{Qubit platforms:}
                 superconducting, trapped-ion,
                 photonic, neutral-atom arrays
@@ -2001,15 +1971,11 @@
         \end{itemize}
       \end{block}
       \begin{alertblock}{Key Insight}
-        Quantum advantage requires both
+        {\small Quantum advantage requires both
         better algorithms \emph{and}
-        better hardware in tandem.
+        better hardware in tandem.}
       \end{alertblock}
   \end{columns}
 \end{frame}
-
-\end{document}
-
-
 
 \end{document}
