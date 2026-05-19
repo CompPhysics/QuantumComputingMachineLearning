@@ -1,0 +1,653 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{braket}
+
+\title{The Kraus Formalism in Quantum Computing}
+\author{Morten Hjorth-Jensen}
+\date{Spring 2026}
+
+\begin{document}
+
+%------------------------------------------------
+\begin{frame}
+\titlepage
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Introduction}
+
+The \textbf{Kraus formalism} provides the most general mathematical
+description of quantum evolution for open quantum systems.
+
+\vspace{0.3cm}
+
+It describes:
+\begin{itemize}
+    \item Decoherence
+    \item Dissipation
+    \item Quantum noise
+    \item Measurements
+    \item Environmental interactions
+\end{itemize}
+
+\vspace{0.3cm}
+
+It generalizes ordinary unitary quantum mechanics to realistic
+quantum devices interacting with an environment.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Closed Quantum Systems}
+
+For a closed quantum system:
+
+\[
+|\psi\rangle \rightarrow U |\psi\rangle,
+\]
+
+where \(U\) is unitary:
+
+\[
+U^\dagger U = I.
+\]
+
+\vspace{0.4cm}
+
+For density matrices:
+
+\[
+\rho \rightarrow U \rho U^\dagger.
+\]
+
+\vspace{0.3cm}
+
+This evolution preserves:
+\begin{itemize}
+    \item Probability
+    \item Purity
+    \item Reversibility
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Open Quantum Systems}
+
+Realistic quantum systems interact with:
+
+\begin{itemize}
+    \item Thermal environments
+    \item Measurement devices
+    \item Electromagnetic noise
+    \item Imperfect hardware
+\end{itemize}
+
+\vspace{0.3cm}
+
+The evolution becomes:
+
+\begin{itemize}
+    \item Non-unitary
+    \item Irreversible
+    \item Probabilistic
+\end{itemize}
+
+\vspace{0.4cm}
+
+Examples:
+\begin{itemize}
+    \item Decoherence
+    \item Relaxation
+    \item Dephasing
+    \item Spontaneous emission
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{The Kraus Representation}
+
+The most general physical quantum evolution is
+
+\[
+\rho'
+=
+\sum_k
+K_k \rho K_k^\dagger,
+\]
+
+where \(K_k\) are called:
+
+\begin{itemize}
+    \item Kraus operators
+    \item Operation elements
+    \item Noise operators
+\end{itemize}
+
+\vspace{0.4cm}
+
+This defines a quantum channel:
+
+\[
+\mathcal{E}(\rho)
+=
+\sum_k K_k \rho K_k^\dagger.
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Trace Preservation}
+
+Physical states must satisfy:
+
+\[
+\mathrm{Tr}(\rho)=1.
+\]
+
+\vspace{0.4cm}
+
+The Kraus operators obey the completeness relation:
+
+\[
+\sum_k
+K_k^\dagger K_k
+=
+I.
+\]
+
+\vspace{0.4cm}
+
+This guarantees:
+
+\[
+\mathrm{Tr}(\rho')=1.
+\]
+
+\vspace{0.3cm}
+
+The map is therefore trace preserving.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{System + Environment Picture}
+
+Consider:
+
+\[
+\text{System} + \text{Environment}.
+\]
+
+\vspace{0.4cm}
+
+The combined system evolves unitarily:
+
+\[
+U_{SE}.
+\]
+
+\vspace{0.4cm}
+
+The subsystem evolution is obtained by tracing out the environment:
+
+\[
+\rho_S'
+=
+\mathrm{Tr}_E
+\left[
+U_{SE}
+(\rho_S \otimes \rho_E)
+U_{SE}^\dagger
+\right].
+\]
+
+\vspace{0.3cm}
+
+Open-system dynamics emerge naturally from entanglement
+with the environment.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Derivation of Kraus Operators}
+
+Suppose the environment initially starts in:
+
+\[
+|0_E\rangle.
+\]
+
+\vspace{0.4cm}
+
+The Kraus operators are:
+
+\[
+K_k
+=
+\langle k_E|
+U_{SE}
+|0_E\rangle.
+\]
+
+\vspace{0.4cm}
+
+The environment basis states:
+
+\[
+|k_E\rangle
+\]
+
+represent different environmental outcomes.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Bit-Flip Noise Channel}
+
+Suppose a qubit flips with probability \(p\):
+
+\[
+|0\rangle \leftrightarrow |1\rangle.
+\]
+
+\vspace{0.4cm}
+
+The Kraus operators are:
+
+\[
+K_0
+=
+\sqrt{1-p}\, I,
+\]
+
+\[
+K_1
+=
+\sqrt{p}\, X.
+\]
+
+\vspace{0.3cm}
+
+The Pauli \(X\)-matrix is:
+
+\[
+X=
+\begin{pmatrix}
+0 & 1 \\
+1 & 0
+\end{pmatrix}.
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Bit-Flip Channel Evolution}
+
+The density matrix evolves as:
+
+\[
+\rho'
+=
+(1-p)\rho
++
+p X \rho X.
+\]
+
+\vspace{0.4cm}
+
+Interpretation:
+
+\begin{itemize}
+    \item With probability \(1-p\):
+    nothing happens.
+    
+    \item With probability \(p\):
+    the qubit flips.
+\end{itemize}
+
+\vspace{0.4cm}
+
+This is a simple quantum noise model.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Amplitude Damping Channel}
+
+Amplitude damping models spontaneous emission:
+
+\[
+|1\rangle \rightarrow |0\rangle.
+\]
+
+\vspace{0.4cm}
+
+The Kraus operators are:
+
+\[
+K_0
+=
+\begin{pmatrix}
+1 & 0 \\
+0 & \sqrt{1-\gamma}
+\end{pmatrix},
+\]
+
+\[
+K_1
+=
+\begin{pmatrix}
+0 & \sqrt{\gamma} \\
+0 & 0
+\end{pmatrix}.
+\]
+
+\vspace{0.3cm}
+
+The parameter \(\gamma\) controls the decay probability.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Physical Meaning of Amplitude Damping}
+
+Amplitude damping produces:
+
+\begin{itemize}
+    \item Energy loss
+    \item Relaxation
+    \item Irreversible decay
+    \item Decoherence
+\end{itemize}
+
+\vspace{0.4cm}
+
+Examples:
+\begin{itemize}
+    \item Spontaneous photon emission
+    \item Superconducting qubit relaxation
+    \item Atomic decay
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Channels}
+
+A quantum channel must be:
+
+\begin{enumerate}
+    \item Linear
+    \item Completely positive
+    \item Trace preserving
+\end{enumerate}
+
+\vspace{0.4cm}
+
+Such maps are called:
+
+\[
+\textbf{CPTP maps}.
+\]
+
+\vspace{0.4cm}
+
+The Kraus representation gives the most general CPTP map.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Complete Positivity}
+
+Positivity alone is insufficient in quantum mechanics.
+
+\vspace{0.4cm}
+
+If the system is entangled with an ancilla,
+the map:
+
+\[
+\mathcal{E}\otimes I
+\]
+
+must remain positive.
+
+\vspace{0.4cm}
+
+This is called:
+
+\[
+\textbf{Complete positivity}.
+\]
+
+\vspace{0.4cm}
+
+It is essential for:
+\begin{itemize}
+    \item Entanglement
+    \item Multipartite systems
+    \item Quantum computing
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Connection to Lindblad Dynamics}
+
+The Kraus formalism describes:
+\begin{itemize}
+    \item Finite-time evolution
+\end{itemize}
+
+\vspace{0.3cm}
+
+Continuous-time evolution is described by the
+Lindblad master equation:
+
+\[
+\frac{d\rho}{dt}
+=
+-\frac{i}{\hbar}[H,\rho]
++
+\sum_i
+\gamma_i
+\left(
+L_i \rho L_i^\dagger
+-
+\frac12
+\{L_i^\dagger L_i,\rho\}
+\right).
+\]
+
+\vspace{0.3cm}
+
+Kraus operators can be derived from short-time
+Lindblad evolution.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Measurements}
+
+Generalized measurements are described by:
+
+\[
+M_k = K_k^\dagger K_k.
+\]
+
+\vspace{0.4cm}
+
+The probability of outcome \(k\) is:
+
+\[
+p_k
+=
+\mathrm{Tr}
+(K_k \rho K_k^\dagger).
+\]
+
+\vspace{0.4cm}
+
+The post-measurement state becomes:
+
+\[
+\rho_k
+=
+\frac{
+K_k \rho K_k^\dagger
+}{
+p_k
+}.
+\]
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{POVM Formalism}
+
+The operators:
+
+\[
+M_k
+=
+K_k^\dagger K_k
+\]
+
+form a Positive Operator-Valued Measure (POVM).
+
+\vspace{0.4cm}
+
+POVMs generalize projective measurements.
+
+\vspace{0.4cm}
+
+Applications:
+\begin{itemize}
+    \item Weak measurements
+    \item Noisy measurements
+    \item Quantum tomography
+    \item Quantum communication
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Bloch Sphere Interpretation}
+
+Unitary evolution:
+\begin{itemize}
+    \item Rotates the Bloch sphere
+\end{itemize}
+
+\vspace{0.4cm}
+
+Kraus evolution can:
+\begin{itemize}
+    \item Shrink the sphere
+    \item Distort the sphere
+    \item Shift the sphere
+\end{itemize}
+
+\vspace{0.4cm}
+
+Examples:
+\begin{itemize}
+    \item Depolarization:
+    shrink toward center
+    
+    \item Amplitude damping:
+    drift toward \(|0\rangle\)
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Applications in Quantum Computing}
+
+The Kraus formalism is fundamental for:
+
+\begin{itemize}
+    \item Quantum error correction
+    \item Noise-aware quantum circuits
+    \item Quantum communication
+    \item Open-system quantum simulation
+    \item Quantum sensing
+    \item Quantum machine learning
+    \item NISQ device modeling
+\end{itemize}
+
+\vspace{0.3cm}
+
+It is the standard language of realistic quantum hardware.
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Quantum Error Correction}
+
+Noise channels can be represented as:
+
+\[
+\rho'
+=
+\sum_k
+K_k \rho K_k^\dagger.
+\]
+
+\vspace{0.4cm}
+
+Quantum error correction attempts to reverse these errors.
+
+\vspace{0.4cm}
+
+Examples:
+\begin{itemize}
+    \item Bit-flip correction
+    \item Phase-flip correction
+    \item Surface codes
+    \item Stabilizer codes
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}{Summary}
+
+The Kraus formalism provides the most general description
+of open quantum evolution.
+
+\vspace{0.4cm}
+
+Key ideas:
+
+\begin{itemize}
+    \item Quantum channels
+    \item CPTP maps
+    \item Decoherence
+    \item Dissipation
+    \item Generalized measurements
+\end{itemize}
+
+\vspace{0.4cm}
+
+It forms a central foundation of:
+\begin{itemize}
+    \item Quantum computing
+    \item Quantum information
+    \item Quantum optics
+    \item Quantum sensing
+    \item Quantum technologies
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\end{document}
