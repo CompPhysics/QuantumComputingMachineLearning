@@ -1,13 +1,20 @@
 # Quantum Computing and Quantum Machine Learning 
 
-The first part of the course (project 1 and till mid march) has its focus on studies of
-quantum-mechanical many-particle systems using quantum computing
-algorithms and quantum computers. The second part is optional and
-depends on the interests and backgrounds of the participants. Two main
-themes can be covered:
-- Quantum machine learning algorithms, implementations and studies
-- Realization and studies of entanglement in physical systems
+The first part of the course (project 1 and till mid march) has its
+focus on studies of quantum-mechanical many-particle systems using
+quantum computing algorithms and quantum computers. The second part is
+optional and depends on the interests and backgrounds of the
+participants. The lectures cover mainly quantum machine learning
+algorithms with an emphasis on variational quantum algorithms for
+NISQ-era quantum computers.  We discuss for example quantum for
+neural networks, quantum support vector machines, quantum Boltzmann
+machines and the QAOA algorithm. Fault-tolerant algorithms like
+quantum Fourier transforms, quantum phase estimation and the HHL
+algorithm are also discussed.
+
+
 - Advanced VQE and hamiltonian systems
+
 ### Possible  textbooks:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
