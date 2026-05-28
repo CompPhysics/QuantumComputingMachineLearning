@@ -122,10 +122,10 @@ you made to the LLM output.
 
 **Example (Level 3 note):**
 
-> *Section 2.3 (Variational Autoencoder loss derivation):* I prompted Claude with "Explain the
-> ELBO derivation for a VAE at graduate level, assuming the reader knows KL divergence." The
+> *Section 2.3 (Variational Quantum Eigensolver):* I prompted Claude with "Explain the
+>  VQE for a student at graduate level, assuming the reader knows the variational principle." The
 > output was used as a starting point; I rewrote the notation to match the rest of the report,
-> corrected a sign error in equation (7), and added the connection to our specific encoder
+> corrected a sign error in equation (7), and added the connection to our specific code
 > architecture.
 
 ### 4.3 Code Generation and Assistance
@@ -147,10 +147,10 @@ For each code file or notebook submitted, state the LLM's role using the levels 
 ```
 File / notebook           | LLM level | Description
 --------------------------|-----------|----------------------------------------------
-train.py                  | 2         | LLM provided the learning rate scheduler loop;
+train.py                  | 2         | LLM provided the shot/measurement setup;
                           |           | tested and adapted for our NTK experiment
-autoencoder.ipynb         | 3         | LLM generated class skeleton for ConvAE;
-                          |           | encoder/decoder architecture designed by us
+qaoa.ipynb                | 3         | LLM generated class skeleton for QAOA;
+                          |           | Optimization architecture designed by us
 utils/ntk_compute.py      | 0         | Written independently
 results/plot_figures.py   | 1         | LLM debugged an indexing error in the
                           |           | eigenvalue sorting routine
@@ -171,9 +171,9 @@ the docstring, stating the tool and a brief description of what it did.
 **Python example:**
 
 ```python
-def compute_ntk_gram(model, X, device="cpu"):
+def compute_nat_grad(model, X, device="cpu"):
     """
-    Compute the empirical Neural Tangent Kernel (NTK) Gram matrix
+    Compute the Natural Gradient 
     for a given model and input data X.
 
     Parameters
@@ -188,7 +188,7 @@ def compute_ntk_gram(model, X, device="cpu"):
     Returns
     -------
     K : torch.Tensor, shape (N, N)
-        NTK Gram matrix.
+        Natural gradient.
 
     LLM-assisted
     ------------
@@ -203,10 +203,10 @@ def compute_ntk_gram(model, X, device="cpu"):
 **Fortran example:**
 
 ```fortran
-! LLM-assisted: Claude (Feb 2026) suggested the recursive NTK kernel
+! LLM-assisted: Claude (Feb 2026) suggested the Natural Gradient  kernel
 ! evaluation structure. Loop bounds and array indexing corrected by author.
 ! Verified against Python reference implementation.
-SUBROUTINE compute_ntk_kernel(X1, X2, depth, sigma_w, sigma_b, K_out)
+SUBROUTINE compute_natgrad_kernel(X1, X2, depth, sigma_w, sigma_b, K_out)
     ...
 END SUBROUTINE
 ```
@@ -215,7 +215,7 @@ END SUBROUTINE
 
 ```cpp
 /**
- * Computes the NTK covariance kernel Sigma^{(L)} recursively.
+ * Computes the Nat gradient covariance kernel Sigma^{(L)} recursively.
  *
  * LLM-assisted: ChatGPT (GPT-4o, April 2026) generated the base
  * template for the recursive lambda evaluation. The Gaussian quadrature
@@ -274,7 +274,7 @@ Below is a self-contained example of how the LLM appendix might look in a real r
 | 5. Discussion | 2 | LLM suggested restructuring paragraph order in Sec. 5.2 |
 | 6. Conclusion | 1 | Minor grammar corrections |
 
-*Level 2 note, Section 2.4:* I gave Claude the recursion from Jacot et al. (2018) and asked it
+*Level 2 note, Section 2.4:* I gave Claude the recursion from XX et al. (2018) and asked it
 to rewrite it in notation consistent with Section 2.1 of this report. I checked every equation
 against the original paper.
 
@@ -282,8 +282,8 @@ against the original paper.
 
 | File | Level | Description |
 |---|---|---|
-| `src/ntk.py` | 3 | Copilot generated Jacobian loop; NTK recursion and verification code written independently |
-| `src/train_vae.py` | 2 | Copilot autocompleted the KL annealing scheduler; adapted to our $\beta$-schedule |
+| `src/ntk.py` | 3 | Copilot generated Jacobian loop; Gradient recursion and verification code written independently |
+| `src/train_vae.py` | 2 | Copilot autocompleted the quantum annealing scheduler; adapted to our $\beta$-schedule |
 | `notebooks/results.ipynb` | 1 | Copilot debugged a matplotlib axis-label bug |
 | `src/utils.py` | 0 | Fully independent |
 
