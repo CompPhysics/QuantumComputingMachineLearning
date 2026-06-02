@@ -1,0 +1,698 @@
+\documentclass[10pt,aspectratio=169]{beamer}
+
+% ---------- Theme ----------
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+% ---------- Packages ----------
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{braket}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+% ---------- Code listing style ----------
+\definecolor{codebg}{rgb}{0.96,0.96,0.98}
+\definecolor{codekw}{rgb}{0.10,0.30,0.70}
+\definecolor{codestr}{rgb}{0.55,0.20,0.20}
+\definecolor{codecom}{rgb}{0.25,0.55,0.25}
+
+\lstdefinestyle{pystyle}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecom}\itshape,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!20},
+  showstringspaces=false,
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  tabsize=2,
+  columns=fullflexible,
+  upquote=true,
+}
+\lstset{style=pystyle}
+
+% ---------- Title info ----------
+\title[VQE-UCCSD from a Hartree--Fock reference]
+{From a Hartree--Fock reference to a VQE-UCCSD calculation}
+\subtitle{A hybrid quantum--classical workflow for electronic ground states}
+\author{Morten Hjorth-Jensen}
+\date{\today}
+
+\begin{document}
+
+% =========================================================
+\begin{frame}
+\titlepage
+\end{frame}
+
+% =========================================================
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% =========================================================
+\section{The eigenvalue problem and the VQE strategy}
+
+\begin{frame}{Goal: the electronic ground-state energy}
+We want to approximate the lowest eigenvalue of an electronic Hamiltonian,
+\[
+E_0 \;=\; \min_{\ket{\Psi}}\;
+\frac{\bra{\Psi}\hat H\ket{\Psi}}{\braket{\Psi|\Psi}}.
+\]
+
+Exact diagonalisation scales as $\mathcal{O}(d^3)$ with Hilbert-space dimension $d=2^{N_q}$ --- intractable for moderate molecules.
+
+\medskip
+The \textbf{Variational Quantum Eigensolver (VQE)} restricts the wave function to a parameterised ansatz,
+\[
+\ket{\Psi(\bm\theta)} \;=\; U(\bm\theta)\,\ket{\Phi_0},
+\]
+and minimises
+\[
+E(\bm\theta) \;=\; \bra{\Psi(\bm\theta)}\hat H\ket{\Psi(\bm\theta)} \;\geq\; E_0.
+\]
+
+For UCCSD the reference state is the Hartree--Fock determinant,
+$\ket{\Phi_0}=\ket{\Phi_{\mathrm{HF}}}$. The rest of these notes
+develop \emph{why} this is a good choice and \emph{how} to realise it on a quantum computer.
+\end{frame}
+
+% =========================================================
+\begin{frame}{Why the initial state matters}
+The ansatz is $\ket{\Psi(\bm\theta)} = U(\bm\theta)\ket{\Phi_0}$. The reference state $\ket{\Phi_0}$ controls:
+\begin{itemize}
+  \item the region of Hilbert space reachable at a given circuit depth,
+  \item the number of variational parameters needed for chemical accuracy,
+  \item susceptibility to barren plateaus and local minima.
+\end{itemize}
+
+\medskip
+A bad reference (e.g.\ the qubit vacuum $\ket{0\cdots 0}$) forces $U(\bm\theta)$ first to build in the gross electronic structure before refining correlation.
+
+\medskip
+A good reference encodes the \emph{mean-field} physics already, so $U(\bm\theta)$ only has to add electron correlation on top.
+
+\medskip
+$\Rightarrow$ the Hartree--Fock state is the natural starting point inherited from classical quantum chemistry.
+\end{frame}
+
+% =========================================================
+\section{The electronic Hamiltonian}
+
+\begin{frame}{The electronic Hamiltonian in second quantisation}
+In second quantisation,
+\[
+\hat H \;=\; \sum_{pq} h_{pq}\, \hat a_p^\dagger \hat a_q
+\;+\;\frac12\sum_{pqrs} h_{pqrs}\, \hat a_p^\dagger \hat a_q^\dagger \hat a_s \hat a_r,
+\]
+with one-body integrals
+\[
+h_{pq} \;=\; \int d\mathbf{x}\,
+\phi_p^*(\mathbf{x})\!\left(-\tfrac12\nabla^2 - \sum_A \tfrac{Z_A}{|\mathbf{r}-\mathbf{R}_A|}\right)\!\phi_q(\mathbf{x}),
+\]
+and two-body integrals
+\[
+h_{pqrs} \;=\;
+\int d\mathbf{x}_1\,d\mathbf{x}_2\;
+\frac{\phi_p^*(\mathbf{x}_1)\phi_q^*(\mathbf{x}_2)\phi_r(\mathbf{x}_1)\phi_s(\mathbf{x}_2)}{|\mathbf{r}_1-\mathbf{r}_2|}.
+\]
+
+\smallskip
+The single-particle basis $\{\phi_p\}$ is typically obtained from a preceding Hartree--Fock calculation,
+which is the next ingredient.
+\end{frame}
+
+% =========================================================
+\section{The Hartree--Fock reference}
+
+\begin{frame}{Hartree--Fock recap}
+The Hartree--Fock (HF) method approximates the many-electron wave function by a single Slater determinant,
+\[
+\ket{\Phi_{\mathrm{HF}}} \;=\; \frac{1}{\sqrt{N_e!}}\,
+\det\!\big[\,\varphi_{i_1}(x_1)\cdots\varphi_{i_{N_e}}(x_{N_e})\,\big],
+\]
+with spin-orbitals $\{\varphi_p\}$ obtained self-consistently from the Roothaan--Hall equations.
+
+\medskip
+In second quantisation this is just a product of creation operators acting on the Fock vacuum,
+\[
+\boxed{\;
+\ket{\Phi_{\mathrm{HF}}} \;=\; \prod_{p\,\in\,\mathrm{occ}} \hat a_p^\dagger \,\ket{\mathrm{vac}}\;}
+\]
+where $\mathrm{occ}$ contains the $N_e$ lowest-energy spin-orbitals.
+
+\medskip
+HF captures the mean-field physics exactly. What it misses is the \emph{correlation energy},
+\[
+E_{\mathrm{corr}} \;=\; E_{\mathrm{exact}} - E_{\mathrm{HF}}.
+\]
+Recovering $E_{\mathrm{corr}}$ on a quantum computer is precisely the job of $U(\bm\theta)$.
+\end{frame}
+
+% =========================================================
+\section{Mapping fermions to qubits}
+
+\begin{frame}{From fermions to qubits}
+A qubit can encode the occupation of one spin-orbital,
+\[
+\ket{0}_p \leftrightarrow \text{empty},\qquad \ket{1}_p \leftrightarrow \text{occupied}.
+\]
+We need a mapping that respects fermionic antisymmetry. The fermionic Hamiltonian becomes
+\[
+\hat H \;\longrightarrow\; \hat H_q \;=\; \sum_\alpha c_\alpha\, P_\alpha,
+\qquad
+P_\alpha = \sigma_1^{(\alpha)}\otimes\sigma_2^{(\alpha)}\otimes\cdots\otimes\sigma_n^{(\alpha)},
+\]
+a weighted sum of Pauli strings. Common mappings:
+\begin{itemize}
+  \item \textbf{Jordan--Wigner (JW):} simple, local in occupation, non-local parity strings.
+  \item \textbf{Parity:} swaps the locality trade-off, allows a two-qubit reduction via $\mathbb{Z}_2$ symmetries.
+  \item \textbf{Bravyi--Kitaev (BK):} $\mathcal{O}(\log N)$ locality in both occupation and parity.
+\end{itemize}
+
+\smallskip
+Under Jordan--Wigner,
+\[
+\hat a_p^\dagger \;=\; \Big(\prod_{q<p} Z_q\Big)\,\frac{X_p - i Y_p}{2}.
+\]
+
+\smallskip
+The VQE objective then reads
+\(\,E(\bm\theta) = \sum_\alpha c_\alpha \langle P_\alpha\rangle_{\bm\theta}.\)
+\end{frame}
+
+% =========================================================
+\begin{frame}{The HF state under Jordan--Wigner}
+With JW ordering (spin-orbitals indexed $0,1,\ldots,M-1$, occupied first),
+\[
+\ket{\Phi_{\mathrm{HF}}}_{\mathrm{JW}}
+\;=\;
+\underbrace{\ket{1}\ket{1}\cdots\ket{1}}_{N_e\ \text{occupied}}\,
+\underbrace{\ket{0}\ket{0}\cdots\ket{0}}_{M-N_e\ \text{virtual}}.
+\]
+
+\textbf{This is a product state!} It is prepared from $\ket{0}^{\otimes M}$ by applying $X$ gates on the first $N_e$ qubits.
+
+\medskip
+For $\mathrm{H}_2$ in the minimal STO-3G basis,
+\[
+M=4\text{ spin-orbitals},\quad N_e=2\;\;\Longrightarrow\;\;\ket{\Phi_{\mathrm{HF}}}=\ket{1100}.
+\]
+
+\medskip
+Different mappings produce different bit patterns for the \emph{same} physical state:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Mapping & H$_2$ HF state & \# qubits \\
+\midrule
+Jordan--Wigner            & $\ket{1100}$ & 4 \\
+Parity                    & $\ket{0110}$ & 4 \\
+Parity $+\,\mathbb{Z}_2$  & $\ket{01}$   & 2 \\
+Bravyi--Kitaev            & $\ket{1110}$ & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+Never hard-code the bit pattern --- derive it from the mapper.
+\end{frame}
+
+% =========================================================
+\section{Preparing the HF state in code}
+
+\begin{frame}[fragile]{A bare-bones HF initialiser in Qiskit}
+Under Jordan--Wigner, preparing $\ket{\Phi_{\mathrm{HF}}}$ takes $N_e$ Pauli-$X$ gates:
+\begin{lstlisting}
+from qiskit import QuantumCircuit, QuantumRegister
+
+def hartree_fock_jw(n_spin_orbitals, n_electrons):
+    """Prepare a Hartree-Fock reference state under JW mapping.
+    Occupied orbitals are the lowest n_electrons indices."""
+    qr = QuantumRegister(n_spin_orbitals, name="q")
+    qc = QuantumCircuit(qr, name="HF")
+    for i in range(n_electrons):
+        qc.x(qr[i])           # flip |0> -> |1> on occupied orbitals
+    return qc
+
+hf_circuit = hartree_fock_jw(n_spin_orbitals=4, n_electrons=2)
+print(hf_circuit)
+\end{lstlisting}
+
+\smallskip
+Schematic output:
+\begin{verbatim}
+q_0: -X-
+q_1: -X-
+q_2: ---
+q_3: ---
+\end{verbatim}
+That is the entire HF state preparation under JW.
+\end{frame}
+
+% =========================================================
+\begin{frame}[fragile]{Using Qiskit Nature's built-in HF initial state}
+For production work, let the library handle JW, parity (with two-qubit reduction), and BK consistently:
+\begin{lstlisting}
+from qiskit_nature.second_q.circuit.library import HartreeFock
+from qiskit_nature.second_q.mappers import JordanWignerMapper
+
+mapper = JordanWignerMapper()
+
+hf_init = HartreeFock(
+    num_spatial_orbitals = 2,       # H2 in STO-3G has 2 spatial orbitals
+    num_particles        = (1, 1),  # (alpha, beta) electrons
+    qubit_mapper         = mapper,
+)
+print(hf_init.draw())
+\end{lstlisting}
+
+\smallskip
+Switching mapper $=$ switching the bit-pattern that represents HF; the library does the bookkeeping.
+With $\ket{\Phi_{\mathrm{HF}}}$ in hand, we can now ask the quantum computer to add the correlation.
+\end{frame}
+
+% =========================================================
+\section{From Hartree--Fock to coupled cluster}
+
+\begin{frame}{Classical coupled cluster}
+In classical coupled-cluster (CC) theory, the correlated wave function is
+\[
+\ket{\Psi_{\mathrm{CC}}} \;=\; e^{\hat T}\,\ket{\Phi_{\mathrm{HF}}},
+\qquad
+\hat T \;=\; \hat T_1 + \hat T_2 + \hat T_3 + \cdots
+\]
+with single and double excitation operators
+\[
+\hat T_1 \;=\; \sum_{ia} t_i^{a}\,\hat a_a^\dagger \hat a_i,
+\qquad
+\hat T_2 \;=\; \frac14\sum_{ijab} t_{ij}^{ab}\,\hat a_a^\dagger \hat a_b^\dagger \hat a_j \hat a_i.
+\]
+Indices: $i,j$ are occupied spin-orbitals; $a,b$ are virtual spin-orbitals.
+
+\bigskip
+Each excitation promotes one (or two) electrons from below to above the Fermi level of the HF reference.
+The coefficients $t_i^a,\,t_{ij}^{ab}$ are the cluster amplitudes that encode electron correlation.
+
+\bigskip
+\textbf{Problem for quantum hardware:} the operator $e^{\hat T}$ is \emph{not} unitary, so it cannot be implemented directly as a quantum circuit.
+\end{frame}
+
+% =========================================================
+\begin{frame}{Unitary coupled cluster}
+The fix is to use an anti-Hermitian generator. Define
+\[
+\hat A \;=\; \hat T - \hat T^\dagger,
+\qquad \hat A^\dagger = -\hat A.
+\]
+Then $e^{\hat A}$ \emph{is} unitary, and the unitary coupled-cluster ansatz reads
+\[
+\ket{\Psi_{\mathrm{UCC}}}
+\;=\; e^{\hat T - \hat T^\dagger}\,\ket{\Phi_{\mathrm{HF}}}.
+\]
+
+Truncating at singles and doubles gives \textbf{UCCSD},
+\[
+\ket{\Psi_{\mathrm{UCCSD}}}
+\;=\; e^{\hat T_1 + \hat T_2 - \hat T_1^\dagger - \hat T_2^\dagger}\,\ket{\Phi_{\mathrm{HF}}}.
+\]
+
+\bigskip
+Two crucial properties that justify starting from the HF reference:
+\begin{itemize}
+  \item At $\bm\theta=0$ all amplitudes vanish and $\ket{\Psi(0)}=\ket{\Phi_{\mathrm{HF}}}$.
+        The optimiser starts at the (known) HF energy --- a sensible baseline.
+  \item Each excitation operator promotes electrons from occupied to virtual orbitals,
+        i.e.\ it generates correlation \emph{on top of} HF.
+\end{itemize}
+\end{frame}
+
+% =========================================================
+\begin{frame}{Single and double excitation operators}
+\textbf{Single excitation} $i\to a$ has anti-Hermitian generator
+\[
+\hat\tau_i^{a} \;=\; \hat a_a^\dagger \hat a_i \;-\; \hat a_i^\dagger \hat a_a,
+\]
+giving the unitary
+\[
+U_i^{a}(\theta_i^a) \;=\; \exp\!\big[\,\theta_i^a\big(\hat a_a^\dagger \hat a_i - \hat a_i^\dagger \hat a_a\big)\big].
+\]
+This rotates between the reference and singly excited determinants.
+
+\bigskip
+\textbf{Double excitation} $ij\to ab$ has generator
+\[
+\hat\tau_{ij}^{ab}
+\;=\;
+\hat a_a^\dagger \hat a_b^\dagger \hat a_j \hat a_i
+\;-\;
+\hat a_i^\dagger \hat a_j^\dagger \hat a_b \hat a_a,
+\]
+and unitary
+\[
+U_{ij}^{ab}(\theta_{ij}^{ab})
+\;=\;
+\exp\!\big[\,\theta_{ij}^{ab}\,\hat\tau_{ij}^{ab}\big].
+\]
+Doubles are essential for capturing dynamical electron correlation.
+\end{frame}
+
+% =========================================================
+\begin{frame}{Trotterised UCCSD ansatz}
+The exact UCCSD unitary is
+\[
+U_{\mathrm{UCCSD}}(\bm\theta)
+\;=\;
+\exp\!\Big[\,\sum_{ia}\theta_i^a\,\hat\tau_i^a \;+\; \sum_{ijab}\theta_{ij}^{ab}\,\hat\tau_{ij}^{ab}\Big].
+\]
+
+Excitation generators generally do not commute, $[\hat\tau_\mu,\hat\tau_\nu]\neq 0$,
+so a single exponential cannot be implemented exactly. In practice one uses a first-order Trotter approximation,
+\[
+U_{\mathrm{UCCSD}}(\bm\theta)
+\;\approx\;
+\prod_{ia} e^{\theta_i^a\,\hat\tau_i^a}\;
+\prod_{ijab} e^{\theta_{ij}^{ab}\,\hat\tau_{ij}^{ab}}.
+\]
+Each factor is a Pauli-string rotation that compiles to a short sequence of CNOT and single-qubit gates.
+
+\bigskip
+The Trotter error is absorbed by the variational optimisation:
+the parameters $\bm\theta$ are re-tuned to minimise the energy of whatever circuit is actually executed.
+\end{frame}
+
+% =========================================================
+\section{Building and running the VQE-UCCSD circuit}
+
+\begin{frame}{Quantum circuit construction}
+The full UCCSD trial state on a quantum computer is
+\[
+\ket{\Psi(\bm\theta)}
+\;=\;
+U_{\mathrm{UCCSD}}(\bm\theta)\,\ket{\Phi_{\mathrm{HF}}}.
+\]
+
+\textbf{Workflow:}
+\begin{enumerate}
+  \item Prepare $\ket{\Phi_{\mathrm{HF}}}$ on the qubits ($N_e$ Pauli-$X$ gates under JW).
+  \item Apply all selected single-excitation unitaries $\prod_{ia} e^{\theta_i^a\hat\tau_i^a}$.
+  \item Apply all selected double-excitation unitaries $\prod_{ijab} e^{\theta_{ij}^{ab}\hat\tau_{ij}^{ab}}$.
+  \item Measure expectation values of the Pauli strings in $\hat H_q$.
+\end{enumerate}
+
+\medskip
+The HF preparation in step 1 is essentially free (a single layer of $X$ gates).
+Steps 2--3 dominate the depth: UCCSD circuits contain many excitations and become deep for larger systems.
+\end{frame}
+
+% =========================================================
+\begin{frame}{Energy measurement}
+After fermion-to-qubit mapping the Hamiltonian is
+\[
+\hat H_q \;=\; \sum_\alpha c_\alpha\, P_\alpha.
+\]
+For a fixed parameter vector $\bm\theta$ we estimate
+\[
+E(\bm\theta)
+\;=\;
+\sum_\alpha c_\alpha \bra{\Psi(\bm\theta)} P_\alpha \ket{\Psi(\bm\theta)}.
+\]
+
+\medskip
+Each Pauli string is measured separately on the quantum device. For example,
+\[
+P_\alpha \;=\; Z_0\, Z_1\, X_2\, Y_3,
+\]
+requires rotating qubits 2 and 3 into the $X$ and $Y$ bases (Hadamard, $S^\dagger H$) before a $Z$-basis measurement.
+
+\medskip
+The number of distinct Pauli strings grows polynomially with system size, and grouping commuting terms reduces the number of measurement circuits.
+\end{frame}
+
+% =========================================================
+\begin{frame}{The hybrid quantum--classical loop}
+VQE is hybrid: each iteration combines quantum estimation with classical optimisation.
+\[
+\bm\theta^{(k)}
+\;\longrightarrow\;
+\text{quantum circuit}
+\;\longrightarrow\;
+E\big(\bm\theta^{(k)}\big)
+\;\longrightarrow\;
+\text{classical optimiser}.
+\]
+
+The optimiser updates the parameters,
+\[
+\bm\theta^{(k+1)} \;=\; \bm\theta^{(k)} + \Delta\bm\theta^{(k)},
+\]
+until convergence,
+\[
+\big|E^{(k+1)} - E^{(k)}\big| \;<\; \epsilon.
+\]
+
+\medskip
+The variational principle guarantees
+\[
+E_{\mathrm{VQE}} \;=\; \min_{\bm\theta} E(\bm\theta) \;\geq\; E_0,
+\]
+so improving the ansatz (more excitations, deeper Trotter, larger basis) can only lower the variational energy.
+\end{frame}
+
+% =========================================================
+\begin{frame}{Gradients and the parameter-shift rule}
+Gradient-free optimisers (COBYLA, SPSA, SLSQP) are common, but gradients can also be computed on hardware.
+For a parameter $\theta_\mu$,
+\[
+\frac{\partial E}{\partial \theta_\mu}
+\;=\;
+\bra{\partial_\mu \Psi}\hat H\ket{\Psi} + \bra{\Psi}\hat H\ket{\partial_\mu \Psi}.
+\]
+
+For Pauli-generated rotations
+\(\,U_\mu(\theta_\mu) = e^{-i\theta_\mu P_\mu/2},\)
+the \textbf{parameter-shift rule} gives an exact analytic gradient from two extra circuit evaluations:
+\[
+\frac{\partial E}{\partial \theta_\mu}
+\;=\;
+\frac12\left[\,E\!\Big(\theta_\mu+\tfrac{\pi}{2}\Big) - E\!\Big(\theta_\mu-\tfrac{\pi}{2}\Big)\right].
+\]
+
+\medskip
+This is structurally similar to a finite difference but is \emph{exact} for these gate generators --- no step-size bias.
+\end{frame}
+
+% =========================================================
+\section{The complete algorithm}
+
+\begin{frame}{Algorithm: VQE-UCCSD with a Hartree--Fock reference}
+\small
+\begin{enumerate}
+  \item Choose a molecular geometry and a one-particle basis (e.g.\ STO-3G).
+  \item Compute one- and two-body integrals $h_{pq}$ and $h_{pqrs}$ (PySCF, Psi4, ...).
+  \item Assemble the second-quantised Hamiltonian
+        \[
+        \hat H = \sum_{pq} h_{pq}\hat a_p^\dagger \hat a_q + \tfrac12 \sum_{pqrs} h_{pqrs}\hat a_p^\dagger \hat a_q^\dagger \hat a_s \hat a_r.
+        \]
+  \item Map to a qubit Hamiltonian via JW / parity / BK:
+        $\hat H_q = \sum_\alpha c_\alpha P_\alpha$.
+  \item Prepare the Hartree--Fock reference $\ket{\Phi_{\mathrm{HF}}}$.
+  \item Build the UCCSD ansatz on top of it:
+        \(U(\bm\theta) = e^{\hat T_1 + \hat T_2 - \hat T_1^\dagger - \hat T_2^\dagger}.\)
+  \item Initialise $\bm\theta = 0$ (so the trial state starts at $\ket{\Phi_{\mathrm{HF}}}$).
+  \item Measure $E(\bm\theta) = \bra{\Psi(\bm\theta)}\hat H_q\ket{\Psi(\bm\theta)}$.
+  \item Update $\bm\theta$ with a classical optimiser; repeat 8--9 until $|\Delta E| < \epsilon$.
+\end{enumerate}
+\end{frame}
+
+% =========================================================
+\begin{frame}[fragile]{Putting it all together: H$_2$ with Qiskit Nature}
+\begin{lstlisting}
+from qiskit_nature.second_q.drivers import PySCFDriver
+from qiskit_nature.second_q.mappers import JordanWignerMapper
+from qiskit_nature.second_q.circuit.library import HartreeFock, UCCSD
+from qiskit_algorithms           import VQE
+from qiskit_algorithms.optimizers import SLSQP
+from qiskit.primitives           import Estimator
+import numpy as np
+
+# 1-3. Electronic structure problem and second-quantised Hamiltonian
+driver  = PySCFDriver(atom="H 0 0 0; H 0 0 0.735", basis="sto3g")
+problem = driver.run()
+
+# 4. Map fermions -> qubits
+mapper   = JordanWignerMapper()
+qubit_op = mapper.map(problem.hamiltonian.second_q_op())
+
+# 5. Hartree-Fock initial state
+hf_state = HartreeFock(problem.num_spatial_orbitals,
+                       problem.num_particles, mapper)
+
+# 6. UCCSD ansatz built ON TOP OF the HF reference
+ansatz = UCCSD(problem.num_spatial_orbitals,
+               problem.num_particles, mapper,
+               initial_state=hf_state)
+
+# 7-9. Run VQE starting from theta = 0  (state = |Phi_HF>)
+vqe = VQE(Estimator(), ansatz, SLSQP(maxiter=200),
+          initial_point=np.zeros(ansatz.num_parameters))
+result = vqe.compute_minimum_eigenvalue(qubit_op)
+
+print("VQE electronic energy:", result.eigenvalue.real)
+\end{lstlisting}
+\end{frame}
+
+% =========================================================
+\begin{frame}{What this code is doing, line by line}
+\begin{itemize}
+  \item \textbf{Driver + problem:} PySCF computes the HF orbitals and the integrals $h_{pq}$, $h_{pqrs}$ in that basis.
+  \item \textbf{Mapper:} converts $\hat H$ into a sum of Pauli strings $\hat H_q$.
+  \item \textbf{HartreeFock:} a circuit that prepares $\ket{\Phi_{\mathrm{HF}}}$ --- under JW just $N_e$ Pauli-$X$ gates.
+  \item \textbf{UCCSD(initial\_state=hf\_state):} the trial state is $U_{\mathrm{UCCSD}}(\bm\theta)\ket{\Phi_{\mathrm{HF}}}$.
+  \item \textbf{initial\_point=zeros:} at iteration $0$, $\bm\theta=0$, so $\ket{\Psi(0)} = \ket{\Phi_{\mathrm{HF}}}$ and $E(0) = E_{\mathrm{HF}}$.
+  \item \textbf{VQE:} the hybrid loop runs --- the optimiser only has to find the \emph{correlation} energy
+        $E_{\mathrm{corr}} = E_{\mathrm{exact}} - E_{\mathrm{HF}}$, a small fraction of the total.
+\end{itemize}
+
+\medskip
+For H$_2$/STO-3G this converges in a handful of iterations and reproduces the FCI energy to machine precision.
+\end{frame}
+
+% =========================================================
+\section{Properties, scaling, and limitations}
+
+\begin{frame}{Scaling of UCCSD}
+Let
+\[
+N_{\mathrm{occ}} = \text{\# occupied spin-orbitals},
+\qquad
+N_{\mathrm{virt}} = \text{\# virtual spin-orbitals}.
+\]
+
+Number of excitation amplitudes:
+\[
+N_{\mathrm{singles}} \;\sim\; N_{\mathrm{occ}}\,N_{\mathrm{virt}},
+\qquad
+N_{\mathrm{doubles}} \;\sim\; N_{\mathrm{occ}}^2\,N_{\mathrm{virt}}^2.
+\]
+
+\medskip
+Each amplitude contributes a Trotter factor $e^{\theta_\mu \hat\tau_\mu}$, which compiles to multiple CNOTs.
+The circuit depth therefore grows roughly as $\mathcal{O}(N_{\mathrm{occ}}^2 N_{\mathrm{virt}}^2)$,
+which becomes prohibitive for medium-sized molecules on near-term devices.
+
+\medskip
+Mitigations: active-space selection, point-group/spin symmetries, k-UpCCGSD, ADAPT-VQE (grow the operator pool adaptively), tapering off $\mathbb{Z}_2$ symmetries (e.g.\ two-qubit reduction).
+\end{frame}
+
+% =========================================================
+\begin{frame}{Why UCCSD is useful --- and where it hurts}
+\textbf{Strengths:}
+\begin{itemize}
+  \item Physically motivated; direct link to classical quantum chemistry.
+  \item Captures dynamical electron correlation systematically.
+  \item Unitary form is natural for quantum circuits.
+  \item Size-extensive in the untruncated limit.
+\end{itemize}
+
+\medskip
+\textbf{Limitations:}
+\begin{itemize}
+  \item Deep circuits and many variational parameters.
+  \item Trotter errors (mitigated by re-optimising $\bm\theta$).
+  \item Heavy measurement overhead --- thousands of Pauli strings for larger molecules.
+  \item Optimisation landscape can suffer from local minima and barren plateaus.
+  \item HF is a poor reference for strongly correlated systems (stretched bonds, transition metals).
+\end{itemize}
+\end{frame}
+
+% =========================================================
+\begin{frame}{Beyond a single-determinant reference}
+When HF fails (strong static correlation), the same machinery still applies but with a richer $\ket{\Phi_0}$:
+\begin{itemize}
+  \item \textbf{Multi-determinant references} (CASSCF, CISD): prepared by an entangling layer of controlled rotations on top of the HF X-gates.
+  \item \textbf{Symmetry-broken (UHF) orbitals}: cheaper, but lose spin symmetry.
+  \item \textbf{ADAPT-VQE}: grow the operator pool one excitation at a time, partly compensating for a poor reference.
+\end{itemize}
+
+\medskip
+The structure of the VQE-UCCSD workflow does not change --- only the first circuit block (initial state) and possibly the operator pool. Everything else (mapping, measurement, optimisation, parameter-shift gradients) carries over unchanged.
+\end{frame}
+
+% =========================================================
+\section{Summary}
+
+\begin{frame}{Conceptual summary}
+The VQE-UCCSD method combines
+\[
+\text{quantum chemistry}\;+\;\text{unitary coupled cluster}\;+\;\text{quantum measurement}\;+\;\text{classical optimisation}.
+\]
+
+The central variational problem is
+\[
+E_{\mathrm{VQE}}
+\;=\;
+\min_{\bm\theta}\,
+\bra{\Phi_{\mathrm{HF}}}
+U^\dagger_{\mathrm{UCCSD}}(\bm\theta)\,
+\hat H\,
+U_{\mathrm{UCCSD}}(\bm\theta)
+\ket{\Phi_{\mathrm{HF}}}.
+\]
+
+\medskip
+\textbf{Take-home messages:}
+\begin{itemize}
+  \item The Hartree--Fock state is the natural reference; under Jordan--Wigner it is a single product state $\ket{1\cdots1\,0\cdots0}$.
+  \item Starting VQE at $\bm\theta=0$ means $\ket{\Psi(0)} = \ket{\Phi_{\mathrm{HF}}}$ and $E(0) = E_{\mathrm{HF}}$; only the correlation energy needs to be recovered.
+  \item UCCSD adds correlation through anti-Hermitian single and double excitations, $e^{\hat T - \hat T^\dagger}$, which is unitary and circuit-implementable.
+  \item The quantum computer prepares the correlated wave function; the classical computer updates the cluster amplitudes.
+  \item For strongly correlated systems, replace HF with a multi-determinant or adaptive reference --- the rest of the pipeline is unchanged.
+\end{itemize}
+\end{frame}
+
+% =========================================================
+\begin{frame}{References}
+\footnotesize
+\begin{thebibliography}{99}
+\bibitem{Peruzzo2014}
+A. Peruzzo \emph{et al.},
+A variational eigenvalue solver on a photonic quantum processor,
+\emph{Nat.\ Commun.} \textbf{5}, 4213 (2014).
+
+\bibitem{McClean2016}
+J. R. McClean \emph{et al.},
+The theory of variational hybrid quantum-classical algorithms,
+\emph{New J.\ Phys.} \textbf{18}, 023023 (2016).
+
+\bibitem{Romero2018}
+J. Romero \emph{et al.},
+Strategies for quantum computing molecular energies using the unitary coupled cluster ansatz,
+\emph{Quantum Sci.\ Technol.} \textbf{4}, 014008 (2018).
+
+\bibitem{Bartlett2007}
+R. J. Bartlett and M. Musial,
+Coupled-cluster theory in quantum chemistry,
+\emph{Rev.\ Mod.\ Phys.} \textbf{79}, 291 (2007).
+
+\bibitem{McArdle2020}
+S. McArdle \emph{et al.},
+Quantum computational chemistry,
+\emph{Rev.\ Mod.\ Phys.} \textbf{92}, 015003 (2020).
+
+\bibitem{Tilly2022}
+J. Tilly \emph{et al.},
+The Variational Quantum Eigensolver: a review of methods and best practices,
+\emph{Phys.\ Rep.} \textbf{986}, 1 (2022).
+\end{thebibliography}
+\end{frame}
+
+\end{document}
