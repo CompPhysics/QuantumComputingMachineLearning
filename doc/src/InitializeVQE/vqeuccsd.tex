@@ -1,0 +1,522 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{braket}
+\usepackage{booktabs}
+\title{Variational Quantum Eigensolver with UCCSD}
+\subtitle{Algorithm, Equations, and Workflow}
+\author{}
+\date{\today}
+\begin{document}
+%------------------------------------------------
+\begin{frame}
+\titlepage
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Goal}
+We want to approximate the ground-state energy of an electronic Hamiltonian
+\[
+E_0 = \min_{\ket{\Psi}} 
+\frac{\bra{\Psi} H \ket{\Psi}}{\braket{\Psi|\Psi}}.
+\]
+\vspace{0.3cm}
+In VQE, we restrict the wave function to a parameterized ansatz
+\[
+\ket{\Psi(\bm{\theta})}
+=
+U(\bm{\theta})\ket{\Phi_0},
+\]
+and minimize
+\[
+E(\bm{\theta})
+=
+\bra{\Psi(\bm{\theta})}H\ket{\Psi(\bm{\theta})}.
+\]
+\vspace{0.3cm}
+For UCCSD, the reference state is usually the Hartree--Fock state
+\[
+\ket{\Phi_0} = \ket{\Phi_{\mathrm{HF}}}.
+\]
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Electronic Hamiltonian}
+In second quantization,
+\[
+H
+=
+\sum_{pq} h_{pq} a_p^\dagger a_q
++
+\frac{1}{2}
+\sum_{pqrs}
+h_{pqrs}
+a_p^\dagger a_q^\dagger a_s a_r .
+\]
+\vspace{0.3cm}
+Here
+\[
+h_{pq}
+=
+\int d\mathbf{x}\,
+\phi_p^*(\mathbf{x})
+\left(
+-\frac12\nabla^2
+-
+\sum_A \frac{Z_A}{|\mathbf{r}-\mathbf{R}_A|}
+\right)
+\phi_q(\mathbf{x}),
+\]
+and
+\[
+h_{pqrs}
+=
+\int d\mathbf{x}_1 d\mathbf{x}_2\,
+\frac{
+\phi_p^*(\mathbf{x}_1)
+\phi_q^*(\mathbf{x}_2)
+\phi_r(\mathbf{x}_1)
+\phi_s(\mathbf{x}_2)}
+{|\mathbf{r}_1-\mathbf{r}_2|}.
+\]
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Mapping Fermions to Qubits}
+The fermionic Hamiltonian is mapped to qubits:
+\[
+H
+\longrightarrow
+H_q
+=
+\sum_{\alpha} c_\alpha P_\alpha ,
+\]
+where each
+\[
+P_\alpha
+=
+\sigma_1^{(\alpha)}
+\otimes
+\sigma_2^{(\alpha)}
+\otimes
+\cdots
+\otimes
+\sigma_n^{(\alpha)}
+\]
+is a Pauli string.
+\vspace{0.3cm}
+Common mappings include:
+\begin{itemize}
+\item Jordan--Wigner transformation,
+\item Bravyi--Kitaev transformation,
+\item parity mapping.
+\end{itemize}
+\vspace{0.3cm}
+The VQE objective becomes
+\[
+E(\bm{\theta})
+=
+\sum_\alpha c_\alpha
+\langle P_\alpha\rangle_{\bm{\theta}}.
+\]
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Classical Coupled Cluster Ansatz}
+In classical coupled cluster theory,
+\[
+\ket{\Psi_{\mathrm{CC}}}
+=
+e^T
+\ket{\Phi_{\mathrm{HF}}},
+\]
+where
+\[
+T = T_1 + T_2 + T_3 + \cdots .
+\]
+\vspace{0.3cm}
+The singles and doubles operators are
+\[
+T_1
+=
+\sum_{ia}
+t_i^a
+a_a^\dagger a_i ,
+\]
+\[
+T_2
+=
+\frac{1}{4}
+\sum_{ijab}
+t_{ij}^{ab}
+a_a^\dagger a_b^\dagger a_j a_i .
+\]
+\vspace{0.3cm}
+Indices:
+\begin{itemize}
+\item \(i,j\): occupied spin orbitals,
+\item \(a,b\): virtual spin orbitals.
+\end{itemize}
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Unitary Coupled Cluster}
+The coupled-cluster operator \(e^T\) is not unitary.
+\vspace{0.3cm}
+In quantum computing, we use the unitary ansatz
+\[
+\ket{\Psi_{\mathrm{UCC}}}
+=
+e^{T-T^\dagger}
+\ket{\Phi_{\mathrm{HF}}}.
+\]
+\vspace{0.3cm}
+For UCCSD,
+\[
+T = T_1 + T_2,
+\]
+so
+\[
+\ket{\Psi_{\mathrm{UCCSD}}}
+=
+e^{T_1+T_2-T_1^\dagger-T_2^\dagger}
+\ket{\Phi_{\mathrm{HF}}}.
+\]
+\vspace{0.3cm}
+The operator
+\[
+A = T - T^\dagger
+\]
+is anti-Hermitian:
+\[
+A^\dagger = -A.
+\]
+Therefore \(e^A\) is unitary.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Single Excitations}
+A single excitation promotes one electron:
+\[
+i \rightarrow a.
+\]
+The corresponding anti-Hermitian excitation operator is
+\[
+\tau_i^a
+=
+a_a^\dagger a_i
+-
+a_i^\dagger a_a .
+\]
+The associated unitary is
+\[
+U_i^a(\theta_i^a)
+=
+\exp\left[
+\theta_i^a
+\left(
+a_a^\dagger a_i
+-
+a_i^\dagger a_a
+\right)
+\right].
+\]
+\vspace{0.3cm}
+This rotates between the reference determinant and singly excited determinants.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Double Excitations}
+A double excitation promotes two electrons:
+\[
+ij \rightarrow ab.
+\]
+The anti-Hermitian excitation operator is
+\[
+\tau_{ij}^{ab}
+=
+a_a^\dagger a_b^\dagger a_j a_i
+-
+a_i^\dagger a_j^\dagger a_b a_a .
+\]
+The associated unitary is
+\[
+U_{ij}^{ab}(\theta_{ij}^{ab})
+=
+\exp\left[
+\theta_{ij}^{ab}
+\tau_{ij}^{ab}
+\right].
+\]
+\vspace{0.3cm}
+Doubles are essential for describing electron correlation.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Trotterized UCCSD Ansatz}
+The exact UCCSD ansatz is
+\[
+U_{\mathrm{UCCSD}}
+=
+\exp
+\left[
+\sum_{ia}\theta_i^a \tau_i^a
++
+\sum_{ijab}\theta_{ij}^{ab}\tau_{ij}^{ab}
+\right].
+\]
+\vspace{0.3cm}
+Because the excitation operators generally do not commute,
+\[
+[\tau_\mu,\tau_\nu]\neq 0,
+\]
+one often uses a first-order Trotter approximation:
+\[
+U_{\mathrm{UCCSD}}
+\approx
+\prod_{ia}
+e^{\theta_i^a\tau_i^a}
+\prod_{ijab}
+e^{\theta_{ij}^{ab}\tau_{ij}^{ab}}.
+\]
+\vspace{0.3cm}
+The parameters \(\bm{\theta}\) are optimized variationally.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Quantum Circuit Construction}
+The UCCSD circuit is built by applying excitation unitaries to the Hartree--Fock state:
+\[
+\ket{\Psi(\bm{\theta})}
+=
+U_{\mathrm{UCCSD}}(\bm{\theta})
+\ket{\Phi_{\mathrm{HF}}}.
+\]
+\vspace{0.3cm}
+Workflow:
+\begin{enumerate}
+\item Prepare \(\ket{\Phi_{\mathrm{HF}}}\) on qubits.
+\item Apply all selected single-excitation unitaries.
+\item Apply all selected double-excitation unitaries.
+\item Measure expectation values of Pauli strings.
+\end{enumerate}
+\vspace{0.3cm}
+The circuit depth can become large because UCCSD contains many excitations.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Energy Measurement}
+After mapping to qubits,
+\[
+H_q=\sum_\alpha c_\alpha P_\alpha .
+\]
+For a fixed parameter vector \(\bm{\theta}\), estimate
+\[
+E(\bm{\theta})
+=
+\sum_\alpha c_\alpha
+\bra{\Psi(\bm{\theta})}
+P_\alpha
+\ket{\Psi(\bm{\theta})}.
+\]
+\vspace{0.3cm}
+Each Pauli string is measured on the quantum device.
+\vspace{0.3cm}
+For example,
+\[
+P_\alpha = Z_0 Z_1 X_2 Y_3.
+\]
+Measurement requires rotating qubits into the appropriate basis.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Classical Optimization Loop}
+The VQE loop is hybrid:
+\[
+\bm{\theta}^{(k)}
+\longrightarrow
+\text{quantum circuit}
+\longrightarrow
+E(\bm{\theta}^{(k)})
+\longrightarrow
+\text{classical optimizer}.
+\]
+\vspace{0.4cm}
+The optimizer updates
+\[
+\bm{\theta}^{(k+1)}
+=
+\bm{\theta}^{(k)}
++
+\Delta \bm{\theta}^{(k)}.
+\]
+\vspace{0.4cm}
+The process continues until
+\[
+|E^{(k+1)}-E^{(k)}| < \epsilon.
+\]
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Algorithm: VQE-UCCSD}
+\small
+\begin{enumerate}
+\item Choose a molecular geometry and one-particle basis.
+\item Compute one- and two-body integrals:
+\[
+h_{pq},\qquad h_{pqrs}.
+\]
+\item Build the second-quantized Hamiltonian \(H\).
+\item Map \(H\) to a qubit Hamiltonian:
+\[
+H_q=\sum_\alpha c_\alpha P_\alpha.
+\]
+\item Prepare the Hartree--Fock reference state.
+\item Construct the UCCSD ansatz:
+\[
+U(\bm{\theta})=e^{T_1+T_2-T_1^\dagger-T_2^\dagger}.
+\]
+\item Measure
+\[
+E(\bm{\theta})=\bra{\Psi(\bm{\theta})}H_q\ket{\Psi(\bm{\theta})}.
+\]
+\item Minimize \(E(\bm{\theta})\) classically.
+\end{enumerate}
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Variational Principle}
+The VQE energy satisfies
+\[
+E(\bm{\theta})
+=
+\bra{\Psi(\bm{\theta})}H\ket{\Psi(\bm{\theta})}
+\geq
+E_0.
+\]
+\vspace{0.3cm}
+Therefore, if the state is normalized,
+\[
+E_{\mathrm{VQE}}
+=
+\min_{\bm{\theta}} E(\bm{\theta})
+\]
+is an upper bound to the exact ground-state energy.
+\vspace{0.3cm}
+Improving the ansatz lowers the variational energy.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Gradient Evaluation}
+One may use gradient-free optimizers, but gradients can also be computed.
+For a parameter \(\theta_\mu\),
+\[
+\frac{\partial E}{\partial \theta_\mu}
+=
+\bra{\partial_\mu \Psi}H\ket{\Psi}
++
+\bra{\Psi}H\ket{\partial_\mu \Psi}.
+\]
+\vspace{0.3cm}
+For suitable Pauli-generated rotations,
+\[
+U_\mu(\theta_\mu)
+=
+e^{-i\theta_\mu P_\mu/2},
+\]
+one can use the parameter-shift rule:
+\[
+\frac{\partial E}{\partial \theta_\mu}
+=
+\frac12
+\left[
+E\left(\theta_\mu+\frac{\pi}{2}\right)
+-
+E\left(\theta_\mu-\frac{\pi}{2}\right)
+\right].
+\]
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Scaling of UCCSD}
+Let
+\[
+N_{\mathrm{occ}} = \text{number of occupied spin orbitals},
+\]
+\[
+N_{\mathrm{virt}} = \text{number of virtual spin orbitals}.
+\]
+\vspace{0.3cm}
+Number of single excitations:
+\[
+N_{\mathrm{singles}}
+\sim
+N_{\mathrm{occ}}N_{\mathrm{virt}}.
+\]
+Number of double excitations:
+\[
+N_{\mathrm{doubles}}
+\sim
+N_{\mathrm{occ}}^2N_{\mathrm{virt}}^2.
+\]
+\vspace{0.3cm}
+Thus UCCSD can become expensive for large systems.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Why UCCSD Is Useful}
+Advantages:
+\begin{itemize}
+\item Physically motivated ansatz.
+\item Direct connection to quantum chemistry.
+\item Captures dynamical electron correlation.
+\item Systematically improvable.
+\item Unitary form is natural for quantum circuits.
+\end{itemize}
+\vspace{0.3cm}
+Main limitations:
+\begin{itemize}
+\item Deep circuits.
+\item Many variational parameters.
+\item Trotter errors.
+\item Measurement overhead.
+\item Optimization can be difficult.
+\end{itemize}
+\end{frame}
+%------------------------------------------------
+\begin{frame}{Conceptual Summary}
+The VQE-UCCSD method combines:
+\[
+\text{Quantum chemistry}
++
+\text{unitary coupled cluster}
++
+\text{quantum measurement}
++
+\text{classical optimization}.
+\]
+\vspace{0.4cm}
+The central variational problem is
+\[
+E_{\mathrm{VQE}}
+=
+\min_{\bm{\theta}}
+\bra{\Phi_{\mathrm{HF}}}
+U^\dagger_{\mathrm{UCCSD}}(\bm{\theta})
+H
+U_{\mathrm{UCCSD}}(\bm{\theta})
+\ket{\Phi_{\mathrm{HF}}}.
+\]
+\vspace{0.3cm}
+The quantum computer prepares the correlated wave function.
+The classical computer updates the cluster amplitudes.
+\end{frame}
+%------------------------------------------------
+\begin{frame}{References}
+\footnotesize
+\begin{thebibliography}{99}
+\bibitem{Peruzzo2014}
+A. Peruzzo et al.,
+\newblock A variational eigenvalue solver on a photonic quantum processor,
+\newblock \emph{Nature Communications} 5, 4213 (2014).
+\bibitem{McClean2016}
+J. R. McClean et al.,
+\newblock The theory of variational hybrid quantum-classical algorithms,
+\newblock \emph{New Journal of Physics} 18, 023023 (2016).
+\bibitem{Romero2018}
+J. Romero et al.,
+\newblock Strategies for quantum computing molecular energies using the unitary coupled cluster ansatz,
+\newblock \emph{Quantum Science and Technology} 4, 014008 (2018).
+\bibitem{Bartlett2007}
+R. J. Bartlett and M. Musial,
+\newblock Coupled-cluster theory in quantum chemistry,
+\newblock \emph{Reviews of Modern Physics} 79, 291 (2007).
+\end{thebibliography}
+\end{frame}
+%------------------------------------------------
+\end{document}
