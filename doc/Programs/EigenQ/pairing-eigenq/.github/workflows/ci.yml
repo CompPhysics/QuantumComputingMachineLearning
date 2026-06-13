@@ -1,0 +1,25 @@
+name: build
+on: [push, pull_request]
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install package + deps
+        run: pip install -e ".[notebook,dev]"
+      - name: Unit tests (library + benchmark anchors)
+        run: pytest -q
+      - name: Install LaTeX
+        run: sudo apt-get update && sudo apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-science lmodern
+      - name: Execute notebook
+        run: python .claude/skills/notebook-builder/scripts/execute_notebook.py notebooks/ResolutionRefPairing.ipynb 2400
+      - name: Validate notebook
+        run: python .claude/skills/notebook-builder/scripts/check_notebook.py notebooks/ResolutionRefPairing.ipynb 6
+      - name: Build paper
+        run: |
+          python .claude/skills/physics-paper/scripts/extract_figures.py notebooks/ResolutionRefPairing.ipynb paper/figs
+          bash .claude/skills/physics-paper/scripts/build_paper.sh paper/eigenq_pairing.tex
+      - uses: actions/upload-artifact@v4
+        with: { name: paper, path: paper/eigenq_pairing.pdf }

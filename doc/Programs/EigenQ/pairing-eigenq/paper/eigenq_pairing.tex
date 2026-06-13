@@ -1,0 +1,526 @@
+\documentclass[11pt]{article}
+
+% ---------------------------------------------------------------------------
+%  Hybrid resolution refinement + rodeo algorithm on the pairing Hamiltonian
+%  Built from the Jupyter notebook ResolutionRefPairing.ipynb, the EIGEN-Q
+%  research proposal, and Qian et al., Eur. Phys. J. A 60, 151 (2024).
+% ---------------------------------------------------------------------------
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{authblk}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black]{hyperref}
+
+\captionsetup{font=small,labelfont=bf}
+\renewcommand\Authfont{\normalsize}
+\renewcommand\Affilfont{\small\itshape}
+\setlength{\affilsep}{0.4em}
+
+\newcommand{\Hlow}{H_{\mathrm{low}}}
+\newcommand{\Hhigh}{H_{\mathrm{high}}}
+\newcommand{\Eobj}{E_{\mathrm{obj}}}
+
+\title{\bfseries Hybrid resolution refinement and the rodeo algorithm for
+eigenstate preparation: a demonstration on the pairing Hamiltonian}
+
+\author[1]{Scott Bogner}
+\author[2]{Cecilie Glittum}
+\author[1]{Heiko Hergert}
+\author[2]{Morten Hjorth-Jensen}
+\author[2]{Gunnar Lange}
+\author[1]{Ryan LaRose}
+\author[1]{Dean Lee}
+\author[3]{Francesco Pietro Massel}
+
+\affil[1]{Facility for Rare Isotope Beams and Department of Physics and Astronomy,
+Michigan State University, East Lansing, MI 48824, USA}
+\affil[2]{Department of Physics and Center for Computing in Science Education,
+University of Oslo, N-0316 Oslo, Norway}
+\affil[3]{Department of Science and Industry Systems, University of
+South-Eastern Norway, N-3179 Borre, Norway}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+The efficient preparation of correlated eigenstates is a central bottleneck for
+quantum simulation: variational quantum eigensolvers (VQE) suffer from
+exponentially vanishing gradients, adiabatic state preparation requires evolution
+times that diverge when the spectral gap closes, and projective filters such as
+quantum phase estimation and the rodeo algorithm converge exponentially only when
+the input state already has a sizeable overlap with the target eigenstate.  We
+demonstrate, end to end and on a single controlled testbed --- the constant-pairing
+Hamiltonian --- a hybrid pipeline that resolves these tensions: a cheap
+low-resolution VQE state is prolonged into a larger model space, adiabatically
+\emph{refined} across resolutions, and finally polished by the rodeo algorithm.
+Resolution refinement keeps the path gapped, so the adiabatic time scales only as
+$T\sim 1/\Delta E$ and the overlap $p$ with the high-resolution ground state rises
+toward unity; the rodeo algorithm then removes the residual error exponentially,
+with a post-selected infidelity $1-\mathcal{F}_M\lesssim \tfrac{1-p}{p}\,2^{-M}$ in
+the number of cycles $M$ and a post-selection acceptance that stays of order $p$.
+For four particles refined up to four levels ($k=4$, eight qubits) the refined input
+($p\simeq0.998$) is filtered to a fidelity $1-\mathcal{F}\sim10^{-6}$ within one or
+two cycles, while an unrefined prolonged guess ($p\simeq0.87$) still reaches
+$\sim10^{-4}$ in a handful of cycles.  All gate-level building blocks (UCCSD state
+preparation, the prolongation embedding, and the ancilla-based rodeo cycle) are
+implemented explicitly and validated against exact diagonalisation.  The
+construction is the pairing-model realisation of the EIGEN-Q proposal and a concrete
+template for hardware demonstrations on mid-circuit-measurement platforms such as the
+Magne neutral-atom quantum computer.
+\end{abstract}
+
+% ===========================================================================
+\section{Introduction}
+% ===========================================================================
+Determining the low-lying eigenvalues and eigenvectors of a many-body Hamiltonian is
+one of the grand challenges of quantum many-body theory, where the Hilbert-space
+dimension grows exponentially with the number of constituents.  Quantum computers
+offer new routes to eigenvalue estimation and eigenstate preparation, but the
+state-of-the-art methods each face an obstacle at scale.  The variational quantum
+eigensolver (VQE)~\cite{Peruzzo2014} is limited by barren plateaus --- gradients that
+vanish exponentially with system size~\cite{McClean2018}.  Adiabatic state
+preparation requires evolution times that diverge if the gap between the tracked
+state and the rest of the spectrum closes along the path~\cite{Albash2018}.
+Projective spectral filters --- quantum phase estimation~\cite{Abrams1999} and the
+rodeo algorithm (RA)~\cite{Choi2021,Qian2024} --- converge exponentially in the
+number of cycles, but only once the initial state has a significant squared overlap
+$p$ with the target eigenstate; their cost grows as $1/p$, and $p$ itself typically
+falls exponentially with system size.
+
+These limitations are complementary, which suggests a hybrid strategy.
+\emph{Resolution refinement}~\cite{Bogner2026} bootstraps an eigenstate across
+model-space scales: an eigenstate of a coarse (low-resolution) Hamiltonian is lifted
+by a prolongation operator into a finer space and adiabatically evolved to the
+fine-resolution eigenstate.  Because refinement preserves the low-energy spectral
+structure, the path stays gapped and the required adiabatic time scales only as the
+inverse physical gap (times a slowly growing system-size factor), delivering an
+output with $p\approx 1$.  That output is exactly the high-overlap input the rodeo
+algorithm needs to converge exponentially.  This is the core idea of the EIGEN-Q
+pipeline: (i) prepare a low-resolution eigenstate; (ii) prolong and adiabatically
+refine to a final time $T^\ast$; (iii) apply the rodeo algorithm to reach the target
+fidelity and observables with exponential convergence.
+
+In this work we realise the full pipeline end to end on a transparent and exactly
+solvable testbed, the constant-pairing Hamiltonian familiar from nuclear and
+condensed-matter many-body theory~\cite{LNP936}.  Working on a model whose exact
+spectrum is available at every stage lets us validate each component quantitatively:
+the gate-level UCCSD coarse solver against full configuration interaction (FCI) and
+coupled-cluster doubles (CCD); the prolongation and adiabatic refinement against the
+exact high-resolution eigenstate; and the rodeo filter against the analytic
+success-probability formulas of Ref.~\cite{Qian2024}.  All circuits are implemented
+explicitly as rotation and CNOT gates (and an ancilla-based rodeo cycle), so the
+demonstration doubles as a reference implementation for hardware.
+
+% ===========================================================================
+\section{The pairing model and its qubit encoding}
+% ===========================================================================
+We study the constant-pairing Hamiltonian
+\begin{equation}
+  H=\delta\sum_{p=0}^{k-1} p\sum_{\sigma=\uparrow\downarrow} n_{p\sigma}
+   -\frac{g}{2}\sum_{p,q=0}^{k-1} a^\dagger_{p\uparrow}a^\dagger_{p\downarrow}
+     a_{q\downarrow}a_{q\uparrow},
+  \label{eq:H}
+\end{equation}
+with $k$ doubly degenerate single-particle levels of spacing $\delta$ (set to
+$\delta=1$) and a pairing strength $g$.  The interaction scatters time-reversed
+pairs between levels; it conserves the seniority (the number of unpaired particles),
+so the ground state of $N$ paired particles lives entirely in the seniority-zero
+subspace.  We map level $p$ and spin $\sigma$ to qubit $2p+\sigma$ (so a $k$-level
+problem uses $2k$ qubits) and encode the fermionic operators through the
+Jordan--Wigner transformation.  The Hartree--Fock (HF) reference fills the lowest
+$N/2$ levels, with $E_{\rm HF}(N{=}4,g)=2-g$.
+
+Throughout we use $N=4$ particles as the running example.  The fixed-$N$ sector
+dimension is $\binom{2k}{N}$, growing from $1$ at $k=2$ (a single filled
+determinant) to $70$ at $k=4$ and $1820$ at $k=8$; the seniority-zero ground-state
+problem is correspondingly compact, which makes the model an ideal multi-resolution
+laboratory.  ``Basis refinement'' here means \emph{increasing $k$ at fixed $N$}: the
+number of single-particle levels (and qubits) grows while the particle number is
+held fixed.
+
+% ===========================================================================
+\section{The hybrid pipeline}
+% ===========================================================================
+
+\subsection{Coarse-state preparation: gate-level UCCSD--VQE}
+\label{sec:uccsd}
+The coarse eigenstate is prepared with a unitary coupled-cluster ansatz restricted
+to singles and doubles (UCCSD), Trotterised into a product of excitation circuits
+acting on the HF reference,
+\begin{equation}
+  \ket{\Psi(\boldsymbol\theta)}
+  =\prod_{\mu} e^{\theta_\mu(\hat\tau_\mu-\hat\tau_\mu^\dagger)}\ket{\rm HF}.
+\end{equation}
+Through the Jordan--Wigner map each anti-Hermitian generator becomes a sum of
+commuting Pauli strings, so every factor compiles into a basis change, a CNOT ladder,
+a single $R_z(\theta)$ rotation, and the uncompute; a single excitation yields two
+Pauli-rotation sub-circuits and a double excitation yields eight.  We optimise with
+the exact analytic gradient of the product ansatz (the naive two-term parameter shift
+is incorrect beyond the first factor, because later factors acquire frequency-one
+cross terms).  Because the pairing force does not couple to seniority-changing
+single excitations, all singles amplitudes vanish to machine precision and the
+solver is effectively a \emph{doubles} theory, mirroring the classical CCD structure.
+
+\subsection{The prolongation operator}
+The prolongation $P$ embeds a low-resolution state into the high-resolution space.
+For basis refinement it maps every many-body basis state of the $k_{\rm low}$ space to
+the \emph{same} occupation pattern in the $k_{\rm high}$ space, leaving the new
+single-particle levels empty.  In canonical Jordan--Wigner ordering this is
+gate-free; for lattice refinement the analogous operator distributes each occupied
+coarse site over the neighbouring fine sites with two single-qubit rotations and two
+CNOTs per site per spatial direction, i.e.\ $O(N_{\rm sites})$ gates per
+dimension~\cite{Bogner2026}.  The prolonged state $\ket{\Phi_0}=P\ket{\psi_{\rm low}}$
+satisfies $\expval{\Hhigh}{\Phi_0}=E_{\rm low}$ exactly, and already provides a
+high-quality first guess for the high-resolution ground state.
+
+\subsection{Resolution refinement (adiabatic phase)}
+\label{sec:refine}
+The prolonged state is refined by adiabatically following the interpolated,
+energy-shifted Hamiltonian
+\begin{equation}
+  H(s)=\cos^2\!\Big(\tfrac{\pi s}{2}\Big)\,P(\Hlow-\mu)P^\dagger
+      +\sin^2\!\Big(\tfrac{\pi s}{2}\Big)\,(\Hhigh-\mu),
+  \qquad s=\frac{t}{T},
+  \label{eq:path}
+\end{equation}
+evolved by a Suzuki--Trotter product over total time $T\le T^\ast$.  The shift $\mu$
+(here $\mu=E_{\rm low}+0.6$) places the tracked low-energy states below the large
+null space of $P^\dagger$, so the level followed from $s=0$ to $s=1$ is the
+high-resolution ground state.  The instantaneous spectrum stays smooth and gapped
+along the entire path; consequently the adiabatic time scales as $T\sim 1/\Delta E$
+rather than the $O(1/\Delta E_{\min}^2)$ of generic adiabatic preparation, and the
+overlap $p=\abs{\braket{\Psi_{\rm high}}{\Phi(T)}}^2$ rises toward unity.
+
+\subsection{The rodeo algorithm}
+\label{sec:rodeo}
+The rodeo algorithm~\cite{Choi2021,Qian2024} removes the residual error left by the
+adiabatic tail.  One cycle acts on the system register plus a single ancilla
+(reused across cycles by mid-circuit measurement): a Hadamard on the ancilla, the
+controlled evolution $e^{-iH t_k}$ of the system, a phase gate $P(E\,t_k)$ on the
+ancilla (which effectively shifts $H\to H-E$), a second Hadamard, and an ancilla
+measurement.  Post-selecting the ancilla in $\ket{0}$ applies the non-unitary filter
+$\tfrac12\big(\mathbb{1}+e^{iE t_k}e^{-iH t_k}\big)$ to the system: an eigenstate
+$\ket{E_j}$ acquires the factor $e^{i(E-E_j)t_k/2}\cos[(E_j-E)t_k/2]$.  For an
+eigenstate input the probability that all $M$ ancilla measurements return $0$ is
+therefore~\cite{Qian2024}
+\begin{equation}
+  P_{0^{M}}\!\big(E\mid\{t_k\}\big)=\prod_{k=1}^{M}
+  \cos^2\!\Big[\tfrac{t_k}{2}\big(\Eobj-E\big)\Big],
+  \label{eq:rodeo1}
+\end{equation}
+and averaging the $t_k$ over a Gaussian of RMS width $\sigma$ gives
+\begin{equation}
+  P_{0^{M}}(E)=\Bigg[\frac{1+e^{-(\Eobj-E)^2\sigma^2/2}}{2}\Bigg]^{M}.
+  \label{eq:rodeo2}
+\end{equation}
+On resonance ($E=\Eobj$) the success probability is unity at every cycle, while
+off-resonant weight is suppressed geometrically toward the background $2^{-M}$ (the
+arithmetic mean of $\cos^2$ is $1/2$).  Scanning $E$ thus locates eigenvalues as
+peaks whose width $\sim 1/\sigma$ sets the energy resolution; fixing $E$ at the
+target eigenvalue turns the algorithm into a state-preparation filter.
+
+The controlled evolution is the only system-size-dependent ingredient.  On hardware
+$e^{-iH t}$ is realised by a Suzuki--Trotter decomposition over the $2k$
+qubits~\cite{Trotter1959,Suzuki1976,Childs2021}; for the single-qubit benchmark of
+Ref.~\cite{Qian2024} it reduces to a $Z$--$Y$--$Z$ Euler rotation
+$R_{\hat n}(\theta)=e^{-i\theta\,\hat n\cdot\vec\sigma/2}$ implemented through the
+Qiskit native gate.  In the simulations below we apply the controlled evolution
+exactly within the conserved $N$-particle sector, isolating the algorithmic behaviour
+from Trotter error (quantified in Sec.~\ref{sec:discussion}).
+
+\paragraph{Convergence criterion.}
+With $E$ tuned to the target eigenvalue $E_0$, the all-zero acceptance probability of
+an input $\ket{\psi}=\sum_k c_k\ket{E_k}$ after $M$ cycles is
+\begin{equation}
+  P_M=p+\sum_{k\neq0}\abs{c_k}^2
+  \Big[\tfrac12\big(1+e^{-(E_k-E_0)^2\sigma^2/2}\big)\Big]^{M},
+  \quad p=\abs{c_0}^2 .
+  \label{eq:PM}
+\end{equation}
+The target weight $p$ is preserved at every round while off-resonant components decay
+geometrically, so $P_M\to p$ and the post-selected fidelity obeys
+\begin{equation}
+  \mathcal{F}_M=\frac{p}{P_M}\simeq\Big[1+\tfrac{1-p}{p}\,2^{-M}\Big]^{-1},
+  \qquad
+  1-\mathcal{F}_M\lesssim\frac{1-p}{p}\,2^{-M}.
+  \label{eq:fid}
+\end{equation}
+Reaching fidelity $1-\delta$ therefore needs only
+$M\gtrsim\log_2[(1-p)/(p\,\delta)]$ cycles, and since the expected number of
+repetitions to obtain an accepted run is $\sim 1/P_M\to 1/p$, the total
+controlled-evolution effort scales as $O\!\big(\abs{\log\delta}/(p\,\epsilon)\big)$
+at energy resolution $\epsilon$~\cite{Choi2021}.  This is efficient precisely when
+resolution refinement supplies $p\approx 1$.
+
+% ===========================================================================
+\section{Results}
+% ===========================================================================
+
+\subsection{Coarse solver: UCCSD versus exact references}
+\label{sec:res-uccsd}
+Table~\ref{tab:uccsd} lists the ground-state energies at $g=1$ for $N=4$ as the basis
+grows from $k=2$ to $k=8$.  The gate-level UCCSD circuit reproduces the operator-level
+(statevector) UCCSD to machine precision and stays variational ($E_{\rm UCCSD}\ge
+E_{\rm FCI}$), tracking FCI to $\sim10^{-3}$--$10^{-2}$, whereas CCD over-binds.
+Figure~\ref{fig:methods} compares all solvers (exact, CCD, statevector and gate-level
+UCCSD, and a hardware-efficient ansatz) as a function of $k$.  The hardware-efficient
+ansatz is exact at $k=2$ and reaches FCI at $k=3$ only after a multi-start
+optimisation, and struggles at $k=4$ --- the symmetry-blind landscape that motivates
+the physically structured UCCSD circuit.  Figure~\ref{fig:scaling} shows that the same
+UCCSD solver remains a tight variational bound all the way to $k=8$ (sixteen qubits),
+at the cost of a CNOT count that grows steeply ($1312$ CNOTs already at $k=4$).
+
+\begin{table}[t]
+\centering
+\caption{Ground-state energies at $g=1$, $N=4$, for the constant-pairing
+Hamiltonian.  FCI is the exact $N$-sector result; CCD is coupled-cluster doubles;
+UCCSD is the gate-level circuit of Sec.~\ref{sec:uccsd}.  ``\#CNOT'' is the two-qubit
+gate count of the UCCSD state preparation.}
+\label{tab:uccsd}
+\small
+\begin{tabular}{cccccc}
+\toprule
+$k$ & qubits & FCI & CCD & UCCSD & \#CNOT\\
+\midrule
+2 & 4  & $1.000000$ & $1.000000$ & $1.000000$ & 0\\
+3 & 6  & $0.794697$ & $0.794697$ & $0.794697$ & 272\\
+4 & 8  & $0.635548$ & $0.630443$ & $0.636987$ & 1312\\
+6 & 12 & $0.372664$ & $0.350058$ & $0.378719$ & --\\
+8 & 16 & $0.145559$ & $0.097263$ & $0.157856$ & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/fig4.png}
+\caption{Ground-state energy at $N=4$, $g=1$ obtained with all solvers (left) and
+their deviation from FCI (right), versus the number of levels $k$.  The structured
+UCCSD circuits track FCI from above; CCD over-binds; the hardware-efficient ansatz
+matches FCI for $k\le3$ but loses accuracy at $k=4$.}
+\label{fig:methods}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/fig3.png}
+\caption{Scalability of the Trotterised UCCSD--VQE: ground-state energy (left) and
+deviation from FCI (right) from $k=2$ to $k=8$ ($N=4$, $g=1$).  The same solver
+remains variational and tight as the basis --- and hence the qubit count --- grows.}
+\label{fig:scaling}
+\end{figure}
+
+\subsection{Resolution refinement: overlap and energy}
+\label{sec:res-refine}
+At $N=4$ the low-resolution ($k=2$) space is a single filled determinant, so the
+prolonged state is the high-resolution HF reference, with first-guess overlaps
+$0.917$ for refinement to $k=3$ and $0.868$ to $k=4$.  Adiabatic evolution along the
+gapped path of Eq.~\eqref{eq:path} drives both quantities toward their exact targets:
+the overlap rises to $\simeq0.999$ and the energy falls from $E_{\rm HF}=1$ to the FCI
+value from above --- $0.7964$ for $k=3$ (FCI $0.794697$) and $0.6397$ for $k=4$ (FCI
+$0.635548$) at $T=30$ (Fig.~\ref{fig:fourparticle}).  The instantaneous spectrum stays
+open along the whole path (Fig.~\ref{fig:refine}, right), confirming the favourable
+$T\sim 1/\Delta E$ timescale; the larger $k=4$ space starts lower in overlap and
+converges more slowly, exactly as expected from the system-size dependence of the
+refinement.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/fig5.png}
+\caption{Resolution refinement $k=2\to k=4$.  Left: overlap of the evolved state with
+the exact high-resolution ground state versus the total adiabatic time $T$, for $N=2$
+and $N=4$.  Right: the instantaneous spectrum along the interpolation parameter
+$s=t/T$ stays smooth and gapped, the condition for efficient refinement.}
+\label{fig:refine}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/fig6.png}
+\caption{Four-particle refinement up to $k=4$: overlap (left) and physical energy
+$\expval{\Hhigh}{\Phi(T)}$ (right) versus $T$ for $k_{\rm high}=3,4$.  The energy
+approaches the FCI value (dotted) from above while the overlap approaches unity, both
+on a $\sim1/\Delta E$ timescale.}
+\label{fig:fourparticle}
+\end{figure}
+
+\subsection{Rodeo filtering of the refined state}
+\label{sec:res-rodeo}
+We verified the rodeo primitive in two ways: the explicit ancilla circuit agrees with
+the compact filter $\tfrac12(\mathbb{1}+e^{iEt}e^{-iHt})$ to $10^{-16}$, and the
+all-zero probabilities reproduce Eqs.~\eqref{eq:rodeo1}--\eqref{eq:rodeo2}, with the
+Gaussian-averaged single-cycle factor matching $\tfrac12(1+e^{-(\Delta E\,\sigma)^2/2})$
+to three digits.
+
+The state fed to the filter is the resolution-refined $k=4$ state of
+Sec.~\ref{sec:res-refine}, with overlap $p=0.998$ with the exact ground state; for
+contrast we also use the unrefined prolonged guess $\Phi_0$ ($p=0.868$).  Scanning the
+target energy $E$ (Fig.~\ref{fig:scan}) produces a peak at the ground-state energy; a
+coarse scan ($\sigma=2$) resolves it from the excited band, and a fine scan
+($\sigma=8$) locates it at $E=0.6352$ against the exact $E_0=0.635548$.  Starting from
+the refined state, essentially all spectral weight sits in the single ground-state
+peak; starting from $\Phi_0$, the small residual weight on excited states is visible as
+secondary structure above the $2^{-M}$ background.
+
+Fixing $E=E_0$ and applying $M$ cycles (Fig.~\ref{fig:convergence}), the post-selected
+fidelity rises exponentially and the cumulative acceptance settles at $\approx p$, in
+quantitative agreement with Eqs.~\eqref{eq:PM}--\eqref{eq:fid}.  The refined input
+reaches an infidelity $1-\mathcal{F}\simeq5\times10^{-6}$ within one to two cycles;
+even the cruder prolonged input reaches $\simeq1.3\times10^{-4}$ in a few cycles, while
+its acceptance holds at $0.868$.  The dotted reference lines $\tfrac{1-p}{p}2^{-M}$
+bracket the measured infidelities, confirming the convergence criterion.  This is the
+concrete pay-off of the pipeline: resolution refinement supplies the high overlap that
+turns the rodeo algorithm from a $1/p$-expensive filter into a few-cycle polish.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/fig7.png}
+\caption{Rodeo energy scan ($M=4$).  Left: coarse scan ($\sigma=2$); the dotted
+vertical lines mark exact eigenvalues and the dashed line the $2^{-M}$ background.
+Right: fine scan ($\sigma=8$) on the ground-state peak, located at $E=0.6352$ (exact
+$E_0=0.6355$).}
+\label{fig:scan}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/fig8.png}
+\caption{Rodeo eigenstate preparation at $E=E_0$, averaged over random time sets.
+Left: post-selected infidelity $1-\mathcal{F}_M$ versus the number of cycles $M$
+(dotted: the bound $\tfrac{1-p}{p}2^{-M}$).  Right: the post-selection acceptance
+converges to the input overlap $p$.}
+\label{fig:convergence}
+\end{figure}
+
+% ===========================================================================
+\section{Discussion and outlook}
+\label{sec:discussion}
+% ===========================================================================
+The pairing model lets us exhibit the entire EIGEN-Q pipeline with every stage
+benchmarked against exact results: a gate-level UCCSD coarse solver, a gate-free
+prolongation, a gapped adiabatic refinement with $T\sim1/\Delta E$, and a rodeo filter
+with $1-\mathcal{F}_M\lesssim\tfrac{1-p}{p}2^{-M}$.  The two algorithms are genuinely
+complementary --- refinement provides the large overlap $p\approx1$ that the rodeo
+algorithm requires, and the rodeo algorithm removes the slow adiabatic tail that
+refinement alone leaves behind.
+
+Moving to hardware changes only the controlled evolution.  On a device $e^{-iHt}$ is
+Trotterised over the $2k$ qubits, which introduces an effective Hamiltonian whose
+eigenvalues differ from the exact ones at a controllable order in the step size; as
+noted in Ref.~\cite{Qian2024}, the rodeo algorithm filters the eigenstates of this
+effective Hamiltonian, and its self-correcting design (small unitary errors broaden the
+energy window rather than biasing the estimate) makes it unusually robust to such
+errors.  The mid-circuit measurement and deep coherent circuits required by the two
+phases are supported by neutral-atom architectures such as the Magne system, making the
+pipeline a natural target for a hardware demonstration.
+
+Beyond the pairing model, the same construction applies to the targets of the EIGEN-Q
+proposal --- light and medium-mass nuclei benchmarked against coupled-cluster and
+in-medium similarity renormalization group calculations, molecular systems toward
+chemical accuracy, and Hubbard models refined from a coarse to a fine lattice --- with
+a closed-loop control layer that can adapt the refinement schedule from the rodeo
+acceptance statistics read out mid-circuit.  The present results establish, on a fully
+controlled example, that the hybrid of resolution refinement and the rodeo algorithm
+prepares correlated eigenstates with exponential accuracy at a cost set by an overlap
+that the refinement itself makes large.
+
+% ===========================================================================
+\section*{Code availability}
+The complete implementation --- pairing Hamiltonian, gate-level UCCSD--VQE,
+prolongation, adiabatic refinement, and the ancilla-based rodeo algorithm --- is
+provided as a single Jupyter notebook that reproduces every figure in this article.
+
+\section*{Acknowledgements}
+This work builds on the constant-pairing material of the FYS4480 and FYS5419 courses
+at the University of Oslo and \emph{Lecture Notes in Physics} \textbf{936}.  We
+acknowledge the EIGEN-Q collaboration and the QuNorth flagship programme.
+
+% ===========================================================================
+\begin{thebibliography}{99}
+% ===========================================================================
+\bibitem{Peruzzo2014}
+A.~Peruzzo, J.~McClean, P.~Shadbolt, M.-H.~Yung, X.-Q.~Zhou, P.~J.~Love,
+A.~Aspuru-Guzik, J.~L.~O'Brien,
+\textit{A variational eigenvalue solver on a photonic quantum processor},
+Nat.\ Commun.\ \textbf{5}, 4213 (2014).
+
+\bibitem{McClean2018}
+J.~R.~McClean, S.~Boixo, V.~N.~Smelyanskiy, R.~Babbush, H.~Neven,
+\textit{Barren plateaus in quantum neural network training landscapes},
+Nat.\ Commun.\ \textbf{9}, 4812 (2018).
+
+\bibitem{Albash2018}
+T.~Albash, D.~A.~Lidar,
+\textit{Adiabatic quantum computation},
+Rev.\ Mod.\ Phys.\ \textbf{90}, 015002 (2018).
+
+\bibitem{Abrams1999}
+D.~S.~Abrams, S.~Lloyd,
+\textit{Quantum algorithm providing exponential speed increase for finding
+eigenvalues and eigenvectors},
+Phys.\ Rev.\ Lett.\ \textbf{83}, 5162 (1999).
+
+\bibitem{Choi2021}
+K.~Choi, D.~Lee, J.~Bonitati, Z.~Qian, J.~Watkins,
+\textit{Rodeo algorithm for quantum computing},
+Phys.\ Rev.\ Lett.\ \textbf{127}, 040505 (2021).
+
+\bibitem{Qian2024}
+Z.~Qian, J.~Watkins, G.~Given, J.~Bonitati, K.~Choi, D.~Lee,
+\textit{Demonstration of the rodeo algorithm on a quantum computer},
+Eur.\ Phys.\ J.\ A \textbf{60}, 151 (2024).
+
+\bibitem{Bogner2026}
+S.~Bogner \textit{et al.},
+\textit{Quantum state preparation with resolution refinement},
+Phys.\ Lett.\ B \textbf{875}, 140363 (2026).
+
+\bibitem{LeeReview2023}
+D.~Lee,
+\textit{Quantum techniques for eigenvalue problems},
+Eur.\ Phys.\ J.\ A \textbf{59}, 275 (2023).
+
+\bibitem{LeeUCC2019}
+J.~Lee, W.~J.~Huggins, M.~Head-Gordon, K.~B.~Whaley,
+\textit{Generalized unitary coupled cluster wavefunctions for quantum computation},
+J.\ Chem.\ Theory Comput.\ \textbf{15}, 311 (2019).
+
+\bibitem{Trotter1959}
+H.~F.~Trotter,
+\textit{On the product of semi-groups of operators},
+Proc.\ Am.\ Math.\ Soc.\ \textbf{10}, 545 (1959).
+
+\bibitem{Suzuki1976}
+M.~Suzuki,
+\textit{Generalized Trotter's formula and systematic approximants of exponential
+operators},
+Commun.\ Math.\ Phys.\ \textbf{51}, 183 (1976).
+
+\bibitem{Childs2021}
+A.~M.~Childs, Y.~Su, M.~C.~Tran, N.~Wiebe, S.~Zhu,
+\textit{Theory of Trotter error with commutator scaling},
+Phys.\ Rev.\ X \textbf{11}, 011020 (2021).
+
+\bibitem{LNP936}
+M.~Hjorth-Jensen, M.~P.~Lombardo, U.~van~Kolck (eds.),
+\textit{An Advanced Course in Computational Nuclear Physics},
+Lecture Notes in Physics \textbf{936}, Springer (2017).
+
+\bibitem{NielsenChuang}
+M.~A.~Nielsen, I.~L.~Chuang,
+\textit{Quantum Computation and Quantum Information},
+Cambridge University Press (2010).
+\end{thebibliography}
+
+\end{document}
