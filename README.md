@@ -6,7 +6,10 @@ quantum computing algorithms and quantum computers. The second part is
 optional and depends on the interests and backgrounds of the
 participants. The lectures cover mainly quantum machine learning
 algorithms with an emphasis on variational quantum algorithms for
-NISQ-era quantum computers.  We discuss for example quantum for
+NISQ-era quantum computers.  The schedule is adaptive and the lecture plan from the spring 2026 (see below)
+reflects the choices which can be made.
+
+We discuss for example quantum for
 neural networks, quantum support vector machines, quantum Boltzmann
 machines and the QAOA algorithm. Fault-tolerant algorithms like
 quantum Fourier transforms, quantum phase estimation and the HHL
