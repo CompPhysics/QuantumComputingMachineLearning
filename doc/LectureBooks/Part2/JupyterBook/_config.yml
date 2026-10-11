@@ -1,0 +1,56 @@
+# Jupyter Book (version 1.x) configuration for "Quantum Machine Learning".
+# Build with   python3 build_book.py   (or  jupyter-book build .  from this folder).
+title: Quantum Machine Learning
+author: Morten Hjorth-Jensen
+copyright: "2026"
+only_build_toc_files: true          # README.md and anything not in _toc.yml are ignored
+exclude_patterns: [_build, "**.ipynb_checkpoints", README.md, "_ext/*"]
+
+# The notebooks are generated from the LaTeX and committed *with* their outputs
+# (see README.md), so the book does not re-execute them.  Use "force" (or
+# python3 build_book.py --execute) to re-run everything; a few minutes.
+execute:
+  execute_notebooks: "off"
+  timeout: 900
+  allow_errors: false
+
+parse:
+  myst_enable_extensions: [amsmath, dollarmath, linkify, smartquotes, substitution]
+
+bibtex_bibfiles:
+  - references.bib                  # merged from ../chapter*.bib by build_book.py
+
+latex:
+  latex_documents:
+    targetname: qmlbook.tex
+
+html:
+  use_repository_button: true
+  use_issues_button: true
+  use_edit_page_button: false       # the notebooks are generated, never edited
+  use_multitoc_numbering: true
+  home_page_in_navbar: true
+  comments:
+    hypothesis: false
+
+repository:
+  url: https://github.com/QuantumComputingQuantumMachineLearning/QuantumComputing
+  path_to_book: doc/Book/BookQML/Notebooks
+  branch: main
+
+# No launch buttons: the notebooks import the programs of BookPrograms/, so they are
+# run from a clone of the repository (see intro.md), not from Colab.
+
+sphinx:
+  local_extensions:
+    bibkeys: _ext                   # labels the reference list by BibTeX key, as the text does
+  config:
+    bibtex_default_style: keylabels
+    bibtex_reference_style: label
+    html_show_copyright: true
+    suppress_warnings: ["mystnb.unknown_mime_type", "myst.header"]
+    mathjax3_config:
+      tex:
+        tags: none                  # equation numbers are written by the generator as \tag{N.m}
+        macros:
+          bm: ["\\boldsymbol{#1}", 1]
