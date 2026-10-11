@@ -16,7 +16,12 @@ machines and the QAOA algorithm. Fault-tolerant algorithms like
 quantum Fourier transforms, quantum phase estimation and the HHL
 algorithm are also discussed.
 
-### Possible  textbooks:
+###  Lecture notes
+- Book 1, first half on _Quantum Computing_ at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/LectureBooks/Part1/Book1/Book1.pdf and  see https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/LectureBooks/Part1/JupyterBook/_build/html/index.html for the companion jupyter-book
+- Book 2, second half of semester on _Quantum Machine Learning_ at https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/LectureBooks/Part2/Book2/QMLBook.pdf and  see https://github.com/CompPhysics/QuantumComputingMachineLearning/blob/gh-pages/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html for the companion jupyter-book
+
+
+### Other textbooks used:
 - Maria Schuld and Francesco Petruccione, Machine Learning with Quantum Computers, see https://link.springer.com/book/10.1007/978-3-030-83098-4
 - Wolfgang Scherer, Mathematics of Quantum Computing, see https://link.springer.com/book/10.1007/978-3-030-12358-1
 - Hidary, Quantum Computing: An Applied Approach, see https://link.springer.com/book/10.1007/978-3-030-23922-0
