@@ -1,0 +1,2249 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Chapter 3: The Quantum Approximate Optimization Algorithm &#8212; Quantum Machine Learning</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"tex": {"tags": "none", "macros": {"bm": ["\\boldsymbol{#1}", 1]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'chapter3/chapter3';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Chapter 4: Quantum Neural Networks" href="../chapter4/chapter4.html" />
+    <link rel="prev" title="Chapter 2: Quantum Support Vector Machines" href="../chapter2/chapter2.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Quantum Machine Learning</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Quantum Machine Learning
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter1/chapter1.html">Chapter 1: Introduction and Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter2/chapter2.html">Chapter 2: Quantum Support Vector Machines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Variational models</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Chapter 3: The Quantum Approximate Optimization Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter4/chapter4.html">Chapter 4: Quantum Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter5/chapter5.html">Chapter 5: Quantum Boltzmann Machines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Outlook</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter6/chapter6.html">Chapter 6: Reinforcement Learning and Quantum Reinforcement Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter7/chapter7.html">Chapter 7: Summary and Perspectives</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Back matter</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://compphysics.github.io/QuantumComputingMachineLearning/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://compphysics.github.io/QuantumComputingMachineLearning/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html/issues/new?title=Issue%20on%20page%20%2Fchapter3/chapter3.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/chapter3/chapter3.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Chapter 3: The Quantum Approximate Optimization Algorithm</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-a-cost-function-to-a-hamiltonian">From a cost function to a Hamiltonian</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-algorithm">The algorithm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-algorithm-at-work">The algorithm at work</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-edge-by-hand">One edge, by hand</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ring-and-a-six-vertex-graph">The ring and a six-vertex graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-landscape-and-cost">Performance, landscape and cost</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gradients">Gradients</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-physical-register-two-electrons-in-a-double-quantum-well">A physical register: two electrons in a double quantum well</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-application-selecting-a-portfolio">An application: selecting a portfolio</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qaoa-as-a-machine-learning-model">QAOA as a machine-learning model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exercises">Exercises</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#programs-for-this-chapter">Programs for this chapter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-programs-of-this-chapter">Running the programs of this chapter</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="chapter-3-the-quantum-approximate-optimization-algorithm">
+<h1>Chapter 3: The Quantum Approximate Optimization Algorithm<a class="headerlink" href="#chapter-3-the-quantum-approximate-optimization-algorithm" title="Link to this heading">#</a></h1>
+<p><em>The quantum approximate optimization algorithm is the simplest variational quantum circuit and the one whose purpose is easiest to state: find the bit string that minimizes a cost. The chapter builds the pipeline from a combinatorial problem to a quadratic unconstrained binary optimization, from there to an Ising model and a diagonal cost Hamiltonian, and from the Hamiltonian to the alternating circuit of phase separators and transverse-field mixers, derived from adiabatic evolution by Trotterization and written out gate by gate. The single-edge instance is solved by hand, the algorithm is run on a ring and on a six-vertex graph, and its performance, landscape and gate cost are discussed. Gradients require the parameter-shift rule applied term by term, since the generators have many eigenvalues. Two electron spins in a double quantum dot, coupled by the exchange interaction, implement the one-edge instance natively, and the selection of a portfolio of stocks from real price data shows the pipeline on a constrained problem, with the penalty method, its tuning and the connection to thermal states. The chapter closes by reading QAOA as a machine-learning model: a clustering algorithm, a quantum neural network with a problem-fixed architecture, a feature map and a sampler.</em></p>
+<!-- Macro definitions for MathJax, mirroring book.tex -->
+<div class="math notranslate nohighlight">
+\[
+\newcommand{\bm}[1]{\boldsymbol{#1}}
+\newcommand{\matr}[1]{\boldsymbol{#1}}
+\newcommand{\bfv}[1]{\boldsymbol{#1}}
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\uvec}[1]{\boldsymbol{\hat{#1}}}
+\newcommand{\op}[1]{\widehat{#1}}
+\newcommand{\Op}[1]{\boldsymbol{\widehat{#1}}}
+\newcommand{\OP}[1]{\boldsymbol{\widehat{#1}}}
+\newcommand{\Det}[1]{|\boldsymbol{#1}|}
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\real}[1]{\mathrm{Re}\left\{#1\right\}}
+\newcommand{\ud}[1]{d#1}
+\newcommand{\udd}[1]{d^2#1}
+\newcommand{\mean}[1]{\langle #1 \rangle}
+\newcommand{\overlap}[2]{\langle #1 | #2 \rangle}
+\newcommand{\bracket}[3]{\langle #1 | #2 | #3 \rangle}
+\newcommand{\projection}[2]{| #1 \rangle \langle #2 |}
+\newcommand{\brab}[1]{\big\langle #1 \big|}
+\newcommand{\ketb}[1]{\big| #1 \big\rangle}
+\newcommand{\bket}[1]{\vert #1\rangle}
+\newcommand{\bbra}[1]{\langle #1\vert}
+\newcommand{\ketbra}[2]{\vert #1\rangle\langle #2\vert}
+\newcommand{\braket}[2]{\langle #1\vert #2\rangle}
+\]</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put every BookPrograms/chapter*/ and BookPrograms/common/ on sys.path</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">pathlib</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="n">root</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">root</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>The quantum support-vector machine of Chapter 2 used the
+quantum computer for one thing only, to evaluate a kernel; the learning
+was classical and convex, and, the trainable kernels of its last
+section apart, there were no parameters on the quantum side. This chapter introduces the other way of using the
+machine, which the rest of the book will follow: a circuit with
+adjustable angles, an expectation value that depends on them, and a
+classical optimizer that moves the angles downhill. The <em>quantum
+approximate optimization algorithm</em> (QAOA) of Farhi, Goldstone and
+Gutmann [Farhi2014] is the simplest and the most structured
+example of such a variational circuit, and it is also the one whose
+purpose is easiest to state: it looks for the bit string that minimizes
+a cost function, by preparing a quantum state whose measurement
+outcomes are concentrated on good bit strings.</p>
+<p>The algorithm is a bridge in two directions. Towards physics, it is a
+variational eigensolver for an Ising Hamiltonian, the problem is
+written as a classical spin glass, and its ansatz is the
+Trotterized form of adiabatic quantum evolution, so that the reader of
+the companion volume [QCbook] will recognize every ingredient:
+its chapter on variational quantum algorithms introduces QAOA in a
+section of its own, after the variational principle, the ansätze,
+the measurement of a Pauli sum and the parameter-shift rule, and the
+present chapter continues from there, with the relation between its
+sign convention for the cost Hamiltonian and ours made explicit in
+Section <em>From a cost function to a Hamiltonian</em>.
+Towards machine learning, it is a parametrized circuit trained by
+gradient descent on a cost, the data of a problem enter through the
+Hamiltonian, and the variational classifiers and generative models of
+Chapters 4 and 5 differ from it only in
+where the data and the parameters sit. We develop both directions.</p>
+<p>The chapter is organized as follows. Section <em>From a cost function to a Hamiltonian</em> sets up
+the problem: combinatorial optimization over bit strings, its quadratic
+unconstrained binary form (QUBO), the change of variables that turns it
+into an Ising model, and the cost Hamiltonian, with MaxCut as the
+running example. Section <em>The algorithm</em> defines the algorithm, derives
+its ansatz from adiabatic evolution by Trotterization, and gives the
+circuit gate by gate. Section <em>The algorithm at work</em> solves the smallest
+instance, a single edge, by hand, runs the algorithm on a four-vertex
+ring and a six-vertex graph, and discusses what is known about its
+performance, its landscape and its cost in gates. Section <em>Gradients</em>
+is about gradients, where the parameter-shift rule of Chapter 2
+meets a complication, generators with many eigenvalues, and where a
+simple per-term rule resolves it. Section <em>A physical register: two electrons in a double quantum well</em> leaves
+the abstract register for a physical one: two electrons in a double
+quantum well whose exchange interaction implements the cost unitary,
+following a recent two-qubit experiment [Roscher2026].
+Section <em>An application: selecting a portfolio</em> applies the pipeline to a problem outside
+physics, the selection of a portfolio of stocks from real price data,
+and uses it to discuss constraints, penalties and the connection to the
+statistical mechanics of spin glasses. Section <em>QAOA as a machine-learning model</em> returns
+to the question of the book and reads QAOA as a machine-learning model,
+with clustering as the example. The programs are in
+<code class="docutils literal notranslate"><span class="pre">BookPrograms/chapter3/</span></code>: a <code class="docutils literal notranslate"><span class="pre">QUBO</span></code> and an <code class="docutils literal notranslate"><span class="pre">Ising</span></code>
+class, a <code class="docutils literal notranslate"><span class="pre">QAOA</span></code> class on the simulator of the earlier chapters
+with the three gradient rules, and the scripts of the experiments.
+Every number quoted below is printed by one of them.</p>
+</section>
+<section id="from-a-cost-function-to-a-hamiltonian">
+<h2>From a cost function to a Hamiltonian<a class="headerlink" href="#from-a-cost-function-to-a-hamiltonian" title="Link to this heading">#</a></h2>
+<p><strong>Binary optimization.</strong>
+A combinatorial optimization problem asks for the bit string
+<span class="math notranslate nohighlight">\(\vec{x}=(x_1,\dots,x_n)\in\{0,1\}^n\)</span> that minimizes a cost function
+<span class="math notranslate nohighlight">\(C:\{0,1\}^n\to\mathbb{R}\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[
+\vec{x}^{*}=\arg\min_{\vec{x}\in\{0,1\}^n}C(\vec{x}) .\tag{3.1}
+\]</div>
+<p>The search space has <span class="math notranslate nohighlight">\(2^n\)</span> elements, and for the problems of interest,
+the <em>NP-hard</em> ones, no algorithm is known that finds <span class="math notranslate nohighlight">\(\vec{x}^{*}\)</span>
+in time polynomial in <span class="math notranslate nohighlight">\(n\)</span> for every instance. One settles for
+approximations, and measures their quality by the <em>approximation
+ratio</em>, the value achieved divided by the optimum; for a minimization
+with negative costs, which is how MaxCut will appear below, the ratio
+<span class="math notranslate nohighlight">\(\alpha=C(\vec{x})/C(\vec{x}^{*})\le1\)</span>, and the closer to one the
+better.</p>
+<p><strong>QUBO.</strong>
+A large class of such problems can be written with a cost that is
+quadratic in the bits,</p>
+<div class="math notranslate nohighlight">
+\[
+C(\vec{x})=\vec{x}^{T}\matr{Q}\vec{x}+c_0=\sum_{i}Q_{ii}x_i+\sum_{i&lt;j}2Q_{ij}\,x_ix_j+c_0 ,\tag{3.2}
+\]</div>
+<p>with a real symmetric matrix <span class="math notranslate nohighlight">\(\matr{Q}\)</span> and a constant <span class="math notranslate nohighlight">\(c_0\)</span>; since
+<span class="math notranslate nohighlight">\(x_i^2=x_i\)</span> for a bit, the diagonal of <span class="math notranslate nohighlight">\(\matr{Q}\)</span> carries the linear
+terms. This is <em>quadratic unconstrained binary optimization</em>,
+QUBO [Kochenberger2014], and Lucas’s catalog [Lucas2014]
+shows how partitioning, covering, coloring, scheduling and
+satisfiability problems are brought into this form, constraints
+included, by adding penalty terms. QUBO is itself NP-hard, so nothing
+is lost in generality, and everything is gained in uniformity: a
+single algorithm for Eq. (3.2) is an algorithm for all of
+them.</p>
+<p><strong>From bits to spins.</strong>
+The substitution</p>
+<div class="math notranslate nohighlight">
+\[
+x_i=\frac{1-z_i}{2},\qquad z_i=1-2x_i\in\{-1,+1\},\tag{3.3}
+\]</div>
+<p>turns a bit into a classical spin, with <span class="math notranslate nohighlight">\(x_i=0\)</span> the spin <span class="math notranslate nohighlight">\(z_i=+1\)</span> and
+<span class="math notranslate nohighlight">\(x_i=1\)</span> the spin <span class="math notranslate nohighlight">\(z_i=-1\)</span>. Inserting it into Eq. (3.2) and
+collecting the terms by their degree in the spins gives an
+<em>Ising model</em>,</p>
+<div class="math notranslate nohighlight">
+\[
+C(\vec{x})=H(\vec{z})=\sum_{i}h_iz_i+\sum_{i&lt;j}J_{ij}\,z_iz_j+c ,\tag{3.4}
+\]</div>
+<p>with, for symmetric <span class="math notranslate nohighlight">\(\matr{Q}\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[
+J_{ij}=\frac{Q_{ij}}{2},\qquad
+h_i=-\frac{Q_{ii}}{2}-\sum_{j\ne i}\frac{Q_{ij}}{2},\qquad
+c=c_0+\sum_i\frac{Q_{ii}}{2}+\sum_{i&lt;j}\frac{Q_{ij}}{2} .\tag{3.5}
+\]</div>
+<p>The derivation is a few lines (Exercise 3.1): the product
+<span class="math notranslate nohighlight">\(x_ix_j=(1-z_i)(1-z_j)/4\)</span> contributes <span class="math notranslate nohighlight">\(z_iz_j/4\)</span>, <span class="math notranslate nohighlight">\(-z_i/4\)</span>, <span class="math notranslate nohighlight">\(-z_j/4\)</span>
+and a constant, each appearing twice in the double sum of
+Eq. (3.2), and the linear term <span class="math notranslate nohighlight">\(Q_{ii}x_i\)</span> contributes
+<span class="math notranslate nohighlight">\(-Q_{ii}z_i/2\)</span> and <span class="math notranslate nohighlight">\(Q_{ii}/2\)</span>. Minimizing <span class="math notranslate nohighlight">\(C\)</span> over bit strings is
+finding the ground state of the Ising model, a problem that
+statistical physics has studied for a century, and whose hardness,
+for couplings <span class="math notranslate nohighlight">\(J_{ij}\)</span> of both signs that cannot all be satisfied at
+once, is the <em>frustration</em> of a spin glass.
+The class <code class="docutils literal notranslate"><span class="pre">QUBO</span></code> of <code class="docutils literal notranslate"><span class="pre">qubo.py</span></code> carries out the substitution
+and the class <code class="docutils literal notranslate"><span class="pre">Ising</span></code> lists the energies of all bit strings:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">qubo</span> <span class="kn">import</span> <span class="n">QUBO</span><span class="p">,</span> <span class="n">bitstrings</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">QUBO</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>                  <span class="c1"># C(x) = x1 + x2 - 4 x1 x2, Table 3-qubo</span>
+<span class="n">ising</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>                          <span class="c1"># Eq. (3-qubotoising)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;J_12 =&quot;</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">J</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">&quot; h =&quot;</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="s2">&quot; const =&quot;</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">const</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bitstrings</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">q</span><span class="o">.</span><span class="n">costs</span><span class="p">(),</span> <span class="n">ising</span><span class="o">.</span><span class="n">energies</span><span class="p">()):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>                 <span class="c1"># bits, spins, C(x), H(z) + const</span>
+<span class="n">ring</span> <span class="o">=</span> <span class="n">QUBO</span><span class="o">.</span><span class="n">maxcut</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ring: ground energy&quot;</span><span class="p">,</span> <span class="n">ring</span><span class="o">.</span><span class="n">ground_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;= minus&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;cut edges&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>J_12 = -1.0  h = [0.5 0.5]  const = 0.0
+[0 0] [1 1] 0.0 0.0
+[0 1] [ 1 -1] 1.0 1.0
+[1 0] [-1  1] 1.0 1.0
+[1 1] [-1 -1] -2.0 -2.0
+ring: ground energy -4.0 = minus 4 cut edges
+</pre></div>
+</div>
+</div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><span class="math notranslate nohighlight">\(\vec{x}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\vec{z}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(C(\vec{x})\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(H(\vec{z})+c\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\((0,0)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\((+1,+1)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\((0,1)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\((+1,-1)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\((1,0)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\((-1,+1)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\((1,1)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\((-1,-1)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-2\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 3.1: The QUBO with <span class="math notranslate nohighlight">\(\matr{Q}=\bigl(\begin{smallmatrix}1&amp;-2\\-2&amp;1\end{smallmatrix}\bigr)\)</span>,
+<span class="math notranslate nohighlight">\(C(\vec{x})=x_1+x_2-4x_1x_2\)</span>, and its Ising form
+<span class="math notranslate nohighlight">\(H(\vec{z})=-z_1z_2+\tfrac12(z_1+z_2)\)</span>, <span class="math notranslate nohighlight">\(c=0\)</span>, by
+Eq. (3.5). From <code class="docutils literal notranslate"><span class="pre">qubo.py</span></code>.</em></p>
+<p><strong>From spins to qubits.</strong>
+A classical spin <span class="math notranslate nohighlight">\(z_i=\pm1\)</span> is the eigenvalue of the Pauli operator
+<span class="math notranslate nohighlight">\(Z_i\)</span> on the computational basis states <span class="math notranslate nohighlight">\(\vert0\rangle\)</span> and
+<span class="math notranslate nohighlight">\(\vert1\rangle\)</span> of qubit <span class="math notranslate nohighlight">\(i\)</span>, and the substitution <span class="math notranslate nohighlight">\(z_i\to Z_i\)</span> turns
+Eq. (3.4) into the <em>cost Hamiltonian</em></p>
+<div class="math notranslate nohighlight">
+\[
+H_C=\sum_{i}h_iZ_i+\sum_{i&lt;j}J_{ij}\,Z_iZ_j+c\,I ,
+\qquad H_C\vert\vec{x}\rangle=C(\vec{x})\vert\vec{x}\rangle .\tag{3.6}
+\]</div>
+<p>It is diagonal in the computational basis, every bit string is an
+eigenstate with its cost as the eigenvalue, and the optimal bit string
+is the ground state. The whole of the chapter is about preparing a
+state of <span class="math notranslate nohighlight">\(n\)</span> qubits that has a large overlap with that ground state.
+We use the conventions of Chapter 1: qubit <span class="math notranslate nohighlight">\(0\)</span> is the
+leftmost factor, <span class="math notranslate nohighlight">\(\vert0\rangle\leftrightarrow z=+1\leftrightarrow x=0\)</span>.</p>
+<p><strong>MaxCut.</strong>
+The example that every discussion of QAOA starts from is
+<em>MaxCut</em>. Given a graph <span class="math notranslate nohighlight">\(G=(V,E)\)</span> with weights <span class="math notranslate nohighlight">\(w_{ij}\)</span> on its
+edges, split the vertices into two sets so that the total weight of
+the edges running between the sets, the <em>cut</em>, is as large as
+possible. With <span class="math notranslate nohighlight">\(x_i=1\)</span> for the vertices of one set, an edge is cut
+when <span class="math notranslate nohighlight">\(x_i\ne x_j\)</span>, which the quadratic expression
+<span class="math notranslate nohighlight">\(x_i+x_j-2x_ix_j\)</span> detects, so the cut and the cost to be minimized are</p>
+<div class="math notranslate nohighlight">
+\[
+\mathrm{Cut}(\vec{x})=\sum_{(i,j)\in E}w_{ij}\left(x_i+x_j-2x_ix_j\right),
+\qquad
+C(\vec{x})=-\mathrm{Cut}(\vec{x}) .\tag{3.7}
+\]</div>
+<p>The substitution of Eq. (3.3) gives
+<span class="math notranslate nohighlight">\(x_i+x_j-2x_ix_j=(1-z_iz_j)/2\)</span> and therefore</p>
+<div class="math notranslate nohighlight">
+\[
+H_C=-\frac{1}{2}\sum_{(i,j)\in E}w_{ij}\left(I-Z_iZ_j\right),\tag{3.8}
+\]</div>
+<p>an antiferromagnetic Ising model, <span class="math notranslate nohighlight">\(J_{ij}=w_{ij}/2\)</span>, without fields
+and with the constant <span class="math notranslate nohighlight">\(c=-\frac12\sum w_{ij}\)</span>; the ground-state energy is
+minus the maximum cut. MaxCut is NP-hard; the best classical algorithm
+with a guarantee, the semidefinite relaxation of Goemans and Williamson
+[GoemansWilliamson1995], achieves an approximation ratio of
+<span class="math notranslate nohighlight">\(0.878\)</span> on every graph, and it is widely believed that no polynomial
+algorithm does better in the worst case. Our running example is the
+ring of four vertices, <span class="math notranslate nohighlight">\(C_4\)</span>, with edges <span class="math notranslate nohighlight">\((0,1)\)</span>, <span class="math notranslate nohighlight">\((1,2)\)</span>, <span class="math notranslate nohighlight">\((2,3)\)</span>,
+<span class="math notranslate nohighlight">\((3,0)\)</span> and unit weights, whose Hamiltonian
+<span class="math notranslate nohighlight">\(H_C=\frac12(Z_0Z_1+Z_1Z_2+Z_2Z_3+Z_3Z_0)-2\)</span> has the ground energy
+<span class="math notranslate nohighlight">\(-4\)</span>, all four edges cut, at the two alternating strings <span class="math notranslate nohighlight">\(0101\)</span> and
+<span class="math notranslate nohighlight">\(1010\)</span>; the program <code class="docutils literal notranslate"><span class="pre">qubo.py</span></code> checks this against the cut of
+every bit string. We follow the sign convention of
+Eq. (3.8), minimizing <span class="math notranslate nohighlight">\(\langle H_C\rangle\)</span>, throughout
+the chapter, since it is the one in which QUBO, the double well and the
+portfolio all appear; the original paper and the companion volume
+maximize the cut operator <span class="math notranslate nohighlight">\(-H_C\)</span> instead, which amounts to the sign
+change <span class="math notranslate nohighlight">\(\gamma\to-\gamma\)</span> in everything that follows.</p>
+</section>
+<section id="the-algorithm">
+<h2>The algorithm<a class="headerlink" href="#the-algorithm" title="Link to this heading">#</a></h2>
+<p><strong>The variational principle.</strong>
+For any state, <span class="math notranslate nohighlight">\(\langle\psi\vert H_C\vert\psi\rangle\ge E_0\)</span>, with
+equality only in the ground-state eigenspace, and the expectation value
+of a diagonal operator is the average cost over the measurement
+distribution,</p>
+<div class="math notranslate nohighlight">
+\[
+E=\langle\psi\vert H_C\vert\psi\rangle=\sum_{\vec{x}}C(\vec{x})\,\vert\langle\vec{x}\vert\psi\rangle\vert^2 .\tag{3.9}
+\]</div>
+<p>A variational algorithm restricts <span class="math notranslate nohighlight">\(\vert\psi\rangle\)</span> to a family
+<span class="math notranslate nohighlight">\(\vert\psi(\vec{\theta})\rangle\)</span> prepared by a circuit, minimizes
+Eq. (3.9) over <span class="math notranslate nohighlight">\(\vec{\theta}\)</span> with a classical
+optimizer, and reads out bit strings from the optimized state. The
+variational quantum eigensolver of the companion volume [QCbook]
+does this for molecular and nuclear Hamiltonians with chemistry-inspired
+or hardware-efficient circuits. QAOA is a variational quantum
+eigensolver whose circuit is dictated by the problem.</p>
+<p><strong>The mixer and the ansatz.</strong>
+The second ingredient is the <em>mixing Hamiltonian</em></p>
+<div class="math notranslate nohighlight">
+\[
+H_M=\sum_{i}X_i ,\tag{3.10}
+\]</div>
+<p>a transverse field. It does not commute with <span class="math notranslate nohighlight">\(H_C\)</span>, so that alternating
+the two generates transitions between bit strings, and the ground
+state of <span class="math notranslate nohighlight">\(-H_M\)</span> is the uniform superposition
+<span class="math notranslate nohighlight">\(\vert+\rangle^{\otimes n}=H^{\otimes n}\vert0\rangle^{\otimes n}=2^{-n/2}\sum_{\vec{x}}\vert\vec{x}\rangle\)</span>,
+which is also the state of complete ignorance about the answer. The
+depth-<span class="math notranslate nohighlight">\(p\)</span> QAOA state is</p>
+<div class="math notranslate nohighlight">
+\[
+\vert\psi_p(\vec{\gamma},\vec{\beta})\rangle
+=\prod_{k=1}^{p}e^{-i\beta_kH_M}\,e^{-i\gamma_kH_C}\,\vert+\rangle^{\otimes n},\tag{3.11}
+\]</div>
+<p>with the factor <span class="math notranslate nohighlight">\(k=1\)</span> acting first, and the <span class="math notranslate nohighlight">\(2p\)</span> angles
+<span class="math notranslate nohighlight">\(\vec{\gamma}=(\gamma_1,\dots,\gamma_p)\)</span>,
+<span class="math notranslate nohighlight">\(\vec{\beta}=(\beta_1,\dots,\beta_p)\)</span> are the variational parameters.
+Each layer first applies the <em>phase separator</em>
+<span class="math notranslate nohighlight">\(U_C(\gamma)=e^{-i\gamma H_C}\)</span>, which is diagonal and writes the cost of
+every bit string into its phase,
+<span class="math notranslate nohighlight">\(U_C(\gamma)\vert\vec{x}\rangle=e^{-i\gamma C(\vec{x})}\vert\vec{x}\rangle\)</span>,
+and then the <em>mixer</em> <span class="math notranslate nohighlight">\(U_M(\beta)=e^{-i\beta H_M}=\bigotimes_iR_x(2\beta)\)</span>,
+a product of single-qubit rotations, which turns the phases into
+amplitudes by interference. The algorithm minimizes
+<span class="math notranslate nohighlight">\(E_p(\vec{\gamma},\vec{\beta})=\langle\psi_p\vert H_C\vert\psi_p\rangle\)</span>,
+and the claim of Farhi <em>et al.</em> is that
+<span class="math notranslate nohighlight">\(\min E_p\to E_0\)</span> as <span class="math notranslate nohighlight">\(p\to\infty\)</span>. The landscape is <span class="math notranslate nohighlight">\(2\pi\)</span>-periodic in
+every <span class="math notranslate nohighlight">\(\gamma_k\)</span> when the costs are integers, as in unweighted MaxCut,
+and <span class="math notranslate nohighlight">\(\pi\)</span>-periodic in every <span class="math notranslate nohighlight">\(\beta_k\)</span>, since <span class="math notranslate nohighlight">\(e^{-i\pi H_M}=(-1)^nI\)</span>; for
+a cost without field terms, such as Eq. (3.8), the
+period in <span class="math notranslate nohighlight">\(\beta\)</span> is even <span class="math notranslate nohighlight">\(\pi/2\)</span>, since <span class="math notranslate nohighlight">\(e^{-i(\pi/2)H_M}=(-i)^nX^{\otimes n}\)</span>
+is a global phase times the flip of all bits, which leaves such an <span class="math notranslate nohighlight">\(H_C\)</span>
+invariant.</p>
+<p><strong>Where the ansatz comes from.</strong>
+The form of Eq. (3.11) is not a guess. Adiabatic quantum
+computation [Farhi2001,Albash2018] prepares the ground state of
+<span class="math notranslate nohighlight">\(H_C\)</span> by starting in the ground state of <span class="math notranslate nohighlight">\(H_M\)</span> and evolving under the
+interpolating Hamiltonian</p>
+<div class="math notranslate nohighlight">
+\[
+H(s)=(1-s)\,(-H_M)+s\,H_C,\qquad s=t/T\in[0,1] ,\tag{3.12}
+\]</div>
+<p>for a time <span class="math notranslate nohighlight">\(T\)</span> long compared with the inverse square of the smallest
+gap of <span class="math notranslate nohighlight">\(H(s)\)</span>; the adiabatic theorem then keeps the system in the
+instantaneous ground state, and the final state is the answer. (The sign
+of <span class="math notranslate nohighlight">\(H_M\)</span> is chosen so that <span class="math notranslate nohighlight">\(\vert+\rangle^{\otimes n}\)</span> is its ground
+state; it is a convention, since <span class="math notranslate nohighlight">\(\beta\to-\beta\)</span> undoes it.)
+Discretize the evolution into <span class="math notranslate nohighlight">\(p\)</span> steps of length <span class="math notranslate nohighlight">\(\Delta t=T/p\)</span> at
+<span class="math notranslate nohighlight">\(s_k=k/p\)</span>, and split each step by the first-order Trotter formula of
+the companion volume,</p>
+<div class="math notranslate nohighlight">
+\[
+e^{-i\Delta t\,H(s_k)}=e^{+i\Delta t\,(1-s_k)H_M}\,e^{-i\Delta t\,s_kH_C}+\bigO\!\left(\Delta t^2\,[H_C,H_M]\right).\tag{3.13}
+\]</div>
+<p>The product over <span class="math notranslate nohighlight">\(k\)</span> is exactly Eq. (3.11) with the
+<em>schedule</em> <span class="math notranslate nohighlight">\(\gamma_k=s_k\Delta t\)</span>, <span class="math notranslate nohighlight">\(\beta_k=-(1-s_k)\Delta t\)</span>. QAOA
+takes this circuit and frees the angles: instead of following the
+schedule, which is only guaranteed to work for a very long <span class="math notranslate nohighlight">\(T\)</span> and
+therefore a very large <span class="math notranslate nohighlight">\(p\)</span>, it lets a classical optimizer choose
+<span class="math notranslate nohighlight">\(\vec{\gamma},\vec{\beta}\)</span> for the <span class="math notranslate nohighlight">\(p\)</span> at hand. At <span class="math notranslate nohighlight">\(p\to\infty\)</span> the
+adiabatic schedule is among the admissible parameters and the
+minimum of <span class="math notranslate nohighlight">\(E_p\)</span> reaches <span class="math notranslate nohighlight">\(E_0\)</span>; at small <span class="math notranslate nohighlight">\(p\)</span> the optimized angles are
+usually nothing like a schedule, and the algorithm is a different
+object, closer to a learned control protocol [Brady2021,Zhou2020]
+than to an approximation of adiabatic evolution. The commutator in
+Eq. (3.13) is what makes the circuit non-trivial: for
+MaxCut, with <span class="math notranslate nohighlight">\([Z_a,X_b]=2i\delta_{ab}Y_a\)</span>,
+<span class="math notranslate nohighlight">\([H_C,H_M]=i\sum_{(i,j)\in E}w_{ij}(Y_iZ_j+Z_iY_j)\)</span>, and it is this
+operator that generates entanglement between the qubits of an edge.</p>
+<p><strong>The circuit.</strong>
+Both unitaries have an exact, short circuit. Each term of <span class="math notranslate nohighlight">\(H_C\)</span> is a
+Pauli string that is diagonal in the computational basis, and the
+terms commute, so <span class="math notranslate nohighlight">\(U_C(\gamma)\)</span> is a product of one gate per term:
+<span class="math notranslate nohighlight">\(e^{-i\gamma h_iZ_i}=R_z(2\gamma h_i)\)</span> for a field, and for a coupling</p>
+<div class="math notranslate nohighlight">
+\[
+e^{-i\gamma J_{ij}Z_iZ_j}=\mathrm{CNOT}_{ij}\;R_z^{(j)}(2\gamma J_{ij})\;\mathrm{CNOT}_{ij},\tag{3.14}
+\]</div>
+<p>the same gadget as the ZZ feature map of Chapter 2: the
+first CNOT writes the parity <span class="math notranslate nohighlight">\(z_iz_j\)</span> into qubit <span class="math notranslate nohighlight">\(j\)</span>, the rotation
+applies the phase, and the second CNOT restores the qubit. The mixer
+is <span class="math notranslate nohighlight">\(R_x(2\beta)\)</span> on every qubit. Figure 3.1 draws one
+layer for a path of three vertices, and the gate count of a layer is</p>
+<div class="math notranslate nohighlight">
+\[
+N_{\mathrm{CNOT}}=2\,\vert E\vert,\qquad N_{R_z}=\vert E\vert+n_h,\qquad N_{R_x}=n ,\tag{3.15}
+\]</div>
+<p>with <span class="math notranslate nohighlight">\(n_h\)</span> the number of nonzero fields, plus the <span class="math notranslate nohighlight">\(n\)</span> Hadamards of the
+initial state. Every gate of the phase separator can be applied in
+parallel with the gates of the edges that share no vertex, so that the
+depth of a layer is set by the degree of the graph rather than by its
+size. On the simulator, we exploit a different structure: the phase
+separator is an elementwise phase on the <span class="math notranslate nohighlight">\(2^n\)</span> amplitudes, and the mixer
+is diagonal in the <span class="math notranslate nohighlight">\(X\)</span> basis,</p>
+<div class="math notranslate nohighlight">
+\[
+e^{-i\beta\sum_qX_q}=H^{\otimes n}\,e^{-i\beta\sum_qZ_q}\,H^{\otimes n},\tag{3.16}
+\]</div>
+<p>so that one layer costs two Hadamard transforms and two phases. This is
+how the class <code class="docutils literal notranslate"><span class="pre">QAOA</span></code> of <code class="docutils literal notranslate"><span class="pre">qaoa.py</span></code> prepares
+Eq. (3.11); stripped of the bookkeeping for the
+parameter shifts of Section <em>Gradients</em>, its core is</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">qubo</span> <span class="kn">import</span> <span class="n">QUBO</span><span class="p">,</span> <span class="n">bitstrings</span>
+<span class="n">ising</span> <span class="o">=</span> <span class="n">QUBO</span><span class="o">.</span><span class="n">maxcut</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>
+<span class="n">n</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="n">ising</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">energies</span><span class="p">()</span>           <span class="c1"># C(z) for every bit string</span>
+<span class="n">z</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">bitstrings</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>                     <span class="c1"># z_q = +-1 per bit string and qubit</span>
+<span class="n">H1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">Hn</span> <span class="o">=</span> <span class="n">H1</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">Hn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">Hn</span><span class="p">,</span> <span class="n">H1</span><span class="p">)</span>                      <span class="c1"># H^{(x)n}</span>
+
+<span class="k">def</span> <span class="nf">qaoa_state</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">betas</span><span class="p">):</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">n</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>        <span class="c1"># |+&gt;^n</span>
+    <span class="k">for</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">beta</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">betas</span><span class="p">):</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">cost</span><span class="p">)</span> <span class="o">*</span> <span class="n">psi</span>                 <span class="c1"># phase separator</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">Hn</span> <span class="o">@</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">Hn</span> <span class="o">@</span> <span class="n">psi</span><span class="p">))</span>  <span class="c1"># mixer, Eq. (3-mixerwht)</span>
+    <span class="k">return</span> <span class="n">psi</span>
+
+<span class="n">psi</span> <span class="o">=</span> <span class="n">qaoa_state</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">8</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;E =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">psi</span><span class="p">,</span> <span class="n">cost</span> <span class="o">*</span> <span class="n">psi</span><span class="p">)))</span>   <span class="c1"># -3: three of four edges cut</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>E = -2.999999999999997
+</pre></div>
+</div>
+</div>
+</div>
+<p><img alt="One layer of the QAOA circuit for MaxCut on the path  qubit  on the to" src="../BookFigures/chapter3/3-circuit.png" /></p>
+<p><em>Figure 3.1: One layer of the QAOA circuit for MaxCut on the path <span class="math notranslate nohighlight">\(0-1-2\)</span> (qubit <span class="math notranslate nohighlight">\(0\)</span> on the top wire). After the Hadamards that prepare <span class="math notranslate nohighlight">\(\vert+\rangle^{\otimes3}\)</span>, each edge contributes the gadget of Eq. (3.14), CNOT, <span class="math notranslate nohighlight">\(R_z(2\gamma J_{ij})=R_z(\gamma w_{ij})\)</span> on the target, CNOT, the constant of <span class="math notranslate nohighlight">\(H_C\)</span> being a global phase; the mixer is one <span class="math notranslate nohighlight">\(R_x(2\beta)\)</span> per qubit. Deeper circuits repeat the two blocks with new angles before the measurement.</em></p>
+<p><strong>The loop.</strong>
+The classical optimizer sees only the function
+<span class="math notranslate nohighlight">\(E_p(\vec{\gamma},\vec{\beta})\)</span>, estimated on a quantum computer by
+preparing the state, measuring all qubits, and averaging the cost of
+the outcomes over <span class="math notranslate nohighlight">\(S\)</span> shots, with the statistical error
+<span class="math notranslate nohighlight">\(\sigma_C/\sqrt{S}\)</span> of Chapter 1. The optimizer may be
+gradient-free (Nelder–Mead, COBYLA, or the stochastic approximation of
+the companion volume) or use the gradients of
+Section <em>Gradients</em>; since the landscape has many local
+minima, it is run from several random starting points, and since the
+optimal angles at depth <span class="math notranslate nohighlight">\(p\)</span> are a good start for depth <span class="math notranslate nohighlight">\(p+1\)</span>
+[Zhou2020], we also start the depth-<span class="math notranslate nohighlight">\((p+1)\)</span> search from the
+depth-<span class="math notranslate nohighlight">\(p\)</span> optimum with one layer appended (the <em>warm start</em>). The
+output is not the energy but a bit string: the optimized state is
+sampled, and the best bit string among the samples is returned. Since
+the state is a superposition, this best string is usually better than
+the average, and the probability of sampling an optimal string is a
+more honest figure of merit than the approximation ratio of the energy.</p>
+</section>
+<section id="the-algorithm-at-work">
+<h2>The algorithm at work<a class="headerlink" href="#the-algorithm-at-work" title="Link to this heading">#</a></h2>
+<section id="one-edge-by-hand">
+<h3>One edge, by hand<a class="headerlink" href="#one-edge-by-hand" title="Link to this heading">#</a></h3>
+<p>The smallest instance, two vertices and one edge, can be solved
+completely in closed form, and the calculation shows how the two layers
+of the circuit cooperate. With <span class="math notranslate nohighlight">\(H_C=-\frac12(I-Z_0Z_1)\)</span> and
+<span class="math notranslate nohighlight">\(H_M=X_0+X_1\)</span> the <span class="math notranslate nohighlight">\(p=1\)</span> state is
+<span class="math notranslate nohighlight">\(\vert\psi\rangle=e^{-i\beta(X_0+X_1)}e^{-i\gamma H_C}\vert{+}{+}\rangle\)</span>,
+and we need <span class="math notranslate nohighlight">\(\langle Z_0Z_1\rangle\)</span>. Rather than computing the state,
+we move the operator through the circuit, the Heisenberg picture. The
+mixer rotates each <span class="math notranslate nohighlight">\(Z\)</span> about the <span class="math notranslate nohighlight">\(x\)</span> axis,</p>
+<div class="math notranslate nohighlight">
+\[
+e^{i\beta X}Ze^{-i\beta X}=Z\,e^{-2i\beta X}=\cos(2\beta)\,Z+\sin(2\beta)\,Y ,\tag{3.17}
+\]</div>
+<p>(using <span class="math notranslate nohighlight">\(ZX=iY\)</span> and that <span class="math notranslate nohighlight">\(Z\)</span> anticommutes with <span class="math notranslate nohighlight">\(X\)</span>), so that</p>
+<div class="math notranslate nohighlight">
+\[
+U_M^{\dagger}Z_0Z_1U_M=\cos^2(2\beta)\,Z_0Z_1+\sin(2\beta)\cos(2\beta)\,(Z_0Y_1+Y_0Z_1)+\sin^2(2\beta)\,Y_0Y_1 .
+\]</div>
+<p>The phase separator, <span class="math notranslate nohighlight">\(e^{-i\gamma H_C}=e^{i\gamma/2}e^{-i\gamma Z_0Z_1/2}\)</span>,
+commutes with <span class="math notranslate nohighlight">\(Z_0Z_1\)</span> and with <span class="math notranslate nohighlight">\(Y_0Y_1\)</span> and leaves them unchanged; its
+generator <span class="math notranslate nohighlight">\(Z_0Z_1\)</span> anticommutes with <span class="math notranslate nohighlight">\(Z_0Y_1\)</span>, for which</p>
+<div class="math notranslate nohighlight">
+\[
+U_C^{\dagger}\,Z_0Y_1\,U_C=Z_0Y_1\,e^{-i\gamma Z_0Z_1}=\cos\gamma\,Z_0Y_1-i\sin\gamma\,Z_0Y_1Z_0Z_1=\cos\gamma\,Z_0Y_1+\sin\gamma\,X_1 ,
+\]</div>
+<p>since <span class="math notranslate nohighlight">\(Y_1Z_1=iX_1\)</span>, and likewise <span class="math notranslate nohighlight">\(Y_0Z_1\to\cos\gamma\,Y_0Z_1+\sin\gamma\,X_0\)</span>.
+In <span class="math notranslate nohighlight">\(\vert{+}{+}\rangle\)</span> every operator containing a <span class="math notranslate nohighlight">\(Y\)</span> or a <span class="math notranslate nohighlight">\(Z\)</span> has
+expectation zero and <span class="math notranslate nohighlight">\(\langle X_0\rangle=\langle X_1\rangle=1\)</span>, so that
+<span class="math notranslate nohighlight">\(\langle Z_0Z_1\rangle=2\sin(2\beta)\cos(2\beta)\sin\gamma=\sin(4\beta)\sin\gamma\)</span>,
+and</p>
+<div class="math notranslate nohighlight">
+\[
+E_1(\gamma,\beta)=-\frac{1}{2}\left(1-\langle Z_0Z_1\rangle\right)=-\frac{1}{2}+\frac{1}{2}\sin(4\beta)\sin\gamma .\tag{3.18}
+\]</div>
+<p>The minimum <span class="math notranslate nohighlight">\(E_1=-1\)</span>, the exact ground energy, is reached at
+<span class="math notranslate nohighlight">\(\sin(4\beta)\sin\gamma=-1\)</span>, for instance <span class="math notranslate nohighlight">\(\beta^{*}=\pi/8\)</span>,
+<span class="math notranslate nohighlight">\(\gamma^{*}=3\pi/2\)</span> (equivalently <span class="math notranslate nohighlight">\(-\pi/2\)</span>). The program
+<code class="docutils literal notranslate"><span class="pre">qaoa.py</span></code> checks Eq. (3.18) against the simulator
+on a grid, to <span class="math notranslate nohighlight">\(10^{-15}\)</span>, and prints the optimal state,
+<span class="math notranslate nohighlight">\(\frac{1}{\sqrt2}(\vert01\rangle+\vert10\rangle)\)</span> up to a phase: the
+equal superposition of the two optimal cuts, a Bell state, with a
+single measurement giving an optimal bit string with certainty. One
+layer suffices because the problem has one edge; we shall return to
+this state in Section <em>A physical register: two electrons in a double quantum well</em>, where the two qubits are
+two electron spins.</p>
+<p>The same Heisenberg calculation on a general graph gives the
+<span class="math notranslate nohighlight">\(p=1\)</span> energy edge by edge [Farhi2014]: the expectation of
+<span class="math notranslate nohighlight">\(Z_iZ_j\)</span> depends only on the edges adjacent to <span class="math notranslate nohighlight">\((i,j)\)</span>, and for a
+triangle-free graph in which <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span> have degrees <span class="math notranslate nohighlight">\(d_i\)</span> and <span class="math notranslate nohighlight">\(d_j\)</span>,
+<span class="math notranslate nohighlight">\(\langle Z_iZ_j\rangle=\frac12\sin(4\beta)\sin\gamma\,(\cos^{d_i-1}\gamma+\cos^{d_j-1}\gamma)\)</span>,
+which for the ring, <span class="math notranslate nohighlight">\(d=2\)</span>, gives</p>
+<div class="math notranslate nohighlight">
+\[
+E_1^{\mathrm{ring}}(\gamma,\beta)=-2+\sin(4\beta)\sin(2\gamma)
+\qquad\text{for }C_4 ,\tag{3.19}
+\]</div>
+<p>also verified by <code class="docutils literal notranslate"><span class="pre">maxcut.py</span></code>. Its minimum is <span class="math notranslate nohighlight">\(-3\)</span>: one layer
+cuts three of the four edges, an approximation ratio of <span class="math notranslate nohighlight">\(3/4\)</span>. This
+<em>locality</em> is general. At depth <span class="math notranslate nohighlight">\(p\)</span> the expectation of an edge
+term depends only on the subgraph within distance <span class="math notranslate nohighlight">\(p\)</span> of the edge, its
+light cone, because each layer of the circuit spreads the operator by
+one edge; the QAOA energy at fixed <span class="math notranslate nohighlight">\(p\)</span> is therefore a sum of local
+contributions, and the algorithm cannot see global structure, such as
+whether the graph is bipartite, until <span class="math notranslate nohighlight">\(p\)</span> is comparable to the
+diameter of the graph [FarhiHarrow2016,Bravyi2020].</p>
+</section>
+<section id="the-ring-and-a-six-vertex-graph">
+<h3>The ring and a six-vertex graph<a class="headerlink" href="#the-ring-and-a-six-vertex-graph" title="Link to this heading">#</a></h3>
+<p>Table 3.2 and Fig. 3.2 show the algorithm on
+the ring <span class="math notranslate nohighlight">\(C_4\)</span>, with eight random starts of the BFGS optimizer per
+depth and the warm start from the previous depth. At <span class="math notranslate nohighlight">\(p=1\)</span> the
+optimizer finds <span class="math notranslate nohighlight">\(\gamma=3\pi/4\)</span>, <span class="math notranslate nohighlight">\(\beta=\pi/8\)</span> (mod the periods), one of
+the two minima of Eq. (3.19), with <span class="math notranslate nohighlight">\(E=-3\)</span> and a probability
+<span class="math notranslate nohighlight">\(0.53\)</span> of reading one of the two optimal strings; the landscape in the
+first panel has four extrema, two equivalent minima and two equivalent
+maxima,
+related by the symmetries <span class="math notranslate nohighlight">\((\gamma,\beta)\to(\gamma+\pi/2,\beta+\pi/4)\)</span>
+of the ring. At <span class="math notranslate nohighlight">\(p=2\)</span> the state is exactly the superposition of the
+two optimal cuts, <span class="math notranslate nohighlight">\(E=-4\)</span> and <span class="math notranslate nohighlight">\(P_{\mathrm{opt}}=1\)</span>: the light cone of two
+layers covers the whole ring, and two layers are enough to prepare the
+ground state. This is the general pattern on small bipartite graphs and
+should not be mistaken for a property of the algorithm.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>ring <span class="math notranslate nohighlight">\(C_4\)</span></p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+<th class="head"><p>six-vertex graph</p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(p\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\langle H_C\rangle\)</span></p></td>
+<td><p>ratio</p></td>
+<td><p><span class="math notranslate nohighlight">\(P_{\mathrm{opt}}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\langle H_C\rangle\)</span></p></td>
+<td><p>ratio</p></td>
+<td><p><span class="math notranslate nohighlight">\(P_{\mathrm{opt}}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.000\)</span></p></td>
+<td><p>0.750</p></td>
+<td><p>0.531</p></td>
+<td><p><span class="math notranslate nohighlight">\(-5.469\)</span></p></td>
+<td><p>0.781</p></td>
+<td><p>0.187</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p><span class="math notranslate nohighlight">\(-4.000\)</span></p></td>
+<td><p>1.000</p></td>
+<td><p>1.000</p></td>
+<td><p><span class="math notranslate nohighlight">\(-6.150\)</span></p></td>
+<td><p>0.879</p></td>
+<td><p>0.364</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p><span class="math notranslate nohighlight">\(-4.000\)</span></p></td>
+<td><p>1.000</p></td>
+<td><p>1.000</p></td>
+<td><p><span class="math notranslate nohighlight">\(-6.455\)</span></p></td>
+<td><p>0.922</p></td>
+<td><p>0.542</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p><span class="math notranslate nohighlight">\(-6.680\)</span></p></td>
+<td><p>0.954</p></td>
+<td><p>0.768</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 3.2: QAOA on MaxCut of the ring <span class="math notranslate nohighlight">\(C_4\)</span> (maximum cut 4) and of the
+six-vertex graph with edges <span class="math notranslate nohighlight">\((0,1),(1,2),(2,3),(3,4),(4,5),(5,0),(0,2),(1,4)\)</span>
+(maximum cut 7 of 8). Energy <span class="math notranslate nohighlight">\(\langle H_C\rangle\)</span>, approximation ratio
+<span class="math notranslate nohighlight">\(\langle H_C\rangle/E_0\)</span> and probability of an optimal string at the
+optimized angles, eight random starts plus the warm start. From
+<code class="docutils literal notranslate"><span class="pre">maxcut.py</span></code>.</em></p>
+<p><img alt="MaxCut on the ring C4. Left the p1 landscape E1gamma,beta of Eq. 3.19 " src="../BookFigures/chapter3/ring.png" /></p>
+<p><em>Figure 3.2: MaxCut on the ring <span class="math notranslate nohighlight">\(C_4\)</span>. Left: the <span class="math notranslate nohighlight">\(p=1\)</span> landscape <span class="math notranslate nohighlight">\(E_1(\gamma,\beta)\)</span> of Eq. (3.19) with the optimum found by the optimizer (star). Right: the output distributions of the optimized states for <span class="math notranslate nohighlight">\(p=1,2,3\)</span>; the two optimal strings are in red. From <code class="docutils literal notranslate"><span class="pre">maxcut.py</span></code>.</em></p>
+<p>The second half of Table 3.2 is a graph with a triangle,
+the six-ring with the chords <span class="math notranslate nohighlight">\((0,2)\)</span> and <span class="math notranslate nohighlight">\((1,4)\)</span>, which is not
+bipartite, so that no cut takes all eight edges; the maximum is seven,
+reached by two strings. Here the ratio climbs from <span class="math notranslate nohighlight">\(0.78\)</span> at <span class="math notranslate nohighlight">\(p=1\)</span> to
+<span class="math notranslate nohighlight">\(0.95\)</span> at <span class="math notranslate nohighlight">\(p=4\)</span>, and the probability of sampling an optimal string from
+<span class="math notranslate nohighlight">\(0.19\)</span> to <span class="math notranslate nohighlight">\(0.77\)</span>, with no sign of the exact solution at any depth we
+tried. The light-cone argument says why: already a two-layer circuit
+on a graph of diameter two can see everything, but seeing is not solving,
+and the optimized angles at small <span class="math notranslate nohighlight">\(p\)</span> balance the terms of
+Eq. (3.9) rather than satisfying them. Each layer on
+this graph costs 16 CNOTs, 8 <span class="math notranslate nohighlight">\(R_z\)</span> and 6 <span class="math notranslate nohighlight">\(R_x\)</span> gates, by
+Eq. (3.15).</p>
+</section>
+<section id="performance-landscape-and-cost">
+<h3>Performance, landscape and cost<a class="headerlink" href="#performance-landscape-and-cost" title="Link to this heading">#</a></h3>
+<p>What is known in general is less than one might hope. At <span class="math notranslate nohighlight">\(p=1\)</span> the
+ratio for unweighted <span class="math notranslate nohighlight">\(3\)</span>-regular graphs is at least <span class="math notranslate nohighlight">\(0.6924\)</span>
+[Farhi2014], below the <span class="math notranslate nohighlight">\(0.878\)</span> of Goemans and Williamson, and
+the bounds improve slowly with <span class="math notranslate nohighlight">\(p\)</span>; for worst-case instances the
+locality argument shows that a constant <span class="math notranslate nohighlight">\(p\)</span> cannot beat the classical
+guarantee, and that <span class="math notranslate nohighlight">\(p\)</span> must grow with the size of the graph
+[Bravyi2020]. On typical instances the algorithm does much better
+than its worst-case bounds, and the <span class="math notranslate nohighlight">\(p\)</span> needed for a given ratio has
+been studied numerically up to tens of qubits [Zhou2020]; an
+early large hardware demonstration ran MaxCut on up to 23 qubits
+[Harrigan2021], with the noise of the device visible in a
+performance that peaked at <span class="math notranslate nohighlight">\(p=3\)</span> and decreased beyond.
+Whether QAOA at any feasible depth offers an advantage over the best
+classical heuristics for optimization is an open question, and the
+case for it rests on the facts that the circuit is shallow, that its
+output cannot in general be sampled classically even at <span class="math notranslate nohighlight">\(p=1\)</span>
+[FarhiHarrow2016], and that it is a natural fit for the
+hardware.</p>
+<p>The landscape <span class="math notranslate nohighlight">\(E_p(\vec{\gamma},\vec{\beta})\)</span> is a trigonometric
+polynomial in the angles, smooth and periodic. At <span class="math notranslate nohighlight">\(p=1\)</span> it is simple
+enough to scan, as Fig. 3.2 did, and often to write down.
+As <span class="math notranslate nohighlight">\(p\)</span> grows it acquires the many local minima of a glassy function,
+and the optimization becomes the hard part of the algorithm; the warm
+start and the observation that the optimal angles vary smoothly with
+<span class="math notranslate nohighlight">\(p\)</span> and transfer between instances of the same class
+[Zhou2020,Egger2021] are the practical answers. The barren
+plateaus of Chapter 1 are milder here than for a generic
+circuit: the cost is a sum of two-body terms, the circuit has only two
+parameters per layer, and for constant <span class="math notranslate nohighlight">\(p\)</span> the gradient of an edge
+term involves only its light cone, so that the variance of the
+gradient decays polynomially rather than exponentially with <span class="math notranslate nohighlight">\(n\)</span>. They
+do return when <span class="math notranslate nohighlight">\(p\)</span> grows with <span class="math notranslate nohighlight">\(n\)</span>.</p>
+<p>Finally, the cost in gates. A layer costs the <span class="math notranslate nohighlight">\(2\vert E\vert+\vert E\vert+n\)</span>
+gates of Eq. (3.15), and with a two-qubit error rate
+<span class="math notranslate nohighlight">\(\epsilon\)</span> the fidelity of the whole circuit decays as
+<span class="math notranslate nohighlight">\((1-\epsilon)^{2p\vert E\vert}\)</span>. For a graph with <span class="math notranslate nohighlight">\(n=100\)</span> vertices and
+<span class="math notranslate nohighlight">\(\vert E\vert=500\)</span> edges and <span class="math notranslate nohighlight">\(\epsilon=10^{-3}\)</span>, a single layer already
+has a thousand CNOTs and a fidelity of <span class="math notranslate nohighlight">\(e^{-1}\)</span>; the depths of
+Table 3.2 are affordable only on small graphs or with
+much better gates, and the demonstrations on hardware have accordingly
+used small <span class="math notranslate nohighlight">\(p\)</span> and error mitigation. This arithmetic, more than any
+theorem, sets the near-term scope of the algorithm.</p>
+</section>
+</section>
+<section id="gradients">
+<h2>Gradients<a class="headerlink" href="#gradients" title="Link to this heading">#</a></h2>
+<p>The optimizers themselves, gradient descent with and without momentum,
+Adam and BFGS, are those of the optimization chapter of the
+machine-learning text [MLbook], implemented in
+<code class="docutils literal notranslate"><span class="pre">common/optimize.py</span></code>; what is specific to a circuit is how the
+gradient is obtained. The optimizer needs <span class="math notranslate nohighlight">\(\partial E/\partial\gamma_k\)</span> and
+<span class="math notranslate nohighlight">\(\partial E/\partial\beta_k\)</span>, and the parameter-shift rule of
+Chapter 2 seems to supply them: for a gate <span class="math notranslate nohighlight">\(e^{-i\theta P}\)</span>
+with <span class="math notranslate nohighlight">\(P^2=I\)</span>, <span class="math notranslate nohighlight">\(\partial_\theta f=f(\theta+\pi/4)-f(\theta-\pi/4)\)</span> (the
+rule of Chapter 2 written for <span class="math notranslate nohighlight">\(e^{-i\theta P}\)</span> rather
+than <span class="math notranslate nohighlight">\(e^{-i\theta P/2}\)</span>, which halves the shift and removes the factor
+<span class="math notranslate nohighlight">\(\tfrac12\)</span>). The
+generators here are <span class="math notranslate nohighlight">\(H_C\)</span> and <span class="math notranslate nohighlight">\(H_M\)</span>, and neither squares to the
+identity. The naive application of the rule to the whole angle,</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial E}{\partial\gamma_k}\overset{?}{=}E(\gamma_k+\pi/4)-E(\gamma_k-\pi/4),\tag{3.20}
+\]</div>
+<p>is therefore not a derivative but a finite difference with a large
+step, and Fig. 3.3 shows how wrong it is on the
+six-vertex graph: for <span class="math notranslate nohighlight">\(\gamma\)</span> it has the right sign most of the time
+and the wrong magnitude everywhere, and for <span class="math notranslate nohighlight">\(\beta\)</span> it returns zero
+along the whole line, because the two shifted mixers differ by
+<span class="math notranslate nohighlight">\(e^{-i(\pi/2)\sum_qX_q}=(-i)^nX^{\otimes n}\)</span>, the flip of all bits, which
+leaves a field-free <span class="math notranslate nohighlight">\(H_C\)</span> invariant, so that <span class="math notranslate nohighlight">\(E(\beta+\pi/4)=E(\beta-\pi/4)\)</span>
+identically.</p>
+<p>The correct rule follows from the structure of the unitaries. The
+phase separator is a product of commuting gates, one per Pauli term
+<span class="math notranslate nohighlight">\(P_a\)</span> of <span class="math notranslate nohighlight">\(H_C=\sum_ac_aP_a\)</span>, each with its own angle <span class="math notranslate nohighlight">\(\theta_a=\gamma c_a\)</span>,
+and the mixer is a product of one gate per qubit with angle <span class="math notranslate nohighlight">\(\beta\)</span>.
+The chain rule gives</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial E}{\partial\gamma_k}=\sum_ac_a\left[E(\theta_{a}^{(k)}+\tfrac{\pi}{4})-E(\theta_{a}^{(k)}-\tfrac{\pi}{4})\right],
+\qquad
+\frac{\partial E}{\partial\beta_k}=\sum_{q}\left[E(\beta_{q}^{(k)}+\tfrac{\pi}{4})-E(\beta_{q}^{(k)}-\tfrac{\pi}{4})\right],\tag{3.21}
+\]</div>
+<p>where the shift is applied to the angle of one term, or of one qubit,
+in layer <span class="math notranslate nohighlight">\(k\)</span> only, with all other angles at their values. Each
+evaluation is a circuit that differs from the original by one gate
+angle, so the rule is exact and hardware-compatible
+[Schuld2019gradients,Crooks2019,Wierichs2022], and it costs
+<span class="math notranslate nohighlight">\(2(K+n)\)</span> energy evaluations per layer, with <span class="math notranslate nohighlight">\(K\)</span> the number of terms;
+Fig. 3.3 shows it agreeing with central finite
+differences to <span class="math notranslate nohighlight">\(10^{-9}\)</span>. (The finite-difference gradient is exact on a
+noiseless simulator and useless on hardware, where a step small enough
+to approximate the derivative is swamped by shot noise; the shift rule
+uses steps of order one.) Terms that commute and act on disjoint
+qubits can share a shift, which brings the cost down to the number of
+commuting groups, and for the two angles per layer of QAOA the whole
+gradient is cheap compared with the gradient of a generic circuit
+with hundreds of parameters.
+In <code class="docutils literal notranslate"><span class="pre">qaoa.py</span></code> the rule reads, with <code class="docutils literal notranslate"><span class="pre">self.terms</span></code> the list of
+terms <span class="math notranslate nohighlight">\((c_a,P_a,\dots)\)</span> and <code class="docutils literal notranslate"><span class="pre">energy(params,</span> <span class="pre">shift)</span></code> evaluating the circuit with
+one angle shifted:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">qubo</span> <span class="kn">import</span> <span class="n">QUBO</span>
+<span class="kn">from</span> <span class="nn">qaoa</span> <span class="kn">import</span> <span class="n">QAOA</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">QUBO</span><span class="o">.</span><span class="n">maxcut</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span><span class="o">.</span><span class="n">to_ising</span><span class="p">(),</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span>
+
+<span class="k">def</span> <span class="nf">gradient_shift</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>                      <span class="c1"># Eq. (3-pertermshift)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">q</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">terms</span><span class="p">):</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">+</span><span class="n">s</span><span class="p">))</span> <span class="o">-</span> <span class="n">q</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">q</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">&quot;mixer&quot;</span><span class="p">,</span> <span class="n">qubit</span><span class="p">,</span> <span class="o">+</span><span class="n">s</span><span class="p">))</span> <span class="o">-</span> <span class="n">q</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">&quot;mixer&quot;</span><span class="p">,</span> <span class="n">qubit</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">g</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">gradient_shift</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">q</span><span class="o">.</span><span class="n">gradient_fd</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">q</span><span class="o">.</span><span class="n">gradient_global_shift</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[-0.0531021  -1.66387757] [-0.0531021  -1.66387757] [-0.0531021  0.       ]
+</pre></div>
+</div>
+</div>
+</div>
+<p><img alt="Gradients of the p1 energy of the six-vertex graph along the line beta" src="../BookFigures/chapter3/gradients.png" /></p>
+<p><em>Figure 3.3: Gradients of the <span class="math notranslate nohighlight">\(p=1\)</span> energy of the six-vertex graph along the line <span class="math notranslate nohighlight">\(\beta=0.4\)</span>: central finite differences, the per-term parameter-shift rule of Eq. (3.21), and the naive global shift of Eq. (3.20), for <span class="math notranslate nohighlight">\(\gamma\)</span> (left) and <span class="math notranslate nohighlight">\(\beta\)</span> (middle). Right: plain gradient descent with the shift-rule gradient against BFGS from the same random start at <span class="math notranslate nohighlight">\(p=2\)</span>, with the cost counted in energy evaluations (a gradient costs <span class="math notranslate nohighlight">\(2p(K+n)=56\)</span> of them). From <code class="docutils literal notranslate"><span class="pre">maxcut.py</span></code>.</em></p>
+<p>The third panel of Fig. 3.3 compares two optimizers
+fed with the same gradient from the same start on the six-vertex graph
+at <span class="math notranslate nohighlight">\(p=2\)</span>. Plain gradient descent with step <span class="math notranslate nohighlight">\(0.05\)</span> reaches <span class="math notranslate nohighlight">\(-6.15\)</span>, the
+best value of Table 3.2, after sixty steps and <span class="math notranslate nohighlight">\(3420\)</span>
+energy evaluations; BFGS converges in fifteen iterations and <span class="math notranslate nohighlight">\(865\)</span>
+evaluations, but to a local minimum at <span class="math notranslate nohighlight">\(-5.92\)</span>, which a second start
+would have fixed. Both behaviors are typical: the landscape rewards a
+cheap optimizer with many restarts over an expensive one with few, and
+on hardware, where every evaluation costs thousands of shots, the
+count of evaluations is the figure to watch.</p>
+</section>
+<section id="a-physical-register-two-electrons-in-a-double-quantum-well">
+<h2>A physical register: two electrons in a double quantum well<a class="headerlink" href="#a-physical-register-two-electrons-in-a-double-quantum-well" title="Link to this heading">#</a></h2>
+<p>Everything so far was simulated on abstract qubits. The smallest QAOA
+instance, one edge, needs two of them, and there is a physical system
+in which the two qubits and the cost unitary are both native: two
+electrons, one in each well of a double quantum dot, coupled by the
+exchange interaction. This is the spin-qubit platform of Loss and
+DiVincenzo [Loss1998], in which the first exchange gates were
+demonstrated by Petta <em>et al.</em> [Petta2005] and which is
+reviewed in [Burkard2023]; the following is a translation to it
+of a recent two-qubit QAOA experiment on a nitrogen-vacancy center
+[Roscher2026].</p>
+<p><strong>The system.</strong>
+Two spin-<span class="math notranslate nohighlight">\(\frac12\)</span> electrons are confined in the left and right wells
+<span class="math notranslate nohighlight">\(L\)</span>, <span class="math notranslate nohighlight">\(R\)</span> of a double-well potential, in the regime where the tunnel
+coupling <span class="math notranslate nohighlight">\(t\)</span> between the wells is small compared with the on-site
+Coulomb energy <span class="math notranslate nohighlight">\(U\)</span> and the detuning keeps one electron in each well
+(the <span class="math notranslate nohighlight">\((1,1)\)</span> charge configuration). The orbital degrees of freedom are
+then frozen and the low-energy Hilbert space is that of two spins,
+<span class="math notranslate nohighlight">\(\mathbb{C}^2\otimes\mathbb{C}^2\)</span>, with the qubit encoding
+<span class="math notranslate nohighlight">\(\vert\!\uparrow\rangle=\vert0\rangle\)</span>, <span class="math notranslate nohighlight">\(\vert\!\downarrow\rangle=\vert1\rangle\)</span>
+on each electron. Second-order tunneling, allowed by the Pauli
+principle only for antiparallel spins, produces the effective
+<em>exchange</em> Hamiltonian</p>
+<div class="math notranslate nohighlight">
+\[
+H_{\mathrm{ex}}=J\,\vec{S}_L\cdot\vec{S}_R=\frac{J}{4}\left(X_LX_R+Y_LY_R+Z_LZ_R\right),
+\qquad J=\frac{4t^2}{U}&gt;0 ,\tag{3.22}
+\]</div>
+<p>whose spectrum, printed by <code class="docutils literal notranslate"><span class="pre">double_well.py</span></code>, is the singlet
+<span class="math notranslate nohighlight">\(\vert S\rangle=\frac{1}{\sqrt2}(\vert\!\uparrow\downarrow\rangle-\vert\!\downarrow\uparrow\rangle)\)</span>
+at <span class="math notranslate nohighlight">\(-3J/4\)</span> and the three triplets <span class="math notranslate nohighlight">\(\vert T_{+}\rangle=\vert\!\uparrow\uparrow\rangle\)</span>,
+<span class="math notranslate nohighlight">\(\vert T_0\rangle=\frac{1}{\sqrt2}(\vert\!\uparrow\downarrow\rangle+\vert\!\downarrow\uparrow\rangle)\)</span>,
+<span class="math notranslate nohighlight">\(\vert T_{-}\rangle=\vert\!\downarrow\downarrow\rangle\)</span> at <span class="math notranslate nohighlight">\(J/4\)</span>. The
+coupling <span class="math notranslate nohighlight">\(J\)</span> is set by the gate voltages that control <span class="math notranslate nohighlight">\(t\)</span> and the
+detuning, and can be switched on and off in nanoseconds.</p>
+<p><strong>The cost unitary from the exchange.</strong>
+The MaxCut Hamiltonian of the single edge, <span class="math notranslate nohighlight">\(H_C=-\frac12(I-Z_LZ_R)\)</span>,
+has the cost <span class="math notranslate nohighlight">\(0\)</span> on <span class="math notranslate nohighlight">\(\vert\!\uparrow\uparrow\rangle\)</span> and
+<span class="math notranslate nohighlight">\(\vert\!\downarrow\downarrow\rangle\)</span> and <span class="math notranslate nohighlight">\(-1\)</span> on the two antiparallel
+configurations: the two cuts are the two ways of having one spin up and
+one down. Up to a constant and the factor <span class="math notranslate nohighlight">\(2/J\)</span>, <span class="math notranslate nohighlight">\(H_C\)</span> is the Ising part of
+Eq. (3.22), <span class="math notranslate nohighlight">\(\frac{J}{4}Z_LZ_R\)</span>, and if the flip-flop
+part <span class="math notranslate nohighlight">\(X_LX_R+Y_LY_R\)</span> is suppressed, which a Zeeman splitting between the
+two electrons larger than <span class="math notranslate nohighlight">\(J\)</span> does, free evolution under the exchange
+for a time <span class="math notranslate nohighlight">\(t\)</span> is the phase separator,</p>
+<div class="math notranslate nohighlight">
+\[
+e^{-it\,(J/4)Z_LZ_R}=e^{-i\gamma H_C}\ \text{(up to a phase)}\qquad\text{for}\quad t=\frac{2\gamma}{J} .\tag{3.23}
+\]</div>
+<p>The mixer <span class="math notranslate nohighlight">\(R_x(2\beta)\)</span> on each spin is a microwave pulse in electron
+spin resonance (ESR), the initial Hadamards are two <span class="math notranslate nohighlight">\(\pi/2\)</span> pulses, the
+initial state <span class="math notranslate nohighlight">\(\vert\!\uparrow\uparrow\rangle\)</span> is prepared by spin
+polarization, and the readout is spin-to-charge conversion followed by
+charge sensing, one measurement per electron. Table 3.3
+lists the correspondence. Every step of Eq. (3.11) is a
+standard operation on the platform, and the whole <span class="math notranslate nohighlight">\(p=1\)</span> circuit is a
+pulse sequence of a few hundred nanoseconds.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Circuit step</p></th>
+<th class="head"><p>Double-dot operation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>prepare <span class="math notranslate nohighlight">\(\vert00\rangle=\vert\!\uparrow\uparrow\rangle\)</span></p></td>
+<td><p>spin-selective tunneling or optical pumping</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(H\otimes H\)</span></p></td>
+<td><p>two simultaneous <span class="math notranslate nohighlight">\(\pi/2\)</span> ESR pulses</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(e^{-i\gamma H_C}\)</span>, Eq. (3.14)</p></td>
+<td><p>exchange pulse of duration <span class="math notranslate nohighlight">\(t=2\gamma/J\)</span>, Eq. (3.23)</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(R_x(2\beta)\otimes R_x(2\beta)\)</span></p></td>
+<td><p>two individual ESR rotations</p></td>
+</tr>
+<tr class="row-even"><td><p>measure <span class="math notranslate nohighlight">\(Z_L\)</span>, <span class="math notranslate nohighlight">\(Z_R\)</span></p></td>
+<td><p>spin-to-charge conversion, charge sensing</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 3.3: The <span class="math notranslate nohighlight">\(p=1\)</span> QAOA circuit for MaxCut on one edge and its
+implementation on a two-electron double quantum dot.</em></p>
+<p><strong>What the experiment measures.</strong>
+The landscape of the <span class="math notranslate nohighlight">\(p=1\)</span> energy is the closed form of
+Eq. (3.18), and Fig. 3.4 shows it
+with the simulator on top: the minimum <span class="math notranslate nohighlight">\(E=-1\)</span> at <span class="math notranslate nohighlight">\((\gamma,\beta)=(3\pi/2,\pi/8)\)</span>,
+the maximum <span class="math notranslate nohighlight">\(0\)</span> at <span class="math notranslate nohighlight">\((\pi/2,\pi/8)\)</span>, and the two sinusoidal slices
+through the optimum. At the optimum the state is the triplet
+<span class="math notranslate nohighlight">\(\vert T_0\rangle\)</span>, with the overlap <span class="math notranslate nohighlight">\(\vert\langle T_0\vert\psi^{*}\rangle\vert^2=1.000000\)</span>
+printed by the program; it is not the singlet, the ground state of the
+full exchange Hamiltonian, because the flip-flop terms that single out
+the singlet are precisely the ones that the circuit does not use.
+Figure 3.5 shows the output distribution at the optimum
+and at a point off it, <span class="math notranslate nohighlight">\((3\pi/2,\pi/16)\)</span>, where <span class="math notranslate nohighlight">\(E=-0.854\)</span> and the two
+cut states carry <span class="math notranslate nohighlight">\(0.427\)</span> each, together with <span class="math notranslate nohighlight">\(100\)</span> simulated
+single-shot spin readouts at the optimum: <span class="math notranslate nohighlight">\(50\)</span> of <span class="math notranslate nohighlight">\(\vert\!\uparrow\downarrow\rangle\)</span>,
+<span class="math notranslate nohighlight">\(50\)</span> of <span class="math notranslate nohighlight">\(\vert\!\downarrow\uparrow\rangle\)</span>, none of the parallel
+configurations. On a real device the two cut states would be read with
+a probability below one by the readout fidelity and the decoherence
+during the exchange pulse, and the landscape would be measured as a
+noisy surface over a grid of pulse parameters; the exact result is the
+reference against which such a measurement is compared. Deeper circuits
+change nothing here, as the last lines of the program confirm for
+<span class="math notranslate nohighlight">\(p=2,3\)</span>: one edge is solved by one layer.</p>
+<p><img alt="The p1 energy of the two-electron single-edge problem, E1-tfrac12tfrac" src="../BookFigures/chapter3/dwlandscape.png" /></p>
+<p><em>Figure 3.4: The <span class="math notranslate nohighlight">\(p=1\)</span> energy of the two-electron (single-edge) problem, <span class="math notranslate nohighlight">\(E_1=-\tfrac12+\tfrac12\sin(4\beta)\sin\gamma\)</span>, Eq. (3.18): the landscape from the simulator with the optimum marked (left), and the slices through the optimum at fixed <span class="math notranslate nohighlight">\(\gamma=3\pi/2\)</span> (middle) and fixed <span class="math notranslate nohighlight">\(\beta=\pi/8\)</span> (right) against the closed form. From <code class="docutils literal notranslate"><span class="pre">double_well.py</span></code>.</em></p>
+<p><img alt="Output distributions of the two-electron QAOA state at the optimum lef" src="../BookFigures/chapter3/dwprobs.png" /></p>
+<p><em>Figure 3.5: Output distributions of the two-electron QAOA state at the optimum (left), off the optimum (middle), and <span class="math notranslate nohighlight">\(100\)</span> simulated single-shot readouts of the two spins at the optimum with the exact probabilities as bars (right). The cut states, antiparallel spins, are in red. From <code class="docutils literal notranslate"><span class="pre">double_well.py</span></code>.</em></p>
+</section>
+<section id="an-application-selecting-a-portfolio">
+<h2>An application: selecting a portfolio<a class="headerlink" href="#an-application-selecting-a-portfolio" title="Link to this heading">#</a></h2>
+<p>The pipeline cost function <span class="math notranslate nohighlight">\(\to\)</span> QUBO <span class="math notranslate nohighlight">\(\to\)</span> Ising <span class="math notranslate nohighlight">\(\to\)</span> cost Hamiltonian
+<span class="math notranslate nohighlight">\(\to\)</span> QAOA is the same whatever the problem, and the domain enters only
+through the matrix <span class="math notranslate nohighlight">\(\matr{Q}\)</span>. To see it on a problem far from graphs,
+we take the oldest problem of quantitative finance, Markowitz’s
+mean-variance portfolio selection [Markowitz1952], in the
+combinatorial version that quantum-computing proposals for finance
+[Orus2019,Herman2023] usually consider.</p>
+<p><strong>The problem.</strong>
+There are <span class="math notranslate nohighlight">\(n\)</span> assets with expected returns <span class="math notranslate nohighlight">\(\mu_i\)</span> over some period and
+a covariance matrix <span class="math notranslate nohighlight">\(\Sigma_{ij}\)</span> of their returns; both are estimated
+from price histories. A portfolio that holds asset <span class="math notranslate nohighlight">\(i\)</span> or not is a bit
+string, and the investor wants a high return and a low variance,</p>
+<div class="math notranslate nohighlight">
+\[
+\min_{\vec{x}\in\{0,1\}^n}\ -\vec{\mu}^{T}\vec{x}+\lambda\,\vec{x}^{T}\matr{\Sigma}\vec{x}
+\qquad\text{subject to}\qquad\sum_ix_i=K ,\tag{3.24}
+\]</div>
+<p>with a risk-aversion parameter <span class="math notranslate nohighlight">\(\lambda&gt;0\)</span> and a budget of exactly <span class="math notranslate nohighlight">\(K\)</span>
+assets. The constraint is the new element. QUBO has no constraints,
+and the standard device [Lucas2014] is to add the squared violation
+as a penalty,</p>
+<div class="math notranslate nohighlight">
+\[
+C(\vec{x})=-\vec{\mu}^{T}\vec{x}+\lambda\,\vec{x}^{T}\matr{\Sigma}\vec{x}+A\Bigl(\sum_ix_i-K\Bigr)^2 ,\tag{3.25}
+\]</div>
+<p>with a strength <span class="math notranslate nohighlight">\(A\)</span> large enough that no infeasible portfolio has a
+lower cost than the best feasible one. Expanding the square and using
+<span class="math notranslate nohighlight">\(x_i^2=x_i\)</span> gives the QUBO of Eq. (3.2) with</p>
+<div class="math notranslate nohighlight">
+\[
+Q_{ii}=-\mu_i+\lambda\Sigma_{ii}+A(1-2K),\qquad
+Q_{ij}=\lambda\Sigma_{ij}+A\ (i\ne j),\qquad c_0=AK^2 ,\tag{3.26}
+\]</div>
+<p>and Eq. (3.5) turns it into an Ising model whose
+couplings <span class="math notranslate nohighlight">\(J_{ij}=(\lambda\Sigma_{ij}+A)/2\)</span> are all positive (the
+penalty and the covariances both discourage holding two assets at once)
+and whose fields are set by the returns. The couplings, being an
+empirical covariance matrix, are as good as random: the portfolio
+problem is a small spin glass, and the frustration that makes spin
+glasses hard is here the fact that the assets that return most are
+correlated with each other.</p>
+<p><strong>Two data sets.</strong>
+The program <code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code> uses two data sets of four assets
+each, so that <span class="math notranslate nohighlight">\(n=4\)</span> qubits, <span class="math notranslate nohighlight">\(K=2\)</span>, and all <span class="math notranslate nohighlight">\(2^4\)</span> portfolios can be
+listed. The first is synthetic, with annualized returns
+<span class="math notranslate nohighlight">\((0.12,0.10,0.08,0.15)\)</span> and a covariance matrix with variances
+<span class="math notranslate nohighlight">\(0.06\)</span>–<span class="math notranslate nohighlight">\(0.10\)</span> and small positive covariances. The second is real:
+164 weekly closing prices of Apple, Microsoft, Amazon and Alphabet from
+January 2020 to December 2023, stored in <code class="docutils literal notranslate"><span class="pre">sp500_weekly.csv</span></code> and
+drawn in Fig. 3.6, from which the weekly log returns
+give annualized mean returns of <span class="math notranslate nohighlight">\(30.9\)</span>, <span class="math notranslate nohighlight">\(24.6\)</span>, <span class="math notranslate nohighlight">\(26.3\)</span> and <span class="math notranslate nohighlight">\(30.7\)</span>
+percent, volatilities of <span class="math notranslate nohighlight">\(30.8\)</span>, <span class="math notranslate nohighlight">\(24.4\)</span>, <span class="math notranslate nohighlight">\(30.7\)</span> and <span class="math notranslate nohighlight">\(29.2\)</span> percent, and
+correlations between <span class="math notranslate nohighlight">\(0.80\)</span> and <span class="math notranslate nohighlight">\(0.94\)</span>: four large technology stocks
+that moved together through the pandemic, the 2022 correction and the
+2023 recovery. With <span class="math notranslate nohighlight">\(\lambda=2\)</span> the six feasible pairs have the costs
+of Table 3.4; Microsoft and Alphabet, the two with the
+lowest volatility and the second-highest return respectively, are the
+best pair, by a margin of <span class="math notranslate nohighlight">\(0.02\)</span> over Apple and Microsoft, and the
+worst pair, Apple and Amazon, is <span class="math notranslate nohighlight">\(0.11\)</span> away. The penalty <span class="math notranslate nohighlight">\(A=0.3\)</span>
+exceeds every such difference and the ground state of the cost
+Hamiltonian is the feasible optimum, as the program verifies by brute
+force.</p>
+<p><img alt="The data of the portfolio problem weekly closing prices of the four st" src="../BookFigures/chapter3/sp500data.png" /></p>
+<p><em>Figure 3.6: The data of the portfolio problem: weekly closing prices of the four stocks relative to January 2020 (left), the correlation matrix of their weekly log returns (middle), and their annualized return against volatility (right). From <code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code>.</em></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>synthetic assets</p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+<th class="head"><p>stocks</p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>portfolio</p></td>
+<td><p><span class="math notranslate nohighlight">\(\vec{x}\)</span></p></td>
+<td><p>cost</p></td>
+<td><p>portfolio</p></td>
+<td><p><span class="math notranslate nohighlight">\(\vec{x}\)</span></p></td>
+<td><p>cost</p></td>
+</tr>
+<tr class="row-odd"><td><p>B+D</p></td>
+<td><p>0101</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.060\)</span></p></td>
+<td><p>MSFT+GOOG</p></td>
+<td><p>0101</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.003\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>C+D</p></td>
+<td><p>0011</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.040\)</span></p></td>
+<td><p>AAPL+MSFT</p></td>
+<td><p>1100</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.026\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>A+D</p></td>
+<td><p>1001</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.020\)</span></p></td>
+<td><p>AAPL+GOOG</p></td>
+<td><p>1001</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.053\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>A+C</p></td>
+<td><p>1010</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.020\)</span></p></td>
+<td><p>MSFT+AMZN</p></td>
+<td><p>0110</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.054\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>B+C</p></td>
+<td><p>0110</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.000\)</span></p></td>
+<td><p>AMZN+GOOG</p></td>
+<td><p>0011</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.108\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>A+B</p></td>
+<td><p>1100</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.000\)</span></p></td>
+<td><p>AAPL+AMZN</p></td>
+<td><p>1010</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.112\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 3.4: The six feasible portfolios (<span class="math notranslate nohighlight">\(K=2\)</span>) of the two data sets and
+their mean-variance cost <span class="math notranslate nohighlight">\(-\vec{\mu}^{T}\vec{x}+\lambda\vec{x}^{T}\matr{\Sigma}\vec{x}\)</span>,
+with <span class="math notranslate nohighlight">\(\lambda=1\)</span> (synthetic) and <span class="math notranslate nohighlight">\(\lambda=2\)</span> (stocks). From
+<code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code>.</em></p>
+<p><strong>QAOA on the stocks.</strong>
+Table 3.5 and Fig. 3.7 give the
+result for <span class="math notranslate nohighlight">\(p=1\)</span> to <span class="math notranslate nohighlight">\(4\)</span>. Since the energies are no longer integers the
+approximation ratio is not a useful measure, and we report instead the
+fraction, closed by the optimized state, of the gap between the energy
+of the initial state <span class="math notranslate nohighlight">\(\vert+\rangle^{\otimes n}\)</span> (the average cost over
+all sixteen portfolios) and the ground energy,</p>
+<div class="math notranslate nohighlight">
+\[
+g_p=\frac{E_{\mathrm{uniform}}-E_p}{E_{\mathrm{uniform}}-E_0},\tag{3.27}
+\]</div>
+<p>together with the probability of sampling a feasible portfolio and the
+probability of sampling the optimal one. One layer closes <span class="math notranslate nohighlight">\(70\)</span> percent
+of the gap and concentrates <span class="math notranslate nohighlight">\(65\)</span> percent of the probability on the six
+feasible strings; four layers reach <span class="math notranslate nohighlight">\(90\)</span> percent and <span class="math notranslate nohighlight">\(97\)</span> percent, and
+the optimal pair, Microsoft and Alphabet, is the most probable outcome
+with <span class="math notranslate nohighlight">\(0.26\)</span>. The distributions in Fig. 3.7 show what
+the algorithm does first: it learns the constraint. The penalty is the
+largest energy scale of the problem, the feasible strings are separated
+from the others by <span class="math notranslate nohighlight">\(A=0.3\)</span> while they differ among themselves by at
+most <span class="math notranslate nohighlight">\(0.11\)</span>, and the first layers push the amplitude onto the feasible
+subspace, within which the ordering of the pairs is resolved only at
+larger <span class="math notranslate nohighlight">\(p\)</span>. This is the generic weakness of penalty methods: the
+constraint consumes the expressive power of the circuit, and the
+alternative, a mixer that preserves the number of ones, the <span class="math notranslate nohighlight">\(XY\)</span> mixer
+of the quantum alternating operator ansatz [Hadfield2019], keeps the
+state inside the feasible subspace from the start and needs no penalty
+at all (Exercise 3.7).</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>synthetic assets (<span class="math notranslate nohighlight">\(E_0=-0.060\)</span>)</p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+<th class="head"><p>stocks (<span class="math notranslate nohighlight">\(E_0=0.003\)</span>)</p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+<th class="head"><p></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(p\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(E_p\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(g_p\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(P_{\mathrm{feas}}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(P_{\mathrm{opt}}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(E_p\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(g_p\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(P_{\mathrm{feas}}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(P_{\mathrm{opt}}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.072\)</span></p></td>
+<td><p>0.63</p></td>
+<td><p>0.74</p></td>
+<td><p>0.13</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.151\)</span></p></td>
+<td><p>0.70</p></td>
+<td><p>0.65</p></td>
+<td><p>0.11</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.021\)</span></p></td>
+<td><p>0.89</p></td>
+<td><p>0.99</p></td>
+<td><p>0.17</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.083\)</span></p></td>
+<td><p>0.84</p></td>
+<td><p>0.95</p></td>
+<td><p>0.15</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.023\)</span></p></td>
+<td><p>0.90</p></td>
+<td><p>1.00</p></td>
+<td><p>0.18</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.073\)</span></p></td>
+<td><p>0.86</p></td>
+<td><p>0.95</p></td>
+<td><p>0.15</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.025\)</span></p></td>
+<td><p>0.90</p></td>
+<td><p>1.00</p></td>
+<td><p>0.20</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.052\)</span></p></td>
+<td><p>0.90</p></td>
+<td><p>0.97</p></td>
+<td><p>0.26</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 3.5: QAOA for the two portfolio problems of Table 3.4
+with the penalty <span class="math notranslate nohighlight">\(A=0.3\)</span>: the energy, the fraction of the gap closed,
+Eq. (3.27), and the probabilities of sampling a
+feasible and the optimal portfolio from the optimized state (six random
+starts plus the warm start). From <code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code>.</em></p>
+<p><img alt="The portfolio problem on the stock data. Left the p1 landscape with th" src="../BookFigures/chapter3/portfolio.png" /></p>
+<p><em>Figure 3.7: The portfolio problem on the stock data. Left: the <span class="math notranslate nohighlight">\(p=1\)</span> landscape with the optimum found. Right: output distributions of the optimized states for <span class="math notranslate nohighlight">\(p=1,2,4\)</span>; the six feasible portfolios are in red and labeled by their stocks. From <code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code>.</em></p>
+<p><strong>The strength of the penalty.</strong>
+Table 3.6 varies <span class="math notranslate nohighlight">\(A\)</span> at <span class="math notranslate nohighlight">\(p=2\)</span>. For <span class="math notranslate nohighlight">\(A=0.03\)</span> and <span class="math notranslate nohighlight">\(0.1\)</span>
+the ground state of <span class="math notranslate nohighlight">\(H_C\)</span> is the single stock Alphabet, a portfolio of
+the wrong size, because the gain from dropping a correlated asset
+exceeds the penalty, and the algorithm faithfully finds that wrong
+answer. For <span class="math notranslate nohighlight">\(A=0.3\)</span> the ground state is the right one and the feasible
+probability is <span class="math notranslate nohighlight">\(0.95\)</span>. For <span class="math notranslate nohighlight">\(A=1\)</span> it is still the right one, but the
+feasible probability falls to <span class="math notranslate nohighlight">\(0.66\)</span> and the probability of the optimum
+hardly moves, because the penalty now dominates the landscape so
+completely that the angles are spent on it and the cost differences
+within the feasible subspace become invisible to two layers. The
+penalty must be large enough and no larger, and the right value is
+found by exactly the brute-force check that is impossible on the
+instances for which one would want a quantum computer; this is a known
+weakness of the method and one of the reasons for the constraint-preserving
+mixers mentioned above.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><span class="math notranslate nohighlight">\(A\)</span></p></th>
+<th class="head"><p>ground state</p></th>
+<th class="head"><p>budget</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(P_{\mathrm{feas}}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(P(\text{ground state})\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(P(\text{MSFT+GOOG})\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0.03</p></td>
+<td><p>0001 (GOOG)</p></td>
+<td><p>1</p></td>
+<td><p>0.04</p></td>
+<td><p>0.23</p></td>
+<td><p>0.00</p></td>
+</tr>
+<tr class="row-odd"><td><p>0.1</p></td>
+<td><p>0001 (GOOG)</p></td>
+<td><p>1</p></td>
+<td><p>0.14</p></td>
+<td><p>0.22</p></td>
+<td><p>0.04</p></td>
+</tr>
+<tr class="row-even"><td><p>0.3</p></td>
+<td><p>0101 (MSFT+GOOG)</p></td>
+<td><p>2</p></td>
+<td><p>0.95</p></td>
+<td><p>0.15</p></td>
+<td><p>0.15</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.0</p></td>
+<td><p>0101 (MSFT+GOOG)</p></td>
+<td><p>2</p></td>
+<td><p>0.66</p></td>
+<td><p>0.15</p></td>
+<td><p>0.15</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 3.6: The effect of the penalty strength <span class="math notranslate nohighlight">\(A\)</span> on the stock data at
+<span class="math notranslate nohighlight">\(p=2\)</span>: the ground state of <span class="math notranslate nohighlight">\(H_C\)</span> and its budget, and the probabilities
+of a feasible portfolio, of the ground state, and of the best feasible
+pair MSFT+GOOG in the optimized QAOA state. From <code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code>.</em></p>
+<p><strong>Thermal states and the variational state.</strong>
+The Ising energies of the sixteen portfolios define a classical
+partition function and a thermal average,</p>
+<div class="math notranslate nohighlight">
+\[
+\langle H\rangle_{\beta_T}=\frac{\sum_{\vec{z}}H(\vec{z})\,e^{-\beta_TH(\vec{z})}}{\sum_{\vec{z}}e^{-\beta_TH(\vec{z})}},\tag{3.28}
+\]</div>
+<p>which decreases from the mean cost at infinite temperature to the
+ground energy as <span class="math notranslate nohighlight">\(\beta_T\to\infty\)</span>; this is the energy of simulated
+annealing at temperature <span class="math notranslate nohighlight">\(1/\beta_T\)</span>. Figure 3.8 draws
+it with the QAOA energies on top: <span class="math notranslate nohighlight">\(p=1\)</span> matches the thermal state at
+<span class="math notranslate nohighlight">\(\beta_T\approx2.4\)</span>, <span class="math notranslate nohighlight">\(p=2\)</span> at <span class="math notranslate nohighlight">\(6.4\)</span>, <span class="math notranslate nohighlight">\(p=4\)</span> at <span class="math notranslate nohighlight">\(14.5\)</span>. The comparison is
+suggestive rather than deep. A QAOA state is pure, prepared by a
+unitary, and its distribution over bit strings is not a Boltzmann
+distribution; but the effective temperature it corresponds to is a
+convenient way of stating how far a given depth has cooled the
+problem, and it makes the point that the mixer plays the role that
+thermal fluctuations play in annealing, with real-time interference
+in the place of imaginary-time damping. The quantum Boltzmann machines
+of Chapter 5 make the thermal state itself the object of
+the computation.</p>
+<p><img alt="The classical thermal energy of Eq. 3.28 of the stock-portfolio Ising " src="../BookFigures/chapter3/thermal.png" /></p>
+<p><em>Figure 3.8: The classical thermal energy of Eq. (3.28) of the stock-portfolio Ising model as a function of the inverse temperature, with the QAOA energies of Table 3.5 as horizontal lines. From <code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code>.</em></p>
+</section>
+<section id="qaoa-as-a-machine-learning-model">
+<h2>QAOA as a machine-learning model<a class="headerlink" href="#qaoa-as-a-machine-learning-model" title="Link to this heading">#</a></h2>
+<p>Return to the general model of Eq. (1.1),
+<span class="math notranslate nohighlight">\(f(\vec{x};\vec{\theta})=\langle0\vert U^{\dagger}W^{\dagger}\hat{O}WU\vert0\rangle\)</span>.
+In QAOA the observable is <span class="math notranslate nohighlight">\(\hat{O}=H_C\)</span>, the trainable circuit is the
+alternation of Eq. (3.11), and the data enter not through
+an encoding <span class="math notranslate nohighlight">\(U(\vec{x})\)</span> of individual samples but through the
+Hamiltonian: <span class="math notranslate nohighlight">\(H_C\)</span> is built from a graph, a covariance matrix, a set of
+distances, and the circuit <span class="math notranslate nohighlight">\(e^{-i\gamma H_C(\text{data})}\)</span> is a feature
+map of the whole data set at once. Three consequences follow.</p>
+<p><strong>Clustering is MaxCut.</strong>
+The most direct learning task for the algorithm is unsupervised.
+Given <span class="math notranslate nohighlight">\(N\)</span> points <span class="math notranslate nohighlight">\(\vec{x}_i\)</span>, split them into two groups so that
+points in different groups are far apart: with the similarity graph
+of all pairs and the weights</p>
+<div class="math notranslate nohighlight">
+\[
+w_{ij}=\Vert\vec{x}_i-\vec{x}_j\Vert^2 ,\tag{3.29}
+\]</div>
+<p>the partition that maximizes the weight of the cut is the two-way
+clustering, a discrete relative of the problem that spectral clustering
+relaxes [Ng2001] (Exercise 3.9), and a qubit per point turns it into QAOA on a weighted
+complete graph. The program <code class="docutils literal notranslate"><span class="pre">clustering.py</span></code> does this for eight
+points drawn from two overlapping Gaussian clouds,
+Fig. 3.9: the maximum cut, found by brute force,
+coincides with the partition of the classical two-means algorithm, and
+QAOA with <span class="math notranslate nohighlight">\(p=3\)</span> returns that partition with probability <span class="math notranslate nohighlight">\(0.47\)</span>, its two
+strings (a partition and its complement are the same clustering) being
+the most probable outcomes by nearly a factor of two. The approximation ratio
+is <span class="math notranslate nohighlight">\(0.60\)</span>, <span class="math notranslate nohighlight">\(0.77\)</span> and <span class="math notranslate nohighlight">\(0.90\)</span> for <span class="math notranslate nohighlight">\(p=1,2,3\)</span>; a dense graph on eight
+vertices has 28 edges, each layer 56 CNOTs, and the depth at which the
+optimal partition dominates the output is, as for the six-vertex graph,
+not small.
+The whole pipeline, from the points to the partition, is a few lines
+(with fewer restarts than the program and without its warm start, so
+the ratio printed here is lower than the <span class="math notranslate nohighlight">\(0.77\)</span> above):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">two_blobs</span>
+<span class="kn">from</span> <span class="nn">qubo</span> <span class="kn">import</span> <span class="n">QUBO</span><span class="p">,</span> <span class="n">bitstrings</span>
+<span class="kn">from</span> <span class="nn">qaoa</span> <span class="kn">import</span> <span class="n">QAOA</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">two_blobs</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">separation</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">)]</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">]</span>   <span class="c1"># Eq. (3-clustering)</span>
+<span class="n">ising</span> <span class="o">=</span> <span class="n">QUBO</span><span class="o">.</span><span class="n">maxcut</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">to_ising</span><span class="p">()</span>
+<span class="n">ising</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">J</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">const</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ising</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">J</span><span class="p">,</span> <span class="n">ising</span><span class="o">.</span><span class="n">const</span><span class="p">))</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">QAOA</span><span class="p">(</span><span class="n">ising</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">restarts</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="s2">&quot;fd&quot;</span><span class="p">)</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">probabilities</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;partition&quot;</span><span class="p">,</span> <span class="n">bitstrings</span><span class="p">(</span><span class="mi">8</span><span class="p">)[</span><span class="n">best</span><span class="p">],</span> <span class="s2">&quot;ratio&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">approximation_ratio</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>partition [0 0 0 0 1 1 1 1] ratio 0.613
+</pre></div>
+</div>
+</div>
+</div>
+<p><img alt="Two-way clustering as MaxCut on the similarity graph of Eq. 3.29. Left" src="../BookFigures/chapter3/clustering.png" /></p>
+<p><em>Figure 3.9: Two-way clustering as MaxCut on the similarity graph of Eq. (3.29). Left: eight points colored by the most probable QAOA partition at <span class="math notranslate nohighlight">\(p=3\)</span>, with the cut edges drawn. Right: the eight most probable output strings; the two optimal ones (a partition and its complement) are in red. From <code class="docutils literal notranslate"><span class="pre">clustering.py</span></code>.</em></p>
+<p><strong>QAOA as a structured neural network.</strong>
+Written out, the QAOA state is
+<span class="math notranslate nohighlight">\(\vert\psi_p\rangle=\prod_kW_k(\beta_k)\,S_k(\gamma_k;\text{data})\vert+\rangle^{\otimes n}\)</span>
+with a data-dependent layer <span class="math notranslate nohighlight">\(S_k=e^{-i\gamma_kH_C(\text{data})}\)</span> followed
+by a trainable layer <span class="math notranslate nohighlight">\(W_k=e^{-i\beta_kH_M}\)</span>: this is a quantum neural
+network of the kind that Chapter 4 studies, with the data
+re-uploaded in every layer, two parameters per layer, and an
+architecture fixed by the problem rather than chosen. Its training is
+the same loop as that of Chapter 4, with the energy as the
+loss, the parameter-shift rule of Eq. (3.21) as the
+gradient, and the same restarts, warm starts and barren-plateau
+considerations. One can also encode a labeled data set in the cost,
+<span class="math notranslate nohighlight">\(H_C=-\sum_iy_i\hat{f}(\vec{x}_i)\)</span> with <span class="math notranslate nohighlight">\(\hat{f}\)</span> a sum of Pauli strings
+whose coefficients are functions of the sample, and train the
+alternation to classify; the variational classifier of
+Chapter 4 is the better-studied form of this idea.</p>
+<p><strong>Kernels and samplers.</strong>
+Finally, the data-dependent state <span class="math notranslate nohighlight">\(\vert\psi_p(\vec{x})\rangle\)</span> obtained
+by encoding one sample in <span class="math notranslate nohighlight">\(H_C(\vec{x})\)</span> defines a quantum feature map in
+the sense of Chapter 2, with the fidelity kernel
+<span class="math notranslate nohighlight">\(\vert\langle\psi_p(\vec{x})\vert\psi_p(\vec{x}')\rangle\vert^2\)</span> of
+Eq. (2.29), and the kernel-method theorem of
+Section <em>Perspectives</em> applies to QAOA as to any other model
+of the form of Eq. (1.1). And the optimized state, sampled
+in the computational basis, is a generative model over bit strings: a
+<em>Born machine</em> whose angles can be trained so that the samples
+follow a target distribution rather than concentrate on a ground state.
+Both views lead out of this chapter, the first back to kernels and the
+second forward to the Boltzmann machines of Chapter 5.</p>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>A combinatorial problem over bit strings with a quadratic cost is a
+QUBO, Eq. (3.2); the substitution <span class="math notranslate nohighlight">\(x_i=(1-z_i)/2\)</span> makes it
+an Ising model, Eq. (3.5), and <span class="math notranslate nohighlight">\(z_i\to Z_i\)</span> a
+diagonal cost Hamiltonian whose ground state is the answer,
+Eq. (3.6). QAOA prepares the state of
+Eq. (3.11), <span class="math notranslate nohighlight">\(p\)</span> alternations of the phase separator
+<span class="math notranslate nohighlight">\(e^{-i\gamma H_C}\)</span> and the transverse-field mixer <span class="math notranslate nohighlight">\(e^{-i\beta H_M}\)</span> on
+the uniform superposition, and minimizes <span class="math notranslate nohighlight">\(\langle H_C\rangle\)</span> over the
+<span class="math notranslate nohighlight">\(2p\)</span> angles classically; the ansatz is Trotterized adiabatic evolution
+with the schedule freed, its circuit is a CNOT–<span class="math notranslate nohighlight">\(R_z\)</span>–CNOT gadget per
+coupling and an <span class="math notranslate nohighlight">\(R_x\)</span> per qubit, and the <span class="math notranslate nohighlight">\(p=1\)</span> energy of a single edge
+is <span class="math notranslate nohighlight">\(-\frac12+\frac12\sin(4\beta)\sin\gamma\)</span>, reaching the exact Bell-state
+answer at <span class="math notranslate nohighlight">\(\beta=\pi/8\)</span>, <span class="math notranslate nohighlight">\(\gamma=3\pi/2\)</span>. On a ring two layers are
+exact; on a graph with a triangle the ratio climbs slowly with <span class="math notranslate nohighlight">\(p\)</span>,
+and the light cone of the circuit explains both. The gradient requires
+the parameter-shift rule term by term, Eq. (3.21),
+because <span class="math notranslate nohighlight">\(H_C\)</span> and <span class="math notranslate nohighlight">\(H_M\)</span> have many eigenvalues; the naive rule is wrong.
+Two electron spins in a double quantum dot implement the one-edge
+instance natively, with the exchange interaction as the cost unitary.
+On a portfolio problem with real data the same pipeline works, learns
+the budget constraint before it learns the costs, and shows how the
+penalty strength must be tuned. Read as a learning model, QAOA is a
+quantum neural network with a problem-fixed architecture, a clustering
+algorithm, a feature map and a sampler, and it is the point from which
+Chapters 4 and 5 depart.</p>
+</section>
+<section id="exercises">
+<h2>Exercises<a class="headerlink" href="#exercises" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>QUBO to Ising.</strong> (a) Derive
+Eq. (3.5) from Eq. (3.2) and check it on
+Table 3.1. (b) Show that for MaxCut with unit weights the
+Ising constant is <span class="math notranslate nohighlight">\(-\vert E\vert/2\)</span> and the couplings are <span class="math notranslate nohighlight">\(1/2\)</span>, and
+that the fields vanish. (c) Write the graph three-coloring problem of
+Lucas [Lucas2014] as a QUBO with <span class="math notranslate nohighlight">\(3\vert V\vert\)</span> bits and a penalty
+for vertices with no or several colors, and give its Ising
+coefficients.</p></li>
+<li><p><strong>The adiabatic origin.</strong> (a) Verify
+Eq. (3.13) to second order in <span class="math notranslate nohighlight">\(\Delta t\)</span> with the
+Baker–Campbell–Hausdorff formula and compute <span class="math notranslate nohighlight">\([H_C,H_M]\)</span> for a general
+Ising cost with fields. (b) Show that <span class="math notranslate nohighlight">\(\vert+\rangle^{\otimes n}\)</span> is the
+ground state of <span class="math notranslate nohighlight">\(-H_M\)</span> and that the adiabatic schedule corresponds to
+<span class="math notranslate nohighlight">\(\gamma_k=k\Delta t/p\)</span>, <span class="math notranslate nohighlight">\(\beta_k=-(1-k/p)\Delta t\)</span>. (c) With
+<code class="docutils literal notranslate"><span class="pre">qaoa.py</span></code>, evaluate the energy of the ring <span class="math notranslate nohighlight">\(C_4\)</span> along the
+schedule for <span class="math notranslate nohighlight">\(p=10,20,50\)</span> and <span class="math notranslate nohighlight">\(T=p\Delta t\)</span> with <span class="math notranslate nohighlight">\(\Delta t=0.1,0.3,0.5\)</span>,
+and compare with the optimized energies of Table 3.2.</p></li>
+<li><p><strong>The one-edge formula.</strong> (a) Verify
+Eq. (3.17) by expanding <span class="math notranslate nohighlight">\(e^{-2i\beta X}\)</span> and show
+<span class="math notranslate nohighlight">\(e^{i\beta X}Ye^{-i\beta X}=\cos(2\beta)Y-\sin(2\beta)Z\)</span>. (b) Complete
+the derivation of Eq. (3.18), including the vanishing of
+the <span class="math notranslate nohighlight">\(Y_0Y_1\)</span> and <span class="math notranslate nohighlight">\(Z_0Z_1\)</span> terms. (c) Derive the triangle-free formula
+quoted after Eq. (3.18) for an edge whose endpoints have
+degrees <span class="math notranslate nohighlight">\(d_i\)</span> and <span class="math notranslate nohighlight">\(d_j\)</span>, and from it Eq. (3.19).
+(d) Write the optimal one-edge state explicitly, including its phase,
+and show that it is <span class="math notranslate nohighlight">\(\vert T_0\rangle\)</span> up to a global phase.</p></li>
+<li><p><strong>Symmetries of the landscape.</strong> (a) Show
+that for an integer-valued cost <span class="math notranslate nohighlight">\(E_p\)</span> is <span class="math notranslate nohighlight">\(2\pi\)</span>-periodic in every
+<span class="math notranslate nohighlight">\(\gamma_k\)</span>, and that for a field-free cost it is <span class="math notranslate nohighlight">\(\pi/2\)</span>-periodic in
+every <span class="math notranslate nohighlight">\(\beta_k\)</span>. (b) Show <span class="math notranslate nohighlight">\(E_p(-\vec{\gamma},-\vec{\beta})=E_p(\vec{\gamma},\vec{\beta})\)</span>
+by time reversal (complex conjugation of the state). (c) Explain the
+four extrema of the ring landscape in Fig. 3.2 from (a)
+and (b).</p></li>
+<li><p><strong>Gradients.</strong> (a) Show that the two-point
+rule <span class="math notranslate nohighlight">\(\partial_\theta f=f(\theta+\pi/4)-f(\theta-\pi/4)\)</span> holds for any
+expectation value of a gate <span class="math notranslate nohighlight">\(e^{-i\theta P}\)</span> with <span class="math notranslate nohighlight">\(P^2=I\)</span>, by writing
+<span class="math notranslate nohighlight">\(f\)</span> as <span class="math notranslate nohighlight">\(a+b\cos2\theta+c\sin2\theta\)</span>. (b) Derive
+Eq. (3.21) by the chain rule. (c) The global rule of
+Eq. (3.20) is exact for a generator with eigenvalues
+<span class="math notranslate nohighlight">\(\pm1\)</span> only; show that <span class="math notranslate nohighlight">\(H_M\)</span> on <span class="math notranslate nohighlight">\(n\)</span> qubits has the eigenvalues
+<span class="math notranslate nohighlight">\(-n,-n+2,\dots,n\)</span> and explain why the global rule for <span class="math notranslate nohighlight">\(\beta\)</span> returned
+zero in Fig. 3.3. (d) Group the terms of the
+six-vertex cost into sets acting on disjoint qubits and determine the
+smallest number of energy evaluations that gives the exact gradient
+with respect to <span class="math notranslate nohighlight">\(\gamma\)</span>.</p></li>
+<li><p><strong>The double well.</strong> (a) Diagonalize
+Eq. (3.22) by hand and identify the singlet and the
+triplets. (b) Show that the singlet is an eigenstate of <span class="math notranslate nohighlight">\(Z_LZ_R\)</span> with
+eigenvalue <span class="math notranslate nohighlight">\(-1\)</span>, hence a cut state, and explain why QAOA nevertheless
+prepares <span class="math notranslate nohighlight">\(\vert T_0\rangle\)</span> rather than <span class="math notranslate nohighlight">\(\vert S\rangle\)</span>. (c) Add the
+flip-flop terms to the cost unitary, <span class="math notranslate nohighlight">\(e^{-itH_{\mathrm{ex}}}\)</span> in the
+place of Eq. (3.23), and recompute the <span class="math notranslate nohighlight">\(p=1\)</span> landscape
+with <code class="docutils literal notranslate"><span class="pre">double_well.py</span></code>: is <span class="math notranslate nohighlight">\(E=-1\)</span> still reached? (d) Model a
+readout error that flips each measured spin with probability <span class="math notranslate nohighlight">\(\epsilon\)</span>
+and compute the probability of reading a cut state at the optimum as a
+function of <span class="math notranslate nohighlight">\(\epsilon\)</span>.</p></li>
+<li><p><strong>Constraints without penalties.</strong> The
+<span class="math notranslate nohighlight">\(XY\)</span> mixer <span class="math notranslate nohighlight">\(H_{XY}=\sum_{i&lt;j}(X_iX_j+Y_iY_j)\)</span> commutes with the number
+operator <span class="math notranslate nohighlight">\(\sum_i(I-Z_i)/2\)</span>. (a) Show this, and show that starting from
+a uniform superposition of the strings with exactly <span class="math notranslate nohighlight">\(K\)</span> ones (a Dicke
+state) the QAOA state stays feasible for any angles. (b) Implement the
+<span class="math notranslate nohighlight">\(XY\)</span> mixer in <code class="docutils literal notranslate"><span class="pre">qaoa.py</span></code> (as a <span class="math notranslate nohighlight">\(2^n\times2^n\)</span> matrix exponential,
+since it is no longer a product of single-qubit gates) and rerun the
+stock-portfolio problem without penalty, comparing <span class="math notranslate nohighlight">\(P_{\mathrm{opt}}\)</span>
+with Table 3.5. (c) How would the Dicke state be
+prepared on a quantum computer?</p></li>
+<li><p><strong>Portfolios.</strong> (a) Derive
+Eq. (3.26). (b) Give a lower bound on the penalty
+<span class="math notranslate nohighlight">\(A\)</span> in terms of <span class="math notranslate nohighlight">\(\vec{\mu}\)</span>, <span class="math notranslate nohighlight">\(\lambda\)</span> and <span class="math notranslate nohighlight">\(\matr{\Sigma}\)</span> that
+guarantees a feasible ground state, and compare it with
+Table 3.6. (c) Repeat the stock experiment with
+<span class="math notranslate nohighlight">\(\lambda=0.5\)</span> and <span class="math notranslate nohighlight">\(\lambda=5\)</span> and explain the change in the optimal pair
+from the data of Fig. 3.6. (d) Estimate <span class="math notranslate nohighlight">\(\vec{\mu}\)</span> and
+<span class="math notranslate nohighlight">\(\matr{\Sigma}\)</span> from the first half of the price history only, optimize,
+and evaluate the chosen portfolio on the second half: how much of the
+in-sample advantage survives?</p></li>
+<li><p><strong>Clustering.</strong> (a) Show that maximizing the
+cut of Eq. (3.29) is equivalent to minimizing the sum
+of squared distances of the points to their cluster centroids (the
+two-means objective) when the clusters have equal size, and that it is not equivalent in general. (b) Add a
+penalty that enforces equal cluster sizes and rerun
+<code class="docutils literal notranslate"><span class="pre">clustering.py</span></code>. (c) Replace the squared distances by the
+Gaussian similarity <span class="math notranslate nohighlight">\(e^{-\Vert\vec{x}_i-\vec{x}_j\Vert^2/2\sigma^2}\)</span>,
+which is what spectral clustering uses, and show that the minimum cut
+of this graph, rather than the maximum, is then the clustering
+objective; adapt the sign of <span class="math notranslate nohighlight">\(H_C\)</span> accordingly.</p></li>
+</ol>
+</section>
+<section id="programs-for-this-chapter">
+<h2>Programs for this chapter<a class="headerlink" href="#programs-for-this-chapter" title="Link to this heading">#</a></h2>
+<p>Every number and figure in this chapter comes from the programs in
+<code class="docutils literal notranslate"><span class="pre">BookPrograms/allowbreak</span> <span class="pre">chapter3/</span></code>, which build on the shared
+modules of <code class="docutils literal notranslate"><span class="pre">BookPrograms/allowbreak</span> <span class="pre">common/</span></code>
+(<code class="docutils literal notranslate"><span class="pre">statevector</span></code>, <code class="docutils literal notranslate"><span class="pre">gates</span></code>, <code class="docutils literal notranslate"><span class="pre">optimize</span></code>,
+<code class="docutils literal notranslate"><span class="pre">datasets</span></code>, <code class="docutils literal notranslate"><span class="pre">bookplot</span></code>) and are imported by the notebook
+<code class="docutils literal notranslate"><span class="pre">Notebooks/allowbreak</span> <span class="pre">chapter3/allowbreak</span> <span class="pre">chapter3.ipynb</span></code>. All run
+on <code class="docutils literal notranslate"><span class="pre">numpy</span></code> and <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> alone.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">qubo.py</span></code></strong> The classes <code class="docutils literal notranslate"><span class="pre">QUBO</span></code> (with the builders <code class="docutils literal notranslate"><span class="pre">maxcut</span></code> and <code class="docutils literal notranslate"><span class="pre">portfolio</span></code>, Eqs. (3.7) and (3.26), and <code class="docutils literal notranslate"><span class="pre">to_ising</span></code>, Eq. (3.5)) and <code class="docutils literal notranslate"><span class="pre">Ising</span></code> (energies of all bit strings, the Pauli terms of <span class="math notranslate nohighlight">\(H_C\)</span>, the brute-force ground state). As a script it checks Table 3.1 and the ring. Under a second.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">qaoa.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">QAOA</span></code>: the state of Eq. (3.11) on the simulator by phases and Hadamard transforms, Eq. (3.16); the energy, the probabilities, the samples; the three gradients of Section <em>Gradients</em>; BFGS and gradient-descent optimization with restarts and the warm start; the gate count of Eq. (3.15). As a script it checks Eq. (3.18) and the gradient rules. One second.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">maxcut.py</span></code></strong> The ring and the six-vertex graph: Table 3.2, the closed form of Eq. (3.19), Figs. 3.2 and 3.3. About a minute.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">double_well.py</span></code></strong> The exchange Hamiltonian, the cost table, the closed form, Figs. 3.4 and 3.5, the sampled readouts and the depths <span class="math notranslate nohighlight">\(p=1,2,3\)</span>. Five seconds.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">portfolio.py</span></code></strong> The two portfolio problems: the data of <code class="docutils literal notranslate"><span class="pre">sp500_weekly.csv</span></code> and Fig. 3.6, Tables 3.4, 3.5 and 3.6, Figs. 3.7 and 3.8. About forty seconds.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">clustering.py</span></code></strong> Two-way clustering as weighted MaxCut on eight points, Fig. 3.9, against brute force and two-means. Ten seconds.</p></li>
+</ul>
+</section>
+<section id="running-the-programs-of-this-chapter">
+<h2>Running the programs of this chapter<a class="headerlink" href="#running-the-programs-of-this-chapter" title="Link to this heading">#</a></h2>
+<p>Each cell below runs one of the programs listed above as a script and shows the figures it writes to <code class="docutils literal notranslate"><span class="pre">BookFigures/</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3/qubo.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Worked example: Q = [[1,-2],[-2,1]]
+  J_12 = -1.000, h = [0.5 0.5], const = +0.000
+  x = [0 0], z = [1 1]: C(x) = +0.0, H(z) + const = +0.0
+  x = [0 1], z = [ 1 -1]: C(x) = +1.0, H(z) + const = +1.0
+  x = [1 0], z = [-1  1]: C(x) = +1.0, H(z) + const = +1.0
+  x = [1 1], z = [-1 -1]: C(x) = -2.0, H(z) + const = -2.0
+
+Ring C4: h = [0. 0. 0. 0.]  J_01, J_12, J_23, J_03 = [np.float64(0.5), np.float64(0.5), np.float64(0.5), np.float64(0.5)]  const = -2.0
+  ground energy -4.0 = -(maximum cut), reached by [&#39;0101&#39;, &#39;1010&#39;]
+  Pauli terms of H_C: 4
+QUBO / Ising checks passed
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3/qaoa.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>single edge, p = 1: max |E_simulator - E_closed form| = 1.2e-15
+  at (gamma, beta) = (3pi/2, pi/8): E = -1.000000, state = (-0.5000+0.5000j)|01&gt; + (-0.5000+0.5000j)|10&gt;
+ring C4 at (gamma, beta) = [0.8 0.5]: dE = [-0.0531021  -1.66387757] (finite differences)
+                                   [-0.0531021  -1.66387757] (per-term parameter shift)
+                                   [-0.0531021  0.       ] (global shift, wrong)
+gate count, one layer on the ring: {&#39;hadamard&#39;: 4, &#39;cnot&#39;: 8, &#39;rz&#39;: 4, &#39;rx&#39;: 4}
+QAOA checks passed
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3/maxcut.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MaxCut on the ring C4: maximum cut 4, optimal strings [&#39;0101&#39;, &#39;1010&#39;]
+Table 3-ring
+  p=1: &lt;H_C&gt; = -3.0000  cut 3.0000  ratio 0.7500  P(opt) 0.5312  gamma = [5.498]  beta = [0.393]
+  p=2: &lt;H_C&gt; = -4.0000  cut 4.0000  ratio 1.0000  P(opt) 1.0000  gamma = [4.712 5.498]  beta = [0.393 0.785]
+  p=3: &lt;H_C&gt; = -4.0000  cut 4.0000  ratio 1.0000  P(opt) 1.0000  gamma = [5.39  3.755 4.476]  beta = [1.163 2.255 2.8  ]
+  ring closed form E = -2 + sin(4 beta) sin(2 gamma): max error 4.9e-15
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Six-vertex graph (ring + chords (0,2), (1,4)): maximum cut 7 of 8 edges, 2 optimal strings
+Table 3-sixgraph
+  p=1: cut 5.4689  ratio 0.7813  P(opt) 0.1872
+  p=2: cut 6.1505  ratio 0.8786  P(opt) 0.3642
+  p=3: cut 6.4547  ratio 0.9221  P(opt) 0.5416
+  p=4: cut 6.6802  ratio 0.9543  P(opt) 0.7683
+  gates per layer: {&#39;hadamard&#39;: 6, &#39;cnot&#39;: 16, &#39;rz&#39;: 8, &#39;rx&#39;: 6}
+
+Fig. 3-gradients: gradients along the line beta = 0.4, gamma in [0, pi] (six-vertex graph, p = 1)
+  max |per-term shift - finite differences| = 1.1e-09
+  max |global shift   - finite differences| = 1.684
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p = 2 from the same start: gradient descent -6.1505 after 60 steps (3420 energy evaluations), BFGS -5.9195 after 15 iterations (865 evaluations), best of 8 restarts -6.1505
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figures ring and gradients written
+</pre></div>
+</div>
+<img alt="../_images/1671aab0c198dcd88128a3a7875d767edebc9ac41218f9f78342a50e4105c8d8.png" src="../_images/1671aab0c198dcd88128a3a7875d767edebc9ac41218f9f78342a50e4105c8d8.png" />
+<img alt="../_images/5bec45e7a8902f237af1f052b912ed8e22c3f067fea6f799aab9b6206ddda9e7.png" src="../_images/5bec45e7a8902f237af1f052b912ed8e22c3f067fea6f799aab9b6206ddda9e7.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3/double_well.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Exchange Hamiltonian, J = 1.0: eigenvalues [-0.75  0.25  0.25  0.25] (singlet -3J/4, triplet J/4)
+  singlet amplitudes: [ 0.      0.7071 -0.7071  0.    ]  (|01&gt; - |10&gt;)/sqrt(2) up to sign
+Cost Hamiltonian H_C = -(I - Z_L Z_R)/2: diagonal [ 0. -1. -1.  0.] (cut states |01&gt;, |10&gt; have energy -1)
+  gate time for the cost unitary: t = 2 gamma / J; at gamma* = 3pi/2, t = 9.4248/J
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  closed form -1/2 + sin(4 beta) sin(gamma)/2: max error 1.4e-15
+  minimum E = -1.000000 at beta = pi/8, gamma = 3pi/2
+  |&lt;T0|psi*&gt;|^2 = 1.000000: the optimal state is the triplet (|01&gt;+|10&gt;)/sqrt(2)
+  |&lt;S|psi*&gt;|^2  = 0.000000: not the singlet ground state of H_ex
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  optimum $(\gamma,\beta)=(3\pi/2,\pi/8)$: P = [0.  0.5 0.5 0. ], E = -1.0000
+  off the optimum $(3\pi/2,\pi/16)$: P = [0.0732 0.4268 0.4268 0.0732], E = -0.8536
+  100 shots at the optimum: counts [ 0 50 50  0], P(cut state) = 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p = 1: E* = -1.000000, ratio 1.0000, P(cut) = 1.0000
+  p = 2: E* = -1.000000, ratio 1.0000, P(cut) = 1.0000
+  p = 3: E* = -1.000000, ratio 1.0000, P(cut) = 1.0000
+figures dwlandscape and dwprobs written
+</pre></div>
+</div>
+<img alt="../_images/c11b605291845339e7946445c5b6f0bf3e2e5fd5e386ffecabd7e38d29ffe259.png" src="../_images/c11b605291845339e7946445c5b6f0bf3e2e5fd5e386ffecabd7e38d29ffe259.png" />
+<img alt="../_images/bd6cea901afe78a381ec26827474363c6692c26c7ee7361a264166da2a5c3251.png" src="../_images/bd6cea901afe78a381ec26827474363c6692c26c7ee7361a264166da2a5c3251.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3/portfolio.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>S&amp;P data: 164 weekly closes, 163 returns
+  annualised mean return (%): [30.92 24.58 26.33 30.65]
+  annualised volatility (%): [30.83 24.37 30.73 29.15]
+  correlation matrix:
+ [[1.    0.905 0.805 0.857]
+ [0.905 1.    0.851 0.939]
+ [0.805 0.851 1.    0.891]
+ [0.857 0.939 0.891 1.   ]]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Synthetic data: lambda = 1.0, A = 0.3, K = 2
+  QUBO diagonal: [-0.92 -0.92 -0.92 -0.96]
+  Ising h: [-0.02  -0.015 -0.015 -0.   ]  J (upper): [0.16  0.155 0.165 0.16  0.155 0.16 ]  const 0.29500
+  feasible portfolios (budget 2), Table 3-portfolio:
+    B+D          0101  cost -0.060000
+    C+D          0011  cost -0.040000
+    A+D          1001  cost -0.020000
+    A+C          1010  cost -0.020000
+    B+C          0110  cost +0.000000
+    A+B          1100  cost +0.000000
+  ground state of H_C: E0 = -0.060000 at [&#39;0101&#39;] (= best feasible portfolio + penalty offset 0)
+  energy of the uniform superposition +0.2950, spectrum [-0.0600, +1.3000]
+  p=1: E = +0.07215  gap closed 0.628  P(optimal) 0.128  P(feasible) 0.738  most probable: B+D (0.128)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=2: E = -0.02102  gap closed 0.890  P(optimal) 0.172  P(feasible) 0.992  most probable: B+D (0.172)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=3: E = -0.02332  gap closed 0.897  P(optimal) 0.175  P(feasible) 0.998  most probable: B+D (0.175)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=4: E = -0.02502  gap closed 0.901  P(optimal) 0.202  P(feasible) 0.998  most probable: B+D (0.202)
+
+S&amp;P data: lambda = 2.0, A = 0.3, K = 2
+  QUBO diagonal: [-1.0191  -1.02699 -0.97436 -1.03658]
+  Ising h: [-0.16188 -0.13506 -0.18277 -0.15538]  J (upper): [0.21804 0.22631 0.22707 0.21378 0.21674 0.22986]  const 0.50329
+  feasible portfolios (budget 2), Table 3-portfolio:
+    MSFT+GOOG    0101  cost +0.003370
+    AAPL+MSFT    1100  cost +0.026079
+    AAPL+GOOG    1001  cost +0.052622
+    MSFT+AMZN    0110  cost +0.053771
+    AMZN+GOOG    0011  cost +0.108494
+    AAPL+AMZN    1010  cost +0.111791
+  ground state of H_C: E0 = +0.003370 at [&#39;0101&#39;] (= best feasible portfolio + penalty offset 0)
+  energy of the uniform superposition +0.5033, spectrum [+0.0034, +2.4702]
+  p=1: E = +0.15092  gap closed 0.705  P(optimal) 0.112  P(feasible) 0.646  most probable: MSFT+GOOG (0.112)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=2: E = +0.08298  gap closed 0.841  P(optimal) 0.153  P(feasible) 0.947  most probable: AAPL+AMZN (0.175)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=3: E = +0.07270  gap closed 0.861  P(optimal) 0.153  P(feasible) 0.949  most probable: AMZN+GOOG (0.169)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=4: E = +0.05185  gap closed 0.903  P(optimal) 0.259  P(feasible) 0.965  most probable: MSFT+GOOG (0.259)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  QAOA p=1 energy +0.15092 equals the thermal energy at beta_T ~ 2.4
+  QAOA p=2 energy +0.08298 equals the thermal energy at beta_T ~ 6.4
+  QAOA p=3 energy +0.07270 equals the thermal energy at beta_T ~ 8.1
+  QAOA p=4 energy +0.05185 equals the thermal energy at beta_T ~ 14.5
+
+Table 3-penalty (S&amp;P data, p = 2): the penalty strength A
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  A =  0.03: ground state 0001 (budget 1), P(feasible) 0.040, P(ground state) 0.233, P(MSFT+GOOG) 0.004
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  A =  0.10: ground state 0001 (budget 1), P(feasible) 0.137, P(ground state) 0.222, P(MSFT+GOOG) 0.043
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  A =  0.30: ground state 0101 (budget 2), P(feasible) 0.947, P(ground state) 0.153, P(MSFT+GOOG) 0.153
+  A =  1.00: ground state 0101 (budget 2), P(feasible) 0.657, P(ground state) 0.146, P(MSFT+GOOG) 0.146
+figures sp500data, portfolio and thermal written
+</pre></div>
+</div>
+<img alt="../_images/b8025d00cd4ab8409428b5e1050a339b7b3a4972ed1bd227a20285b29dc2fe0f.png" src="../_images/b8025d00cd4ab8409428b5e1050a339b7b3a4972ed1bd227a20285b29dc2fe0f.png" />
+<img alt="../_images/2ddc16bc4a98ac924065d15cc2e726d8ac2c8ff664c970c257d89a043af46766.png" src="../_images/2ddc16bc4a98ac924065d15cc2e726d8ac2c8ff664c970c257d89a043af46766.png" />
+<img alt="../_images/b76d5bb595bf75ba9e8e687ea9a7a2f7c9180448b10ceeb90e2996999b67fbe8.png" src="../_images/b76d5bb595bf75ba9e8e687ea9a7a2f7c9180448b10ceeb90e2996999b67fbe8.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3/clustering.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>8 points, 28 weighted edges; maximum cut 170.368 (scaled 24.561) at 00001111 and its complement
+two-means clustering cuts 170.368: the same partition
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=1: ratio 0.6026, P(optimal partition) 0.035, most probable string 10001111 (p = 0.027), cut 136.675
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=2: ratio 0.7724, P(optimal partition) 0.266, most probable string 11110000 (p = 0.133), cut 170.368
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  p=3: ratio 0.8992, P(optimal partition) 0.472, most probable string 00001111 (p = 0.236), cut 170.368
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure clustering written
+</pre></div>
+</div>
+<img alt="../_images/393fb498d00bfaa886dd4b3680d480b6c31a5c829cc5b27452c0dcef69664bac.png" src="../_images/393fb498d00bfaa886dd4b3680d480b6c31a5c829cc5b27452c0dcef69664bac.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./chapter3"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../chapter2/chapter2.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Chapter 2: Quantum Support Vector Machines</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../chapter4/chapter4.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Chapter 4: Quantum Neural Networks</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-a-cost-function-to-a-hamiltonian">From a cost function to a Hamiltonian</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-algorithm">The algorithm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-algorithm-at-work">The algorithm at work</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-edge-by-hand">One edge, by hand</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ring-and-a-six-vertex-graph">The ring and a six-vertex graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-landscape-and-cost">Performance, landscape and cost</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gradients">Gradients</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-physical-register-two-electrons-in-a-double-quantum-well">A physical register: two electrons in a double quantum well</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-application-selecting-a-portfolio">An application: selecting a portfolio</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qaoa-as-a-machine-learning-model">QAOA as a machine-learning model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exercises">Exercises</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#programs-for-this-chapter">Programs for this chapter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-programs-of-this-chapter">Running the programs of this chapter</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Morten Hjorth-Jensen
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

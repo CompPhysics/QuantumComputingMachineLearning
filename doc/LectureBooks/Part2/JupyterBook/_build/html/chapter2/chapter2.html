@@ -1,0 +1,2310 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Chapter 2: Quantum Support Vector Machines &#8212; Quantum Machine Learning</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"tex": {"tags": "none", "macros": {"bm": ["\\boldsymbol{#1}", 1]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'chapter2/chapter2';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Chapter 3: The Quantum Approximate Optimization Algorithm" href="../chapter3/chapter3.html" />
+    <link rel="prev" title="Chapter 1: Introduction and Motivation" href="../chapter1/chapter1.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Quantum Machine Learning</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Quantum Machine Learning
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter1/chapter1.html">Chapter 1: Introduction and Motivation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Chapter 2: Quantum Support Vector Machines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Variational models</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter3/chapter3.html">Chapter 3: The Quantum Approximate Optimization Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter4/chapter4.html">Chapter 4: Quantum Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter5/chapter5.html">Chapter 5: Quantum Boltzmann Machines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Outlook</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter6/chapter6.html">Chapter 6: Reinforcement Learning and Quantum Reinforcement Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter7/chapter7.html">Chapter 7: Summary and Perspectives</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Back matter</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://compphysics.github.io/QuantumComputingMachineLearning/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://compphysics.github.io/QuantumComputingMachineLearning/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html/issues/new?title=Issue%20on%20page%20%2Fchapter2/chapter2.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/chapter2/chapter2.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Chapter 2: Quantum Support Vector Machines</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hyperplanes-and-the-margin">Hyperplanes and the margin</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lagrange-multipliers-and-the-dual-problem">Lagrange multipliers and the dual problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-soft-margin">The soft margin</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernels">Kernels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solving-the-dual-problem">Solving the dual problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-feature-maps-and-quantum-kernels">Quantum feature maps and quantum kernels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimating-the-kernel-on-a-quantum-computer">Estimating the kernel on a quantum computer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-quantum-support-vector-machine">The quantum support-vector machine</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernels-from-a-finite-number-of-shots">Kernels from a finite number of shots</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-feature-map">Training the feature map</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perspectives">Perspectives</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exercises">Exercises</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#programs-for-this-chapter">Programs for this chapter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-programs-of-this-chapter">Running the programs of this chapter</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="chapter-2-quantum-support-vector-machines">
+<h1>Chapter 2: Quantum Support Vector Machines<a class="headerlink" href="#chapter-2-quantum-support-vector-machines" title="Link to this heading">#</a></h1>
+<p><em>The support-vector machine looks at its data only through a kernel, and a quantum computer can supply one as the overlap of two encoded states. The chapter first derives the classical machine from the margin: the primal and dual problems, the Karush–Kuhn–Tucker conditions and the support vectors, the soft margin, the kernel trick and Mercer’s theorem, and the sequential minimal optimization algorithm that solves the dual in a few lines of NumPy. It then defines quantum feature maps and the fidelity kernel, works out the angle, amplitude and entangling ZZ maps, shows how the kernel is estimated by the adjoint and SWAP tests with a finite number of shots, and assembles the quantum support-vector machine. The machine is run beside its classical counterpart on the two moons, two circles, XOR and Iris data, where it offers no advantage, and on a data set labeled by the ZZ map itself, where it is exact and the Gaussian kernel fails; the effects of shot noise and of the kernel bandwidth are measured, the feature map is trained by kernel-target alignment with parameter-shift gradients, and the chapter closes with the complexity of the near-term and fault-tolerant machines and with the observation that every hybrid quantum model is a kernel method.</em></p>
+<!-- Macro definitions for MathJax, mirroring book.tex -->
+<div class="math notranslate nohighlight">
+\[
+\newcommand{\bm}[1]{\boldsymbol{#1}}
+\newcommand{\matr}[1]{\boldsymbol{#1}}
+\newcommand{\bfv}[1]{\boldsymbol{#1}}
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\uvec}[1]{\boldsymbol{\hat{#1}}}
+\newcommand{\op}[1]{\widehat{#1}}
+\newcommand{\Op}[1]{\boldsymbol{\widehat{#1}}}
+\newcommand{\OP}[1]{\boldsymbol{\widehat{#1}}}
+\newcommand{\Det}[1]{|\boldsymbol{#1}|}
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\real}[1]{\mathrm{Re}\left\{#1\right\}}
+\newcommand{\ud}[1]{d#1}
+\newcommand{\udd}[1]{d^2#1}
+\newcommand{\mean}[1]{\langle #1 \rangle}
+\newcommand{\overlap}[2]{\langle #1 | #2 \rangle}
+\newcommand{\bracket}[3]{\langle #1 | #2 | #3 \rangle}
+\newcommand{\projection}[2]{| #1 \rangle \langle #2 |}
+\newcommand{\brab}[1]{\big\langle #1 \big|}
+\newcommand{\ketb}[1]{\big| #1 \big\rangle}
+\newcommand{\bket}[1]{\vert #1\rangle}
+\newcommand{\bbra}[1]{\langle #1\vert}
+\newcommand{\ketbra}[2]{\vert #1\rangle\langle #2\vert}
+\newcommand{\braket}[2]{\langle #1\vert #2\rangle}
+\]</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put every BookPrograms/chapter*/ and BookPrograms/common/ on sys.path</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">pathlib</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="n">root</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">root</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>The support-vector machine (SVM) is the natural first model for a book
+on quantum machine learning, for a reason that will take the whole
+chapter to appreciate and can be stated in one sentence: it never
+looks at the data except through a similarity <span class="math notranslate nohighlight">\(K(\vec{x},\vec{x}')\)</span>
+between pairs of samples, and a quantum computer can supply such a
+similarity as the overlap of two encoded states. Everything else, the
+notion of a margin, the convex optimization problem that finds it, the
+sparsity of the solution in terms of <em>support vectors</em>, stays
+exactly as Boser, Guyon, Vapnik and Cortes left it
+[Boser1992,CortesVapnik1995]. The quantum support-vector machine
+(QSVM) is therefore not a new algorithm but a new kernel, and the
+questions it raises, whether the kernel can be estimated accurately
+enough, whether it fits the data better than a Gaussian, whether it
+could be computed classically after all, are questions about that
+kernel. The quantum side of the chapter needs only the fundamentals
+of the companion volume [QCbook]: the overlap of two states,
+the measurement of a register in the computational basis, and the
+density matrix of a prepared state (its chapter on the fundamentals
+of quantum computation), together with its chapter on mapping
+Hamiltonians to qubits for the Pauli-string gates of the feature
+maps; the reader who has those in hand can read this chapter without
+any other preparation.</p>
+<p>The chapter is in two halves. The first, Sections <em>Hyperplanes and the margin</em>
+to <em>Solving the dual problem</em>, derives the classical machine from scratch: the
+hyperplane and the margin, the Lagrangian and its dual, the
+Karush–Kuhn–Tucker conditions that single out the support vectors,
+the soft margin that tolerates overlapping classes, the kernel trick,
+Mercer’s theorem, and the sequential minimal optimization algorithm
+that solves the dual problem in a few dozen lines of NumPy; the
+derivation is the one of the chapter on support-vector machines of
+the author’s machine-learning text [MLbook], which also treats
+the regression and multiclass versions not needed here. Readers who
+know this material can go directly to Section <em>Quantum feature maps and quantum kernels</em>,
+but should at least note the notation of Eqs. (2.10)
+and (2.13), which is used throughout. The second half
+replaces the kernel by a quantum one: Section <em>Quantum feature maps and quantum kernels</em>
+defines quantum feature maps and the fidelity kernel and works out the
+angle, amplitude and entangling maps of Havlíček <em>et al.</em><br />
+[Havlicek2019]; Section <em>Estimating the kernel on a quantum computer</em> shows how the
+kernel is measured, with the adjoint test and the SWAP test, and what
+a finite number of shots does to it; Section <em>The quantum support-vector machine</em> assembles
+the machine and runs it on four data sets, including one that was
+constructed so that the quantum kernel separates it and classical
+kernels do not; Section <em>Training the feature map</em> trains the feature map
+itself by kernel-target alignment; and Section <em>Perspectives</em>
+weighs the result against the complexity of the classical machine and
+the fault-tolerant proposal of Rebentrost, Mohseni and Lloyd
+[Rebentrost2014]. The programs are in
+<code class="docutils literal notranslate"><span class="pre">BookPrograms/chapter2/</span></code>: a <code class="docutils literal notranslate"><span class="pre">Kernel</span></code> hierarchy, an
+<code class="docutils literal notranslate"><span class="pre">SVM</span></code> class with its own solver, the feature maps and a
+<code class="docutils literal notranslate"><span class="pre">QuantumKernel</span></code> that estimates overlaps with or without shot
+noise, a <code class="docutils literal notranslate"><span class="pre">QSVM</span></code> class, and a <code class="docutils literal notranslate"><span class="pre">KernelAlignment</span></code> class.
+Every number quoted below is printed by one of them.</p>
+</section>
+<section id="hyperplanes-and-the-margin">
+<h2>Hyperplanes and the margin<a class="headerlink" href="#hyperplanes-and-the-margin" title="Link to this heading">#</a></h2>
+<p>We have <span class="math notranslate nohighlight">\(N\)</span> training samples <span class="math notranslate nohighlight">\(\vec{x}_i\in\mathbb{R}^p\)</span> with <span class="math notranslate nohighlight">\(p\)</span>
+features each, and a label <span class="math notranslate nohighlight">\(y_i\in\{-1,+1\}\)</span> for each of them. A
+<em>hyperplane</em> in <span class="math notranslate nohighlight">\(\mathbb{R}^p\)</span> is an affine subspace of dimension
+<span class="math notranslate nohighlight">\(p-1\)</span>, a line in the plane, a plane in space, and it is the set of
+points satisfying</p>
+<div class="math notranslate nohighlight">
+\[
+f(\vec{x})=\vec{w}^{T}\vec{x}+b=0 ,\tag{2.1}
+\]</div>
+<p>for a vector <span class="math notranslate nohighlight">\(\vec{w}\)</span> normal to the plane and an intercept <span class="math notranslate nohighlight">\(b\)</span>. In two
+dimensions this is <span class="math notranslate nohighlight">\(b+w_1x_1+w_2x_2=0\)</span>. Two points <span class="math notranslate nohighlight">\(\vec{x}_1\)</span>, <span class="math notranslate nohighlight">\(\vec{x}_2\)</span>
+on the plane satisfy <span class="math notranslate nohighlight">\(\vec{w}^{T}(\vec{x}_1-\vec{x}_2)=0\)</span>, which is what
+“normal” means, and the signed distance of an arbitrary point
+<span class="math notranslate nohighlight">\(\vec{x}\)</span> from the plane is</p>
+<div class="math notranslate nohighlight">
+\[
+\delta(\vec{x})=\frac{1}{\Vert\vec{w}\Vert}\left(\vec{w}^{T}\vec{x}+b\right)=\frac{f(\vec{x})}{\Vert\vec{w}\Vert},\tag{2.2}
+\]</div>
+<p>positive on the side <span class="math notranslate nohighlight">\(\vec{w}\)</span> points to and negative on the other.
+A hyperplane therefore defines a classifier, <span class="math notranslate nohighlight">\(\hat{y}(\vec{x})=\mathrm{sign}\,f(\vec{x})\)</span>,
+and the hyperplane classifies the training set correctly if</p>
+<div class="math notranslate nohighlight">
+\[
+y_i\left(\vec{w}^{T}\vec{x}_i+b\right)&gt;0\qquad\forall\, i=1,\dots,N .\tag{2.3}
+\]</div>
+<p>If such a plane exists the classes are <em>linearly separable</em>.</p>
+<p><strong>A first attempt.</strong>
+The most direct way of finding <span class="math notranslate nohighlight">\(\vec{w}\)</span> and <span class="math notranslate nohighlight">\(b\)</span> is to penalize the
+misclassified points. With <span class="math notranslate nohighlight">\(M\)</span> the set of indices violating
+Eq. (2.3) one minimizes</p>
+<div class="math notranslate nohighlight">
+\[
+C(\vec{w},b)=-\sum_{i\in M}y_i\left(\vec{w}^{T}\vec{x}_i+b\right),\tag{2.4}
+\]</div>
+<p>whose derivatives are <span class="math notranslate nohighlight">\(\partial C/\partial b=-\sum_{i\in M}y_i\)</span> and
+<span class="math notranslate nohighlight">\(\partial C/\partial\vec{w}=-\sum_{i\in M}y_i\vec{x}_i\)</span>, and updates
+<span class="math notranslate nohighlight">\(b\leftarrow b-\eta\,\partial C/\partial b\)</span>,
+<span class="math notranslate nohighlight">\(\vec{w}\leftarrow\vec{w}-\eta\,\partial C/\partial\vec{w}\)</span> with a
+learning rate <span class="math notranslate nohighlight">\(\eta\)</span> take the familiar form of the perceptron rule and
+of gradient descent in logistic regression. The approach is easy to
+code and has two defects. When the classes are separable there are
+infinitely many separating planes, Eq. (2.4) is zero
+on all of them, and which one the iteration stops at depends on the
+starting point and the order of the data; and when the classes are not
+separable the iteration need not converge at all. Both defects are
+cured by asking for a particular plane: the one farthest from the data.</p>
+<p><strong>The margin.</strong>
+Suppose the classes are separable. For any separating plane the
+smallest signed distance of a training point from it, <span class="math notranslate nohighlight">\(\min_i y_i\delta(\vec{x}_i)\)</span>,
+is positive; it is called the <em>margin</em> <span class="math notranslate nohighlight">\(M\)</span> of the plane, and we
+want the plane with the largest margin. That is the problem</p>
+<div class="math notranslate nohighlight">
+\[
+\max_{\vec{w},b}M\qquad\text{subject to}\qquad
+\frac{1}{\Vert\vec{w}\Vert}\,y_i\left(\vec{w}^{T}\vec{x}_i+b\right)\ge M\quad\forall\, i .\tag{2.5}
+\]</div>
+<p>The constraint is unchanged if <span class="math notranslate nohighlight">\(\vec{w}\)</span> and <span class="math notranslate nohighlight">\(b\)</span> are multiplied by the
+same positive constant, so we may fix the scale by <span class="math notranslate nohighlight">\(\Vert\vec{w}\Vert=1/M\)</span>.
+Maximizing <span class="math notranslate nohighlight">\(M\)</span> is then minimizing <span class="math notranslate nohighlight">\(\Vert\vec{w}\Vert\)</span>, or more
+conveniently <span class="math notranslate nohighlight">\(\frac12\vec{w}^{T}\vec{w}\)</span>, and the problem becomes</p>
+<div class="math notranslate nohighlight">
+\[
+\min_{\vec{w},b}\ \frac{1}{2}\vec{w}^{T}\vec{w}\qquad\text{subject to}\qquad
+y_i\left(\vec{w}^{T}\vec{x}_i+b\right)\ge 1\quad\forall\, i .\tag{2.6}
+\]</div>
+<p>This is the <em>primal</em> form of the hard-margin support-vector
+machine: a quadratic objective with <span class="math notranslate nohighlight">\(N\)</span> linear inequality constraints,
+a convex problem with a unique solution. The two planes
+<span class="math notranslate nohighlight">\(\vec{w}^{T}\vec{x}+b=\pm1\)</span> are the margin boundaries, at distance
+<span class="math notranslate nohighlight">\(1/\Vert\vec{w}\Vert=M\)</span> on either side of the decision plane, and the
+training points that lie on them will turn out to be the only ones
+that matter.</p>
+</section>
+<section id="lagrange-multipliers-and-the-dual-problem">
+<h2>Lagrange multipliers and the dual problem<a class="headerlink" href="#lagrange-multipliers-and-the-dual-problem" title="Link to this heading">#</a></h2>
+<p><strong>A reminder on constrained extrema.</strong>
+A function <span class="math notranslate nohighlight">\(f(x,y,z)\)</span> has an extremum where <span class="math notranslate nohighlight">\(df=f_xdx+f_ydy+f_zdz=0\)</span>,
+and if the three variables are independent this requires
+<span class="math notranslate nohighlight">\(f_x=f_y=f_z=0\)</span>. If the variables are tied by a constraint
+<span class="math notranslate nohighlight">\(\phi(x,y,z)=0\)</span> they are no longer independent: only two of the
+differentials, say <span class="math notranslate nohighlight">\(dx\)</span> and <span class="math notranslate nohighlight">\(dy\)</span>, can be chosen freely, and <span class="math notranslate nohighlight">\(dz\)</span> is
+fixed by <span class="math notranslate nohighlight">\(d\phi=\phi_xdx+\phi_ydy+\phi_zdz=0\)</span>. One could eliminate <span class="math notranslate nohighlight">\(z\)</span>
+and work with two variables, but it is usually more convenient to add
+a multiple <span class="math notranslate nohighlight">\(\lambda\,d\phi\)</span> of the constraint to <span class="math notranslate nohighlight">\(df\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[
+df+\lambda\,d\phi=(f_x+\lambda\phi_x)\,dx+(f_y+\lambda\phi_y)\,dy+(f_z+\lambda\phi_z)\,dz ,
+\]</div>
+<p>to choose <span class="math notranslate nohighlight">\(\lambda\)</span> so that the coefficient of the dependent
+differential vanishes, <span class="math notranslate nohighlight">\(f_z+\lambda\phi_z=0\)</span>, and to note that the two
+remaining differentials are arbitrary, so that their coefficients must
+vanish too. The extremum therefore satisfies
+<span class="math notranslate nohighlight">\(\partial f/\partial x_i+\lambda\,\partial\phi/\partial x_i=0\)</span> for every
+variable, together with <span class="math notranslate nohighlight">\(\phi=0\)</span>: four equations for <span class="math notranslate nohighlight">\(x,y,z,\lambda\)</span>.
+With several constraints <span class="math notranslate nohighlight">\(\phi_k=0\)</span> one multiplier <span class="math notranslate nohighlight">\(\lambda_k\)</span> per
+constraint appears, <span class="math notranslate nohighlight">\(\partial f/\partial x_i+\sum_k\lambda_k\,\partial\phi_k/\partial x_i=0\)</span>.
+The multipliers are Lagrange’s “undetermined” multipliers; they are
+usually not wanted, but in the problem at hand they will be the
+quantities of interest. For <em>inequality</em> constraints <span class="math notranslate nohighlight">\(\phi_k\ge0\)</span>
+the same construction holds with the extra conditions that
+<span class="math notranslate nohighlight">\(\lambda_k\ge0\)</span> and that <span class="math notranslate nohighlight">\(\lambda_k\phi_k=0\)</span> at the solution: a
+constraint that is not active (<span class="math notranslate nohighlight">\(\phi_k&gt;0\)</span>) has multiplier zero, and a
+constraint with nonzero multiplier is active (<span class="math notranslate nohighlight">\(\phi_k=0\)</span>). These are the
+Karush–Kuhn–Tucker (KKT) conditions, and Boyd and Vandenberghe
+[Boyd2004] is the reference for everything we use about them.</p>
+<p><strong>The Lagrangian of the margin problem.</strong>
+Applied to Eq. (2.6), with one multiplier <span class="math notranslate nohighlight">\(\lambda_i\ge0\)</span>
+per sample, the construction gives the Lagrangian</p>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}(\vec{w},b,\vec{\lambda})=\frac{1}{2}\vec{w}^{T}\vec{w}-\sum_{i=1}^{N}\lambda_i\left[y_i\left(\vec{w}^{T}\vec{x}_i+b\right)-1\right],\tag{2.7}
+\]</div>
+<p>to be minimized over <span class="math notranslate nohighlight">\(\vec{w}\)</span> and <span class="math notranslate nohighlight">\(b\)</span> and maximized over the
+multipliers. The derivatives with respect to <span class="math notranslate nohighlight">\(b\)</span> and <span class="math notranslate nohighlight">\(\vec{w}\)</span> give</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\mathcal{L}}{\partial b}=-\sum_i\lambda_iy_i=0 ,\tag{2.8}
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\mathcal{L}}{\partial\vec{w}}=\vec{w}-\sum_i\lambda_iy_i\vec{x}_i=0
+\qquad\Longrightarrow\qquad\vec{w}=\sum_{i=1}^{N}\lambda_iy_i\vec{x}_i .\tag{2.9}
+\]</div>
+<p>The second equation is the key structural fact about the machine: the
+normal vector is a linear combination of the training samples. Inserting
+both into Eq. (2.7), the terms linear in <span class="math notranslate nohighlight">\(b\)</span> vanish by
+Eq. (2.8), and the two quadratic terms combine into</p>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}_D(\vec{\lambda})=\sum_{i=1}^{N}\lambda_i-\frac{1}{2}\sum_{i,j=1}^{N}\lambda_i\lambda_jy_iy_j\,\vec{x}_i^{T}\vec{x}_j ,\tag{2.10}
+\]</div>
+<p>to be <em>maximized</em> subject to <span class="math notranslate nohighlight">\(\lambda_i\ge0\)</span> and <span class="math notranslate nohighlight">\(\sum_i\lambda_iy_i=0\)</span>.
+This is the <em>dual</em> problem. It has as many variables as there are
+samples rather than features, it is again a convex quadratic program,
+and, decisively for what follows, the samples enter it only through
+their inner products <span class="math notranslate nohighlight">\(\vec{x}_i^{T}\vec{x}_j\)</span>.</p>
+<p><strong>Support vectors.</strong>
+The KKT conditions of the problem read</p>
+<div class="math notranslate nohighlight">
+\[
+\lambda_i\left[y_i\left(\vec{w}^{T}\vec{x}_i+b\right)-1\right]=0\qquad\forall\, i .\tag{2.11}
+\]</div>
+<p>Either <span class="math notranslate nohighlight">\(\lambda_i&gt;0\)</span>, and then <span class="math notranslate nohighlight">\(y_i(\vec{w}^{T}\vec{x}_i+b)=1\)</span>: the
+sample lies exactly on the margin boundary. Or <span class="math notranslate nohighlight">\(y_i(\vec{w}^{T}\vec{x}_i+b)&gt;1\)</span>,
+the sample is strictly inside its half space, and then <span class="math notranslate nohighlight">\(\lambda_i=0\)</span>.
+The samples with <span class="math notranslate nohighlight">\(\lambda_i&gt;0\)</span> are the <em>support vectors</em>; they are
+the points closest to the decision plane, they alone define it through
+Eq. (2.9), and removing any other point from the training
+set changes nothing. From any support vector the intercept follows,
+<span class="math notranslate nohighlight">\(b=y_i-\vec{w}^{T}\vec{x}_i\)</span> (using <span class="math notranslate nohighlight">\(1/y_i=y_i\)</span>), and in practice one
+averages over the set <span class="math notranslate nohighlight">\(\mathcal{S}\)</span> of the <span class="math notranslate nohighlight">\(N_s\)</span> support vectors to
+reduce rounding errors,</p>
+<div class="math notranslate nohighlight">
+\[
+b=\frac{1}{N_s}\sum_{j\in\mathcal{S}}\left(y_j-\sum_{i=1}^{N}\lambda_iy_i\,\vec{x}_i^{T}\vec{x}_j\right).\tag{2.12}
+\]</div>
+<p>The classifier for a new sample is then</p>
+<div class="math notranslate nohighlight">
+\[
+\hat{y}(\vec{x})=\mathrm{sign}\left(\sum_{i=1}^{N}\lambda_iy_i\,\vec{x}_i^{T}\vec{x}+b\right),\tag{2.13}
+\]</div>
+<p>with only the support vectors contributing to the sum.</p>
+<p><strong>The matrix form.</strong>
+With the vectors <span class="math notranslate nohighlight">\(\vec{\lambda}=(\lambda_1,\dots,\lambda_N)\)</span> and
+<span class="math notranslate nohighlight">\(\vec{y}=(y_1,\dots,y_N)\)</span> and the matrix <span class="math notranslate nohighlight">\(P_{ij}=y_iy_j\,\vec{x}_i^{T}\vec{x}_j\)</span>,
+maximizing Eq. (2.10) is minimizing</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{1}{2}\vec{\lambda}^{T}\matr{P}\vec{\lambda}-\vec{1}^{T}\vec{\lambda}
+\qquad\text{subject to}\qquad\vec{y}^{T}\vec{\lambda}=0,\quad\lambda_i\ge0 ,\tag{2.14}
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(\matr{P}\)</span>, being the Gram matrix of the vectors <span class="math notranslate nohighlight">\(y_i\vec{x}_i\)</span>,
+is positive semidefinite. We return to how this is solved in
+Section <em>Solving the dual problem</em>; for the moment we let the program
+<code class="docutils literal notranslate"><span class="pre">svm.py</span></code> do it.</p>
+<p><strong>A first example.</strong>
+Figure 2.1 shows the hard-margin machine trained on
+two Gaussian clouds of twenty points each. The solver finds
+<span class="math notranslate nohighlight">\(\vec{w}=(1.2494,-0.0909)\)</span>, <span class="math notranslate nohighlight">\(b=-0.0248\)</span> and a margin
+<span class="math notranslate nohighlight">\(1/\Vert\vec{w}\Vert=0.7983\)</span>, with three support vectors, two of one
+class and one of the other, which sit exactly on the dashed margin
+lines; every other point has <span class="math notranslate nohighlight">\(\lambda_i=0\)</span> and <span class="math notranslate nohighlight">\(y_if(\vec{x}_i)&gt;1\)</span>, as
+the program checks. Fifty-seven two-variable updates of the algorithm
+of Section <em>Solving the dual problem</em> were needed.</p>
+<p><img alt="The hard-margin support-vector machine on two separable Gaussian cloud" src="../BookFigures/chapter2/hardmargin.png" /></p>
+<p><em>Figure 2.1: The hard-margin support-vector machine on two separable Gaussian clouds. The solid line is the decision plane <span class="math notranslate nohighlight">\(\vec{w}^{T}\vec{x}+b=0\)</span>, the dashed lines are the margin boundaries <span class="math notranslate nohighlight">\(\vec{w}^{T}\vec{x}+b=\pm1\)</span>, and the circled points are the three support vectors, the only samples with <span class="math notranslate nohighlight">\(\lambda_i&gt;0\)</span>. From <code class="docutils literal notranslate"><span class="pre">svm.py</span></code>.</em></p>
+</section>
+<section id="the-soft-margin">
+<h2>The soft margin<a class="headerlink" href="#the-soft-margin" title="Link to this heading">#</a></h2>
+<p>When the classes overlap, no plane satisfies all the constraints of
+Eq. (2.6) and the dual problem is unbounded. The remedy
+of Cortes and Vapnik [CortesVapnik1995] is to allow each sample to
+violate its margin by a <em>slack</em> <span class="math notranslate nohighlight">\(\xi_i\ge0\)</span> and to pay for the
+total violation:</p>
+<div class="math notranslate nohighlight">
+\[
+\min_{\vec{w},b,\vec{\xi}}\ \frac{1}{2}\vec{w}^{T}\vec{w}+C\sum_{i=1}^{N}\xi_i
+\qquad\text{subject to}\qquad
+y_i\left(\vec{w}^{T}\vec{x}_i+b\right)\ge1-\xi_i,\quad\xi_i\ge0 .\tag{2.15}
+\]</div>
+<p>A sample with <span class="math notranslate nohighlight">\(0&lt;\xi_i&lt;1\)</span> is on the correct side of the decision plane
+but inside the margin, a sample with <span class="math notranslate nohighlight">\(\xi_i&gt;1\)</span> is misclassified, and
+<span class="math notranslate nohighlight">\(\sum_i\xi_i\)</span> bounds the number of misclassifications. The constant
+<span class="math notranslate nohighlight">\(C&gt;0\)</span> sets the price of a violation: a large <span class="math notranslate nohighlight">\(C\)</span> approaches the hard
+margin, a small <span class="math notranslate nohighlight">\(C\)</span> accepts violations in exchange for a wider margin,
+and <span class="math notranslate nohighlight">\(C\)</span> is the regularization parameter of the method, to be chosen by
+cross-validation. The Lagrangian acquires a second set of multipliers
+<span class="math notranslate nohighlight">\(\gamma_i\ge0\)</span> for the constraints <span class="math notranslate nohighlight">\(\xi_i\ge0\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}=\frac{1}{2}\vec{w}^{T}\vec{w}+C\sum_i\xi_i-\sum_i\lambda_i\left[y_i\left(\vec{w}^{T}\vec{x}_i+b\right)-1+\xi_i\right]-\sum_i\gamma_i\xi_i ,\tag{2.16}
+\]</div>
+<p>and the stationarity conditions are Eqs. (2.8)
+and (2.9) as before, plus one from <span class="math notranslate nohighlight">\(\partial\mathcal{L}/\partial\xi_i=0\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[
+C-\lambda_i-\gamma_i=0\qquad\Longrightarrow\qquad 0\le\lambda_i\le C .\tag{2.17}
+\]</div>
+<p>Inserting them, the slacks and the <span class="math notranslate nohighlight">\(\gamma_i\)</span> drop out, and the dual is
+the same function <span class="math notranslate nohighlight">\(\mathcal{L}_D(\vec{\lambda})\)</span> of Eq. (2.10),
+now maximized in the box <span class="math notranslate nohighlight">\(0\le\lambda_i\le C\)</span> with <span class="math notranslate nohighlight">\(\sum_i\lambda_iy_i=0\)</span>.
+The KKT conditions become</p>
+<div class="math notranslate nohighlight">
+\[
+\lambda_i\left[y_i\left(\vec{w}^{T}\vec{x}_i+b\right)-1+\xi_i\right]=0,\qquad
+\gamma_i\xi_i=(C-\lambda_i)\xi_i=0 ,\tag{2.18}
+\]</div>
+<p>and they sort the samples into three groups: <span class="math notranslate nohighlight">\(\lambda_i=0\)</span>, correctly
+classified outside the margin; <span class="math notranslate nohighlight">\(0&lt;\lambda_i&lt;C\)</span>, on the margin boundary
+with <span class="math notranslate nohighlight">\(\xi_i=0\)</span>; and <span class="math notranslate nohighlight">\(\lambda_i=C\)</span>, inside the margin or misclassified
+with <span class="math notranslate nohighlight">\(\xi_i&gt;0\)</span>. The intercept of Eq. (2.12) must now be
+averaged over the second group only, which is what <code class="docutils literal notranslate"><span class="pre">svm.py</span></code>
+does. Figure 2.2 shows the effect of <span class="math notranslate nohighlight">\(C\)</span> on two
+overlapping clouds: for <span class="math notranslate nohighlight">\(C=0.05\)</span> the margin is <span class="math notranslate nohighlight">\(1.09\)</span>, 28 of the 60
+points are support vectors and 26 of them violate the margin; for
+<span class="math notranslate nohighlight">\(C=1\)</span> the margin is <span class="math notranslate nohighlight">\(0.56\)</span> with 11 support vectors and 9 violations;
+for <span class="math notranslate nohighlight">\(C=100\)</span> it is <span class="math notranslate nohighlight">\(0.25\)</span> with 7 and 6. The training accuracy is <span class="math notranslate nohighlight">\(0.95\)</span>,
+<span class="math notranslate nohighlight">\(0.97\)</span> and <span class="math notranslate nohighlight">\(0.97\)</span>: a narrower margin fits the training set no better,
+and the wide-margin solution is the one that will generalize.</p>
+<p><img alt="The soft-margin machine on two overlapping clouds for three values of " src="../BookFigures/chapter2/softmargin.png" /></p>
+<p><em>Figure 2.2: The soft-margin machine on two overlapping clouds for three values of the regularization constant <span class="math notranslate nohighlight">\(C\)</span>. The circled points are the support vectors, <span class="math notranslate nohighlight">\(\lambda_i&gt;0\)</span>; as <span class="math notranslate nohighlight">\(C\)</span> grows the margin narrows and the solution is carried by fewer points. From <code class="docutils literal notranslate"><span class="pre">svm.py</span></code>.</em></p>
+</section>
+<section id="kernels">
+<h2>Kernels<a class="headerlink" href="#kernels" title="Link to this heading">#</a></h2>
+<p><strong>Non-linear feature maps.</strong>
+Everything so far finds a <em>linear</em> boundary in the space of the
+features. Most data are not linearly separable there, and the classical
+way out, in regression as in classification, is to map the features
+into a larger space, <span class="math notranslate nohighlight">\(\vec{x}\mapsto\vec{z}=\vec{\phi}(\vec{x})\)</span>, with
+polynomials, splines or any other basis functions, and to fit the
+linear model in that space. The top row of
+Fig. 2.3 shows the simplest case: nine points on a
+line with the middle five in one class, which no threshold separates,
+become separable by a line after the map <span class="math notranslate nohighlight">\(x\mapsto(x,x^2)\)</span>. In two
+dimensions the quadratic map is</p>
+<div class="math notranslate nohighlight">
+\[
+\vec{\phi}(x_1,x_2)=\left(x_1^2,\;x_2^2,\;\sqrt{2}\,x_1x_2\right),\tag{2.19}
+\]</div>
+<p>and the dual problem of Eq. (2.10) in the new space is the
+same problem with <span class="math notranslate nohighlight">\(\vec{x}_i^{T}\vec{x}_j\)</span> replaced by
+<span class="math notranslate nohighlight">\(\vec{z}_i^{T}\vec{z}_j=\vec{\phi}(\vec{x}_i)^{T}\vec{\phi}(\vec{x}_j)\)</span>.</p>
+<p><strong>The kernel trick.</strong>
+Multiply out the inner product of Eq. (2.19):</p>
+<div class="math notranslate nohighlight">
+\[
+\vec{\phi}(\vec{x})^{T}\vec{\phi}(\vec{x}')=x_1^2x_1'^2+x_2^2x_2'^2+2x_1x_2x_1'x_2'=\left(\vec{x}^{T}\vec{x}'\right)^2 .\tag{2.20}
+\]</div>
+<p>The inner product in the three-dimensional feature space is a function
+of the inner product in the original space, and can be evaluated
+without ever forming <span class="math notranslate nohighlight">\(\vec{\phi}\)</span>. This is the <em>kernel trick</em>
+[Boser1992]: define the <em>kernel</em>
+<span class="math notranslate nohighlight">\(K(\vec{x},\vec{x}')=\vec{\phi}(\vec{x})^{T}\vec{\phi}(\vec{x}')\)</span>, and
+write the dual problem and the classifier in terms of it,</p>
+<div class="math notranslate nohighlight">
+\[
+\max_{\vec{\lambda}}\ \sum_i\lambda_i-\frac{1}{2}\sum_{i,j}\lambda_i\lambda_jy_iy_jK(\vec{x}_i,\vec{x}_j)
+\quad\text{s.t.}\quad\sum_i\lambda_iy_i=0,\ 0\le\lambda_i\le C ,\tag{2.21}
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+\hat{y}(\vec{x})=\mathrm{sign}\left(\sum_{i=1}^{N}\lambda_iy_iK(\vec{x}_i,\vec{x})+b\right).\tag{2.22}
+\]</div>
+<p>Neither the training nor the prediction ever touches <span class="math notranslate nohighlight">\(\vec{\phi}\)</span>. The
+feature space can therefore be as large as one likes, including
+infinite-dimensional, as long as the kernel is cheap, and this is the
+observation on which the quantum machine rests: the feature space will
+be the Hilbert space of <span class="math notranslate nohighlight">\(n\)</span> qubits, of dimension <span class="math notranslate nohighlight">\(2^n\)</span>, and the kernel
+will be measured.</p>
+<p><strong>Common kernels.</strong>
+Apart from the linear kernel <span class="math notranslate nohighlight">\(K=\vec{x}^{T}\vec{x}'\)</span> the standard
+choices are</p>
+<div class="math notranslate nohighlight">
+\[
+K(\vec{x},\vec{x}')=\left(\gamma\,\vec{x}^{T}\vec{x}'+r\right)^{d}
+\qquad\text{(polynomial of degree $d$)},\tag{2.23}
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+K(\vec{x},\vec{x}')=\exp\left(-\gamma\Vert\vec{x}-\vec{x}'\Vert^2\right)
+\qquad\text{(Gaussian radial basis function, RBF)},\tag{2.24}
+\]</div>
+<p>and the sigmoid kernel <span class="math notranslate nohighlight">\(K=\tanh(\gamma\,\vec{x}^{T}\vec{x}'+r)\)</span>. The RBF
+kernel is the most used; its feature space is infinite-dimensional, its
+parameter <span class="math notranslate nohighlight">\(\gamma\)</span> sets the width <span class="math notranslate nohighlight">\(1/\sqrt{\gamma}\)</span> over which two
+samples are considered similar, and the bottom row of
+Fig. 2.3 gives the picture behind it: a sample is
+described by its similarity to a few <em>landmarks</em>, and in those
+coordinates the nine points of the left panel become linearly
+separable again.</p>
+<p><img alt="Top nine samples on a line, not separable by a threshold left, become " src="../BookFigures/chapter2/kerneltrick.png" /></p>
+<p><em>Figure 2.3: Top: nine samples on a line, not separable by a threshold (left), become linearly separable after the map <span class="math notranslate nohighlight">\(x\mapsto(x,x^2)\)</span> (right). Bottom: the same samples described by their Gaussian similarity <span class="math notranslate nohighlight">\(\exp(-\gamma(x-\ell)^2)\)</span> to two landmarks <span class="math notranslate nohighlight">\(\ell_1=-2\)</span>, <span class="math notranslate nohighlight">\(\ell_2=1\)</span> (left), and in the coordinates <span class="math notranslate nohighlight">\((K(x,\ell_1),K(x,\ell_2))\)</span>, where a line separates them (right). From <code class="docutils literal notranslate"><span class="pre">kernels.py</span></code>.</em></p>
+<p><strong>Mercer’s theorem.</strong>
+Which functions <span class="math notranslate nohighlight">\(K\)</span> are inner products in <em>some</em> feature space?
+Mercer’s theorem [Mercer1909] answers: a symmetric, continuous
+<span class="math notranslate nohighlight">\(K\)</span> is the inner product <span class="math notranslate nohighlight">\(\vec{\phi}(\vec{x})^{T}\vec{\phi}(\vec{x}')\)</span> of
+some map <span class="math notranslate nohighlight">\(\vec{\phi}\)</span>, in general into an infinite-dimensional space, if
+and only if for every finite set of points the Gram matrix</p>
+<div class="math notranslate nohighlight">
+\[
+K_{ij}=K(\vec{x}_i,\vec{x}_j)\qquad\text{is positive semidefinite.}\tag{2.25}
+\]</div>
+<p>One may then use <span class="math notranslate nohighlight">\(K\)</span> without knowing <span class="math notranslate nohighlight">\(\vec{\phi}\)</span>, and the dual
+problem, whose matrix <span class="math notranslate nohighlight">\(P_{ij}=y_iy_jK_{ij}\)</span> inherits the positive
+semidefiniteness, stays convex. The program <code class="docutils literal notranslate"><span class="pre">kernels.py</span></code> checks
+the condition numerically on the hundred points of the two-moons data
+below: the linear, polynomial and RBF kernels pass, and the sigmoid
+kernel fails for both parameter settings tried, with negative
+eigenvalues in its Gram matrix. The sigmoid kernel is nevertheless used
+in practice; the quantum kernels of Section <em>Quantum feature maps and quantum kernels</em>
+will turn out to satisfy Mercer’s condition automatically, and the
+<em>estimated</em> ones of Section <em>Estimating the kernel on a quantum computer</em> to violate it.</p>
+<p><strong>The two moons.</strong>
+Figure 2.4 applies four kernels to the standard
+“two moons” data, two interleaved half circles with Gaussian noise,
+with <span class="math notranslate nohighlight">\(C=5\)</span> and the features standardized to zero mean and unit
+variance. The linear kernel reaches a training accuracy of <span class="math notranslate nohighlight">\(0.88\)</span> with
+34 support vectors; the cubic polynomial <span class="math notranslate nohighlight">\(0.98\)</span> with 12; the RBF kernel
+<span class="math notranslate nohighlight">\(0.96\)</span> with 20 for <span class="math notranslate nohighlight">\(\gamma=0.5\)</span> and <span class="math notranslate nohighlight">\(0.98\)</span> with 43 for <span class="math notranslate nohighlight">\(\gamma=5\)</span>. The
+last panel shows what a too-narrow kernel does: the boundary wraps
+around individual points, nearly half the data become support vectors,
+and the model has begun to memorize the noise.</p>
+<p><img alt="The two-moons data with a linear, a cubic polynomial and two Gaussian " src="../BookFigures/chapter2/moons.png" /></p>
+<p><em>Figure 2.4: The two-moons data with a linear, a cubic polynomial and two Gaussian kernels, <span class="math notranslate nohighlight">\(C=5\)</span>, features standardized. Shading shows the predicted class and the black curve the decision boundary. From <code class="docutils literal notranslate"><span class="pre">svm.py</span></code>.</em></p>
+</section>
+<section id="solving-the-dual-problem">
+<h2>Solving the dual problem<a class="headerlink" href="#solving-the-dual-problem" title="Link to this heading">#</a></h2>
+<p><strong>Quadratic programming.</strong>
+The dual of Eq. (2.21) is an instance of the standard
+quadratic program</p>
+<div class="math notranslate nohighlight">
+\[
+\min_{\vec{\lambda}}\ \frac{1}{2}\vec{\lambda}^{T}\matr{P}\vec{\lambda}+\vec{q}^{T}\vec{\lambda}
+\qquad\text{subject to}\qquad\matr{G}\vec{\lambda}\preceq\vec{h},\quad\matr{A}\vec{\lambda}=\vec{f},\tag{2.26}
+\]</div>
+<p>with <span class="math notranslate nohighlight">\(P_{ij}=y_iy_jK(\vec{x}_i,\vec{x}_j)\)</span>, <span class="math notranslate nohighlight">\(\vec{q}=-\vec{1}\)</span>, the
+equality constraint <span class="math notranslate nohighlight">\(\matr{A}=\vec{y}^{T}\)</span>, <span class="math notranslate nohighlight">\(\vec{f}=0\)</span>, and the box
+<span class="math notranslate nohighlight">\(0\le\lambda_i\le C\)</span> written as the <span class="math notranslate nohighlight">\(2N\)</span> inequalities <span class="math notranslate nohighlight">\(-\lambda_i\le0\)</span>
+and <span class="math notranslate nohighlight">\(\lambda_i\le C\)</span>, which fill the rows of <span class="math notranslate nohighlight">\(\matr{G}\)</span> and <span class="math notranslate nohighlight">\(\vec{h}\)</span>.
+Since <span class="math notranslate nohighlight">\(\matr{P}\)</span> is positive semidefinite the problem is convex, and
+any of the interior-point solvers of convex optimization
+[Boyd2004] solves it; the method <code class="docutils literal notranslate"><span class="pre">SVM.qp_matrices</span></code> of
+<code class="docutils literal notranslate"><span class="pre">svm.py</span></code> builds the six objects, and <code class="docutils literal notranslate"><span class="pre">solve_with_cvxopt</span></code>
+hands them to the CVXOPT library when it is installed, for comparison
+with the solver described next. Gradient methods on
+Eq. (2.21) also work but converge slowly, because the
+equality constraint couples all the multipliers.</p>
+<p><strong>Sequential minimal optimization.</strong>
+The solver we use throughout is Platt’s sequential minimal optimization
+(SMO) [Platt1998], which needs nothing beyond NumPy and exposes
+the structure of the problem. The idea is that the constraint
+<span class="math notranslate nohighlight">\(\sum_i\lambda_iy_i=0\)</span> forbids changing one multiplier alone, but
+allows changing two, <span class="math notranslate nohighlight">\(\lambda_i\)</span> and <span class="math notranslate nohighlight">\(\lambda_j\)</span>, along the line
+<span class="math notranslate nohighlight">\(\lambda_iy_i+\lambda_jy_j=\text{const}\)</span>, and that along that line the
+objective is a parabola whose maximum is known in closed form. With
+the errors <span class="math notranslate nohighlight">\(E_i=f(\vec{x}_i)-y_i\)</span> of the current model and the
+curvature <span class="math notranslate nohighlight">\(\eta=K_{ii}+K_{jj}-2K_{ij}\ge0\)</span>, the unconstrained optimum
+along the line is</p>
+<div class="math notranslate nohighlight">
+\[
+\lambda_j^{\mathrm{new}}=\lambda_j+\frac{y_j\left(E_i-E_j\right)}{\eta},\tag{2.27}
+\]</div>
+<p>which is then clipped to the segment <span class="math notranslate nohighlight">\([L,H]\)</span> of the line that stays
+inside the box <span class="math notranslate nohighlight">\(0\le\lambda\le C\)</span> (<span class="math notranslate nohighlight">\(L=\max(0,\lambda_j-\lambda_i)\)</span>,
+<span class="math notranslate nohighlight">\(H=\min(C,C+\lambda_j-\lambda_i)\)</span> when <span class="math notranslate nohighlight">\(y_i\ne y_j\)</span>, and
+<span class="math notranslate nohighlight">\(L=\max(0,\lambda_i+\lambda_j-C)\)</span>, <span class="math notranslate nohighlight">\(H=\min(C,\lambda_i+\lambda_j)\)</span> when
+<span class="math notranslate nohighlight">\(y_i=y_j\)</span>), and <span class="math notranslate nohighlight">\(\lambda_i\)</span> is moved by <span class="math notranslate nohighlight">\(y_iy_j\)</span> times the opposite
+amount. The intercept is updated so that the KKT condition of the
+moved multiplier holds, and the pair is chosen by scanning the samples
+for a KKT violation and pairing the violator with the sample of the
+largest <span class="math notranslate nohighlight">\(\vert E_i-E_j\vert\)</span>. The core of the update in
+<code class="docutils literal notranslate"><span class="pre">svm.py</span></code>, with <code class="docutils literal notranslate"><span class="pre">Q</span></code> the matrix <span class="math notranslate nohighlight">\(y_iy_jK_{ij}\)</span>, is</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">svm</span> <span class="kn">import</span> <span class="n">SVM</span>
+<span class="c1"># the two-multiplier step of SMO, Eq. (2-smo), as svm.py implements it</span>
+<span class="k">def</span> <span class="nf">take_step</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">C</span><span class="p">):</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">y</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">K</span><span class="p">)</span> <span class="o">@</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">y</span> <span class="o">-</span> <span class="n">y</span> <span class="o">+</span> <span class="n">b</span>    <span class="c1"># E_i = f(x_i) - y_i</span>
+    <span class="n">eta</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">K</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+        <span class="n">L</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lam</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">lam</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="nb">min</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">C</span> <span class="o">+</span> <span class="n">lam</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">lam</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">L</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lam</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">lam</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">C</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">lam</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">lam</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+    <span class="n">lam_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lam</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">E</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="n">eta</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">lam_i</span> <span class="o">=</span> <span class="n">lam</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">lam</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">lam_j</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lam_i</span><span class="p">,</span> <span class="n">lam_j</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Each step is <span class="math notranslate nohighlight">\(\bigO(N)\)</span> once the Gram matrix is stored, the number of
+steps is typically a small multiple of <span class="math notranslate nohighlight">\(N\)</span> (57 for the three-support-vector
+problem of Fig. 2.1, a few hundred for the moons),
+and the iteration stops when no sample violates its KKT condition
+beyond a tolerance. The class <code class="docutils literal notranslate"><span class="pre">SVM</span></code> accepts any kernel object of
+<code class="docutils literal notranslate"><span class="pre">kernels.py</span></code> or, through its argument <code class="docutils literal notranslate"><span class="pre">K</span></code>, a precomputed
+Gram matrix; the latter is how the quantum kernel will enter. On the
+RBF problem of Fig. 2.4 its dual objective agrees with
+that of the LIBSVM solver inside scikit-learn to six digits
+(<code class="docutils literal notranslate"><span class="pre">svm.py</span></code> prints both when scikit-learn is installed).</p>
+</section>
+<section id="quantum-feature-maps-and-quantum-kernels">
+<h2>Quantum feature maps and quantum kernels<a class="headerlink" href="#quantum-feature-maps-and-quantum-kernels" title="Link to this heading">#</a></h2>
+<p><strong>The definition.</strong>
+A classical feature map sends a sample to a vector in a large space.
+A <em>quantum feature map</em> sends it to the state of a register of
+<span class="math notranslate nohighlight">\(n\)</span> qubits, prepared from <span class="math notranslate nohighlight">\(\vert 0\rangle^{\otimes n}\)</span> by a circuit
+whose gates depend on the sample,</p>
+<div class="math notranslate nohighlight">
+\[
+\vec{x}\in\mathbb{R}^p\ \longmapsto\ \vert\phi(\vec{x})\rangle=U(\vec{x})\vert 0\rangle^{\otimes n}\in\mathbb{C}^{2^n},\tag{2.28}
+\]</div>
+<p>and the <em>quantum kernel</em> is the overlap of two such states,</p>
+<div class="math notranslate nohighlight">
+\[
+K(\vec{x},\vec{x}')=\left\vert\langle\phi(\vec{x})\vert\phi(\vec{x}')\rangle\right\vert^2
+=\left\vert\langle 0\vert U^{\dagger}(\vec{x})\,U(\vec{x}')\vert 0\rangle\right\vert^2 .\tag{2.29}
+\]</div>
+<p>The squared modulus rather than the amplitude itself is used because
+the amplitude <span class="math notranslate nohighlight">\(\langle\phi(\vec{x})\vert\phi(\vec{x}')\rangle\)</span> is
+complex and not directly measurable, while its squared modulus is a
+probability, the <em>fidelity</em> of the two states, and
+Section <em>Estimating the kernel on a quantum computer</em> shows how it is measured. Equation (2.29)
+is the kernel of Havlíček <em>et al.</em> [Havlicek2019] and
+of Schuld and Killoran [SchuldKilloran2019], who introduced the
+view of an encoding circuit as a feature map, and it is a Mercer
+kernel without any further condition: writing
+<span class="math notranslate nohighlight">\(\rho(\vec{x})=\vert\phi(\vec{x})\rangle\langle\phi(\vec{x})\vert\)</span> for
+the density matrix of the encoded state,</p>
+<div class="math notranslate nohighlight">
+\[
+K(\vec{x},\vec{x}')=\mathrm{Tr}\left[\rho(\vec{x})\,\rho(\vec{x}')\right],\tag{2.30}
+\]</div>
+<p>which is the Hilbert–Schmidt inner product of two vectors in the real
+vector space of Hermitian <span class="math notranslate nohighlight">\(2^n\times2^n\)</span> matrices. The feature map
+whose existence Mercer’s theorem guarantees is therefore known
+explicitly: it is <span class="math notranslate nohighlight">\(\vec{x}\mapsto\rho(\vec{x})\)</span>, into a space of
+dimension <span class="math notranslate nohighlight">\(4^n\)</span>, and the kernel matrix of any data set is positive
+semidefinite. Equation (2.30) also makes precise the
+sense in which the quantum machine works in an exponentially large
+feature space, and it will return in Section <em>Perspectives</em>
+as the reason why every quantum model of the type of
+Chapter 1 is a kernel method.</p>
+<p><strong>Angle encoding.</strong>
+The angle encoding of Chapter 1,</p>
+<div class="math notranslate nohighlight">
+\[
+U(\vec{x})=\bigotimes_{q=1}^{p}R_y(x_q),\qquad n=p ,\tag{2.31}
+\]</div>
+<p>with one qubit per feature, gives the kernel of Eq. (1.4),</p>
+<div class="math notranslate nohighlight">
+\[
+K(\vec{x},\vec{x}')=\prod_{q=1}^{p}\cos^2\frac{x_q-x'_q}{2},\tag{2.32}
+\]</div>
+<p>a product of one-dimensional kernels, each a smooth periodic function
+of the difference of one feature. It is a stationary kernel like the
+RBF, with a fixed width, and a classical computer evaluates it in
+<span class="math notranslate nohighlight">\(\bigO(p)\)</span> operations. The same holds for <span class="math notranslate nohighlight">\(R_x\)</span> rotations and for the encoding
+<span class="math notranslate nohighlight">\(R_z(x_q)H\)</span>, whose kernel is again <span class="math notranslate nohighlight">\(\prod_q\cos^2((x_q-x'_q)/2)\)</span>
+(Exercise 1.2). The program
+<code class="docutils literal notranslate"><span class="pre">feature_maps.py</span></code> checks Eq. (2.32) for a
+random pair of samples; the value it prints, <span class="math notranslate nohighlight">\(0.7019\)</span>, agrees with the
+product of cosines.</p>
+<p><strong>Amplitude encoding.</strong>
+With the sample as the amplitude vector, Eq. (1.5),</p>
+<div class="math notranslate nohighlight">
+\[
+K(\vec{x},\vec{x}')=\frac{\left(\vec{x}^{T}\vec{x}'\right)^2}{\Vert\vec{x}\Vert^2\Vert\vec{x}'\Vert^2},\tag{2.33}
+\]</div>
+<p>the square of the cosine of the angle between the samples, which is
+the quadratic polynomial kernel of Eq. (2.20) on
+normalized data. The compact encoding, <span class="math notranslate nohighlight">\(\lceil\log_2p\rceil\)</span> qubits,
+buys nothing here: the kernel is classical, and the state-preparation
+circuit is expensive.</p>
+<p><strong>Entangling feature maps.</strong>
+Neither of the two maps above can give a quantum advantage, because
+their kernels are evaluated classically in polynomial time; the
+remark of Havlíček <em>et al.</em> that a feature map that is easy
+to simulate classically makes the quantum computer unnecessary
+[Havlicek2019] is the starting point for everything that follows.
+Their proposal, the <em>second-order Pauli-<span class="math notranslate nohighlight">\(Z\)</span> feature map</em> or
+ZZ feature map, is</p>
+<div class="math notranslate nohighlight">
+\[
+U(\vec{x})=\left[U_{\Phi}(\vec{x})\,H^{\otimes n}\right]^{r},\qquad
+U_{\Phi}(\vec{x})=\exp\Bigl(i\sum_{q}\phi_q(\vec{x})\,Z_q+i\sum_{q&lt;q'}\phi_{qq'}(\vec{x})\,Z_qZ_{q'}\Bigr),\tag{2.34}
+\]</div>
+<p>with one qubit per feature, <span class="math notranslate nohighlight">\(r\)</span> repetitions (two in the original
+work), and the functions</p>
+<div class="math notranslate nohighlight">
+\[
+\phi_q(\vec{x})=x_q,\qquad\phi_{qq'}(\vec{x})=(\pi-x_q)(\pi-x_{q'}) ,\tag{2.35}
+\]</div>
+<p>with the pairs <span class="math notranslate nohighlight">\((q,q')\)</span> running over nearest neighbors (“linear”
+entanglement) or over all pairs (“full”). The Hadamards put every
+qubit into <span class="math notranslate nohighlight">\((\vert0\rangle+\vert1\rangle)/\sqrt2\)</span>, the single-<span class="math notranslate nohighlight">\(Z\)</span> terms
+write the features into the phases, and the <span class="math notranslate nohighlight">\(Z_qZ_{q'}\)</span> terms write
+products of features into the phases of the two-qubit states, which is
+where the entanglement and the non-linearity come from. All the terms
+in the exponent commute, being diagonal, so the exponential is a
+product of one-qubit phase rotations <span class="math notranslate nohighlight">\(e^{i\phi_qZ_q}=R_z(-2\phi_q)\)</span>
+and two-qubit rotations <span class="math notranslate nohighlight">\(e^{i\phi_{qq'}Z_qZ_{q'}}\)</span>,
+each of which is a CNOT, an <span class="math notranslate nohighlight">\(R_z(-2\phi_{qq'})\)</span> on the target, and a
+second CNOT, Fig. 2.5. The depth is <span class="math notranslate nohighlight">\(\bigO(rn)\)</span> for
+linear and <span class="math notranslate nohighlight">\(\bigO(rn^2)\)</span> for full entanglement. The general
+form, with <span class="math notranslate nohighlight">\(Z_qZ_{q'}\)</span> replaced by arbitrary Pauli strings and
+<span class="math notranslate nohighlight">\(\phi_{qq'}\)</span> by other functions, is the Pauli feature map; the ZZ map
+is the one for which classical hardness is argued, through its
+relation to sampling from the output of such circuits, and the one
+every quantum machine-learning library implements.</p>
+<p><img alt="One repetition of the ZZ feature map of Eq. 2.34 on two qubits. The tw" src="../BookFigures/chapter2/2-zzcircuit.png" /></p>
+<p><em>Figure 2.5: One repetition of the ZZ feature map of Eq. (2.34) on two qubits. The two-qubit rotation <span class="math notranslate nohighlight">\(e^{i\phi_{12}Z_1Z_2}\)</span> is realized as CNOT, <span class="math notranslate nohighlight">\(R_z(-2\phi_{12})\)</span> on the target, CNOT. The circuit is repeated <span class="math notranslate nohighlight">\(r\)</span> times, and <span class="math notranslate nohighlight">\(U^{\dagger}(\vec{x}')\)</span> is the same circuit read backwards with the angles of <span class="math notranslate nohighlight">\(\vec{x}'\)</span> and their signs reversed.</em></p>
+<p>The program implements the map as the class <code class="docutils literal notranslate"><span class="pre">ZZFeatureMap</span></code> and
+checks it, on two qubits, against the matrix exponential of the
+diagonal generator; the two agree up to a global phase. Its argument
+<code class="docutils literal notranslate"><span class="pre">alpha</span></code> multiplies the features before they enter
+Eq. (2.35), a <em>bandwidth</em> that plays the role of
+<span class="math notranslate nohighlight">\(\gamma\)</span> in the RBF kernel and whose importance was pointed out by
+Shaydulin and Wild [Shaydulin2022]: a kernel whose phases vary too
+fast with the features becomes nearly diagonal, every sample is
+similar only to itself, and the machine memorizes. We shall see this
+happen in Table 2.1.</p>
+<p><strong>Where the kernel lives.</strong>
+It is worth pausing on what has and has not changed relative to
+Section <em>Kernels</em>. The feature space is explicit, <span class="math notranslate nohighlight">\(\mathbb{C}^{2^n}\)</span>
+or, by Eq. (2.30), the <span class="math notranslate nohighlight">\(4^n\)</span>-dimensional space of
+density matrices, and the kernel is its inner product; a classical
+computer could in principle construct the same feature vectors by
+simulating the circuit, at a cost exponential in <span class="math notranslate nohighlight">\(n\)</span>, which is why
+the quantum computer is used instead. For a product map such as
+Eq. (2.31) the simulation costs <span class="math notranslate nohighlight">\(\bigO(n)\)</span> and the quantum
+computer is not needed; for the ZZ map with a dozen or more qubits and
+full entanglement no efficient simulation is known. The machine
+itself, Eqs. (2.21) and (2.22),
+is the classical one of Sections <em>Lagrange multipliers and the dual problem</em>–<em>Solving the dual problem</em> and
+is trained on a classical computer.</p>
+</section>
+<section id="estimating-the-kernel-on-a-quantum-computer">
+<h2>Estimating the kernel on a quantum computer<a class="headerlink" href="#estimating-the-kernel-on-a-quantum-computer" title="Link to this heading">#</a></h2>
+<p>A quantum computer does not return an overlap; it returns
+measurement outcomes, and the fidelity of Eq. (2.29) has
+to be extracted from their statistics. Two circuits do this.</p>
+<p><strong>The adjoint test.</strong>
+Prepare <span class="math notranslate nohighlight">\(\vert\phi(\vec{x}')\rangle=U(\vec{x}')\vert0\rangle\)</span>, apply the
+inverse of the circuit of the other sample, <span class="math notranslate nohighlight">\(U^{\dagger}(\vec{x})\)</span>, and
+measure every qubit in the computational basis
+(Fig. 2.6). The probability of reading all zeros is</p>
+<div class="math notranslate nohighlight">
+\[
+P(0\cdots0)=\left\vert\langle0\vert U^{\dagger}(\vec{x})U(\vec{x}')\vert0\rangle\right\vert^2=K(\vec{x},\vec{x}') ,\tag{2.36}
+\]</div>
+<p>exactly the kernel. The test uses <span class="math notranslate nohighlight">\(n\)</span> qubits and twice the depth of the
+feature map, and the inverse circuit is the feature-map circuit run
+backwards with the signs of all rotation angles reversed, so that
+nothing new has to be compiled. The estimate from <span class="math notranslate nohighlight">\(S\)</span> shots is the
+fraction <span class="math notranslate nohighlight">\(\hat{K}=S_0/S\)</span> of all-zero outcomes, a binomial variable with</p>
+<div class="math notranslate nohighlight">
+\[
+\mathrm{Var}\,\hat{K}=\frac{K(1-K)}{S}\le\frac{1}{4S} .\tag{2.37}
+\]</div>
+<p><img alt="The adjoint inversion test for the quantum kernel the feature-map circ" src="../BookFigures/chapter2/2-adjointtest.png" /></p>
+<p><em>Figure 2.6: The adjoint (inversion) test for the quantum kernel: the feature-map circuit of one sample followed by the inverse circuit of the other. The fraction of shots in which every qubit reads <span class="math notranslate nohighlight">\(0\)</span> estimates <span class="math notranslate nohighlight">\(K(\vec{x},\vec{x}')\)</span>, Eq. (2.36).</em></p>
+<p><strong>The SWAP test.</strong>
+The older alternative [Buhrman2001] prepares both states in two
+registers of <span class="math notranslate nohighlight">\(n\)</span> qubits and uses an ancilla
+(Fig. 2.7): a Hadamard on the ancilla, a swap of the
+two registers controlled by the ancilla, a second Hadamard, and a
+measurement of the ancilla. Writing
+<span class="math notranslate nohighlight">\(\vert a\rangle=\vert\phi(\vec{x})\rangle\)</span> and
+<span class="math notranslate nohighlight">\(\vert b\rangle=\vert\phi(\vec{x}')\rangle\)</span>, the state before the
+measurement is</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{1}{2}\vert0\rangle\bigl(\vert a\rangle\vert b\rangle+\vert b\rangle\vert a\rangle\bigr)
++\frac{1}{2}\vert1\rangle\bigl(\vert a\rangle\vert b\rangle-\vert b\rangle\vert a\rangle\bigr),
+\]</div>
+<p>and the probability of reading <span class="math notranslate nohighlight">\(0\)</span> on the ancilla is</p>
+<div class="math notranslate nohighlight">
+\[
+P(0)=\frac{1}{2}\left(1+\left\vert\langle a\vert b\rangle\right\vert^2\right)=\frac{1+K}{2} .\tag{2.38}
+\]</div>
+<p>The estimate <span class="math notranslate nohighlight">\(\hat{K}=2\hat{P}(0)-1\)</span> has variance</p>
+<div class="math notranslate nohighlight">
+\[
+\mathrm{Var}\,\hat{K}=4\,\frac{P(0)(1-P(0))}{S}=\frac{1-K^2}{S} ,\tag{2.39}
+\]</div>
+<p>which is <span class="math notranslate nohighlight">\((1+K)/K\)</span> times that of the adjoint test: twice as large near
+<span class="math notranslate nohighlight">\(K=1\)</span> and without bound for small kernel values. The SWAP test needs <span class="math notranslate nohighlight">\(2n+1\)</span> qubits and
+<span class="math notranslate nohighlight">\(n\)</span> controlled-swap (Fredkin) gates, each of which costs several
+two-qubit gates on hardware; its one advantage is that it does not
+require the inverse circuit, so that it also works when the states
+come from somewhere other than a known circuit, for example from a
+quantum simulation. For kernels of encoded classical data the adjoint
+test is used.</p>
+<p><img alt="The SWAP test the two encoded states in two registers each line stands" src="../BookFigures/chapter2/2-swaptest.png" /></p>
+<p><em>Figure 2.7: The SWAP test: the two encoded states in two registers (each line stands for <span class="math notranslate nohighlight">\(n\)</span> qubits), a controlled swap of the registers, and a measurement of the ancilla, Eq. (2.38).</em></p>
+<p><strong>On the simulator.</strong>
+The class <code class="docutils literal notranslate"><span class="pre">QuantumKernel</span></code> of <code class="docutils literal notranslate"><span class="pre">feature_maps.py</span></code> evaluates
+Eq. (2.29) exactly from the two state vectors, which is
+what a noiseless simulator can do and a quantum computer cannot, and
+also builds the two test circuits on the simulator of
+<code class="docutils literal notranslate"><span class="pre">common/statevector.py</span></code> and samples them:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">feature_maps</span> <span class="kn">import</span> <span class="n">ZZFeatureMap</span><span class="p">,</span> <span class="n">QuantumKernel</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>                   <span class="c1"># the pair of the program&#39;s own test</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">xp</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">QuantumKernel</span><span class="p">(</span><span class="n">ZZFeatureMap</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">K</span> <span class="o">=</span> <span class="n">kernel</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">xp</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>                     <span class="c1"># exact fidelity</span>
+<span class="n">adj</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">adjoint_circuit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xp</span><span class="p">)</span>              <span class="c1"># U(x)^dagger U(x&#39;)|0&gt;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">adj</span><span class="o">.</span><span class="n">probabilities</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>                <span class="c1"># P(00) = K</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">adj</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+<span class="n">swap</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">swap_test_circuit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xp</span><span class="p">)</span>           <span class="c1"># ancilla + two registers</span>
+<span class="nb">print</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">K</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">swap</span><span class="o">.</span><span class="n">marginal</span><span class="p">(</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>         <span class="c1"># P(ancilla = 0)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.15698435316510656 0.15698435316510656
+{&#39;00&#39;: 164, &#39;01&#39;: 33, &#39;10&#39;: 798, &#39;11&#39;: 5}
+0.5784921765825533 0.5784921765825534
+</pre></div>
+</div>
+</div>
+</div>
+<p>For the pair of samples in the program’s own test the fidelity is
+<span class="math notranslate nohighlight">\(0.1570\)</span>, the adjoint circuit returns all zeros with that probability,
+the ancilla of the SWAP circuit reads <span class="math notranslate nohighlight">\(0\)</span> with probability <span class="math notranslate nohighlight">\(0.5785=(1+K)/2\)</span>,
+and a thousand shots of the adjoint test give <span class="math notranslate nohighlight">\(164\)</span> all-zero outcomes,
+an estimate <span class="math notranslate nohighlight">\(\hat{K}=0.164\)</span> with the standard error <span class="math notranslate nohighlight">\(\sqrt{K(1-K)/S}=0.012\)</span>
+of Eq. (2.37). With a finite <code class="docutils literal notranslate"><span class="pre">shots</span></code> argument
+the class returns, for every kernel entry, a binomial sample of the
+exact probability; this is statistically identical to running the
+circuit <span class="math notranslate nohighlight">\(S\)</span> times and counting, and it is how all shot-noise results
+below are produced.</p>
+<p><strong>The cost, and a defect of estimated kernels.</strong>
+Training needs the <span class="math notranslate nohighlight">\(N(N-1)/2\)</span> distinct off-diagonal entries of the
+Gram matrix (the diagonal is <span class="math notranslate nohighlight">\(1\)</span>), each from its own circuit run <span class="math notranslate nohighlight">\(S\)</span>
+times, and prediction needs <span class="math notranslate nohighlight">\(N_s\)</span> more entries per test sample; the
+quantum part of the machine therefore costs <span class="math notranslate nohighlight">\(\bigO(N^2S)\)</span> circuit
+executions, which for the <span class="math notranslate nohighlight">\(N=90\)</span> training points and <span class="math notranslate nohighlight">\(S=10^4\)</span> shots
+of Section <em>Kernels from a finite number of shots</em> is <span class="math notranslate nohighlight">\(4\times10^7\)</span> shots, of the order of an hour
+on a present-day device. The estimated matrix <span class="math notranslate nohighlight">\(\hat{\matr{K}}\)</span> (which the program samples
+entry by entry, <span class="math notranslate nohighlight">\(\hat{K}_{ij}\)</span> and <span class="math notranslate nohighlight">\(\hat{K}_{ji}\)</span> independently) is
+symmetric only on average and, more seriously, is not positive
+semidefinite: the sampling errors of <span class="math notranslate nohighlight">\(\bigO(1/\sqrt{S})\)</span> in every
+entry shift the small eigenvalues of <span class="math notranslate nohighlight">\(\matr{K}\)</span> below zero, and the
+dual problem of Eq. (2.21) is then not concave, so
+that SMO can cycle and an interior-point solver can fail. The remedy
+used by <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>, and by the libraries, is to replace
+<span class="math notranslate nohighlight">\(\hat{\matr{K}}\)</span> by the nearest positive-semidefinite matrix: symmetrize,
+diagonalize, and set the negative eigenvalues to zero,</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{1}{2}\bigl(\hat{\matr{K}}+\hat{\matr{K}}^{T}\bigr)=\sum_k\omega_k\,\vec{v}_k\vec{v}_k^{T}
+\ \longrightarrow\ \hat{\matr{K}}_{\mathrm{psd}}=\sum_{k:\,\omega_k&gt;0}\omega_k\,\vec{v}_k\vec{v}_k^{T} .\tag{2.40}
+\]</div>
+<p>Table 2.3 will show how negative the smallest eigenvalue
+gets.</p>
+</section>
+<section id="the-quantum-support-vector-machine">
+<h2>The quantum support-vector machine<a class="headerlink" href="#the-quantum-support-vector-machine" title="Link to this heading">#</a></h2>
+<p><strong>The algorithm.</strong>
+Everything is now in place, and the QSVM is the following four steps
+[Havlicek2019,SchuldKilloran2019].</p>
+<ol class="arabic">
+<li><p>Choose a feature map <span class="math notranslate nohighlight">\(U(\vec{x})\)</span> and rescale the features into
+the range the map expects, <span class="math notranslate nohighlight">\([0,\pi]\)</span> for rotation angles.</p></li>
+<li><p>Estimate the training Gram matrix <span class="math notranslate nohighlight">\(K_{ij}=\vert\langle\phi(\vec{x}_i)\vert\phi(\vec{x}_j)\rangle\vert^2\)</span>
+on the quantum computer, one circuit per pair, and project it onto the
+positive-semidefinite cone if it was estimated with shots.</p></li>
+<li><p>Solve the dual problem</p>
+<div class="math notranslate nohighlight">
+\[
+   \max_{\vec{\lambda}}\ \sum_i\lambda_i-\frac{1}{2}\sum_{i,j}\lambda_i\lambda_jy_iy_jK_{ij}
+   \quad\text{s.t.}\quad\sum_i\lambda_iy_i=0,\ 0\le\lambda_i\le C ,\tag{2.41}
+   \]</div>
+<p>on the classical computer, which is Eq. (2.21) with
+the quantum Gram matrix, and compute <span class="math notranslate nohighlight">\(b\)</span> from the margin support
+vectors by Eq. (2.12).</p>
+</li>
+<li><p>Classify a new sample by estimating its kernel with each support
+vector and evaluating</p>
+<div class="math notranslate nohighlight">
+\[
+   \hat{y}(\vec{x})=\mathrm{sign}\left(\sum_{i\in\mathcal{S}}\lambda_iy_i\,K(\vec{x}_i,\vec{x})+b\right).\tag{2.42}
+   \]</div>
+</li>
+</ol>
+<p>The class <code class="docutils literal notranslate"><span class="pre">QSVM</span></code> of <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code> is these four steps, and
+is short enough to show in full (the program adds only a switch
+<code class="docutils literal notranslate"><span class="pre">psd</span></code> that turns the projection off):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">svm</span> <span class="kn">import</span> <span class="n">SVM</span>
+<span class="kn">from</span> <span class="nn">feature_maps</span> <span class="kn">import</span> <span class="n">QuantumKernel</span><span class="p">,</span> <span class="n">ZZFeatureMap</span>
+
+<span class="k">class</span> <span class="nc">QSVM</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A support-vector machine with a quantum kernel.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_map</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;adjoint&quot;</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">QuantumKernel</span><span class="p">(</span><span class="n">feature_map</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="n">shots</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">svm</span> <span class="o">=</span> <span class="n">SVM</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">gram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_train</span><span class="p">)</span>             <span class="c1"># the quantum part</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">shots</span><span class="p">:</span>                          <span class="c1"># Eq. (2-psdfix)</span>
+            <span class="n">w</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">((</span><span class="n">K</span> <span class="o">+</span> <span class="n">K</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="p">(</span><span class="n">V</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">@</span> <span class="n">V</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">svm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">)</span>             <span class="c1"># the classical part</span>
+        <span class="k">return</span> <span class="bp">self</span>
+    <span class="k">def</span> <span class="nf">decision_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_train</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">svm</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The solver never learns that the kernel came from a quantum circuit,
+and the same class runs with any <code class="docutils literal notranslate"><span class="pre">FeatureMap</span></code>.</p>
+<p><strong>Four data sets.</strong>
+Table 2.1 trains six machines on four two-class
+problems, each split <span class="math notranslate nohighlight">\(70/30\)</span> into training and test sets: the two
+moons and two circles of Fig. 2.4, the XOR problem (four
+Gaussian clouds at the corners of a square with diagonally opposite
+corners in the same class, which no linear classifier can learn), and
+the two overlapping species, versicolor and virginica, of Fisher’s
+Iris flowers [Fisher1936] described by petal length and width.
+The classical machines use standardized features and the quantum ones
+features rescaled into <span class="math notranslate nohighlight">\([0,\pi]\)</span>; <span class="math notranslate nohighlight">\(C=1\)</span> throughout.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Data set</p></th>
+<th class="head"><p>linear</p></th>
+<th class="head"><p>RBF (<span class="math notranslate nohighlight">\(\gamma=1\)</span>)</p></th>
+<th class="head"><p>angle</p></th>
+<th class="head"><p>angle, ent.</p></th>
+<th class="head"><p>ZZ</p></th>
+<th class="head"><p>ZZ, <span class="math notranslate nohighlight">\(\alpha=0.5\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>two moons</p></td>
+<td><p>0.89/0.83</p></td>
+<td><p>0.96/0.97</p></td>
+<td><p>0.89/0.77</p></td>
+<td><p>0.89/0.83</p></td>
+<td><p>0.77/0.83</p></td>
+<td><p>0.94/0.90</p></td>
+</tr>
+<tr class="row-odd"><td><p>two circles</p></td>
+<td><p>0.67/0.37</p></td>
+<td><p>1.00/1.00</p></td>
+<td><p>1.00/1.00</p></td>
+<td><p>0.99/1.00</p></td>
+<td><p>0.80/0.73</p></td>
+<td><p>0.96/0.97</p></td>
+</tr>
+<tr class="row-even"><td><p>XOR</p></td>
+<td><p>0.81/0.60</p></td>
+<td><p>1.00/1.00</p></td>
+<td><p>1.00/1.00</p></td>
+<td><p>0.97/0.90</p></td>
+<td><p>0.81/0.83</p></td>
+<td><p>1.00/1.00</p></td>
+</tr>
+<tr class="row-odd"><td><p>Iris (versicolor/virginica)</p></td>
+<td><p>0.96/0.90</p></td>
+<td><p>0.97/0.90</p></td>
+<td><p>0.96/0.90</p></td>
+<td><p>0.97/0.90</p></td>
+<td><p>0.83/0.70</p></td>
+<td><p>0.93/0.87</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 2.1: Training/test accuracy of classical and quantum kernels on
+four two-class problems, <span class="math notranslate nohighlight">\(C=1\)</span>, 70/30 split (two features, two qubits
+in every case). The angle encoding is Eq. (2.31); “ent”
+adds a second layer of rotations with a CNOT between them; the ZZ map
+is Eq. (2.34) with <span class="math notranslate nohighlight">\(r=2\)</span>, with and without the bandwidth
+<span class="math notranslate nohighlight">\(\alpha=0.5\)</span>. From <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>.</em></p>
+<p>Three things are visible in the table and in Fig. 2.8,
+which draws the decision regions of three of the kernels. First, the
+plain angle encoding does what its kernel, Eq. (2.32),
+says it should: it is a stationary kernel of fixed width, and it
+performs like the RBF kernel on the circles and the XOR data, where a
+width of order one is right, and worse on the moons, where the RBF
+kernel with its tunable <span class="math notranslate nohighlight">\(\gamma\)</span> wins. Second, the ZZ map with the
+features scaled into <span class="math notranslate nohighlight">\([0,\pi]\)</span> fits the training set <em>worse</em> than
+every other non-linear kernel in the table, on every data set: its phases <span class="math notranslate nohighlight">\(\phi_{qq'}=(\pi-x_q)(\pi-x_{q'})\)</span> vary
+so quickly across the data that distinct samples are nearly orthogonal
+in the feature space, the Gram matrix is nearly diagonal, and the
+machine cannot generalize, which is the bandwidth problem of
+Shaydulin and Wild [Shaydulin2022]. Halving the features,
+<span class="math notranslate nohighlight">\(\alpha=0.5\)</span>, repairs it, and the ZZ kernel then matches the RBF
+kernel on the XOR data and comes close on the others.
+Third, and most important, nothing in the table is <em>better</em> than
+the Gaussian kernel. These are two-dimensional problems; the
+two-qubit feature space is four-dimensional, its density matrices
+span a sixteen-dimensional real space, and a classical computer
+evaluates all the quantum kernels of the table exactly in
+microseconds, as the simulator just did. There was no reason to expect
+an advantage and there is none.</p>
+<p><img alt="Decision regions of the RBF kernel, the angle-encoding kernel and the " src="../BookFigures/chapter2/qsvmmoons.png" /></p>
+<p><em>Figure 2.8: Decision regions of the RBF kernel, the angle-encoding kernel and the ZZ kernel with bandwidth <span class="math notranslate nohighlight">\(\alpha=0.5\)</span> on the two moons (top) and the two circles (bottom); <span class="math notranslate nohighlight">\(C=1\)</span>. Filled markers are training samples, crosses test samples. The classical kernel sees standardized features, the quantum ones features rescaled into <span class="math notranslate nohighlight">\([0,\pi]\)</span>. From <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>.</em></p>
+<p><strong>A data set made for the quantum kernel.</strong>
+Havlíček <em>et al.</em> demonstrated their machine on data
+that were constructed to be separable by their feature map
+[Havlicek2019], and the construction is instructive. Draw samples
+<span class="math notranslate nohighlight">\(\vec{x}\)</span> uniformly from <span class="math notranslate nohighlight">\([0,2\pi)^2\)</span>, encode each with the ZZ map,
+<span class="math notranslate nohighlight">\(\vert\phi(\vec{x})\rangle\)</span>, and label it by the sign of the expectation
+value of a fixed observable in that state,</p>
+<div class="math notranslate nohighlight">
+\[
+y(\vec{x})=\mathrm{sign}\,f(\vec{x}),\qquad
+f(\vec{x})=\langle\phi(\vec{x})\vert\,V^{\dagger}\,Z\otimes Z\,V\,\vert\phi(\vec{x})\rangle ,\tag{2.43}
+\]</div>
+<p>with <span class="math notranslate nohighlight">\(V\)</span> a fixed random unitary; samples with <span class="math notranslate nohighlight">\(\vert f(\vec{x})\vert&lt;\Delta\)</span>
+are discarded so that the classes are separated by a gap <span class="math notranslate nohighlight">\(\Delta=0.3\)</span>.
+By construction the labels are a linear function of the density matrix
+<span class="math notranslate nohighlight">\(\rho(\vec{x})\)</span>, hence linearly separable in the feature space of
+Eq. (2.30), and a support-vector machine with exactly
+this kernel should find a separating hyperplane; a classical kernel
+has no such guarantee. Table 2.2 and
+Fig. 2.9 show the outcome for 120 samples, 90 of them
+for training. The linear kernel and the angle encoding are at chance
+level on the test set; the RBF kernel reaches a test accuracy of <span class="math notranslate nohighlight">\(0.57\)</span>
+to <span class="math notranslate nohighlight">\(0.63\)</span> whatever its width, and with <span class="math notranslate nohighlight">\(\gamma=5\)</span> fits the training
+set to <span class="math notranslate nohighlight">\(0.97\)</span> by memorizing it, with 80 of 90 points as support
+vectors; the ZZ kernel with the right number of repetitions classifies
+training and test sets perfectly, with 27 support vectors, or 13 with
+a harder margin. The boundary it draws, in Fig. 2.9,
+is a complicated, fine-grained function of the features that no kernel
+of fixed width can reproduce, and that the ZZ kernel reproduces because
+it is the function the labels were made from.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Kernel</p></th>
+<th class="head"><p>Training accuracy</p></th>
+<th class="head"><p>Test accuracy</p></th>
+<th class="head"><p>Support vectors</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>linear</p></td>
+<td><p>0.64</p></td>
+<td><p>0.57</p></td>
+<td><p>72</p></td>
+</tr>
+<tr class="row-odd"><td><p>RBF, <span class="math notranslate nohighlight">\(\gamma=0.2\)</span></p></td>
+<td><p>0.67</p></td>
+<td><p>0.57</p></td>
+<td><p>76</p></td>
+</tr>
+<tr class="row-even"><td><p>RBF, <span class="math notranslate nohighlight">\(\gamma=1\)</span></p></td>
+<td><p>0.80</p></td>
+<td><p>0.57</p></td>
+<td><p>75</p></td>
+</tr>
+<tr class="row-odd"><td><p>RBF, <span class="math notranslate nohighlight">\(\gamma=5\)</span></p></td>
+<td><p>0.97</p></td>
+<td><p>0.63</p></td>
+<td><p>80</p></td>
+</tr>
+<tr class="row-even"><td><p>angle encoding</p></td>
+<td><p>0.66</p></td>
+<td><p>0.43</p></td>
+<td><p>78</p></td>
+</tr>
+<tr class="row-odd"><td><p>ZZ, <span class="math notranslate nohighlight">\(r=1\)</span></p></td>
+<td><p>0.90</p></td>
+<td><p>0.97</p></td>
+<td><p>46</p></td>
+</tr>
+<tr class="row-even"><td><p>ZZ, <span class="math notranslate nohighlight">\(r=2\)</span></p></td>
+<td><p>1.00</p></td>
+<td><p>1.00</p></td>
+<td><p>27</p></td>
+</tr>
+<tr class="row-odd"><td><p>ZZ, <span class="math notranslate nohighlight">\(r=2\)</span>, <span class="math notranslate nohighlight">\(C=100\)</span></p></td>
+<td><p>1.00</p></td>
+<td><p>1.00</p></td>
+<td><p>13</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 2.2: The data set of Eq. (2.43): 120 samples,
+65 with <span class="math notranslate nohighlight">\(y=+1\)</span>, 90 for training and 30 for testing, <span class="math notranslate nohighlight">\(C=1\)</span> unless
+stated. From <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>.</em></p>
+<p><img alt="Decision regions of the RBF kernel gamma1 and of the ZZ kernel r2 on t" src="../BookFigures/chapter2/havlicek.png" /></p>
+<p><em>Figure 2.9: Decision regions of the RBF kernel (<span class="math notranslate nohighlight">\(\gamma=1\)</span>) and of the ZZ kernel (<span class="math notranslate nohighlight">\(r=2\)</span>) on the data of Eq. (2.43), which were labeled by the ZZ map itself. Filled markers are training samples, crosses test samples. From <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>.</em></p>
+<p>This is the demonstration one can give today, and it must be read for
+what it is. It shows that a quantum kernel is a kernel like any other,
+with its own inductive bias [Kubler2021], and that data whose
+structure matches that bias are learned by it and not by others. It
+does not show that natural data have that structure, and the random
+unitary <span class="math notranslate nohighlight">\(V\)</span> that generated the labels is not something one meets in a
+flower or a material. Whether there exist practically relevant
+problems whose labels are, in this sense, a function of a
+classically intractable quantum state is the open question of the
+field; Liu, Arunachalam and Temme [Liu2021] constructed one from
+the discrete-logarithm problem, with a provable advantage, and Huang
+<em>et al.</em> [Huang2021] gave a test, computable from the two
+Gram matrices, of whether a given data set could profit from a given
+quantum kernel at all.</p>
+<section id="kernels-from-a-finite-number-of-shots">
+<h3>Kernels from a finite number of shots<a class="headerlink" href="#kernels-from-a-finite-number-of-shots" title="Link to this heading">#</a></h3>
+<p>All the quantum results above used the exact fidelities. A quantum
+computer gives estimates, and Table 2.3 and
+Fig. 2.10 repeat the ZZ experiment of
+Table 2.2 with the training Gram matrix estimated
+from <span class="math notranslate nohighlight">\(S\)</span> shots per entry, by each of the two tests, and projected onto
+the positive-semidefinite cone before training. The root-mean-square
+error of the entries falls as <span class="math notranslate nohighlight">\(1/\sqrt{S}\)</span>, with the prefactor of
+Eq. (2.37) for the adjoint test and a prefactor about
+<span class="math notranslate nohighlight">\(2.4\)</span> times larger for the SWAP test, as Eqs. (2.37)
+and (2.39) predict for the small kernel values that
+dominate this Gram matrix. The smallest eigenvalue of the raw estimate
+is negative at every shot count, down to <span class="math notranslate nohighlight">\(-1.4\)</span> (adjoint) and <span class="math notranslate nohighlight">\(-3.6\)</span>
+(SWAP) at ten shots for a matrix whose exact eigenvalues lie in
+<span class="math notranslate nohighlight">\([0,N]\)</span>, which is why the projection of Eq. (2.40) is not
+optional. The classifier is remarkably robust: with the adjoint test
+ten shots per entry already give a perfect test accuracy, and with
+the SWAP test a thousand do. The reason is that the support-vector
+machine is a maximum-margin method, and a margin of <span class="math notranslate nohighlight">\(\Delta=0.3\)</span> in the
+label function tolerates a good deal of noise in the kernel; for data
+with overlapping classes the shot count would matter more, and
+Exercise 2.7 explores this.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Test</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(S\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\max\vert\hat{K}_{ij}-K_{ij}\vert\)</span></p></th>
+<th class="head"><p>rms error</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\omega_{\min}\)</span></p></th>
+<th class="head"><p>Test accuracy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>adjoint</p></td>
+<td><p>10</p></td>
+<td><p>0.576</p></td>
+<td><p>0.119</p></td>
+<td><p><span class="math notranslate nohighlight">\(-1.447\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-odd"><td><p>adjoint</p></td>
+<td><p>100</p></td>
+<td><p>0.167</p></td>
+<td><p>0.038</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.431\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-even"><td><p>adjoint</p></td>
+<td><p>1000</p></td>
+<td><p>0.066</p></td>
+<td><p>0.012</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.149\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-odd"><td><p>adjoint</p></td>
+<td><p>10000</p></td>
+<td><p>0.024</p></td>
+<td><p>0.004</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.044\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-even"><td><p>adjoint</p></td>
+<td><p>100000</p></td>
+<td><p>0.006</p></td>
+<td><p>0.001</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.014\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-odd"><td><p>SWAP</p></td>
+<td><p>10</p></td>
+<td><p>1.225</p></td>
+<td><p>0.290</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.626\)</span></p></td>
+<td><p>0.70</p></td>
+</tr>
+<tr class="row-even"><td><p>SWAP</p></td>
+<td><p>100</p></td>
+<td><p>0.370</p></td>
+<td><p>0.092</p></td>
+<td><p><span class="math notranslate nohighlight">\(-1.125\)</span></p></td>
+<td><p>0.93</p></td>
+</tr>
+<tr class="row-odd"><td><p>SWAP</p></td>
+<td><p>1000</p></td>
+<td><p>0.126</p></td>
+<td><p>0.030</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.335\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-even"><td><p>SWAP</p></td>
+<td><p>10000</p></td>
+<td><p>0.038</p></td>
+<td><p>0.009</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.104\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+<tr class="row-odd"><td><p>SWAP</p></td>
+<td><p>100000</p></td>
+<td><p>0.012</p></td>
+<td><p>0.003</p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.036\)</span></p></td>
+<td><p>1.00</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 2.3: The ZZ kernel (<span class="math notranslate nohighlight">\(r=2\)</span>) of the training set of
+Table 2.2 estimated from <span class="math notranslate nohighlight">\(S\)</span> shots per entry: the
+largest and the root-mean-square error of the entries, the smallest
+eigenvalue of the (symmetrized) estimate before projection, and the
+test accuracy of the machine trained on the projected estimate. From
+<code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>.</em></p>
+<p><img alt="Left root-mean-square error of the estimated kernel entries against th" src="../BookFigures/chapter2/shots.png" /></p>
+<p><em>Figure 2.10: Left: root-mean-square error of the estimated kernel entries against the number of shots per entry, for the adjoint and the SWAP test, with the bound <span class="math notranslate nohighlight">\(1/(2\sqrt{S})\)</span> of Eq. (2.37). Right: test accuracy of the machine trained on the projected estimate. From <code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code>.</em></p>
+<p><strong>The same with a library.</strong>
+The feature map, the adjoint test and the precomputed-kernel machine
+are what the quantum machine-learning libraries package. In PennyLane
+[Bergholm2018] the adjoint test is written by applying the
+template of the feature map and then its adjoint, and the kernel is
+handed to scikit-learn’s <code class="docutils literal notranslate"><span class="pre">SVC</span></code> with <code class="docutils literal notranslate"><span class="pre">kernel='precomputed'</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pennylane</span> <span class="k">as</span> <span class="nn">qml</span>
+    <span class="kn">from</span> <span class="nn">pennylane</span> <span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">pnp</span>
+    <span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="kn">import</span> <span class="n">SVC</span>
+    <span class="n">dev</span> <span class="o">=</span> <span class="n">qml</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;default.qubit&quot;</span><span class="p">,</span> <span class="n">wires</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="nd">@qml</span><span class="o">.</span><span class="n">qnode</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">adjoint_test</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="n">qml</span><span class="o">.</span><span class="n">AngleEmbedding</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">wires</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+        <span class="n">qml</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">qml</span><span class="o">.</span><span class="n">AngleEmbedding</span><span class="p">)(</span><span class="n">x2</span><span class="p">,</span> <span class="n">wires</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">qml</span><span class="o">.</span><span class="n">probs</span><span class="p">(</span><span class="n">wires</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">adjoint_test</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>          <span class="c1"># P(00)</span>
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">pnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]])</span>
+    <span class="n">y_train</span> <span class="o">=</span> <span class="n">pnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">K_train</span> <span class="o">=</span> <span class="n">qml</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">kernel_matrix</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">SVC</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;precomputed&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">K_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">qml</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">kernel_matrix</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)))</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PennyLane or scikit-learn not installed; the book&#39;s own QSVM does the same&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PennyLane or scikit-learn not installed; the book&#39;s own QSVM does the same
+</pre></div>
+</div>
+</div>
+</div>
+<p>Qiskit [Qiskit2024] provides the ZZ map as <code class="docutils literal notranslate"><span class="pre">ZZFeatureMap</span></code>
+and the whole machine as <code class="docutils literal notranslate"><span class="pre">QSVC</span></code> in its machine-learning module:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">qiskit.circuit.library</span> <span class="kn">import</span> <span class="n">ZZFeatureMap</span>
+    <span class="kn">from</span> <span class="nn">qiskit_machine_learning.kernels</span> <span class="kn">import</span> <span class="n">FidelityQuantumKernel</span>
+    <span class="kn">from</span> <span class="nn">qiskit_machine_learning.algorithms</span> <span class="kn">import</span> <span class="n">QSVC</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="n">feature_map</span> <span class="o">=</span> <span class="n">ZZFeatureMap</span><span class="p">(</span><span class="n">feature_dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+    <span class="n">qkernel</span> <span class="o">=</span> <span class="n">FidelityQuantumKernel</span><span class="p">(</span><span class="n">feature_map</span><span class="o">=</span><span class="n">feature_map</span><span class="p">)</span>
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]])</span>
+    <span class="n">y_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">qsvc</span> <span class="o">=</span> <span class="n">QSVC</span><span class="p">(</span><span class="n">quantum_kernel</span><span class="o">=</span><span class="n">qkernel</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">qsvc</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Qiskit machine learning not installed; the book&#39;s own QSVM does the same&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Qiskit machine learning not installed; the book&#39;s own QSVM does the same
+</pre></div>
+</div>
+</div>
+</div>
+<p>Both snippets run when the package is installed and print a message
+when it is not; the results of this chapter do not depend on either.</p>
+</section>
+</section>
+<section id="training-the-feature-map">
+<h2>Training the feature map<a class="headerlink" href="#training-the-feature-map" title="Link to this heading">#</a></h2>
+<p>The feature map has so far been fixed by hand, and the bandwidth
+problem of Table 2.1 showed how much depends on that
+choice. A feature map can instead carry parameters of its own,
+<span class="math notranslate nohighlight">\(U(\vec{x};\vec{\theta})\)</span>, and these can be trained <em>before</em> the
+support-vector machine is, on a criterion that measures how well the
+kernel suits the labels. The standard criterion is the
+<em>kernel-target alignment</em> of Cristianini <em>et al.</em><br />
+[Cristianini2001],</p>
+<div class="math notranslate nohighlight">
+\[
+A(\vec{\theta})=\frac{\sum_{i,j}K_{ij}(\vec{\theta})\,y_iy_j}{\Vert\matr{K}(\vec{\theta})\Vert_F\,\Vert\vec{y}\vec{y}^{T}\Vert_F}
+=\frac{\langle\matr{K},\vec{y}\vec{y}^{T}\rangle_F}{\Vert\matr{K}\Vert_F\,N},\tag{2.44}
+\]</div>
+<p>the cosine of the angle between the Gram matrix and the ideal kernel
+<span class="math notranslate nohighlight">\(\vec{y}\vec{y}^{T}\)</span>, which is <span class="math notranslate nohighlight">\(+1\)</span> for two samples of the same class
+and <span class="math notranslate nohighlight">\(-1\)</span> otherwise. A kernel with <span class="math notranslate nohighlight">\(A=1\)</span> would be proportional to
+<span class="math notranslate nohighlight">\(\vec{y}\vec{y}^{T}\)</span> and would separate the classes with a single
+support vector per class. Hubregtsen <em>et al.</em> [Hubregtsen2022]
+proposed to maximize <span class="math notranslate nohighlight">\(A\)</span> over the parameters of a quantum embedding by
+gradient ascent, with the gradient evaluated on the quantum computer
+by the parameter-shift rule.</p>
+<p><strong>The gradient.</strong>
+Every gate of the embedding is a rotation <span class="math notranslate nohighlight">\(e^{-ia\sigma/2}\)</span> with
+<span class="math notranslate nohighlight">\(\sigma\)</span> a Pauli operator, and for such a gate the derivative of any
+expectation value with respect to its angle <span class="math notranslate nohighlight">\(a\)</span> is the difference of
+two shifted evaluations, <span class="math notranslate nohighlight">\(\partial_a g=\tfrac12[g(a+\pi/2)-g(a-\pi/2)]\)</span>
+[Mitarai2018,Schuld2019gradients]. A kernel entry
+<span class="math notranslate nohighlight">\(K_{ij}=\vert\langle0\vert U^{\dagger}(\vec{x}_i;\vec{\theta})U(\vec{x}_j;\vec{\theta})\vert0\rangle\vert^2\)</span>
+is an expectation value of the projector <span class="math notranslate nohighlight">\(\vert0\rangle\langle0\vert\)</span>,
+but a parameter <span class="math notranslate nohighlight">\(\theta_k\)</span> appears twice in it, in the bra circuit and
+in the ket circuit, and the rule is applied to each occurrence
+separately:</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial K_{ij}}{\partial\theta_k}
+=\frac{1}{2}\left[K_{ij}(\theta_k^{+},\theta_k)-K_{ij}(\theta_k^{-},\theta_k)\right]
++\frac{1}{2}\left[K_{ij}(\theta_k,\theta_k^{+})-K_{ij}(\theta_k,\theta_k^{-})\right],\tag{2.45}
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(K_{ij}(\theta_k^{\pm},\theta_k)\)</span> is the fidelity with the shift
+<span class="math notranslate nohighlight">\(\pm\pi/2\)</span> applied in the bra circuit only, and the second bracket is
+the transpose of the first, since
+<span class="math notranslate nohighlight">\(K_{ij}(\theta,\theta')=K_{ji}(\theta',\theta)\)</span>. If the parameter
+multiplies a feature, as in the gate <span class="math notranslate nohighlight">\(R_y(w_qx_q)\)</span>, the chain rule
+adds a factor <span class="math notranslate nohighlight">\(x_q\)</span> of the shifted sample. The gradient of <span class="math notranslate nohighlight">\(A\)</span> then
+follows from Eq. (2.44) by the chain rule, and costs
+two Gram matrices per parameter.</p>
+<p><strong>The embedding and the experiment.</strong>
+The class <code class="docutils literal notranslate"><span class="pre">TrainableEmbedding</span></code> of <code class="docutils literal notranslate"><span class="pre">feature_maps.py</span></code> is a
+<em>data re-uploading</em> circuit [PerezSalinas2020,Lloyd2020embeddings]:
+<span class="math notranslate nohighlight">\(r\)</span> repetitions of a data layer <span class="math notranslate nohighlight">\(R_y(w_qx_q)\)</span> on every qubit followed
+by a trainable layer <span class="math notranslate nohighlight">\(R_z(\theta)R_y(\theta')\)</span> on every qubit and a
+ring of CNOTs,</p>
+<div class="math notranslate nohighlight">
+\[
+U(\vec{x};\vec{\theta})=\prod_{\ell=1}^{r}\Bigl[\,\mathrm{CNOT}_{\mathrm{ring}}\,\bigotimes_q R_y(\theta'_{\ell q})R_z(\theta_{\ell q})\,\bigotimes_q R_y(w_{\ell q}x_q)\Bigr],\tag{2.46}
+\]</div>
+<p>with the input weights <span class="math notranslate nohighlight">\(w\)</span> among the trainable parameters, so that the
+alignment can also learn the bandwidth. The program
+<code class="docutils literal notranslate"><span class="pre">kernel_alignment.py</span></code> trains it on the two moons, with the
+weights deliberately started at <span class="math notranslate nohighlight">\(w=2.5\)</span>, a badly scaled embedding, and
+the angles at random. The gradient of Eq. (2.45) is
+first checked against finite differences (they agree to <span class="math notranslate nohighlight">\(10^{-11}\)</span>),
+then forty steps of gradient ascent with step size one are taken, and
+every five steps a QSVM is trained on the current kernel.
+Figure 2.11 shows the result: the alignment rises from
+<span class="math notranslate nohighlight">\(0.14\)</span> to <span class="math notranslate nohighlight">\(0.37\)</span>, and the test accuracy of the machine from <span class="math notranslate nohighlight">\(0.67\)</span> at
+the badly scaled start to <span class="math notranslate nohighlight">\(0.97\)</span> after ten steps and <span class="math notranslate nohighlight">\(1.00\)</span> at the end,
+better than any fixed kernel of Table 2.1 on these
+data. Interestingly, the weights do not shrink back towards one; the
+alignment instead reshapes the trainable rotations so that the
+large-angle data layers become useful. The procedure costs a full set
+of Gram matrices per parameter and per step, so it is expensive in
+circuit executions, but the circuits are the same shallow ones as
+before, and the machine that is finally trained is still the convex
+problem of Eq. (2.41).</p>
+<p><img alt="Kernel-target alignment of the trainable embedding of Eq. 2.46 on the " src="../BookFigures/chapter2/alignment.png" /></p>
+<p><em>Figure 2.11: Kernel-target alignment of the trainable embedding of Eq. (2.46) on the two moons during gradient ascent (left) and the training and test accuracy of the quantum support-vector machine with the kernel of the current parameters (right). From <code class="docutils literal notranslate"><span class="pre">kernel_alignment.py</span></code>.</em></p>
+</section>
+<section id="perspectives">
+<h2>Perspectives<a class="headerlink" href="#perspectives" title="Link to this heading">#</a></h2>
+<p><strong>Complexity.</strong>
+A classical kernel machine on <span class="math notranslate nohighlight">\(N\)</span> samples spends <span class="math notranslate nohighlight">\(\bigO(N^2)\)</span> kernel
+evaluations and, with a general-purpose solver, <span class="math notranslate nohighlight">\(\bigO(N^3)\)</span> time on
+the dual problem; prediction costs <span class="math notranslate nohighlight">\(N_s\)</span> kernel evaluations per
+sample. The near-term quantum machine of this chapter spends
+<span class="math notranslate nohighlight">\(\bigO(N^2S)\)</span> circuit executions on the Gram matrix and the same
+<span class="math notranslate nohighlight">\(\bigO(N^3)\)</span> classical time on the dual. It offers no speedup at all,
+and makes no claim to one; what it offers is a different kernel, which
+may or may not suit the data. The fault-tolerant machine of
+Rebentrost, Mohseni and Lloyd [Rebentrost2014] is a different
+proposal: it replaces the inequality constraints by equalities (the
+least-squares SVM), so that training becomes the solution of an
+<span class="math notranslate nohighlight">\((N+1)\)</span>-dimensional linear system with the kernel matrix as its
+principal block, and solves that system with the HHL algorithm
+[HHL2009] in time <span class="math notranslate nohighlight">\(\bigO(\log(Np))\)</span> under the assumptions of
+quantum random-access memory for the data, a well-conditioned,
+efficiently simulable kernel matrix, and an output that is the
+state <span class="math notranslate nohighlight">\(\sum_i\lambda_i\vert i\rangle\)</span> rather than the numbers
+<span class="math notranslate nohighlight">\(\lambda_i\)</span>. The companion volume treats HHL in its phase-estimation
+chapter, and the reader who has followed it will see that each
+assumption is substantive; Tang’s dequantization results [Tang2019]
+show that for low-rank kernel matrices and sampling access to the data
+a classical algorithm matches the polylogarithmic scaling, so that the
+exponential claim survives only under conditions that have not been
+met in practice.</p>
+<p><strong>Every quantum model is a kernel method.</strong>
+Return to the general model of Eq. (1.1),
+<span class="math notranslate nohighlight">\(f(\vec{x};\vec{\theta})=\mathrm{Tr}[\rho(\vec{x})\,W^{\dagger}\hat{O}W]\)</span>.
+For fixed <span class="math notranslate nohighlight">\(\vec{\theta}\)</span> the operator <span class="math notranslate nohighlight">\(M=W^{\dagger}(\vec{\theta})\hat{O}W(\vec{\theta})\)</span>
+is a fixed Hermitian matrix, and <span class="math notranslate nohighlight">\(f\)</span> is <em>linear</em> in the density
+matrix <span class="math notranslate nohighlight">\(\rho(\vec{x})\)</span>, the feature vector of Eq. (2.30).
+Every variational quantum classifier, whatever its trainable circuit,
+is therefore a linear model in the same feature space in which the
+quantum support-vector machine with kernel
+<span class="math notranslate nohighlight">\(\mathrm{Tr}[\rho(\vec{x})\rho(\vec{x}')]\)</span> is linear, and the
+representer theorem of kernel methods implies that the minimizer of any
+regularized loss over such linear models is of the form
+<span class="math notranslate nohighlight">\(\sum_i\alpha_iK(\vec{x}_i,\vec{x})\)</span>. This is Schuld’s observation
+[Schuld2021kernel] that supervised quantum models are kernel
+methods: the trainable circuit <span class="math notranslate nohighlight">\(W\)</span> can only choose a direction <span class="math notranslate nohighlight">\(M\)</span> in
+the feature space, and the support-vector machine, which optimizes
+over all directions, is at least as expressive. Two qualifications
+matter. The two models are trained on different losses, and the
+variational model, restricted to a family of <span class="math notranslate nohighlight">\(M\)</span>, may generalize
+better precisely because it is restricted [Jerbi2023]; and the
+kernel machine needs <span class="math notranslate nohighlight">\(\bigO(N^2)\)</span> circuits where the variational model
+needs <span class="math notranslate nohighlight">\(\bigO(N)\)</span> per epoch. Chapter 4 takes up the
+variational side.</p>
+<p><strong>Exponential concentration.</strong>
+The feature maps that cannot be simulated classically are, for the
+same reason, the ones whose kernels are hard to <em>measure</em>: for a
+map that is expressive enough to produce near-random states, all
+kernel values between distinct samples concentrate exponentially fast
+in <span class="math notranslate nohighlight">\(n\)</span> around a constant, <span class="math notranslate nohighlight">\(K_{ij}\approx2^{-n}\)</span>, and the number of shots
+needed to distinguish them grows exponentially [Thanasilp2024].
+The bandwidth problem that made the ZZ map fail in
+Table 2.1 is a small-<span class="math notranslate nohighlight">\(n\)</span> instance of this: the
+problem is not the circuit but the fact that the circuit is too
+expressive for the data. The design of feature maps that are
+classically hard, that match the structure of some class of data, and
+that keep their kernel values measurable is where the research is.</p>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>A support-vector machine finds the maximum-margin hyperplane between
+two classes. Its dual problem, Eq. (2.10), involves the
+samples only through inner products, its solution is carried by the
+support vectors singled out by the KKT conditions, and the soft margin
+with its constant <span class="math notranslate nohighlight">\(C\)</span> extends it to overlapping classes. Replacing the
+inner product by a kernel, Eq. (2.21), moves the
+machine into any feature space whose inner product is computable, and
+Mercer’s condition says which functions qualify. A quantum feature
+map, Eq. (2.28), is such a space, of dimension
+<span class="math notranslate nohighlight">\(2^n\)</span>, and its kernel is the fidelity of two encoded states,
+Eq. (2.29), which is a Mercer kernel automatically and is
+measured on a quantum computer by the adjoint test with variance
+<span class="math notranslate nohighlight">\(K(1-K)/S\)</span>. The quantum support-vector machine is the classical
+machine trained on this measured Gram matrix, projected onto the
+positive-semidefinite cone. Product feature maps give classical
+kernels; entangling maps such as the ZZ map give kernels that are not
+efficiently simulable for enough qubits, that require a bandwidth to
+be chosen or learned, and that separate data whose labels were made by
+the same map. The feature map can be trained by kernel-target
+alignment with parameter-shift gradients. There is no running-time
+advantage in any of this, and the advantage in accuracy exists for
+constructed data and is open for natural data; and every quantum model
+of the hybrid kind, variational classifiers included, is a linear model
+in the space of density matrices and therefore a kernel method.</p>
+</section>
+<section id="exercises">
+<h2>Exercises<a class="headerlink" href="#exercises" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>The margin.</strong> (a) Show that the distance
+between the two planes <span class="math notranslate nohighlight">\(\vec{w}^{T}\vec{x}+b=\pm1\)</span> is <span class="math notranslate nohighlight">\(2/\Vert\vec{w}\Vert\)</span>.
+(b) Derive Eq. (2.10) from Eq. (2.7) by
+inserting Eqs. (2.8) and (2.9), keeping
+track of the factor <span class="math notranslate nohighlight">\(\frac12\)</span>. (c) Show that at the solution the dual
+objective equals <span class="math notranslate nohighlight">\(\frac12\Vert\vec{w}\Vert^2\)</span>, and check this with
+<code class="docutils literal notranslate"><span class="pre">svm.py</span></code> on the data of Fig. 2.1
+(<code class="docutils literal notranslate"><span class="pre">SVM.dual_objective</span></code> and <code class="docutils literal notranslate"><span class="pre">SVM.margin</span></code>).</p></li>
+<li><p><strong>Soft margin.</strong> (a) Derive Eq. (2.17)
+and show that <span class="math notranslate nohighlight">\(\lambda_i=C\)</span> for every sample with <span class="math notranslate nohighlight">\(\xi_i&gt;0\)</span>. (b) Explain
+why the intercept must be computed from the samples with
+<span class="math notranslate nohighlight">\(0&lt;\lambda_i&lt;C\)</span> only. (c) Reproduce Fig. 2.2, add
+<span class="math notranslate nohighlight">\(C=10^{-3}\)</span> and <span class="math notranslate nohighlight">\(C=10^{4}\)</span>, and plot the margin and the number of
+support vectors against <span class="math notranslate nohighlight">\(C\)</span> on a logarithmic axis. (d) Split the data
+into training and test sets and find the <span class="math notranslate nohighlight">\(C\)</span> that maximizes the test
+accuracy.</p></li>
+<li><p><strong>Kernels.</strong> (a) Show that the polynomial
+kernel <span class="math notranslate nohighlight">\((\vec{x}^{T}\vec{x}'+1)^2\)</span> in two dimensions corresponds to a
+six-dimensional feature map, and write it down. (b) Show that the RBF
+kernel’s feature space is infinite-dimensional by expanding
+<span class="math notranslate nohighlight">\(\exp(2\gamma\,\vec{x}^{T}\vec{x}')\)</span> in a power series. (c) Prove that
+the sum and the product of two Mercer kernels are Mercer kernels, and
+that <span class="math notranslate nohighlight">\(\vert\langle\phi(\vec{x})\vert\phi(\vec{x}')\rangle\vert^2\)</span> is one
+for any feature map, using Eq. (2.30). (d) Find a set
+of three points on which the sigmoid kernel <span class="math notranslate nohighlight">\(\tanh(\vec{x}^{T}\vec{x}'-1)\)</span>
+has a Gram matrix with a negative eigenvalue.</p></li>
+<li><p><strong>SMO.</strong> (a) Show that the dual objective
+restricted to the line <span class="math notranslate nohighlight">\(\lambda_iy_i+\lambda_jy_j=\text{const}\)</span> is a
+parabola with curvature <span class="math notranslate nohighlight">\(-\eta\)</span>, <span class="math notranslate nohighlight">\(\eta=K_{ii}+K_{jj}-2K_{ij}\)</span>, and that
+its maximum is at Eq. (2.27). (b) Show that <span class="math notranslate nohighlight">\(\eta\ge0\)</span> for a
+Mercer kernel and that <span class="math notranslate nohighlight">\(\eta=0\)</span> if and only if
+<span class="math notranslate nohighlight">\(\vec{\phi}(\vec{x}_i)=\vec{\phi}(\vec{x}_j)\)</span>. (c) Derive the bounds <span class="math notranslate nohighlight">\(L\)</span>
+and <span class="math notranslate nohighlight">\(H\)</span> for the two cases <span class="math notranslate nohighlight">\(y_i=y_j\)</span> and <span class="math notranslate nohighlight">\(y_i\ne y_j\)</span>. (d) Install CVXOPT,
+set up the matrices of Eq. (2.26) with
+<code class="docutils literal notranslate"><span class="pre">SVM.qp_matrices</span></code>, and compare the multipliers with those of
+SMO on the data of Fig. 2.4.</p></li>
+<li><p><strong>Feature maps.</strong> (a) Verify that
+<span class="math notranslate nohighlight">\(e^{i\phi Z\otimes Z}\)</span> equals CNOT<span class="math notranslate nohighlight">\(\,(I\otimes R_z(-2\phi))\,\)</span>CNOT
+exactly, with <span class="math notranslate nohighlight">\(R_z(\theta)=e^{-i\theta Z/2}\)</span>. (b) Write out <span class="math notranslate nohighlight">\(\vert\phi(\vec{x})\rangle\)</span> for the ZZ map
+with <span class="math notranslate nohighlight">\(r=1\)</span> on two qubits and compute its kernel in closed form. Is it a
+function of <span class="math notranslate nohighlight">\(\vec{x}-\vec{x}'\)</span> only? (c) Compute the kernel of the
+entangled angle encoding (“angle, ent.” of Table 2.1)
+on two qubits and compare it with Eq. (2.32). (d) With
+<code class="docutils literal notranslate"><span class="pre">feature_maps.py</span></code>, plot <span class="math notranslate nohighlight">\(K(\vec{x},\vec{x}')\)</span> against
+<span class="math notranslate nohighlight">\(\Vert\vec{x}-\vec{x}'\Vert\)</span> for a thousand random pairs and the ZZ map
+with <span class="math notranslate nohighlight">\(\alpha=1\)</span>, <span class="math notranslate nohighlight">\(0.5\)</span> and <span class="math notranslate nohighlight">\(0.2\)</span>; relate what you see to the bandwidth
+discussion of Section <em>The quantum support-vector machine</em>.</p></li>
+<li><p><strong>Kernel estimation.</strong> (a) Derive
+Eqs. (2.38) and (2.39). (b) Show that the
+SWAP-test variance exceeds the adjoint-test variance by the factor
+<span class="math notranslate nohighlight">\((1+K)/K\)</span> and compute the factor for the mean off-diagonal kernel value
+of the Gram matrix of Table 2.3, available as the
+attribute <code class="docutils literal notranslate"><span class="pre">K_raw</span></code> of <code class="docutils literal notranslate"><span class="pre">QSVM</span></code>. (c) Prove that Eq. (2.40) gives
+the nearest positive-semidefinite matrix in the Frobenius norm.
+(d) How many circuit executions does the whole experiment of
+Table 2.3 require at <span class="math notranslate nohighlight">\(S=10^4\)</span>, training and testing
+included?</p></li>
+<li><p><strong>Shots and overlapping classes.</strong> Repeat
+the shot-noise study of Section <em>Kernels from a finite number of shots</em> for the two moons
+with the ZZ kernel, <span class="math notranslate nohighlight">\(\alpha=0.5\)</span>, and for the Iris data, and plot the
+test accuracy against <span class="math notranslate nohighlight">\(S\)</span>. At what shot count does the accuracy reach
+its noiseless value, and how does that compare with
+Table 2.3? Try also training on the raw estimate without
+the projection of Eq. (2.40) (argument <code class="docutils literal notranslate"><span class="pre">psd=False</span></code>
+of <code class="docutils literal notranslate"><span class="pre">QSVM</span></code>) and report what the solver does.</p></li>
+<li><p><strong>Kernel-target alignment.</strong> (a) Show that
+<span class="math notranslate nohighlight">\(A\le1\)</span> with equality if and only if <span class="math notranslate nohighlight">\(\matr{K}\propto\vec{y}\vec{y}^{T}\)</span>.
+(b) Derive Eq. (2.45) and the chain-rule factor for
+a parameter that multiplies a feature. (c) Rerun
+<code class="docutils literal notranslate"><span class="pre">kernel_alignment.py</span></code> from the weights <span class="math notranslate nohighlight">\(w=1\)</span> and from <span class="math notranslate nohighlight">\(w=5\)</span>,
+and with the Adam optimizer in the place of plain gradient ascent.
+Does the alignment find the same optimum? (d) Replace the alignment by
+the test accuracy of the QSVM as the criterion to be maximized. Why is
+that a worse idea, and why can it not be done by the parameter-shift
+rule?</p></li>
+<li><p><strong>Every model is a kernel method.</strong> (a) Show
+that <span class="math notranslate nohighlight">\(f(\vec{x})=\mathrm{Tr}[\rho(\vec{x})M]\)</span> is linear in <span class="math notranslate nohighlight">\(\rho(\vec{x})\)</span>
+and that the set <span class="math notranslate nohighlight">\(\{\rho(\vec{x})\}\)</span> spans at most a <span class="math notranslate nohighlight">\(4^n\)</span>-dimensional
+real space. (b) Show that a one-qubit variational classifier with
+<span class="math notranslate nohighlight">\(\hat{O}=Z\)</span> and any <span class="math notranslate nohighlight">\(W(\vec{\theta})\)</span> computes
+<span class="math notranslate nohighlight">\(f(\vec{x})=\vec{n}(\vec{\theta})\cdot\vec{r}(\vec{x})\)</span>, with <span class="math notranslate nohighlight">\(\vec{r}\)</span>
+the Bloch vector of <span class="math notranslate nohighlight">\(\rho(\vec{x})\)</span> and <span class="math notranslate nohighlight">\(\vec{n}\)</span> a unit vector, and
+that a QSVM with the fidelity kernel can represent every such <span class="math notranslate nohighlight">\(f\)</span>.
+(c) Construct the data of Eq. (2.43) with a
+<em>product</em> observable and a product unitary <span class="math notranslate nohighlight">\(V\)</span>, and show with
+<code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code> that the RBF kernel then learns it as well as the ZZ
+kernel does.</p></li>
+</ol>
+</section>
+<section id="programs-for-this-chapter">
+<h2>Programs for this chapter<a class="headerlink" href="#programs-for-this-chapter" title="Link to this heading">#</a></h2>
+<p>Every number and figure in this chapter comes from the programs in
+<code class="docutils literal notranslate"><span class="pre">BookPrograms/allowbreak</span> <span class="pre">chapter2/</span></code>, which build on the shared
+modules of <code class="docutils literal notranslate"><span class="pre">BookPrograms/allowbreak</span> <span class="pre">common/</span></code>
+(<code class="docutils literal notranslate"><span class="pre">statevector</span></code>, <code class="docutils literal notranslate"><span class="pre">gates</span></code>, <code class="docutils literal notranslate"><span class="pre">datasets</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bookplot</span></code>) and are imported by the notebook
+<code class="docutils literal notranslate"><span class="pre">Notebooks/allowbreak</span> <span class="pre">chapter2/allowbreak</span> <span class="pre">chapter2.ipynb</span></code>. All run
+on <code class="docutils literal notranslate"><span class="pre">numpy</span></code> and <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> alone; CVXOPT, PennyLane,
+Qiskit and scikit-learn are used only where the text says so and only
+if installed.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">kernels.py</span></code></strong> The <code class="docutils literal notranslate"><span class="pre">Kernel</span></code> classes <code class="docutils literal notranslate"><span class="pre">LinearKernel</span></code>, <code class="docutils literal notranslate"><span class="pre">PolynomialKernel</span></code>, <code class="docutils literal notranslate"><span class="pre">RBFKernel</span></code>, <code class="docutils literal notranslate"><span class="pre">TanhKernel</span></code> and <code class="docutils literal notranslate"><span class="pre">PrecomputedKernel</span></code>, Eqs. (2.23)–(2.24), the quadratic map of Eq. (2.19), a numerical Mercer check, and the two rows of Fig. 2.3. Three seconds.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">svm.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">SVM</span></code>: the dual problem of Eq. (2.21) solved by sequential minimal optimization, Eq. (2.27), for any kernel or a precomputed Gram matrix; the intercept of Eq. (2.12), the decision function of Eq. (2.22), the matrices of Eq. (2.26) and an optional CVXOPT solution. As a script it produces Figs. 2.1, 2.2 and 2.4 and the numbers quoted with them. Ten seconds.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">feature_maps.py</span></code></strong> The feature maps <code class="docutils literal notranslate"><span class="pre">AngleEncoding</span></code>, <code class="docutils literal notranslate"><span class="pre">ZZFeatureMap</span></code>, <code class="docutils literal notranslate"><span class="pre">AmplitudeEncoding</span></code> and <code class="docutils literal notranslate"><span class="pre">TrainableEmbedding</span></code>, Eqs. (2.31), (2.34), (2.33) and (2.46), and the class <code class="docutils literal notranslate"><span class="pre">QuantumKernel</span></code> with exact fidelities, shot-sampled estimates by the adjoint or the SWAP test, and the two test circuits on the simulator. As a script it checks the kernels of Eqs. (2.32) and (2.33), the ZZ map against its matrix exponential, and Eqs. (2.36) and (2.38). One second.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">qsvm.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">QSVM</span></code> with the projection of Eq. (2.40), the data set of Eq. (2.43), Tables 2.1, 2.2 and 2.3, and Figs. 2.8, 2.9 and 2.10. Half a minute.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">kernel_alignment.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">KernelAlignment</span></code>: the alignment of Eq. (2.44), its parameter-shift gradient, Eq. (2.45), checked against finite differences, and gradient ascent; Fig. 2.11 and the numbers of Section <em>Training the feature map</em>. Forty seconds.</p></li>
+</ul>
+</section>
+<section id="running-the-programs-of-this-chapter">
+<h2>Running the programs of this chapter<a class="headerlink" href="#running-the-programs-of-this-chapter" title="Link to this heading">#</a></h2>
+<p>Each cell below runs one of the programs listed above as a script and shows the figures it writes to <code class="docutils literal notranslate"><span class="pre">BookFigures/</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2/kernels.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(x^T x&#39;)^2 equals phi(x)^T phi(x&#39;) for phi of Eq. (2-phi2)
+linear                   Mercer (PSD Gram matrix on the moons): True
+poly(d=3,r=1)            Mercer (PSD Gram matrix on the moons): True
+rbf(gamma=1)             Mercer (PSD Gram matrix on the moons): True
+tanh(gamma=1,r=-1)       Mercer (PSD Gram matrix on the moons): False
+tanh(gamma=0.1,r=1)      Mercer (PSD Gram matrix on the moons): False
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figures kerneltrick and rbflandmarks written
+</pre></div>
+</div>
+<img alt="../_images/c4cf54b015b23ff59d268877e8c69f900dbcbf6fdcfb52fbc28c13eb258ae16b.png" src="../_images/c4cf54b015b23ff59d268877e8c69f900dbcbf6fdcfb52fbc28c13eb258ae16b.png" />
+<img alt="../_images/56f881a4488cf3a01b889d866660121a45f2d4c576ecd4549c7792b375d7cbf2.png" src="../_images/56f881a4488cf3a01b889d866660121a45f2d4c576ecd4549c7792b375d7cbf2.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2/svm.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>hard margin: w = (1.2494, -0.0909), b = -0.0248, margin 1/||w|| = 0.7983, 3 support vectors, 57 SMO updates
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>soft margin, overlapping blobs:
+  C =   0.05: margin 1.092, 28 support vectors, 26 margin violations, training accuracy 0.95
+  C =   1.00: margin 0.561, 11 support vectors,  9 margin violations, training accuracy 0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  C = 100.00: margin 0.254,  7 support vectors,  6 margin violations, training accuracy 0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>two moons (standardized), C = 5:
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  linear           training accuracy 0.88, 34 support vectors
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  poly(d=3,r=1)    training accuracy 0.98, 12 support vectors
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  rbf(gamma=0.5)   training accuracy 0.96, 20 support vectors
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>      dual objective: SMO 56.300498, scikit-learn 56.300491
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  rbf(gamma=5)     training accuracy 0.98, 43 support vectors
+      dual objective: SMO 28.406400, scikit-learn 28.406389
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figures hardmargin, softmargin and moons written
+</pre></div>
+</div>
+<img alt="../_images/6a0bb3e96546a430b16654e1a44517d415a913c033438b48881b4406bc441d88.png" src="../_images/6a0bb3e96546a430b16654e1a44517d415a913c033438b48881b4406bc441d88.png" />
+<img alt="../_images/9033ca5a8f3ea050c4c4172d2165ad1ea48a89562e8f895a29c4232c3cc45bc5.png" src="../_images/9033ca5a8f3ea050c4c4172d2165ad1ea48a89562e8f895a29c4232c3cc45bc5.png" />
+<img alt="../_images/28f2fc750dd71c3c6ba64ab702be242cd0ab5cd15b5e80099167855ad01ece91.png" src="../_images/28f2fc750dd71c3c6ba64ab702be242cd0ab5cd15b5e80099167855ad01ece91.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2/feature_maps.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>angle encoding: K = 0.701933 = prod_i cos^2((x_i - x&#39;_i)/2)
+amplitude encoding: K = (x.x&#39;)^2 / (|x|^2 |x&#39;|^2)
+ZZ feature map agrees with exp(i sum phi Z) H^{(x)2} up to a global phase
+fidelity 0.156984: adjoint test P(00) = 0.156984, SWAP test P(anc=0) = 0.578492 = (1+F)/2
+1000 shots of the adjoint test: {&#39;00&#39;: 164, &#39;01&#39;: 33, &#39;10&#39;: 798, &#39;11&#39;: 5} -&gt; K ~ 0.164
+Gram matrix of the ZZ kernel: symmetric, unit diagonal, PSD; quantum-kernel checks passed
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2/qsvm.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Table 2-qsvmdata: training / test accuracy, C = 1.0, 70/30 split
+data set                                    linear          rbf(gamma=1)              angle(Y)   angle(Y,reps=2,ent)            zz(reps=2)  zz(reps=2,alpha=0.5)
+                                        train/test            train/test            train/test            train/test            train/test            train/test
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>moons                              0.89/0.83             0.96/0.97             0.89/0.77             0.89/0.83             0.77/0.83             0.94/0.90      
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>circles                            0.67/0.37             1.00/1.00             1.00/1.00             0.99/1.00             0.80/0.73             0.96/0.97      
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>xor                                0.81/0.60             1.00/1.00             1.00/1.00             0.97/0.90             0.81/0.83             1.00/1.00      
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>iris (versicolor/virginica)        0.96/0.90             0.97/0.90             0.96/0.90             0.97/0.90             0.83/0.70             0.93/0.87      
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Table 2-havlicek: data labelled by the ZZ map (120 points, delta = 0.3, 65 with y=+1), C = 1.0
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  linear               train 0.64  test 0.57   72 support vectors  (1.2 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  rbf(gamma=1)         train 0.80  test 0.57   75 support vectors  (0.4 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  rbf(gamma=0.2)       train 0.67  test 0.57   76 support vectors  (0.8 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  rbf(gamma=5)         train 0.97  test 0.63   80 support vectors  (0.4 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  angle(Y)             train 0.66  test 0.43   78 support vectors  (0.4 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  zz(reps=1)           train 0.90  test 0.97   46 support vectors  (0.6 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  zz(reps=2)           train 1.00  test 1.00   27 support vectors  (1.1 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  zz(reps=2), C=100    train 1.00  test 1.00   13 support vectors  (1.1 s)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Table 2-shots: the ZZ kernel of the Havlicek data estimated with shots
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  adjoint       10 shots: max|dK| 0.5755  rms 0.1194  min eig -1.447  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  adjoint      100 shots: max|dK| 0.1673  rms 0.0377  min eig -0.431  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  adjoint     1000 shots: max|dK| 0.0662  rms 0.0120  min eig -0.149  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  adjoint    10000 shots: max|dK| 0.0235  rms 0.0039  min eig -0.044  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  adjoint   100000 shots: max|dK| 0.0059  rms 0.0012  min eig -0.014  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  swap          10 shots: max|dK| 1.2245  rms 0.2903  min eig -3.626  test acc 0.70
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  swap         100 shots: max|dK| 0.3704  rms 0.0918  min eig -1.125  test acc 0.93
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  swap        1000 shots: max|dK| 0.1258  rms 0.0299  min eig -0.335  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  swap       10000 shots: max|dK| 0.0378  rms 0.0094  min eig -0.104  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  swap      100000 shots: max|dK| 0.0120  rms 0.0029  min eig -0.036  test acc 1.00
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figures qsvmmoons, havlicek and shots written
+</pre></div>
+</div>
+<img alt="../_images/724a65a71d9dbf14473c4cfe03553b758bd77e3d1df567ae2cb050928225bc0e.png" src="../_images/724a65a71d9dbf14473c4cfe03553b758bd77e3d1df567ae2cb050928225bc0e.png" />
+<img alt="../_images/52b072a925852ae38286b2d1669341c1cd0a72ebbdf454e85058bb8d74edb85f.png" src="../_images/52b072a925852ae38286b2d1669341c1cd0a72ebbdf454e85058bb8d74edb85f.png" />
+<img alt="../_images/28e566d730aea604f7f36a943a77905c2140fdd98176351d96c47ddfdc2b362a.png" src="../_images/28e566d730aea604f7f36a943a77905c2140fdd98176351d96c47ddfdc2b362a.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2/kernel_alignment.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>parameter-shift gradient of the alignment agrees with finite differences (max difference 9.3e-12)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step  0: alignment 0.1395  train/test accuracy 0.80/0.67
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step  5: alignment 0.2127  train/test accuracy 0.91/0.90
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 10: alignment 0.2331  train/test accuracy 0.94/0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 15: alignment 0.2460  train/test accuracy 0.97/0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 20: alignment 0.2623  train/test accuracy 0.96/0.93
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 25: alignment 0.2882  train/test accuracy 0.94/0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 30: alignment 0.3208  train/test accuracy 0.99/0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 35: alignment 0.3537  train/test accuracy 0.97/0.97
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>step 40: alignment 0.3702  train/test accuracy 0.97/1.00
+input weights after training: [2.928 1.748 3.407 2.291]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure alignment written
+</pre></div>
+</div>
+<img alt="../_images/f6889ece4c030941d6197ea8e34a04db27016353b6aeabd2a77a371ca219c7a7.png" src="../_images/f6889ece4c030941d6197ea8e34a04db27016353b6aeabd2a77a371ca219c7a7.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./chapter2"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../chapter1/chapter1.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Chapter 1: Introduction and Motivation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../chapter3/chapter3.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Chapter 3: The Quantum Approximate Optimization Algorithm</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hyperplanes-and-the-margin">Hyperplanes and the margin</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lagrange-multipliers-and-the-dual-problem">Lagrange multipliers and the dual problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-soft-margin">The soft margin</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernels">Kernels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solving-the-dual-problem">Solving the dual problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-feature-maps-and-quantum-kernels">Quantum feature maps and quantum kernels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimating-the-kernel-on-a-quantum-computer">Estimating the kernel on a quantum computer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-quantum-support-vector-machine">The quantum support-vector machine</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernels-from-a-finite-number-of-shots">Kernels from a finite number of shots</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-feature-map">Training the feature map</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perspectives">Perspectives</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exercises">Exercises</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#programs-for-this-chapter">Programs for this chapter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-programs-of-this-chapter">Running the programs of this chapter</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Morten Hjorth-Jensen
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

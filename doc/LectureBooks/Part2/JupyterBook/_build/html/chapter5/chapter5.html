@@ -1,0 +1,2578 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Chapter 5: Quantum Boltzmann Machines &#8212; Quantum Machine Learning</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"tex": {"tags": "none", "macros": {"bm": ["\\boldsymbol{#1}", 1]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'chapter5/chapter5';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Chapter 6: Reinforcement Learning and Quantum Reinforcement Learning" href="../chapter6/chapter6.html" />
+    <link rel="prev" title="Chapter 4: Quantum Neural Networks" href="../chapter4/chapter4.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Quantum Machine Learning</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    Quantum Machine Learning
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter1/chapter1.html">Chapter 1: Introduction and Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter2/chapter2.html">Chapter 2: Quantum Support Vector Machines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Variational models</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter3/chapter3.html">Chapter 3: The Quantum Approximate Optimization Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter4/chapter4.html">Chapter 4: Quantum Neural Networks</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Chapter 5: Quantum Boltzmann Machines</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Outlook</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../chapter6/chapter6.html">Chapter 6: Reinforcement Learning and Quantum Reinforcement Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter7/chapter7.html">Chapter 7: Summary and Perspectives</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Back matter</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://compphysics.github.io/QuantumComputingMachineLearning/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://compphysics.github.io/QuantumComputingMachineLearning/doc/LectureBooks/Part2/JupyterBook/_build/html/index.html/issues/new?title=Issue%20on%20page%20%2Fchapter5/chapter5.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/chapter5/chapter5.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Chapter 5: Quantum Boltzmann Machines</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-based-models-and-the-boltzmann-machine">Energy-based models and the Boltzmann machine</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learning-as-the-minimization-of-a-divergence">Learning as the minimization of a divergence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-based-models">Energy-based models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-boltzmann-machine-and-its-restricted-form">The Boltzmann machine and its restricted form</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gibbs-sampling-and-contrastive-divergence">Gibbs sampling and contrastive divergence</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-quantum-boltzmann-machine">The quantum Boltzmann machine</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#definition">Definition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-gradient-duhamels-formula">The gradient: Duhamel’s formula</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-clamped-state-bound">The clamped-state bound</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boltzmann-machines-on-classical-data">Boltzmann machines on classical data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learning-quantum-states">Learning quantum states</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preparing-gibbs-states-on-a-quantum-computer">Preparing Gibbs states on a quantum computer</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-free-energy-principle">The free-energy principle</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermofield-double">The thermofield double</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-variational-quantum-thermalizer">The variational quantum thermalizer</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connections">Connections</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-neural-networks-and-quantum-boltzmann-machines">Quantum neural networks and quantum Boltzmann machines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-transverse-field-ising-model-as-a-learning-problem">The transverse-field Ising model as a learning problem</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expressivity-hardware-and-honest-expectations">Expressivity, hardware and honest expectations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-and-perspectives">Summary and perspectives</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exercises">Exercises</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#programs-for-this-chapter">Programs for this chapter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-programs-of-this-chapter">Running the programs of this chapter</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="chapter-5-quantum-boltzmann-machines">
+<h1>Chapter 5: Quantum Boltzmann Machines<a class="headerlink" href="#chapter-5-quantum-boltzmann-machines" title="Link to this heading">#</a></h1>
+<p><em>The Boltzmann machine is statistical mechanics turned into a learning algorithm: a Boltzmann distribution over binary units whose energy function is shaped until its samples reproduce the data, trained by comparing correlation functions of the data with those of the model. This chapter develops the classical theory, the restricted model with its conditional independence, the exact likelihood gradient and the contrastive-divergence approximation whose bias we measure against the exact gradient, and then replaces the energy by a Hamiltonian with non-commuting terms and the distribution by its Gibbs state. The quantum Boltzmann machine inherits the negative phase of the classical model unchanged, through the cyclicity of the trace, but its positive phase becomes an imaginary-time correlation function by Duhamel’s formula, and the training rule of the literature is shown to be the gradient of a Golden–Thompson bound that cannot see the visible transverse fields. Exact computations on small models show that on classical data the likelihood drives the transverse fields to zero, so that the model falls back on its classical limit, while on quantum data the quantum relative entropy is a convex loss with a gradient of expectation values, Hamiltonians are recovered exactly from their thermal states, and the operator content of the model decides what can be learned. The last part treats the quantum computer’s share of the work: the free-energy variational principle, the thermofield double, and the variational quantum thermalizer, which prepares a Gibbs state with the circuits of Chapter 4 and a classical latent distribution whose entropy is known in closed form. The chapter closes with the connections between the two trainable quantum models of the book.</em></p>
+<!-- Macro definitions for MathJax, mirroring book.tex -->
+<div class="math notranslate nohighlight">
+\[
+\newcommand{\bm}[1]{\boldsymbol{#1}}
+\newcommand{\matr}[1]{\boldsymbol{#1}}
+\newcommand{\bfv}[1]{\boldsymbol{#1}}
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\uvec}[1]{\boldsymbol{\hat{#1}}}
+\newcommand{\op}[1]{\widehat{#1}}
+\newcommand{\Op}[1]{\boldsymbol{\widehat{#1}}}
+\newcommand{\OP}[1]{\boldsymbol{\widehat{#1}}}
+\newcommand{\Det}[1]{|\boldsymbol{#1}|}
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\real}[1]{\mathrm{Re}\left\{#1\right\}}
+\newcommand{\ud}[1]{d#1}
+\newcommand{\udd}[1]{d^2#1}
+\newcommand{\mean}[1]{\langle #1 \rangle}
+\newcommand{\overlap}[2]{\langle #1 | #2 \rangle}
+\newcommand{\bracket}[3]{\langle #1 | #2 | #3 \rangle}
+\newcommand{\projection}[2]{| #1 \rangle \langle #2 |}
+\newcommand{\brab}[1]{\big\langle #1 \big|}
+\newcommand{\ketb}[1]{\big| #1 \big\rangle}
+\newcommand{\bket}[1]{\vert #1\rangle}
+\newcommand{\bbra}[1]{\langle #1\vert}
+\newcommand{\ketbra}[2]{\vert #1\rangle\langle #2\vert}
+\newcommand{\braket}[2]{\langle #1\vert #2\rangle}
+\]</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Put every BookPrograms/chapter*/ and BookPrograms/common/ on sys.path</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">pathlib</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="n">root</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">root</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Every model of the preceding chapters was a function. The support-vector
+machine of Chapter 2 and the quantum neural network of
+Chapter 4 map an input <span class="math notranslate nohighlight">\(\vec{x}\)</span> to a label or a number, the
+QAOA of Chapter 3 maps a set of angles to an energy, and
+training meant adjusting parameters until the function agreed with the
+data at the training points. The <em>Boltzmann machine</em> of this
+chapter is a different kind of object: a probability distribution. It is
+trained not to reproduce a function but to reproduce the statistics of a
+set of samples, so that new samples drawn from the model are
+indistinguishable, as far as the model can tell, from the data. Models of
+this kind are called <em>generative</em>, and the Boltzmann machine is
+their oldest member, older than the neural networks of
+Chapter 4 by a few years [Ackley1985,Smolensky1986].
+The classical machine is developed at length in the chapter on
+Boltzmann machines of the machine-learning text [MLbook], and
+its use as a wave-function ansatz, the neural quantum state, in the
+chapter on Boltzmann machines and generative models of the many-body
+text [MBbook]; Section <em>Energy-based models and the Boltzmann machine</em> summarizes what this
+chapter needs from the first.</p>
+<p>The reason it belongs in a book on quantum machine learning for
+physicists is that the Boltzmann machine <em>is</em> statistical
+mechanics, and the reader of the companion volume [QCbook] will
+meet here, as learning problems, the objects of its many-body primer
+and of its chapter on mapping Hamiltonians to qubits: Pauli-string
+Hamiltonians, the transverse-field Ising and Heisenberg chains,
+thermal states and partial traces. Its distribution is the Boltzmann distribution of an energy
+function of binary variables, its partition function is the obstacle to
+training, its training rule compares correlation functions of the data
+with correlation functions of the model, and the sampling methods used
+to estimate the latter are the Monte Carlo methods of spin systems. The
+<em>quantum Boltzmann machine</em> (QBM) [Amin2018] takes the last step
+that a physicist would take: it replaces the classical energy by a
+Hamiltonian with non-commuting terms, the Boltzmann distribution by the
+thermal (Gibbs) state <span class="math notranslate nohighlight">\(\rho=e^{-\beta H}/Z\)</span>, and the probability of a
+configuration by the Born rule. The model is then a quantum many-body
+system at finite temperature, and the questions of this book acquire a
+new form. What does the non-commutativity buy when the data are
+classical bit strings? What can be learned when the data are themselves
+quantum states? And how does one prepare a Gibbs state, rather than a
+ground state, on a quantum computer?</p>
+<p>The chapter answers these questions in order, and the answers are
+mixed in a way that is instructive. Section <em>Energy-based models and the Boltzmann machine</em> develops the
+classical theory: energy-based models, the restricted Boltzmann
+machine, the exact gradient of the likelihood, and the contrastive
+divergence approximation that made the model practical, with its bias
+measured against the exact gradient on problems small enough to
+enumerate. Section <em>The quantum Boltzmann machine</em> defines the quantum model and
+derives its gradient, which is where the non-commutativity bites: the
+derivative of <span class="math notranslate nohighlight">\(e^{-\beta H}\)</span> with respect to a coupling is no longer an
+expectation value but an integral over imaginary time (Duhamel’s
+formula), and the practical training rule of the literature is the
+gradient of an upper bound on the loss rather than of the loss itself.
+Section <em>Boltzmann machines on classical data</em> trains both models on classical data and
+finds, as the exact computation must, that the transverse fields which
+make the model quantum are driven to zero: a classical distribution is
+best fit by a classical model. Section <em>Learning quantum states</em> turns to
+quantum data, where the picture reverses. When the target is a density
+matrix, the quantum relative entropy is a convex loss whose gradient is
+a difference of expectation values, a Hamiltonian in the model family
+is recovered exactly from its Gibbs state, and a Hamiltonian outside it
+is approximated only as well as the operator content of the model
+allows. Section <em>Preparing Gibbs states on a quantum computer</em> is about the quantum computer’s part
+of the job: the variational principle for the free energy, the
+thermofield double, and the variational quantum thermalizer, which
+prepares a Gibbs state with the circuits of Chapter 4 and a
+classical latent distribution. Section <em>Connections</em> places
+the QBM next to the QNN and next to the transverse-field Ising model
+that has accompanied us since Chapter 3, and
+Section <em>Summary and perspectives</em> closes the chapter.</p>
+<p>As in the previous chapters, every number is computed by a program in
+<code class="docutils literal notranslate"><span class="pre">BookPrograms/chapter5/</span></code>, and all models are small enough
+(at most seven qubits) for every quantity, including the partition
+function and the exact gradient, to be evaluated by dense linear
+algebra. This is deliberate. The approximations that make Boltzmann
+machines usable at scale, classical and quantum, are approximations to
+quantities we can here compute exactly, and the point of the chapter is
+to see what they cost.</p>
+</section>
+<section id="energy-based-models-and-the-boltzmann-machine">
+<h2>Energy-based models and the Boltzmann machine<a class="headerlink" href="#energy-based-models-and-the-boltzmann-machine" title="Link to this heading">#</a></h2>
+<section id="learning-as-the-minimization-of-a-divergence">
+<h3>Learning as the minimization of a divergence<a class="headerlink" href="#learning-as-the-minimization-of-a-divergence" title="Link to this heading">#</a></h3>
+<p>The data are <span class="math notranslate nohighlight">\(N\)</span> samples <span class="math notranslate nohighlight">\(\vec{v}^{(1)},\dots,\vec{v}^{(N)}\)</span> of a vector
+of <span class="math notranslate nohighlight">\(n_v\)</span> binary variables, <span class="math notranslate nohighlight">\(\vec{v}\in\{0,1\}^{n_v}\)</span>, drawn from an
+unknown distribution <span class="math notranslate nohighlight">\(\pi(\vec{v})\)</span>; the model is a family of
+distributions <span class="math notranslate nohighlight">\(p_{\vec{\theta}}(\vec{v})\)</span> over the same <span class="math notranslate nohighlight">\(2^{n_v}\)</span>
+configurations. The natural measure of the distance from the data to
+the model is the Kullback–Leibler divergence</p>
+<div class="math notranslate nohighlight">
+\[
+\mathrm{KL}(\pi\,\|\,p_{\vec{\theta}})
+=\sum_{\vec{v}}\pi(\vec{v})\ln\frac{\pi(\vec{v})}{p_{\vec{\theta}}(\vec{v})}
+=-S(\pi)-\sum_{\vec{v}}\pi(\vec{v})\ln p_{\vec{\theta}}(\vec{v}) ,\tag{5.1}
+\]</div>
+<p>which is non-negative and zero only when the two distributions
+coincide. The first term, minus the entropy of the data, does not
+depend on <span class="math notranslate nohighlight">\(\vec{\theta}\)</span>; the second is the expected negative
+log-likelihood of the model under the data,</p>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}(\vec{\theta})=-\sum_{\vec{v}}\pi(\vec{v})\ln p_{\vec{\theta}}(\vec{v})
+\approx-\frac1N\sum_{k=1}^N\ln p_{\vec{\theta}}(\vec{v}^{(k)}) ,\tag{5.2}
+\]</div>
+<p>where the second form replaces the unknown <span class="math notranslate nohighlight">\(\pi\)</span> by the empirical
+distribution of the samples. Minimizing the divergence and maximizing
+the likelihood are the same thing, and
+<span class="math notranslate nohighlight">\(\mathcal{L}(\vec{\theta})-S(\pi)=\mathrm{KL}(\pi\|p_{\vec{\theta}})\ge0\)</span>
+is the quantity we tabulate below: it is zero exactly when the model
+has learned the data. On the toy distributions of this chapter <span class="math notranslate nohighlight">\(\pi\)</span> is
+known, so we can use Eq. (5.2) with the exact <span class="math notranslate nohighlight">\(\pi\)</span> and
+reserve the sampled form for the methods that need samples.</p>
+</section>
+<section id="energy-based-models">
+<h3>Energy-based models<a class="headerlink" href="#energy-based-models" title="Link to this heading">#</a></h3>
+<p>An energy-based model assigns to every configuration an energy
+<span class="math notranslate nohighlight">\(E_{\vec{\theta}}(\vec{v})\)</span> and defines the probabilities by the
+Boltzmann distribution at unit temperature,</p>
+<div class="math notranslate nohighlight">
+\[
+p_{\vec{\theta}}(\vec{v})=\frac{e^{-E_{\vec{\theta}}(\vec{v})}}{Z(\vec{\theta})},
+\qquad
+Z(\vec{\theta})=\sum_{\vec{v}}e^{-E_{\vec{\theta}}(\vec{v})} .\tag{5.3}
+\]</div>
+<p>The temperature is not a separate parameter because it can be absorbed
+into <span class="math notranslate nohighlight">\(\vec{\theta}\)</span>. Low-energy configurations are probable, and
+learning means shaping the energy landscape so that its valleys sit on
+the data. The gradient of the negative log-likelihood has a form that
+every later formula of this chapter will echo:</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\mathcal{L}}{\partial\theta_\mu}
+=\sum_{\vec{v}}\pi(\vec{v})\frac{\partial E_{\vec{\theta}}(\vec{v})}{\partial\theta_\mu}
++\frac{\partial\ln Z}{\partial\theta_\mu}
+=\Bigl\langle\frac{\partial E}{\partial\theta_\mu}\Bigr\rangle_{\rm data}
+-\Bigl\langle\frac{\partial E}{\partial\theta_\mu}\Bigr\rangle_{\rm model} ,\tag{5.4}
+\]</div>
+<p>since <span class="math notranslate nohighlight">\(\partial_\mu\ln Z=-\sum_{\vec{v}}p_{\vec{\theta}}(\vec{v})\partial_\mu E(\vec{v})\)</span>.
+Gradient descent lowers the energy of the data (the <em>positive
+phase</em>) and raises the energy of what the model currently believes in
+(the <em>negative phase</em>), and stops when the two averages agree. The
+positive phase is a sum over the samples and costs nothing. The
+negative phase is an expectation value under the model, which for
+<span class="math notranslate nohighlight">\(n_v\)</span> variables is a sum over <span class="math notranslate nohighlight">\(2^{n_v}\)</span> configurations: it is the
+partition function in disguise, and everything that is hard about
+Boltzmann machines is in this term.</p>
+</section>
+<section id="the-boltzmann-machine-and-its-restricted-form">
+<h3>The Boltzmann machine and its restricted form<a class="headerlink" href="#the-boltzmann-machine-and-its-restricted-form" title="Link to this heading">#</a></h3>
+<p>A Boltzmann machine [Ackley1985] is an energy-based model with the
+quadratic energy of an Ising model in the variables <span class="math notranslate nohighlight">\(\{0,1\}\)</span>,
+<span class="math notranslate nohighlight">\(E(\vec{s})=-\sum_ia_is_i-\sum_{i&lt;j}W_{ij}s_is_j\)</span>, in which only a subset
+of the units, the <em>visible</em> units <span class="math notranslate nohighlight">\(\vec{v}\)</span>, carries data. The
+remaining <em>hidden</em> units <span class="math notranslate nohighlight">\(\vec{h}\in\{0,1\}^{n_h}\)</span> are summed
+over, so that the model distribution of the visible units is the
+marginal</p>
+<div class="math notranslate nohighlight">
+\[
+p_{\vec{\theta}}(\vec{v})=\sum_{\vec{h}}p_{\vec{\theta}}(\vec{v},\vec{h})
+=\frac1Z\sum_{\vec{h}}e^{-E(\vec{v},\vec{h})} .\tag{5.5}
+\]</div>
+<p>Hidden units matter because a quadratic energy in the visible units
+alone can only represent distributions with pairwise structure; the
+parity distribution of two bits, which is the XOR problem of
+Chapter 2 read as a distribution, is the standard
+example of one it cannot. With hidden units the marginal of a quadratic
+energy is a non-quadratic function of <span class="math notranslate nohighlight">\(\vec{v}\)</span>, and with enough hidden
+units any distribution over <span class="math notranslate nohighlight">\(\{0,1\}^{n_v}\)</span> can be approximated
+[LeRoux2008].</p>
+<p>The <em>restricted</em> Boltzmann machine (RBM) [Smolensky1986,Hinton2002]
+keeps only the couplings between the two layers,</p>
+<div class="math notranslate nohighlight">
+\[
+E(\vec{v},\vec{h})=-\vec{a}\cdot\vec{v}-\vec{b}\cdot\vec{h}-\vec{v}^T\matr{W}\vec{h} ,\tag{5.6}
+\]</div>
+<p>with visible biases <span class="math notranslate nohighlight">\(\vec{a}\in\mathbb{R}^{n_v}\)</span>, hidden biases
+<span class="math notranslate nohighlight">\(\vec{b}\in\mathbb{R}^{n_h}\)</span> and weights <span class="math notranslate nohighlight">\(\matr{W}\in\mathbb{R}^{n_v\times n_h}\)</span>,
+so that <span class="math notranslate nohighlight">\(\vec{\theta}=(\vec{a},\vec{b},\matr{W})\)</span> has <span class="math notranslate nohighlight">\(n_v+n_h+n_vn_h\)</span>
+components. The restriction is what makes the model usable. Because
+no two hidden units interact, the hidden units are conditionally
+independent given the visible ones, and vice versa,</p>
+<div class="math notranslate nohighlight">
+\[
+p(h_j=1\,|\,\vec{v})=\sigma\bigl(b_j+(\matr{W}^T\vec{v})_j\bigr),\qquad
+p(v_i=1\,|\,\vec{h})=\sigma\bigl(a_i+(\matr{W}\vec{h})_i\bigr),\tag{5.7}
+\]</div>
+<p>with the logistic function <span class="math notranslate nohighlight">\(\sigma(x)=1/(1+e^{-x})\)</span>: the conditional
+distribution of a layer factorizes, and a whole layer can be sampled at
+once. The same independence lets the sum over the hidden units in
+Eq. (5.5) be done in closed form,</p>
+<div class="math notranslate nohighlight">
+\[
+p_{\vec{\theta}}(\vec{v})=\frac{1}{Z}e^{-F(\vec{v})},\qquad
+F(\vec{v})=-\vec{a}\cdot\vec{v}-\sum_{j=1}^{n_h}\ln\Bigl(1+e^{\,b_j+(\matr{W}^T\vec{v})_j}\Bigr) ,\tag{5.8}
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(F(\vec{v})\)</span> is called the free energy of the visible configuration
+and <span class="math notranslate nohighlight">\(Z=\sum_{\vec{v}}e^{-F(\vec{v})}\)</span>. The model of the visible units is
+therefore an energy-based model with the non-quadratic energy
+<span class="math notranslate nohighlight">\(F(\vec{v})\)</span>; each hidden unit contributes a soft-plus function of a
+linear combination of the visible bits, which is the sense in which an
+RBM is a one-hidden-layer network. The gradient
+Eq. (5.4) applied to Eq. (5.6) and
+averaged over the hidden units gives the celebrated rule</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{align}
+\frac{\partial\mathcal{L}}{\partial W_{ij}}
+&amp;=\langle v_i\,p(h_j=1|\vec{v})\rangle_{\rm model}
+-\langle v_i\,p(h_j=1|\vec{v})\rangle_{\rm data} ,
+\nonumber\\
+\frac{\partial\mathcal{L}}{\partial a_i}&amp;=\langle v_i\rangle_{\rm model}-\langle v_i\rangle_{\rm data},
+\qquad
+\frac{\partial\mathcal{L}}{\partial b_j}=\langle p(h_j=1|\vec{v})\rangle_{\rm model}-\langle p(h_j=1|\vec{v})\rangle_{\rm data},
+\end{align}
+\end{split}\]</div>
+<p>in which the hidden units have been replaced by their conditional
+means, which is exact. The three quantities inside the averages are
+the sufficient statistics of the model; the data average runs over the
+samples, the model average over <span class="math notranslate nohighlight">\(p_{\vec{\theta}}(\vec{v})\)</span>. For
+<span class="math notranslate nohighlight">\(n_v\le20\)</span> or so the model average can be computed by enumeration from
+Eq. (5.8), and the class <code class="docutils literal notranslate"><span class="pre">RBM</span></code> of
+<code class="docutils literal notranslate"><span class="pre">rbm.py</span></code> does exactly this: it stores <span class="math notranslate nohighlight">\(\vec{\theta}\)</span> as one flat
+vector, evaluates <span class="math notranslate nohighlight">\(\ln p(\vec{v})\)</span> for all <span class="math notranslate nohighlight">\(2^{n_v}\)</span> patterns with a
+stable log-sum-exp, and returns the gradient Eq. (5.9)
+as the difference of two weighted statistics vectors. The program checks
+it against finite differences to <span class="math notranslate nohighlight">\(4\times10^{-10}\)</span>.</p>
+</section>
+<section id="gibbs-sampling-and-contrastive-divergence">
+<h3>Gibbs sampling and contrastive divergence<a class="headerlink" href="#gibbs-sampling-and-contrastive-divergence" title="Link to this heading">#</a></h3>
+<p>When <span class="math notranslate nohighlight">\(n_v\)</span> is large the model average must be estimated by sampling,
+and Eq. (5.7) gives the sampler: a <em>block Gibbs</em>
+step draws all hidden units from <span class="math notranslate nohighlight">\(p(\vec{h}|\vec{v})\)</span> and then all
+visible units from <span class="math notranslate nohighlight">\(p(\vec{v}|\vec{h})\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[
+\vec{v}_0\;\to\;\vec{h}_0\;\to\;\vec{v}_1\;\to\;\vec{h}_1\;\to\;\cdots\;\to\;\vec{v}_k ,\tag{5.10}
+\]</div>
+<p>and the chain converges to the model distribution
+<span class="math notranslate nohighlight">\(p_{\vec{\theta}}(\vec{v})\)</span> as <span class="math notranslate nohighlight">\(k\to\infty\)</span> (the transition kernel has
+<span class="math notranslate nohighlight">\(p_{\vec{\theta}}\)</span> as its stationary distribution and is ergodic because
+every configuration has non-zero probability). Running the chain to
+equilibrium at every gradient step is expensive, and the mixing time
+grows as the model learns and its energy valleys deepen.</p>
+<p>Hinton’s <em>contrastive divergence</em> (CD) [Hinton2002] is the
+observation that one does not need equilibrium. Start the chain at the
+data, <span class="math notranslate nohighlight">\(\vec{v}_0\sim\pi\)</span>, run it for <span class="math notranslate nohighlight">\(k\)</span> steps, and use the
+distribution <span class="math notranslate nohighlight">\(p_k\)</span> of <span class="math notranslate nohighlight">\(\vec{v}_k\)</span> in place of the model distribution in
+the negative phase:</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\mathcal{L}}{\partial\theta_\mu}
+\;\approx\;
+\Bigl\langle\frac{\partial E}{\partial\theta_\mu}\Bigr\rangle_{p_0}
+-\Bigl\langle\frac{\partial E}{\partial\theta_\mu}\Bigr\rangle_{p_k}
+\qquad(\text{CD-}k),\tag{5.11}
+\]</div>
+<p>with the hidden units again replaced by their conditional means. For
+<span class="math notranslate nohighlight">\(k=1\)</span> each gradient step costs one reconstruction of the data, and the
+rule has an appealing reading: the model is pushed to make the data
+more probable and its own one-step reconstruction of the data less
+probable, so that the chain started at the data goes nowhere. The name
+comes from the objective this rule approximately descends,</p>
+<div class="math notranslate nohighlight">
+\[
+\mathrm{CD}_k=\mathrm{KL}(p_0\,\|\,p_\infty)-\mathrm{KL}(p_k\,\|\,p_\infty) ,\tag{5.12}
+\]</div>
+<p>the difference of two divergences from the model: the first is the
+likelihood objective Eq. (5.1) up to a constant, the second
+is the divergence of the partially relaxed chain, and the difference is
+non-negative and vanishes when the data distribution is stationary
+under the chain, that is, when the model has learned the data. The
+exact gradient of Eq. (5.12) contains, besides the
+two averages of Eq. (5.11), a term from the dependence of
+<span class="math notranslate nohighlight">\(p_k\)</span> on <span class="math notranslate nohighlight">\(\vec{\theta}\)</span> through the transition kernel, and CD drops it.
+This is the approximation: CD-<span class="math notranslate nohighlight">\(k\)</span> is not the gradient of any function,
+and its fixed points are not the maximum of the likelihood
+[CarreiraPerpinan2005,Bengio2009]. The bias decreases with <span class="math notranslate nohighlight">\(k\)</span>,
+and it is small when the model is close to the data (the chain then
+barely moves and both neglected quantities are small), which is why CD
+works far better than it has any right to.</p>
+<p><em>Persistent</em> contrastive divergence (PCD) [Tieleman2008] removes
+the restart: a set of chains is initialized once and advanced one
+Gibbs step per parameter update, the negative phase being averaged over
+the current chain states. If the parameters change slowly the chains
+remain close to equilibrium, and the estimate approaches the true
+gradient at the cost of a small learning rate and many chains. Both
+estimators are implemented in <code class="docutils literal notranslate"><span class="pre">rbm.py</span></code> as
+<code class="docutils literal notranslate"><span class="pre">gradient_cd</span></code> and <code class="docutils literal notranslate"><span class="pre">gradient_pcd</span></code>, on the same
+statistics function as the exact gradient, so that the only difference
+between the three is where the negative-phase configurations come from.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Target</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(n_h\)</span></p></th>
+<th class="head"><p>exact</p></th>
+<th class="head"><p>CD-1</p></th>
+<th class="head"><p>CD-10</p></th>
+<th class="head"><p>PCD</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>XOR (<span class="math notranslate nohighlight">\(n_v=2\)</span>)</p></td>
+<td><p>2</p></td>
+<td><p>0.0044</p></td>
+<td><p>0.0967</p></td>
+<td><p>0.0228</p></td>
+<td><p>0.0331</p></td>
+</tr>
+<tr class="row-odd"><td><p>bars and stripes (<span class="math notranslate nohighlight">\(n_v=4\)</span>)</p></td>
+<td><p>4</p></td>
+<td><p>0.0230</p></td>
+<td><p>0.0823</p></td>
+<td><p>0.0531</p></td>
+<td><p>0.4814</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.1: Classical RBMs on two toy distributions: the divergence
+<span class="math notranslate nohighlight">\(\mathrm{KL}(\pi\|p_{\vec{\theta}})=\mathcal{L}-S(\pi)\)</span> after 3000
+steps of plain gradient descent (rate <span class="math notranslate nohighlight">\(0.5\)</span>) with the exact gradient,
+contrastive divergence with <span class="math notranslate nohighlight">\(k=1\)</span> and <span class="math notranslate nohighlight">\(k=10\)</span> steps, and persistent CD
+(rate <span class="math notranslate nohighlight">\(0.2\)</span>, 50 chains); CD and PCD see a data set of 200 samples of
+<span class="math notranslate nohighlight">\(\pi\)</span>. XOR is the even-parity distribution on two bits, bars and
+stripes the uniform distribution over the six <span class="math notranslate nohighlight">\(2\times2\)</span> images whose
+rows or columns are constant (patterns 0000, 0011, 1100, 1111, 0101,
+1010). From <code class="docutils literal notranslate"><span class="pre">rbm.py</span></code>.</em></p>
+<p><img alt="Left the divergence of Table 5.1 against the gradient step for the bar" src="../BookFigures/chapter5/rbm.png" /></p>
+<p><em>Figure 5.1: Left: the divergence of Table 5.1 against the gradient step for the bars-and-stripes RBM with the four estimators of the negative phase. Right: the learned distributions with the exact gradient and with CD-1 against the target. From <code class="docutils literal notranslate"><span class="pre">rbm.py</span></code>.</em></p>
+<p>Table 5.1 and Fig. 5.1 measure the estimators
+on the two distributions that will be used throughout the chapter,
+with the exact gradient as the reference. The exact gradient descends
+smoothly and is still descending after 3000 steps (the RBM likelihood
+has no finite maximum on a target with zero-probability patterns: the
+weights must grow without bound to drive those probabilities to zero,
+and the divergence of <span class="math notranslate nohighlight">\(0.02\)</span> for bars and stripes is a matter of
+patience, not of capacity). CD-1 stalls at a divergence four times
+larger and its learned distribution, on the right of
+Fig. 5.1, is visibly tilted: the bias of
+Eq. (5.11) moves probability between the six patterns and
+leaks some onto the ten others. CD-10 halves the gap, as the decreasing
+bias with <span class="math notranslate nohighlight">\(k\)</span> predicts. PCD with the learning rate and the 50 chains
+of the table is the worst of the four and still fluctuating at the end,
+a reminder that the persistent chains track the model only when the
+parameters move slowly; with a tenth of the rate and ten times the
+chains it overtakes CD-1 (Exercise 5.3). The point to retain
+is not that one estimator is best but that all of them are
+approximations to a quantity, the negative phase, that the quantum
+model of the next section inherits unchanged, together with one new
+difficulty of its own.</p>
+<p>The listing below trains the XOR machine with the exact gradient and
+with CD-1 from the same start, and prints the two divergences.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">rbm</span> <span class="kn">import</span> <span class="n">RBM</span><span class="p">,</span> <span class="n">parity</span><span class="p">,</span> <span class="n">kl_divergence</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">parity</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>                       <span class="c1"># p(00) = p(11) = 1/2: the XOR distribution</span>
+<span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="s2">&quot;cd&quot;</span><span class="p">]:</span>
+    <span class="n">rbm</span> <span class="o">=</span> <span class="n">RBM</span><span class="p">(</span><span class="n">n_visible</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_hidden</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">hist</span> <span class="o">=</span> <span class="n">rbm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">method</span><span class="si">:</span><span class="s2">&gt;5</span><span class="si">}</span><span class="s2">: KL(target || model) = </span><span class="si">{</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;p(v) = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">rbm</span><span class="o">.</span><span class="n">probabilities</span><span class="p">(),</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>exact: KL(target || model) = 0.0044, p(v) = [0.498 0.002 0.002 0.498]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   cd: KL(target || model) = 0.0967, p(v) = [0.294 0.003 0.003 0.7  ]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="the-quantum-boltzmann-machine">
+<h2>The quantum Boltzmann machine<a class="headerlink" href="#the-quantum-boltzmann-machine" title="Link to this heading">#</a></h2>
+<section id="definition">
+<h3>Definition<a class="headerlink" href="#definition" title="Link to this heading">#</a></h3>
+<p>A Boltzmann machine written in spin language has the energy
+<span class="math notranslate nohighlight">\(E(\vec{z})=-\sum_i a_iz_i-\sum_{i&lt;j}W_{ij}z_iz_j\)</span> with <span class="math notranslate nohighlight">\(z_i=\pm1\)</span>, and
+this energy is the diagonal of the Hamiltonian
+<span class="math notranslate nohighlight">\(H=-\sum_ia_iZ_i-\sum_{i&lt;j}W_{ij}Z_iZ_j\)</span> in the computational basis.
+The Boltzmann distribution Eq. (5.3) is the diagonal of the
+Gibbs state <span class="math notranslate nohighlight">\(e^{-H}/Z\)</span> of this Hamiltonian, and because <span class="math notranslate nohighlight">\(H\)</span> is
+diagonal the Gibbs state has nothing but a diagonal. The quantum
+Boltzmann machine of Amin and coworkers [Amin2018] adds terms that
+do not commute with the <span class="math notranslate nohighlight">\(Z\)</span>’s. In the form used in this chapter,</p>
+<div class="math notranslate nohighlight">
+\[
+H(\vec{\theta})=-\sum_{\mu=1}^P\theta_\mu\Lambda_\mu,\qquad
+\rho(\vec{\theta})=\frac{e^{-\beta H(\vec{\theta})}}{Z(\vec{\theta})},\qquad
+Z(\vec{\theta})=\mathrm{Tr}\,e^{-\beta H(\vec{\theta})} ,\tag{5.13}
+\]</div>
+<p>where the <span class="math notranslate nohighlight">\(\Lambda_\mu\)</span> are Pauli strings on <span class="math notranslate nohighlight">\(n=n_v+n_h\)</span> qubits chosen
+once and for all, the <span class="math notranslate nohighlight">\(\theta_\mu\)</span> are the trainable couplings and
+<span class="math notranslate nohighlight">\(\beta\)</span> is a fixed inverse temperature. The <em>restricted</em> QBM, the
+analog of Eq. (5.6) drawn in Fig. 5.2,
+takes</p>
+<div class="math notranslate nohighlight">
+\[
+H=-\sum_{i\in v}a_iZ_i-\sum_{j\in h}b_jZ_j-\sum_{i\in v}\sum_{j\in h}W_{ij}Z_iZ_j
+-\sum_{q\in v\cup h}\Gamma_qX_q ,\tag{5.14}
+\]</div>
+<p>and the <em>transverse fields</em> <span class="math notranslate nohighlight">\(\Gamma_q\)</span> are the only quantum
+ingredient: with all <span class="math notranslate nohighlight">\(\Gamma_q=0\)</span> the model is the classical RBM in
+spin variables, <span class="math notranslate nohighlight">\(z_i=1-2v_i\)</span>. The data are measured in the
+computational basis, so the probability the model assigns to a visible
+configuration <span class="math notranslate nohighlight">\(\vec{v}\)</span> is the Born-rule probability of the projector
+onto that configuration of the visible qubits, with the hidden qubits
+traced out:</p>
+<div class="math notranslate nohighlight">
+\[
+p_{\vec{\theta}}(\vec{v})=\mathrm{Tr}\bigl[\Pi_{\vec{v}}\,\rho(\vec{\theta})\bigr],\qquad
+\Pi_{\vec{v}}=\vert\vec{v}\rangle\langle\vec{v}\vert\otimes I_h .\tag{5.15}
+\]</div>
+<p>Equation (5.15) is the counterpart of the marginal
+Eq. (5.5): summing the diagonal of <span class="math notranslate nohighlight">\(\rho\)</span> over the
+hidden labels is the partial trace. Two things are new. The state
+<span class="math notranslate nohighlight">\(\rho\)</span> is not diagonal, so the model also assigns probabilities to
+measurements in other bases, and a QBM with hidden units can leave the
+visible qubits in a mixed state <span class="math notranslate nohighlight">\(\rho_v=\mathrm{Tr}_h\rho\)</span> with
+coherences; and the diagonal of <span class="math notranslate nohighlight">\(e^{-\beta H}\)</span> is no longer
+<span class="math notranslate nohighlight">\(e^{-\beta E(\vec{z})}\)</span> for the quadratic energy of the model, or for
+any energy built from its terms, because the matrix
+exponential of a non-diagonal <span class="math notranslate nohighlight">\(H\)</span> mixes configurations. The model
+distribution over the visible bits is still a positive function on
+<span class="math notranslate nohighlight">\(2^{n_v}\)</span> points, and the question of this chapter is whether it is a
+more useful family of such functions than the classical one. The loss
+is the same negative log-likelihood Eq. (5.2) with
+Eq. (5.15) inserted, and we keep calling it
+<span class="math notranslate nohighlight">\(\mathcal{L}(\vec{\theta})\)</span>.</p>
+<p><img alt="The restricted quantum Boltzmann machine of Eq. 5.14 used for the bars" src="../BookFigures/chapter5/5-rqbm.png" /></p>
+<p><em>Figure 5.2: The restricted quantum Boltzmann machine of Eq. (5.14) used for the bars-and-stripes data in Section <em>Boltzmann machines on classical data</em>: four visible and three hidden qubits, <span class="math notranslate nohighlight">\(ZZ\)</span> couplings <span class="math notranslate nohighlight">\(W_{ij}\)</span> between the layers only, longitudinal fields <span class="math notranslate nohighlight">\(a_i,b_j\)</span> and transverse fields <span class="math notranslate nohighlight">\(\Gamma_q\)</span> on every qubit. With <span class="math notranslate nohighlight">\(\Gamma_q=0\)</span> it is the classical RBM of Eq. (5.6) in spin variables. The model has <span class="math notranslate nohighlight">\(P=2(n_v+n_h)+n_vn_h=26\)</span> parameters.</em></p>
+<p>The class <code class="docutils literal notranslate"><span class="pre">QBM</span></code> of <code class="docutils literal notranslate"><span class="pre">qbm.py</span></code> represents a model by a
+list of Pauli strings (as dictionaries <code class="docutils literal notranslate"><span class="pre">{qubit:</span> <span class="pre">&quot;X&quot;/&quot;Y&quot;/&quot;Z&quot;</span></code>}),
+builds <span class="math notranslate nohighlight">\(H(\vec{\theta})\)</span> and <span class="math notranslate nohighlight">\(\rho(\vec{\theta})\)</span> as dense matrices, and
+reads off <span class="math notranslate nohighlight">\(p_{\vec{\theta}}(\vec{v})\)</span> from the diagonal of <span class="math notranslate nohighlight">\(\rho\)</span> with a
+<span class="math notranslate nohighlight">\(2^{n_v}\times2^n\)</span> summation matrix for the partial trace. The helper
+<code class="docutils literal notranslate"><span class="pre">rqbm_terms</span></code> produces the terms of Eq. (5.14);
+<code class="docutils literal notranslate"><span class="pre">ising_terms</span></code> produces fully visible chains with chosen fields
+and couplings, which Section <em>Learning quantum states</em> needs. The thermal
+state, the partial trace, the entropies and the other tools of
+finite-temperature quantum mechanics live in <code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code>.</p>
+</section>
+<section id="the-gradient-duhamels-formula">
+<h3>The gradient: Duhamel’s formula<a class="headerlink" href="#the-gradient-duhamels-formula" title="Link to this heading">#</a></h3>
+<p>Differentiating the loss requires the derivative of
+Eq. (5.15) with respect to a coupling,</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\ln p_{\vec{\theta}}(\vec{v})}{\partial\theta_\mu}
+=\frac{\mathrm{Tr}\bigl[\Pi_{\vec{v}}\,\partial_\mu e^{-\beta H}\bigr]}{Z\,p_{\vec{\theta}}(\vec{v})}
+-\frac{\partial\ln Z}{\partial\theta_\mu} ,\tag{5.16}
+\]</div>
+<p>and therefore the derivative of a matrix exponential with respect to a
+parameter of its exponent. When <span class="math notranslate nohighlight">\(H\)</span> is diagonal, or more generally
+when <span class="math notranslate nohighlight">\(\partial_\mu H\)</span> commutes with <span class="math notranslate nohighlight">\(H\)</span>, the exponential differentiates
+like a number, <span class="math notranslate nohighlight">\(\partial_\mu e^{-\beta H}=-\beta\,\partial_\mu H\,e^{-\beta H}
+=\beta\Lambda_\mu e^{-\beta H}\)</span>, and Eq. (5.16) becomes</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\mathcal{L}}{\partial\theta_\mu}
+=\beta\Bigl(\langle\Lambda_\mu\rangle_\rho
+-\sum_{\vec{v}}\pi(\vec{v})\,\langle\Lambda_\mu\rangle_{\rho|\vec{v}}\Bigr),
+\qquad
+\langle\Lambda_\mu\rangle_{\rho|\vec{v}}
+=\frac{\mathrm{Tr}[\Pi_{\vec{v}}\Lambda_\mu\rho]}{\mathrm{Tr}[\Pi_{\vec{v}}\rho]} ,\tag{5.17}
+\]</div>
+<p>the classical rule Eq. (5.4) once more: the model
+expectation of the operator conjugate to <span class="math notranslate nohighlight">\(\theta_\mu\)</span> minus its
+expectation in the state <em>clamped</em> to the data, the visible qubits
+projected onto <span class="math notranslate nohighlight">\(\vec{v}\)</span> and the hidden ones in the conditional thermal
+state. Two commuting operators have a common eigenbasis and the
+quantum model is, in that basis, a classical one.</p>
+<p>When <span class="math notranslate nohighlight">\([\Lambda_\mu,H]\ne0\)</span> this fails, because
+<span class="math notranslate nohighlight">\(e^{-\beta(H+\epsilon\Lambda)}\ne e^{-\beta H}e^{-\beta\epsilon\Lambda}\)</span>.
+The correct derivative is <em>Duhamel’s formula</em></p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial}{\partial\theta_\mu}e^{-\beta H(\vec{\theta})}
+=-\int_0^\beta ds\;e^{-(\beta-s)H}\,\frac{\partial H}{\partial\theta_\mu}\,e^{-sH}
+=\int_0^\beta ds\;e^{-(\beta-s)H}\,\Lambda_\mu\,e^{-sH} ,\tag{5.18}
+\]</div>
+<p>which follows from differentiating the identity
+<span class="math notranslate nohighlight">\(e^{-\beta H}=e^{-(\beta-s)H}e^{-sH}\)</span> with respect to <span class="math notranslate nohighlight">\(s\)</span> under the
+perturbation and integrating (Exercise 5.4). The perturbing
+operator is inserted at every imaginary time <span class="math notranslate nohighlight">\(s\)</span> between <span class="math notranslate nohighlight">\(0\)</span> and
+<span class="math notranslate nohighlight">\(\beta\)</span> and the insertions are averaged: this is the imaginary-time
+correlation function of many-body perturbation theory, and it is what
+replaces the simple product of the commuting case. In the eigenbasis
+of <span class="math notranslate nohighlight">\(H\)</span>, <span class="math notranslate nohighlight">\(H=\sum_ke_k\vert k\rangle\langle k\vert\)</span>, the integral is
+elementary and gives the matrix elements</p>
+<div class="math notranslate nohighlight">
+\[
+\langle k\vert\,\partial_\mu e^{-\beta H}\,\vert l\rangle
+=\langle k\vert\Lambda_\mu\vert l\rangle\;
+\frac{e^{-\beta e_l}-e^{-\beta e_k}}{e_k-e_l}
+\qquad(k\ne l),\qquad
+\langle k\vert\,\partial_\mu e^{-\beta H}\,\vert k\rangle
+=\beta\,e^{-\beta e_k}\langle k\vert\Lambda_\mu\vert k\rangle ,\tag{5.19}
+\]</div>
+<p>divided differences of the exponential between pairs of eigenvalues,
+which reduce to the diagonal rule as <span class="math notranslate nohighlight">\(e_l\to e_k\)</span>. The function
+<code class="docutils literal notranslate"><span class="pre">exp_derivative</span></code> of <code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code> evaluates
+Eq. (5.19) from one diagonalization of <span class="math notranslate nohighlight">\(H\)</span>, and
+<code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code> checks it against a central finite difference on a
+random three-qubit Hamiltonian to <span class="math notranslate nohighlight">\(9\times10^{-11}\)</span>. This is the exact
+gradient of the QBM, available whenever <span class="math notranslate nohighlight">\(H\)</span> can be diagonalized, and
+it is what the programs of this chapter use as the reference.</p>
+<p>Inserting Eq. (5.18) into Eq. (5.16) gives the
+two phases of the quantum model. The negative phase, the derivative of
+the partition function, simplifies because the trace is cyclic:</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\ln Z}{\partial\theta_\mu}
+=\frac1Z\int_0^\beta ds\,\mathrm{Tr}\bigl[e^{-(\beta-s)H}\Lambda_\mu e^{-sH}\bigr]
+=\frac1Z\int_0^\beta ds\,\mathrm{Tr}\bigl[\Lambda_\mu e^{-\beta H}\bigr]
+=\beta\,\langle\Lambda_\mu\rangle_\rho .\tag{5.20}
+\]</div>
+<p>The imaginary-time structure disappears under the trace, and the
+negative phase of the QBM is the same thermal expectation value as in
+the classical model: an observable of the Gibbs state, measurable on
+any device that prepares it. The positive phase does not simplify. The
+projector <span class="math notranslate nohighlight">\(\Pi_{\vec{v}}\)</span> does not commute with <span class="math notranslate nohighlight">\(H\)</span> and sits inside the
+trace next to the integrand, so that</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\mathcal{L}}{\partial\theta_\mu}
+=\beta\Bigl(\langle\Lambda_\mu\rangle_\rho
+-\sum_{\vec{v}}\pi(\vec{v})\,\langle\Lambda_\mu\rangle^{(\tau)}_{\vec{v}}\Bigr),
+\qquad
+\langle\Lambda_\mu\rangle^{(\tau)}_{\vec{v}}
+=\frac{1}{\beta}\int_0^\beta ds\;
+\frac{\mathrm{Tr}\bigl[\Pi_{\vec{v}}\,e^{-(\beta-s)H}\Lambda_\mu e^{-sH}\bigr]}{Z\,p_{\vec{\theta}}(\vec{v})} ,\tag{5.21}
+\]</div>
+<p>with an imaginary-time-averaged clamped expectation in the place of
+the clamped expectation of Eq. (5.17), to which it
+reduces when <span class="math notranslate nohighlight">\([\Pi_{\vec{v}},H]=0\)</span>. The quantity
+<span class="math notranslate nohighlight">\(\langle\Lambda_\mu\rangle^{(\tau)}_{\vec{v}}\)</span> is not an expectation
+value of any state and there is no known efficient way to measure it on
+a quantum device; it can be computed only when <span class="math notranslate nohighlight">\(H\)</span> can be
+diagonalized. This is the specific obstacle to training a quantum
+Boltzmann machine on classical data, and it is where the literature
+resorts to a bound.</p>
+</section>
+<section id="the-clamped-state-bound">
+<h3>The clamped-state bound<a class="headerlink" href="#the-clamped-state-bound" title="Link to this heading">#</a></h3>
+<p>Amin and coworkers [Amin2018] replace the likelihood by a quantity
+that can be differentiated with expectation values alone. The
+Golden–Thompson inequality states that
+<span class="math notranslate nohighlight">\(\mathrm{Tr}[e^Ae^B]\ge\mathrm{Tr}[e^{A+B}]\)</span> for Hermitian <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span>,
+with equality when they commute. Writing the projector as the limit of
+an exponential, <span class="math notranslate nohighlight">\(\Pi_{\vec{v}}=\lim_{\lambda\to\infty}e^{-\lambda(I-\Pi_{\vec{v}})}\)</span>,
+one obtains</p>
+<div class="math notranslate nohighlight">
+\[
+p_{\vec{\theta}}(\vec{v})=\frac{\mathrm{Tr}[\Pi_{\vec{v}}e^{-\beta H}]}{Z}
+\;\ge\;\frac{\mathrm{Tr}\bigl[\Pi_{\vec{v}}\,e^{-\beta H_{\vec{v}}}\bigr]}{Z}
+=\frac{Z_{\vec{v}}}{Z},
+\qquad
+H_{\vec{v}}=\Pi_{\vec{v}}H\Pi_{\vec{v}} ,\tag{5.22}
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(H_{\vec{v}}\)</span> is the <em>clamped Hamiltonian</em>: the model
+Hamiltonian with the visible qubits frozen in the configuration
+<span class="math notranslate nohighlight">\(\vec{v}\)</span>, which for the Pauli strings of Eq. (5.14) means</p>
+<div class="math notranslate nohighlight">
+\[
+Z_i\;\to\;1-2v_i,\qquad X_i\;\to\;0\qquad(i\in v) ,\tag{5.23}
+\]</div>
+<p>an operator on the hidden qubits only, and
+<span class="math notranslate nohighlight">\(Z_{\vec{v}}=\mathrm{Tr}_h\,e^{-\beta H_{\vec{v}}}\)</span> its partition
+function. The visible transverse fields drop out of <span class="math notranslate nohighlight">\(H_{\vec{v}}\)</span>
+because <span class="math notranslate nohighlight">\(X_i\)</span> has no diagonal elements in the computational basis of
+qubit <span class="math notranslate nohighlight">\(i\)</span>. Taking the logarithm and averaging over the data,</p>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}(\vec{\theta})\;\le\;\widetilde{\mathcal{L}}(\vec{\theta})
+=\ln Z(\vec{\theta})-\sum_{\vec{v}}\pi(\vec{v})\ln Z_{\vec{v}}(\vec{\theta}) ,\tag{5.24}
+\]</div>
+<p>an upper bound on the loss whose two terms are both logarithms of
+partition functions, of the full model and of the model clamped to each
+data point. Its gradient follows from Eq. (5.20) applied
+to each,</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial\widetilde{\mathcal{L}}}{\partial\theta_\mu}
+=\beta\Bigl(\langle\Lambda_\mu\rangle_\rho
+-\sum_{\vec{v}}\pi(\vec{v})\,\langle\Lambda^{(\vec{v})}_\mu\rangle_{\rho_{\vec{v}}}\Bigr),
+\qquad
+\rho_{\vec{v}}=\frac{e^{-\beta H_{\vec{v}}}}{Z_{\vec{v}}} ,\tag{5.25}
+\]</div>
+<p>with <span class="math notranslate nohighlight">\(\Lambda^{(\vec{v})}_\mu\)</span> the clamped version of <span class="math notranslate nohighlight">\(\Lambda_\mu\)</span> by
+the rule Eq. (5.23). This is the formula that is usually
+quoted as “the gradient of the quantum Boltzmann machine,” model
+expectation minus clamped expectation, and it has exactly the shape of
+the classical rule; both terms are expectation values of thermal
+states, of <span class="math notranslate nohighlight">\(H\)</span> and of <span class="math notranslate nohighlight">\(H_{\vec{v}}\)</span>, and could be measured on a device
+that prepares them. But it is the gradient of the bound
+Eq. (5.24), not of the likelihood, and the two differ
+in a way that matters. For a visible transverse field the clamped
+operator vanishes, so Eq. (5.25) gives
+<span class="math notranslate nohighlight">\(\partial\widetilde{\mathcal{L}}/\partial\Gamma_i=\beta\langle X_i\rangle_\rho\)</span>
+whatever the data: descending the bound always reduces
+<span class="math notranslate nohighlight">\(\vert\Gamma_i\vert\)</span>, since <span class="math notranslate nohighlight">\(\langle X_i\rangle_\rho\)</span> has the sign of
+<span class="math notranslate nohighlight">\(\Gamma_i\)</span>, and the bound cannot learn the visible transverse fields
+at all. Amin and coworkers therefore keep them fixed; the program
+<code class="docutils literal notranslate"><span class="pre">qbm.py</span></code> trains them anyway, so that the effect can be seen.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Term</p></th>
+<th class="head"><p>exact (Duhamel)</p></th>
+<th class="head"><p>finite difference</p></th>
+<th class="head"><p>bound Eq. (5.25)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z_0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.060300\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.060300\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.061133\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Z_1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.141716\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.141716\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.143026\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.081718\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.081718\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.083694\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Z_3\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.029148\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.029148\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.029801\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(X_0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.009442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.009442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.227435\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(X_1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.005532\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.005532\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.173332\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(X_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.017987\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.017987\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.019094\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(X_3\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.002691\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.002691\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.001743\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z_0Z_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.196026\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.196026\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.206809\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Z_0Z_3\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.013928\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.013928\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.004916\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z_1Z_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.202632\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.202632\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.211565\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Z_1Z_3\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.465294\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.465294\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.479711\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.2: The three gradients of the restricted QBM of
+Fig. 5.2 with two visible and two hidden qubits at random
+couplings and <span class="math notranslate nohighlight">\(\beta=1\)</span>, for the XOR target: the exact gradient
+Eq. (5.21) by Duhamel’s formula, a central finite
+difference of the loss, and the clamped-state gradient
+Eq. (5.25). The exact and finite-difference columns
+agree to <span class="math notranslate nohighlight">\(10^{-9}\)</span>; the bound gradient is close for most <span class="math notranslate nohighlight">\(Z\)</span> terms and
+the hidden <span class="math notranslate nohighlight">\(X\)</span> terms and wrong by more than an order of magnitude for
+the visible transverse fields <span class="math notranslate nohighlight">\(\Gamma_0,\Gamma_1\)</span>. From <code class="docutils literal notranslate"><span class="pre">qbm.py</span></code>.</em></p>
+<p>Table 5.2 compares the three gradients at a random
+point of a small model. The agreement of the Duhamel gradient with the
+finite difference confirms Eqs. (5.18)–(5.21);
+the bound gradient tracks the exact one to a few percent for the
+longitudinal fields and for all but the smallest coupling (<span class="math notranslate nohighlight">\(Z_0Z_3\)</span> is
+off by a factor of three), is already off by a factor of two
+for a hidden transverse field, and for the visible transverse fields
+is twenty to thirty times too large: it is <span class="math notranslate nohighlight">\(\beta\langle X_i\rangle_\rho\)</span>,
+which knows nothing of the data. The program also
+checks that with all <span class="math notranslate nohighlight">\(\Gamma_q=0\)</span> the two gradients coincide to
+<span class="math notranslate nohighlight">\(10^{-16}\)</span>, as Eq. (5.17) requires. The listing
+reproduces the comparison.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">qbm</span> <span class="kn">import</span> <span class="n">QBM</span><span class="p">,</span> <span class="n">rqbm_terms</span>
+<span class="kn">from</span> <span class="nn">rbm</span> <span class="kn">import</span> <span class="n">parity</span>
+<span class="kn">from</span> <span class="nn">optimize</span> <span class="kn">import</span> <span class="n">numerical_gradient</span>
+
+<span class="n">terms</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="n">rqbm_terms</span><span class="p">(</span><span class="n">n_v</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_h</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>               <span class="c1"># Z_q, X_q, Z_i Z_j (visible-hidden)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">QBM</span><span class="p">(</span><span class="n">n_visible</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_hidden</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">terms</span><span class="o">=</span><span class="n">terms</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">parity</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">g_exact</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">gradient_exact</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>          <span class="c1"># Duhamel, Eq. (5-exactgrad)</span>
+<span class="n">g_fd</span> <span class="o">=</span> <span class="n">numerical_gradient</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">nll</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span> <span class="n">theta</span><span class="p">)</span>
+<span class="n">g_bound</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">gradient_bound</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>          <span class="c1"># clamped states, Eq. (5-boundgrad)</span>
+<span class="k">for</span> <span class="n">nm</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">g_exact</span><span class="p">,</span> <span class="n">g_fd</span><span class="p">,</span> <span class="n">g_bound</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nm</span><span class="si">:</span><span class="s2">&gt;5</span><span class="si">}</span><span class="s2">  exact </span><span class="si">{</span><span class="n">a</span><span class="si">:</span><span class="s2">9.6f</span><span class="si">}</span><span class="s2">  finite diff. </span><span class="si">{</span><span class="n">b</span><span class="si">:</span><span class="s2">9.6f</span><span class="si">}</span><span class="s2">  bound </span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s2">9.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   Z0  exact -0.060300  finite diff. -0.060300  bound -0.061133
+   Z1  exact -0.141716  finite diff. -0.141716  bound -0.143026
+   Z2  exact  0.081718  finite diff.  0.081718  bound  0.083694
+   Z3  exact  0.029148  finite diff.  0.029148  bound  0.029801
+   X0  exact -0.009442  finite diff. -0.009442  bound -0.227435
+   X1  exact  0.005532  finite diff.  0.005532  bound  0.173332
+   X2  exact  0.017987  finite diff.  0.017987  bound  0.019094
+   X3  exact -0.002691  finite diff. -0.002691  bound -0.001743
+ Z0Z2  exact  0.196026  finite diff.  0.196026  bound  0.206809
+ Z0Z3  exact -0.013928  finite diff. -0.013928  bound -0.004916
+ Z1Z2  exact  0.202632  finite diff.  0.202632  bound  0.211565
+ Z1Z3  exact  0.465294  finite diff.  0.465294  bound  0.479711
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="boltzmann-machines-on-classical-data">
+<h2>Boltzmann machines on classical data<a class="headerlink" href="#boltzmann-machines-on-classical-data" title="Link to this heading">#</a></h2>
+<p>We now train the models of the two preceding sections on the same two
+distributions, with the exact gradients throughout so that nothing in
+the comparison is due to sampling. Four models are trained on each
+target: the classical RBM with binary units of
+Section <em>The Boltzmann machine and its restricted form</em>; the restricted QBM without transverse fields,
+which is the same model in spin variables; the restricted QBM with
+transverse fields on every qubit and the exact Duhamel gradient
+Eq. (5.21); and the same quantum model trained with
+the bound gradient Eq. (5.25). All use Adam
+[Kingma2015] with the same learning rate and number of steps for
+the three spin models and the same random start for the two quantum
+ones; the RBM, whose <span class="math notranslate nohighlight">\(\{0,1\}\)</span> units make its landscape differently
+scaled, is given 1000 steps. Table 5.3 and
+Fig. 5.3 summarize the result.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Target</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(n_v\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(n_h\)</span></p></th>
+<th class="head"><p>steps (rate)</p></th>
+<th class="head"><p>RBM</p></th>
+<th class="head"><p>QBM, <span class="math notranslate nohighlight">\(\Gamma=0\)</span></p></th>
+<th class="head"><p>QBM, exact</p></th>
+<th class="head"><p>QBM, bound</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>XOR</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+<td><p>300 (0.1)</p></td>
+<td><p>0.0004</p></td>
+<td><p>0.0003</p></td>
+<td><p>0.0002</p></td>
+<td><p>0.0002</p></td>
+</tr>
+<tr class="row-odd"><td><p>bars and stripes</p></td>
+<td><p>4</p></td>
+<td><p>3</p></td>
+<td><p>200 (0.05)</p></td>
+<td><p>0.0028</p></td>
+<td><p>0.0074</p></td>
+<td><p>0.0082</p></td>
+<td><p>0.0099</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.3: Classical and quantum Boltzmann machines on classical data,
+trained with exact gradients and Adam: the divergence
+<span class="math notranslate nohighlight">\(\mathrm{KL}(\pi\|p_{\vec{\theta}})\)</span> at the end of training for the
+binary-unit RBM (1000 steps, rate <span class="math notranslate nohighlight">\(0.1\)</span>), the restricted QBM without
+transverse fields, the restricted QBM with transverse fields and the
+Duhamel gradient, and the same model with the clamped-state gradient;
+<span class="math notranslate nohighlight">\(\beta=1\)</span> throughout. From <code class="docutils literal notranslate"><span class="pre">classical_data.py</span></code>.</em></p>
+<p><img alt="Left the divergence against the Adam step for the four models of Table" src="../BookFigures/chapter5/classical.png" /></p>
+<p><em>Figure 5.3: Left: the divergence against the Adam step for the four models of Table 5.3 on XOR (solid) and bars and stripes (dashed). Middle: the divergence of the trained XOR model when a common transverse field <span class="math notranslate nohighlight">\(\Gamma\)</span> is applied to all four qubits on top of the learned couplings. Right: the bars-and-stripes distribution learned by the quantum model with the exact and with the bound gradient against the target. From <code class="docutils literal notranslate"><span class="pre">classical_data.py</span></code>.</em></p>
+<p>Three observations. First, every model learns both distributions:
+the divergences are a few times <span class="math notranslate nohighlight">\(10^{-4}\)</span> for XOR and a few times
+<span class="math notranslate nohighlight">\(10^{-3}\)</span> for bars and stripes, and the right panel of
+Fig. 5.3 shows the six patterns reproduced to
+within the width of the bars. The XOR distribution, which the
+course material that this chapter grew out of used as an example of a
+distribution on which the classical RBM fails and the quantum one
+succeeds, is learned by the RBM as well as by any of the others; the
+failure that is sometimes shown is an artifact of a symmetric start
+(zero biases and small symmetric weights place the RBM on a saddle of
+its loss, from which plain gradient descent moves very slowly) and
+not of the model. On the small differences in the table, the
+binary-unit RBM reaches the lowest divergence on bars and stripes
+simply because it was given more steps; the left panel shows all
+curves still descending.</p>
+<p>Second, the transverse fields go away. The quantum model trained with
+the exact gradient ends with <span class="math notranslate nohighlight">\(\Gamma_q=(0.000,0.000,0.018,0.000)\)</span> on
+its four qubits for XOR: the fields on both visible qubits are zero to
+three decimals, and the one surviving hidden field is small. The
+middle panel of Fig. 5.3 shows why: a common
+transverse field <span class="math notranslate nohighlight">\(\Gamma\)</span> applied to the trained couplings raises the
+divergence monotonically, from <span class="math notranslate nohighlight">\(0.0002\)</span> at <span class="math notranslate nohighlight">\(\Gamma=0\)</span> to <span class="math notranslate nohighlight">\(0.1085\)</span> at
+<span class="math notranslate nohighlight">\(\Gamma=2\)</span>, with the minimum at <span class="math notranslate nohighlight">\(\Gamma=0\)</span>. The visible state of the
+trained model, <span class="math notranslate nohighlight">\(\rho_v=\mathrm{Tr}_h\rho\)</span>, has the diagonal
+<span class="math notranslate nohighlight">\((0.4999,\,0.0001,\,0.0001,\,0.4999)\)</span> and off-diagonal elements that
+sum to <span class="math notranslate nohighlight">\(0.0000\)</span> in absolute value: it is a classical mixture. This is
+not an accident of the start but what the likelihood must do. The data
+are a distribution over computational-basis strings and the loss sees
+only the diagonal of <span class="math notranslate nohighlight">\(\rho_v\)</span>; a transverse field moves weight off the
+diagonal, into coherences that no term of the loss rewards, and the
+diagonal it leaves behind is, for these couplings, a worse fit. Amin
+and coworkers [Amin2018] report instances in which a fixed
+transverse field helps, but the mechanism there is the optimization
+(the field smooths the landscape of the bound) rather than the
+representation, and the exact optimum on classical data lies, in all
+examples we have tried, at <span class="math notranslate nohighlight">\(\Gamma_q\approx0\)</span>. The model is at best as
+good as its classical limit on classical data, and the extra
+parameters are, in the end, unused.</p>
+<p>Third, the bound gradient works about as well as the exact one on
+these problems, reaching <span class="math notranslate nohighlight">\(0.0002\)</span> against <span class="math notranslate nohighlight">\(0.0002\)</span> for XOR and <span class="math notranslate nohighlight">\(0.0099\)</span>
+against <span class="math notranslate nohighlight">\(0.0082\)</span> for bars and stripes, and it drives the transverse
+fields to the same values, <span class="math notranslate nohighlight">\((0.000,0.000,0.017,0.000)\)</span>. This is less
+surprising than it looks after Table 5.2. The bound
+is loose only where the transverse fields are large, and the bound
+gradient’s own tendency to shrink them, which there looked like a
+defect, is here the right thing to do: the exact likelihood also wants
+them gone. On classical data the two gradients agree where it
+matters, and a device that could prepare the thermal states of <span class="math notranslate nohighlight">\(H\)</span> and
+of the clamped <span class="math notranslate nohighlight">\(H_{\vec{v}}\)</span> could train the model with expectation
+values alone. What it would obtain is a classical Boltzmann machine
+sampled by a quantum thermal process, which may be a useful thing to
+have if the device thermalizes faster than a Gibbs chain mixes
+(Section <em>Connections</em>), but it is not a richer model.</p>
+</section>
+<section id="learning-quantum-states">
+<h2>Learning quantum states<a class="headerlink" href="#learning-quantum-states" title="Link to this heading">#</a></h2>
+<p>The conclusion of the previous section is sharp because the data were
+classical. If the data are quantum states, the coherences that the
+likelihood ignored are information, and the QBM becomes the natural
+model for them. Suppose the target is a density matrix <span class="math notranslate nohighlight">\(\rho_t\)</span> on <span class="math notranslate nohighlight">\(n\)</span>
+qubits, of which we can measure expectation values, and the model is
+the Gibbs state <span class="math notranslate nohighlight">\(\rho_{\vec{\theta}}\)</span> of Eq. (5.13) with
+all qubits visible. The quantum relative entropy</p>
+<div class="math notranslate nohighlight">
+\[
+S(\rho_t\,\|\,\rho_{\vec{\theta}})=\mathrm{Tr}\bigl[\rho_t\ln\rho_t\bigr]
+-\mathrm{Tr}\bigl[\rho_t\ln\rho_{\vec{\theta}}\bigr]
+=-S(\rho_t)+\beta\,\mathrm{Tr}\bigl[\rho_tH(\vec{\theta})\bigr]+\ln Z(\vec{\theta})\tag{5.26}
+\]</div>
+<p>is the quantum counterpart of Eq. (5.1): it is non-negative
+by Klein’s inequality and zero only for <span class="math notranslate nohighlight">\(\rho_{\vec{\theta}}=\rho_t\)</span>
+[NielsenChuang2010], and it reduces to the classical divergence
+when both states are diagonal. The second equality uses the fact that
+the logarithm of a Gibbs state is <span class="math notranslate nohighlight">\(-\beta H-\ln Z\)</span>, and it makes the
+objective remarkably simple: the first term is a constant, the second
+is linear in <span class="math notranslate nohighlight">\(\vec{\theta}\)</span> because <span class="math notranslate nohighlight">\(H\)</span> is, and the third is the
+log-partition function, which is a convex function of the couplings.
+The gradient is [KieferovaWiebe2017,Kappen2020]</p>
+<div class="math notranslate nohighlight">
+\[
+\frac{\partial S(\rho_t\|\rho_{\vec{\theta}})}{\partial\theta_\mu}
+=-\beta\langle\Lambda_\mu\rangle_{\rho_t}+\frac{\partial\ln Z}{\partial\theta_\mu}
+=\beta\Bigl(\langle\Lambda_\mu\rangle_{\rho_{\vec{\theta}}}-\langle\Lambda_\mu\rangle_{\rho_t}\Bigr),\tag{5.27}
+\]</div>
+<p>by Eq. (5.20). Everything that was hard in
+Section <em>The gradient: Duhamel’s formula</em> has vanished. There is no projector inside
+the trace, no imaginary-time integral and no bound: the gradient is
+the difference between the expectation values of the model’s own
+operators in the model and in the target, both measurable, and the
+loss is convex, so gradient descent converges to the global minimum.
+If the target is itself a Gibbs state of a Hamiltonian in the family,
+that minimum is the target’s couplings, and the problem is one of
+<em>Hamiltonian learning</em> [Anshu2021]: reconstruct <span class="math notranslate nohighlight">\(H\)</span> from
+measurements on its thermal state. The expectation values on the
+target side are the only data needed, which for <span class="math notranslate nohighlight">\(P\)</span> Pauli strings
+means <span class="math notranslate nohighlight">\(P\)</span> numbers however many copies of <span class="math notranslate nohighlight">\(\rho_t\)</span> it took to measure
+them.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Term</p></th>
+<th class="head"><p>target <span class="math notranslate nohighlight">\(\theta^\star_\mu\)</span></p></th>
+<th class="head"><p>learned <span class="math notranslate nohighlight">\(\theta_\mu\)</span></p></th>
+<th class="head"><p>Term</p></th>
+<th class="head"><p>target <span class="math notranslate nohighlight">\(\theta^\star_\mu\)</span></p></th>
+<th class="head"><p>learned <span class="math notranslate nohighlight">\(\theta_\mu\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z_0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.5214\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.5214\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(X_1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-1.3131\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-1.3131\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Z_1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.1398\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.1398\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(X_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.0042\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.0042\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 1.3310\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 1.3310\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(Z_0Z_1\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.4988\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(-0.4988\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(X_0\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.5273\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.5273\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(Z_1Z_2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.1189\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\( 0.1189\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.4: Hamiltonian learning. The target is the Gibbs state at
+<span class="math notranslate nohighlight">\(\beta=1\)</span> of a three-qubit transverse-field Ising chain with random
+couplings; the model is a fully visible QBM with the same eight
+operators, trained from <span class="math notranslate nohighlight">\(\vec{\theta}=0\)</span> by 400 Adam steps (rate
+<span class="math notranslate nohighlight">\(0.05\)</span>) on the relative entropy Eq. (5.26) with the
+gradient Eq. (5.27). The relative entropy falls from
+<span class="math notranslate nohighlight">\(1.1288\)</span> to machine precision, the fidelity reaches <span class="math notranslate nohighlight">\(1\)</span> to eight
+decimals and the couplings are recovered to <span class="math notranslate nohighlight">\(2\times10^{-9}\)</span>, in
+<span class="math notranslate nohighlight">\(0.2\)</span> s. From <code class="docutils literal notranslate"><span class="pre">quantum_data.py</span></code>.</em></p>
+<p>Table 5.4 shows the recovery of a random
+transverse-field Ising chain from its Gibbs state: the loss falls
+exponentially (left panel of Fig. 5.4, the solid
+curve, which reaches the floor of double precision after about 300 steps),
+and the learned couplings reproduce the target ones on the diagonal of
+the right panel. The listing below is the whole computation: the
+relative-entropy gradient is one line.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">qbm</span> <span class="kn">import</span> <span class="n">QBM</span><span class="p">,</span> <span class="n">ising_terms</span>
+<span class="kn">from</span> <span class="nn">optimize</span> <span class="kn">import</span> <span class="n">Adam</span>
+
+<span class="n">terms</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="n">ising_terms</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>                          <span class="c1"># Z_q, X_q, Z_q Z_{q+1} on a 3-qubit chain</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">QBM</span><span class="p">(</span><span class="n">n_visible</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_hidden</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">terms</span><span class="o">=</span><span class="n">terms</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">theta_star</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span>
+<span class="n">rho_target</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">gibbs</span><span class="p">(</span><span class="n">theta_star</span><span class="p">)</span>                   <span class="c1"># the data: a Gibbs state in the family</span>
+<span class="n">target_expectations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">expectations</span><span class="p">(</span><span class="n">rho_target</span><span class="p">)</span>   <span class="c1"># P numbers, all the training needs</span>
+<span class="n">theta</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">n_params</span><span class="p">),</span> <span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">400</span><span class="p">):</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">expectations</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">gibbs</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span> <span class="o">-</span> <span class="n">target_expectations</span><span class="p">)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">grad</span><span class="p">)</span>                      <span class="c1"># Eq. (5-relentgrad)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;max |theta - theta*| =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">theta</span> <span class="o">-</span> <span class="n">theta_star</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;relative entropy S(rho_t || rho_theta) =&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">relative_entropy</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">rho_target</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>max |theta - theta*| = 1.558506879106858e-09
+relative entropy S(rho_t || rho_theta) = 0.0
+</pre></div>
+</div>
+</div>
+</div>
+<p>The convexity has a flip side: the model can only reach the
+distributions its operators span. The second experiment of
+<code class="docutils literal notranslate"><span class="pre">quantum_data.py</span></code> takes as target the Gibbs state of a
+Heisenberg XXZ chain in a tilted field with a next-nearest-neighbor
+coupling,</p>
+<div class="math notranslate nohighlight">
+\[
+H_t=\sum_{q=0}^{1}\bigl(X_qX_{q+1}+Y_qY_{q+1}+\tfrac12Z_qZ_{q+1}\bigr)
++\sum_{q=0}^{2}\bigl(0.3\,Z_q+0.4\,X_q\bigr)+\tfrac12Z_0Z_2 ,\tag{5.28}
+\]</div>
+<p>which lies outside every family we train, and fits it with three
+models of growing operator content: <span class="math notranslate nohighlight">\(Z\)</span> fields with nearest-neighbor
+<span class="math notranslate nohighlight">\(ZZ\)</span> couplings (a classical model, <span class="math notranslate nohighlight">\(P=5\)</span>), the same with transverse
+fields (the transverse-field Ising family of
+Table 5.4, <span class="math notranslate nohighlight">\(P=8\)</span>), and the family with <span class="math notranslate nohighlight">\(XX\)</span> and <span class="math notranslate nohighlight">\(YY\)</span>
+couplings added (<span class="math notranslate nohighlight">\(P=12\)</span>). Table 5.5 gives the outcome.
+The classical family reaches a fidelity of <span class="math notranslate nohighlight">\(0.54\)</span>; adding the
+transverse fields, the whole quantum content of
+Section <em>Boltzmann machines on classical data</em>, improves it to <span class="math notranslate nohighlight">\(0.57\)</span>; adding the
+exchange couplings that the target actually contains raises it to
+<span class="math notranslate nohighlight">\(0.99\)</span>, with the remaining <span class="math notranslate nohighlight">\(0.02\)</span> of relative entropy due to the
+next-nearest-neighbor term that none of the families has. The
+last column, the classical divergence between the diagonals of target
+and model, shows that the first two families do not even fit the
+measurement statistics in the computational basis, because the
+coherent terms of <span class="math notranslate nohighlight">\(H_t\)</span> shape its diagonal too. The lesson is the one
+of every variational method in this book: what can be learned is
+fixed by the ansatz, and for a Hamiltonian-based model the ansatz is
+the set of operators. The quantum advantage of the QBM, where there is
+one, is that the family can contain non-commuting operators at all,
+which no classical energy function can.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model operators</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(P\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(S(\rho_t|\rho_{\vec{\theta}})\)</span></p></th>
+<th class="head"><p>fidelity</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\mathrm{KL}\)</span> of diagonals</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z\)</span>, <span class="math notranslate nohighlight">\(ZZ\)</span> (classical)</p></td>
+<td><p>5</p></td>
+<td><p>0.9410</p></td>
+<td><p>0.5398</p></td>
+<td><p>0.0752</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Z\)</span>, <span class="math notranslate nohighlight">\(X\)</span>, <span class="math notranslate nohighlight">\(ZZ\)</span></p></td>
+<td><p>8</p></td>
+<td><p>0.8608</p></td>
+<td><p>0.5718</p></td>
+<td><p>0.0758</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(Z\)</span>, <span class="math notranslate nohighlight">\(X\)</span>, <span class="math notranslate nohighlight">\(ZZ\)</span>, <span class="math notranslate nohighlight">\(XX\)</span>, <span class="math notranslate nohighlight">\(YY\)</span></p></td>
+<td><p>12</p></td>
+<td><p>0.0203</p></td>
+<td><p>0.9906</p></td>
+<td><p>0.0129</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.5: The XXZ target Eq. (5.28) at <span class="math notranslate nohighlight">\(\beta=1\)</span> fitted by
+three fully visible families of growing operator content, 400 Adam
+steps on the relative entropy: the final relative entropy, the
+fidelity with the target and the classical divergence of the
+diagonals. From <code class="docutils literal notranslate"><span class="pre">quantum_data.py</span></code>.</em></p>
+<p><img alt="Left the relative entropy against the Adam step for the Hamiltonian-le" src="../BookFigures/chapter5/quantumdata.png" /></p>
+<p><em>Figure 5.4: Left: the relative entropy against the Adam step for the Hamiltonian-learning problem of Table 5.4 (solid) and for the three families fitted to the XXZ target of Table 5.5 (dashed). Right: learned against target couplings for the Hamiltonian-learning problem. From <code class="docutils literal notranslate"><span class="pre">quantum_data.py</span></code>.</em></p>
+<p>Hidden qubits can be added to this setting too, with the model
+<span class="math notranslate nohighlight">\(\rho_v=\mathrm{Tr}_h\rho_{\vec{\theta}}\)</span> and the loss
+<span class="math notranslate nohighlight">\(S(\rho_t\|\rho_v)\)</span>, but the simplicity is then lost: the logarithm of
+a partial trace is not linear in <span class="math notranslate nohighlight">\(H\)</span>, and the gradient needs the
+derivative of <span class="math notranslate nohighlight">\(\ln\mathrm{Tr}_h e^{-\beta H}\)</span>, for which the
+literature again uses bounds [KieferovaWiebe2017,Wiebe2019]. A
+second practical difference from the classical case concerns the data.
+A classical sample is a bit string that can be stored and reused; a
+quantum sample is a copy of <span class="math notranslate nohighlight">\(\rho_t\)</span> that is consumed by the
+measurement, and the <span class="math notranslate nohighlight">\(P\)</span> expectation values of
+Eq. (5.27) must be estimated from a finite number of
+copies with the shot noise of Chapter 2
+(Exercise 5.7). The model side has the same cost: every
+gradient step needs <span class="math notranslate nohighlight">\(P\)</span> expectation values of the current Gibbs state,
+which brings us to the question of how that state is prepared.</p>
+</section>
+<section id="preparing-gibbs-states-on-a-quantum-computer">
+<h2>Preparing Gibbs states on a quantum computer<a class="headerlink" href="#preparing-gibbs-states-on-a-quantum-computer" title="Link to this heading">#</a></h2>
+<p>Every gradient of this chapter is an expectation value in a Gibbs
+state, Eq. (5.20), and the premise of the quantum
+Boltzmann machine is that a quantum device supplies it. A quantum
+annealer does so by construction, approximately, when it is run at
+finite temperature and read out before it has reached its ground state
+[Amin2018,Benedetti2017]; the open question is at what effective
+<span class="math notranslate nohighlight">\(\beta\)</span>. On a gate-based computer the thermal state must be prepared by
+a circuit, and since a circuit acting on <span class="math notranslate nohighlight">\(\vert0\rangle^{\otimes n}\)</span>
+produces a pure state, a mixed state requires either a classical
+source of randomness or ancilla qubits that are traced out. This
+section gives the variational principle that governs any such
+preparation, the purification that makes a thermal state the reduced
+state of a pure one, and the variational algorithm that puts the two
+together with the circuits of Chapter 4.</p>
+<section id="the-free-energy-principle">
+<h3>The free-energy principle<a class="headerlink" href="#the-free-energy-principle" title="Link to this heading">#</a></h3>
+<p>The Gibbs state is the solution of a variational problem. For any
+density matrix <span class="math notranslate nohighlight">\(\rho\)</span> define the free energy</p>
+<div class="math notranslate nohighlight">
+\[
+F(\rho)=\mathrm{Tr}[H\rho]-\frac1\beta S(\rho),\qquad
+S(\rho)=-\mathrm{Tr}[\rho\ln\rho] ,\tag{5.29}
+\]</div>
+<p>the energy minus the temperature times the von Neumann entropy. For
+the Gibbs state <span class="math notranslate nohighlight">\(\rho_G=e^{-\beta H}/Z\)</span> the free energy is
+<span class="math notranslate nohighlight">\(F(\rho_G)=-\beta^{-1}\ln Z\)</span>, the thermodynamic free energy, and for
+any other state</p>
+<div class="math notranslate nohighlight">
+\[
+F(\rho)-F(\rho_G)=\frac1\beta S(\rho\,\|\,\rho_G)\;\ge\;0 ,\tag{5.30}
+\]</div>
+<p>which is Eq. (5.26) read backwards: inserting
+<span class="math notranslate nohighlight">\(\ln\rho_G=-\beta H-\ln Z\)</span> into the relative entropy gives
+<span class="math notranslate nohighlight">\(S(\rho\|\rho_G)=-S(\rho)+\beta\mathrm{Tr}[H\rho]+\ln Z=\beta[F(\rho)-F(\rho_G)]\)</span>,
+and Klein’s inequality does the rest. The Gibbs state is therefore
+the unique minimizer of the free energy over all states, and the
+excess free energy of a trial state is, up to the factor <span class="math notranslate nohighlight">\(\beta\)</span>, its
+relative entropy to the target: minimizing <span class="math notranslate nohighlight">\(F\)</span> over a family of
+states is the finite-temperature counterpart of the Rayleigh–Ritz
+principle on which the VQE of the QC book and the ground-state search
+of Section <em>Geometry: the quantum Fisher information</em> rest, with the entropy as the new
+ingredient. As <span class="math notranslate nohighlight">\(\beta\to\infty\)</span> the entropy term is switched off and
+the principle becomes the Ritz principle for the ground state; as
+<span class="math notranslate nohighlight">\(\beta\to0\)</span> the energy is switched off and the maximally mixed state
+wins. Figure 5.5 shows the landscape for one qubit
+with <span class="math notranslate nohighlight">\(H=-Z-X/2\)</span> at <span class="math notranslate nohighlight">\(\beta=1.2\)</span>, over the <span class="math notranslate nohighlight">\(xz\)</span>-plane of the Bloch ball,
+parametrized by
+the radius <span class="math notranslate nohighlight">\(r\)</span> and the polar angle <span class="math notranslate nohighlight">\(\vartheta\)</span>: the energy prefers the
+surface of the ball in the direction of the field, the entropy prefers
+the center, and the minimum of <span class="math notranslate nohighlight">\(F\)</span> sits inside at
+<span class="math notranslate nohighlight">\(r=\tanh(\beta\vert\vec{h}\vert)=0.872\)</span>, the Gibbs state, with Bloch
+vector <span class="math notranslate nohighlight">\((0.390,0,0.780)\)</span>, entropy <span class="math notranslate nohighlight">\(0.238\)</span> and free energy <span class="math notranslate nohighlight">\(-1.1731\)</span>;
+the minimum over the plotted grid is <span class="math notranslate nohighlight">\(-1.1731\)</span> as well.
+<code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code> also checks Eq. (5.30) at a random state
+to <span class="math notranslate nohighlight">\(10^{-10}\)</span>.</p>
+<p><img alt="The free-energy principle for one qubit, H-Z-X2, beta1.2. Left Frho ov" src="../BookFigures/chapter5/freeenergy.png" /></p>
+<p><em>Figure 5.5: The free-energy principle for one qubit, <span class="math notranslate nohighlight">\(H=-Z-X/2\)</span>, <span class="math notranslate nohighlight">\(\beta=1.2\)</span>. Left: <span class="math notranslate nohighlight">\(F(\rho)\)</span> over the states <span class="math notranslate nohighlight">\(\rho=\tfrac12(I+r\sin\vartheta\,X+r\cos\vartheta\,Z)\)</span> of the <span class="math notranslate nohighlight">\(xz\)</span>-plane of the Bloch ball; the star is the Gibbs state, the unique minimum. Right: the von Neumann entropy of the same states, which depends on <span class="math notranslate nohighlight">\(r\)</span> only. From <code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code>.</em></p>
+</section>
+<section id="the-thermofield-double">
+<h3>The thermofield double<a class="headerlink" href="#the-thermofield-double" title="Link to this heading">#</a></h3>
+<p>Any mixed state is the reduced state of a pure state on a larger
+system, and for a Gibbs state the purification has a name. Let
+<span class="math notranslate nohighlight">\(H=\sum_ke_k\vert k\rangle\langle k\vert\)</span> act on <span class="math notranslate nohighlight">\(n\)</span> system qubits and
+take <span class="math notranslate nohighlight">\(n\)</span> ancilla qubits with the same basis. The state</p>
+<div class="math notranslate nohighlight">
+\[
+\vert\mathrm{TFD}\rangle=\frac{1}{\sqrt Z}\sum_ke^{-\beta e_k/2}\,
+\vert k\rangle_S\otimes\vert k^*\rangle_A ,
+\qquad
+\mathrm{Tr}_A\vert\mathrm{TFD}\rangle\langle\mathrm{TFD}\vert=\frac{e^{-\beta H}}{Z} ,\tag{5.31}
+\]</div>
+<p>the <em>thermofield double</em>, is a pure, entangled state of system and
+ancilla whose reduced state on the system is exactly the Gibbs state
+(the complex conjugate on the ancilla side is immaterial for a real
+Hamiltonian). The entanglement entropy between the two halves equals
+the thermal entropy of the system, and the thermal fluctuations of
+<span class="math notranslate nohighlight">\(\rho_G\)</span> are the quantum correlations of a pure state. At <span class="math notranslate nohighlight">\(\beta=0\)</span> the
+TFD is a product of <span class="math notranslate nohighlight">\(n\)</span> Bell pairs, at <span class="math notranslate nohighlight">\(\beta\to\infty\)</span> it is the
+product of the two ground states; <code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code> builds it for the
+random three-qubit Hamiltonian of Section <em>The gradient: Duhamel’s formula</em> and
+verifies that it is normalized, that its partial trace reproduces
+<span class="math notranslate nohighlight">\(\rho_G\)</span> to <span class="math notranslate nohighlight">\(10^{-16}\)</span> and that its entanglement entropy, <span class="math notranslate nohighlight">\(1.7146\)</span>,
+equals the thermal entropy. Preparing the TFD on <span class="math notranslate nohighlight">\(2n\)</span> qubits is thus
+one route to the Gibbs state on <span class="math notranslate nohighlight">\(n\)</span>, and the free-energy principle
+tells one how to do it variationally: a circuit <span class="math notranslate nohighlight">\(U(\vec{\phi})\)</span> on <span class="math notranslate nohighlight">\(2n\)</span>
+qubits is trained to minimize <span class="math notranslate nohighlight">\(F(\mathrm{Tr}_A U\vert0\rangle\langle0\vert U^\dagger)\)</span>
+[Wu2019,Martyn2019]. The obstacle is the entropy, which is not an
+observable: <span class="math notranslate nohighlight">\(S(\rho_S)\)</span> of the reduced state has no efficient
+measurement in general, and these algorithms either estimate it from
+the spectrum (by swap tests on several copies) or replace it by a
+quantity that is easier to measure. The algorithm of the next
+subsection sidesteps the problem by putting the randomness where its
+entropy is known in closed form.</p>
+</section>
+<section id="the-variational-quantum-thermalizer">
+<h3>The variational quantum thermalizer<a class="headerlink" href="#the-variational-quantum-thermalizer" title="Link to this heading">#</a></h3>
+<p>The variational quantum thermalizer (VQT) of Verdon and coworkers
+[Verdon2019] prepares a mixed state in two stages. A classical
+<em>latent</em> distribution <span class="math notranslate nohighlight">\(p(i;\vec{w})\)</span> over the <span class="math notranslate nohighlight">\(2^n\)</span>
+computational-basis strings <span class="math notranslate nohighlight">\(i\)</span> is sampled, the basis state
+<span class="math notranslate nohighlight">\(\vert i\rangle\)</span> is prepared, and a parametrized unitary
+<span class="math notranslate nohighlight">\(U(\vec{\phi})\)</span> is applied to it. The state produced on average is</p>
+<div class="math notranslate nohighlight">
+\[
+\rho(\vec{w},\vec{\phi})=\sum_ip(i;\vec{w})\,U(\vec{\phi})\vert i\rangle\langle i\vert U^\dagger(\vec{\phi}) ,\tag{5.32}
+\]</div>
+<p>a mixture of orthogonal pure states, which is a density matrix with
+eigenvalues <span class="math notranslate nohighlight">\(p(i;\vec{w})\)</span> and eigenvectors <span class="math notranslate nohighlight">\(U\vert i\rangle\)</span>: the
+unitary cannot change the spectrum, so the entropy of
+Eq. (5.32) is the Shannon entropy of the latent
+distribution, <span class="math notranslate nohighlight">\(S(\rho)=-\sum_ip_i\ln p_i\)</span>, a classical quantity
+computable without any measurement. The free energy
+Eq. (5.29) becomes</p>
+<div class="math notranslate nohighlight">
+\[
+F(\vec{w},\vec{\phi})=\sum_ip(i;\vec{w})\,E_i(\vec{\phi})-\frac1\beta S(\vec{w}),
+\qquad
+E_i(\vec{\phi})=\langle i\vert U^\dagger(\vec{\phi})HU(\vec{\phi})\vert i\rangle ,\tag{5.33}
+\]</div>
+<p>a weighted average of the energies of the circuit started from the
+different basis states, each of which is a VQE energy, minus the
+entropy of the weights over <span class="math notranslate nohighlight">\(\beta\)</span>. The quantum computer evaluates
+the <span class="math notranslate nohighlight">\(E_i\)</span> (or, in the sampled version, the energy of a randomly chosen
+<span class="math notranslate nohighlight">\(i\)</span>), the classical computer does the rest, and the gradient splits
+accordingly: <span class="math notranslate nohighlight">\(\partial F/\partial\phi_\mu=\sum_ip_i\,\partial E_i/\partial\phi_\mu\)</span>
+is the parameter-shift rule of Chapter 4 applied to
+each energy, and <span class="math notranslate nohighlight">\(\partial F/\partial\vec{w}\)</span> is the derivative of a
+classical expression. By Eq. (5.30), <span class="math notranslate nohighlight">\(F(\vec{w},\vec{\phi})-F(\rho_G)
+=\beta^{-1}S(\rho(\vec{w},\vec{\phi})\|\rho_G)\)</span> measures how far the
+preparation is from the Gibbs state, and the excess free energy is the
+training curve of Fig. 5.6.</p>
+<p>The latent distribution decides what the ansatz can represent. The
+scalable choice is a product of Bernoulli distributions,
+<span class="math notranslate nohighlight">\(p(i;\vec{w})=\prod_qs_q^{i_q}(1-s_q)^{1-i_q}\)</span> with <span class="math notranslate nohighlight">\(s_q=\sigma(w_q)\)</span>,
+one parameter per qubit, whose entropy is a sum of binary entropies;
+it can produce any product spectrum but not, for instance, a spectrum
+with three equal eigenvalues and all others zero. For the small systems
+of this chapter we can also afford the <em>full</em> latent
+distribution, a softmax over all <span class="math notranslate nohighlight">\(2^n\)</span> strings, which can produce any
+spectrum and makes Eq. (5.32) exact if <span class="math notranslate nohighlight">\(U\)</span> can
+diagonalize <span class="math notranslate nohighlight">\(H\)</span>. The class <code class="docutils literal notranslate"><span class="pre">VQT</span></code> of <code class="docutils literal notranslate"><span class="pre">vqt.py</span></code> implements
+both, with the circuit of Chapter 4 (<code class="docutils literal notranslate"><span class="pre">QNN</span></code> with
+<span class="math notranslate nohighlight">\(R_y\)</span>, <span class="math notranslate nohighlight">\(R_z\)</span> layers and the CNOT ladder, without data re-uploading)
+as <span class="math notranslate nohighlight">\(U(\vec{\phi})\)</span>; the basis state <span class="math notranslate nohighlight">\(\vert i\rangle\)</span> is prepared by the
+encoding rotations <span class="math notranslate nohighlight">\(R_y(\pi i_q)\)</span>, so that the whole machinery of
+batched states and shift-rule gradients of <code class="docutils literal notranslate"><span class="pre">qnn.py</span></code> carries
+over, and the program checks the gradient against finite differences
+to <span class="math notranslate nohighlight">\(3\times10^{-10}\)</span>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><span class="math notranslate nohighlight">\(\beta\)</span></p></th>
+<th class="head"><p>latent</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(L\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(P\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(F_{\rm exact}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(F-F_{\rm exact}\)</span></p></th>
+<th class="head"><p>fidelity</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(S\)</span> / <span class="math notranslate nohighlight">\(S_{\rm exact}\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>product</p></td>
+<td><p>1</p></td>
+<td><p>9</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.9442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.256\)</span></p></td>
+<td><p>0.857</p></td>
+<td><p>0.678 / 0.995</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>product</p></td>
+<td><p>2</p></td>
+<td><p>15</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.9442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.089\)</span></p></td>
+<td><p>0.954</p></td>
+<td><p>0.845 / 0.995</p></td>
+</tr>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>product</p></td>
+<td><p>3</p></td>
+<td><p>21</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.9442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.076\)</span></p></td>
+<td><p>0.968</p></td>
+<td><p>0.887 / 0.995</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>full</p></td>
+<td><p>1</p></td>
+<td><p>14</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.9442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.185\)</span></p></td>
+<td><p>0.912</p></td>
+<td><p>0.858 / 0.995</p></td>
+</tr>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>full</p></td>
+<td><p>2</p></td>
+<td><p>20</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.9442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.055\)</span></p></td>
+<td><p>0.977</p></td>
+<td><p>0.918 / 0.995</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>full</p></td>
+<td><p>3</p></td>
+<td><p>26</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.9442\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.031\)</span></p></td>
+<td><p>0.987</p></td>
+<td><p>0.948 / 0.995</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>product</p></td>
+<td><p>1</p></td>
+<td><p>9</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.5165\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.052\)</span></p></td>
+<td><p>0.947</p></td>
+<td><p>0.104 / 0.245</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>product</p></td>
+<td><p>2</p></td>
+<td><p>15</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.5165\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.042\)</span></p></td>
+<td><p>0.955</p></td>
+<td><p>0.116 / 0.245</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>product</p></td>
+<td><p>3</p></td>
+<td><p>21</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.5165\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.031\)</span></p></td>
+<td><p>0.972</p></td>
+<td><p>0.185 / 0.245</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>full</p></td>
+<td><p>1</p></td>
+<td><p>14</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.5165\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.034\)</span></p></td>
+<td><p>0.958</p></td>
+<td><p>0.074 / 0.245</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>full</p></td>
+<td><p>2</p></td>
+<td><p>20</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.5165\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.013\)</span></p></td>
+<td><p>0.991</p></td>
+<td><p>0.196 / 0.245</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>full</p></td>
+<td><p>3</p></td>
+<td><p>26</p></td>
+<td><p><span class="math notranslate nohighlight">\(-3.5165\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.0089\)</span></p></td>
+<td><p>0.996</p></td>
+<td><p>0.236 / 0.245</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.6: The variational quantum thermalizer for the transverse-field
+Ising chain <span class="math notranslate nohighlight">\(H=-\sum_qZ_qZ_{q+1}-\sum_qX_q\)</span> on three qubits at
+<span class="math notranslate nohighlight">\(\beta=1\)</span> and <span class="math notranslate nohighlight">\(\beta=3\)</span>, with the product (Bernoulli) and the full
+(softmax) latent distribution and <span class="math notranslate nohighlight">\(L=1,2,3\)</span> circuit layers (<span class="math notranslate nohighlight">\(P\)</span> is the
+total number of parameters). Each entry is the better of two random
+starts after 300 Adam steps (rate <span class="math notranslate nohighlight">\(0.05\)</span>): the excess free energy
+<span class="math notranslate nohighlight">\(F-F_{\rm exact}\)</span>, the fidelity with the exact Gibbs state and the
+entropy of the prepared state against the exact thermal entropy. From
+<code class="docutils literal notranslate"><span class="pre">vqt.py</span></code>.</em></p>
+<p><img alt="The excess free energy Fvecw,vecphi-Frm exact, equal to SrhorhoGbeta b" src="../BookFigures/chapter5/vqt.png" /></p>
+<p><em>Figure 5.6: The excess free energy <span class="math notranslate nohighlight">\(F(\vec{w},\vec{\phi})-F_{\rm exact}\)</span>, equal to <span class="math notranslate nohighlight">\(S(\rho\|\rho_G)/\beta\)</span> by Eq. (5.30), against the Adam step for the <span class="math notranslate nohighlight">\(\beta=1\)</span> runs of Table 5.6: product latent (dashed) and full latent (solid) with one, two and three circuit layers. From <code class="docutils literal notranslate"><span class="pre">vqt.py</span></code>.</em></p>
+<p>Table 5.6 and Fig. 5.6 show the thermalizer on
+the transverse-field Ising chain of Chapter 4, here on
+three qubits, at two temperatures. Three layers of the full-latent ansatz reach a fidelity
+of <span class="math notranslate nohighlight">\(0.987\)</span> at <span class="math notranslate nohighlight">\(\beta=1\)</span> and <span class="math notranslate nohighlight">\(0.996\)</span> at <span class="math notranslate nohighlight">\(\beta=3\)</span>; the product latent,
+with the same circuit, stops at <span class="math notranslate nohighlight">\(0.968\)</span> and <span class="math notranslate nohighlight">\(0.972\)</span>. The column of
+entropies explains the gap and is the most instructive one. At
+<span class="math notranslate nohighlight">\(\beta=1\)</span> the exact thermal entropy is <span class="math notranslate nohighlight">\(0.995\)</span>, almost half the maximum
+<span class="math notranslate nohighlight">\(3\ln2=2.08\)</span>, and every variational state is purer than it should be:
+the product latent cannot shape its spectrum to match the thermal one
+and sacrifices entropy to lower the energy, and even the full latent
+with one layer underestimates <span class="math notranslate nohighlight">\(S\)</span> by <span class="math notranslate nohighlight">\(0.14\)</span> because its circuit cannot
+rotate the product basis into the eigenbasis of <span class="math notranslate nohighlight">\(H\)</span>, so that the
+latent probabilities are forced to a compromise between the right
+spectrum and the right energies. Depth helps the circuit, and the
+latent then follows. At <span class="math notranslate nohighlight">\(\beta=3\)</span> the state is nearly pure
+(<span class="math notranslate nohighlight">\(S_{\rm exact}=0.245\)</span>), the task is close to a VQE, and all variants
+do well on the fidelity; the remaining entropy deficit is again the
+signature of the ansatz. The listing below runs one case.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">vqt</span> <span class="kn">import</span> <span class="n">VQT</span><span class="p">,</span> <span class="n">transverse_ising</span>
+<span class="kn">from</span> <span class="nn">gibbs</span> <span class="kn">import</span> <span class="n">gibbs_state</span><span class="p">,</span> <span class="n">fidelity</span><span class="p">,</span> <span class="n">log_partition</span>
+
+<span class="n">n</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">transverse_ising</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">vqt</span> <span class="o">=</span> <span class="n">VQT</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">n_qubits</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">n_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">latent</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">)</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vqt</span><span class="o">.</span><span class="n">n_latent</span><span class="p">),</span> <span class="n">vqt</span><span class="o">.</span><span class="n">qnn</span><span class="o">.</span><span class="n">random_parameters</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+<span class="n">params</span><span class="p">,</span> <span class="n">history</span> <span class="o">=</span> <span class="n">vqt</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>      <span class="c1"># Adam on F(w, phi), Eq. (5-vqtfree)</span>
+<span class="n">F_exact</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_partition</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">/</span> <span class="n">beta</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;F - F_exact = </span><span class="si">{</span><span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">F_exact</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;fidelity = </span><span class="si">{</span><span class="n">fidelity</span><span class="p">(</span><span class="n">gibbs_state</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="p">),</span><span class="w"> </span><span class="n">vqt</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="n">params</span><span class="p">))</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>F - F_exact = 0.0554, fidelity = 0.9766
+</pre></div>
+</div>
+</div>
+</div>
+<p>Two remarks close the section. The optimization problem of the VQT
+has the same landscape as that of the QNN, including the barren
+plateaus of Section <em>Barren plateaus</em> for deep random circuits, and
+the natural gradient of Section <em>Geometry: the quantum Fisher information</em> has a
+finite-temperature counterpart in which the quantum Fisher information
+is replaced by the Bures metric of mixed states [Verdon2019]. And
+once the Gibbs state of <span class="math notranslate nohighlight">\(H(\vec{\theta})\)</span> is prepared, training the QBM
+is a loop within a loop: the inner loop prepares <span class="math notranslate nohighlight">\(\rho_{\vec{\theta}}\)</span>
+variationally for the current couplings, the outer loop measures the
+<span class="math notranslate nohighlight">\(\langle\Lambda_\mu\rangle_\rho\)</span> and updates <span class="math notranslate nohighlight">\(\vec{\theta}\)</span> by
+Eq. (5.27) or Eq. (5.25). The
+<em>variational quantum Boltzmann machine</em> of Zoufal and coworkers
+[Zoufal2021] is this algorithm with the Gibbs state prepared by
+variational imaginary-time evolution, the McLachlan principle of
+Section <em>Geometry: the quantum Fisher information</em> run in imaginary time from the maximally
+mixed state to <span class="math notranslate nohighlight">\(\beta\)</span>, which is the other general route to a thermal
+state and is where the two halves of Chapter 4 meet this
+one.</p>
+</section>
+</section>
+<section id="connections">
+<h2>Connections<a class="headerlink" href="#connections" title="Link to this heading">#</a></h2>
+<section id="quantum-neural-networks-and-quantum-boltzmann-machines">
+<h3>Quantum neural networks and quantum Boltzmann machines<a class="headerlink" href="#quantum-neural-networks-and-quantum-boltzmann-machines" title="Link to this heading">#</a></h3>
+<p>The two trainable quantum models of this book, the QNN of
+Chapter 4 and the QBM of this chapter, are complementary
+in almost every respect, and Table 5.7 sets them side
+by side. The QNN is a unitary acting on a pure state; its parameters
+are rotation angles, its output is an expectation value, its natural
+task is to approximate a function and its training signal is the
+parameter-shift rule, which the quantum computer evaluates by running
+shifted circuits. The QBM is a Hamiltonian; its parameters are
+couplings, its output is a distribution or a density matrix, its
+natural task is to model data generatively and its training signal is
+a difference of expectation values, which the quantum computer
+evaluates by preparing a thermal state. The one has the structure of
+a feed-forward network and the other of a statistical-mechanics
+model, and the classical pair they correspond to, the multilayer
+perceptron and the restricted Boltzmann machine, has the same
+relationship. What they share is the variational loop: a classical
+optimizer moves parameters on the strength of numbers measured on a
+quantum device, with the landscape pathologies of
+Section <em>Barren plateaus</em> common to both, and with the geometry of
+Section <em>Geometry: the quantum Fisher information</em> available to both through the Fisher
+information of pure states and the Bures metric of mixed ones.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Quantum neural network (Ch. 4)</p></th>
+<th class="head"><p>Quantum Boltzmann machine (Ch. 5)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>model object</p></td>
+<td><p>unitary <span class="math notranslate nohighlight">\(W(\vec{\theta})\)</span></p></td>
+<td><p>Hamiltonian <span class="math notranslate nohighlight">\(H(\vec{\theta})\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>state</p></td>
+<td><p>pure, <span class="math notranslate nohighlight">\(W S(\vec{x})\vert0\rangle\)</span></p></td>
+<td><p>thermal, <span class="math notranslate nohighlight">\(e^{-\beta H}/Z\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>parameters</p></td>
+<td><p>rotation angles</p></td>
+<td><p>couplings of Pauli strings</p></td>
+</tr>
+<tr class="row-odd"><td><p>output</p></td>
+<td><p>expectation value <span class="math notranslate nohighlight">\(f(\vec{x};\vec{\theta})\)</span></p></td>
+<td><p>distribution <span class="math notranslate nohighlight">\(p(\vec{v})\)</span> or state <span class="math notranslate nohighlight">\(\rho_v\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>task</p></td>
+<td><p>regression, classification, PDEs</p></td>
+<td><p>generative modeling, state learning</p></td>
+</tr>
+<tr class="row-odd"><td><p>loss</p></td>
+<td><p>square loss, residuals</p></td>
+<td><p>negative log-likelihood, relative entropy</p></td>
+</tr>
+<tr class="row-even"><td><p>gradient</p></td>
+<td><p>parameter-shift rule</p></td>
+<td><p><span class="math notranslate nohighlight">\(\langle\Lambda_\mu\rangle_{\rm model}-\langle\Lambda_\mu\rangle_{\rm data}\)</span> (bound or exact)</p></td>
+</tr>
+<tr class="row-odd"><td><p>what the device does</p></td>
+<td><p>runs the circuit</p></td>
+<td><p>prepares and samples the Gibbs state</p></td>
+</tr>
+<tr class="row-even"><td><p>hard part</p></td>
+<td><p>barren plateaus, expressivity</p></td>
+<td><p>the positive phase, Gibbs-state preparation</p></td>
+</tr>
+<tr class="row-odd"><td><p>classical analog</p></td>
+<td><p>multilayer perceptron</p></td>
+<td><p>restricted Boltzmann machine</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Table 5.7: The two trainable quantum models of this book.</em></p>
+</section>
+<section id="the-transverse-field-ising-model-as-a-learning-problem">
+<h3>The transverse-field Ising model as a learning problem<a class="headerlink" href="#the-transverse-field-ising-model-as-a-learning-problem" title="Link to this heading">#</a></h3>
+<p>The restricted QBM Eq. (5.14) is a transverse-field Ising
+model on a bipartite graph, and the Hamiltonians learned in
+Section <em>Learning quantum states</em> were transverse-field Ising chains. The
+same model has appeared in every chapter of this book: as the cost and
+mixer of QAOA, whose annealing limit is the adiabatic passage through
+the quantum phase transition of the model; as the ground-state problem
+on which the natural gradient was demonstrated; and here as a
+generative model and as a target. The three uses are three questions
+about the same object. QAOA and VQE ask for the ground state of a
+given <span class="math notranslate nohighlight">\(H\)</span>, the thermalizer asks for its Gibbs state, and the QBM asks
+the inverse question: which <span class="math notranslate nohighlight">\(H\)</span> has the data as its thermal
+statistics? The first two are forward problems with the variational
+principles of Rayleigh–Ritz and of the free energy; the third is an
+inverse problem with the maximum-likelihood principle, which for a
+quantum target is convex and for a classical target is not. Reading
+the chapters together, a physicist’s tool chest of forward solvers
+becomes, with one change of objective, a set of learning algorithms,
+and the many-body methods on which they rest (imaginary-time
+evolution, Monte Carlo sampling, perturbation theory in the form of
+Duhamel’s formula) are the methods of the learning algorithms too.</p>
+<p>The limit <span class="math notranslate nohighlight">\(\beta\to\infty\)</span> makes the correspondence literal. The Gibbs
+state becomes the projector onto the ground state, the free energy
+becomes the energy, and the QBM with a quantum target becomes the
+problem of finding a Hamiltonian whose ground state is a given state,
+which for a Hamiltonian in the family is the parent-Hamiltonian
+problem of many-body physics. The VQT at large <span class="math notranslate nohighlight">\(\beta\)</span> reduces to the
+VQE, as the <span class="math notranslate nohighlight">\(\beta=3\)</span> rows of Table 5.6 begin to show,
+and the latent distribution collapses onto one basis state. In the
+opposite limit <span class="math notranslate nohighlight">\(\beta\to0\)</span> every model is the maximally mixed state,
+every gradient vanishes, and nothing can be learned: <span class="math notranslate nohighlight">\(\beta\)</span> sets the
+sharpness of the model, and a device whose effective temperature is
+not under control cannot represent sharply peaked data however well
+its couplings are set.</p>
+</section>
+<section id="expressivity-hardware-and-honest-expectations">
+<h3>Expressivity, hardware and honest expectations<a class="headerlink" href="#expressivity-hardware-and-honest-expectations" title="Link to this heading">#</a></h3>
+<p>Is a QBM more expressive than a classical Boltzmann machine? On
+classical data the exact computations of Section <em>Boltzmann machines on classical data</em>
+answer no, in the sense that matters for learning: the likelihood of
+computational-basis data is maximized at vanishing transverse fields,
+and the model falls back on its classical limit. A transverse field
+can still help as an optimization device, and there are distributions,
+those whose diagonal is the diagonal of a thermal state with coherent
+terms, which a QBM with hidden units represents with fewer parameters
+than an RBM; but the general result [Amin2018,Kappen2020] is that
+the diagonal of a Gibbs state of a local Hamiltonian is a Gibbs
+distribution of a classical energy function with, in general, many-body
+terms, so that the question is one of economy of parameters rather than
+of what can be represented at all. On quantum data the answer is yes
+without qualification, because the classical model cannot represent
+coherences at all, and Table 5.5 is the elementary
+demonstration: a target with exchange couplings is not learnable by
+any family without them.</p>
+<p>The hardware question is separate. The negative phase of a Boltzmann
+machine is a sampling problem, and sampling the Gibbs distribution of
+a frustrated Ising model is hard for Monte Carlo at low temperature,
+which is where the models worth having live. A device that reaches
+thermal equilibrium of the same model physically, as quantum annealers
+are built to do, would be an engine for the negative phase even if the
+model it samples is classical, and this quantum-assisted training of
+classical Boltzmann machines has been the most concrete use of the
+idea [Benedetti2017,Dixit2021]. The temperature of the device is
+then an unknown to be estimated, and the samples must be corrected for
+it. On gate-based machines the thermalizer of Section <em>The variational quantum thermalizer</em>
+or imaginary-time evolution prepares the state at a controlled
+<span class="math notranslate nohighlight">\(\beta\)</span>, at the cost of a variational problem inside every gradient
+step and of circuits deep enough to represent thermal correlations.
+The honest expectation, as of this writing, is the one of the whole
+book: the models are sound, the small cases are reproduced exactly as
+the theory says, the quantum content pays where the data are quantum,
+and whether a device can run them at a scale where classical sampling
+fails is a question about devices.</p>
+</section>
+</section>
+<section id="summary-and-perspectives">
+<h2>Summary and perspectives<a class="headerlink" href="#summary-and-perspectives" title="Link to this heading">#</a></h2>
+<p>This chapter has treated the Boltzmann machine as what it is, a
+statistical-mechanics model turned into a learning algorithm, and
+followed it into the quantum domain. The classical theory of
+Section <em>Energy-based models and the Boltzmann machine</em> rests on three equations: the likelihood as a
+divergence, Eq. (5.1); the gradient as a difference of
+data and model averages, Eq. (5.4); and the
+conditional independence of the restricted model,
+Eq. (5.7), which makes the hidden sum and the sampler
+tractable. Contrastive divergence approximates the one quantity that
+is not tractable, the model average, and Table 5.1 measured
+its bias. The quantum model of Section <em>The quantum Boltzmann machine</em> replaces the
+energy by a Hamiltonian and the Boltzmann distribution by a Gibbs
+state, and the one thing that changes in the training is the
+derivative of the matrix exponential: Duhamel’s formula
+Eq. (5.18) turns the positive phase into an
+imaginary-time correlation function that no device is known to
+measure efficiently, the
+negative phase survives by the cyclicity of the trace, and the
+practical rule of the literature, Eq. (5.25), is the
+gradient of a Golden–Thompson bound that cannot see the visible
+transverse fields. On classical data the exact gradient drove those
+fields to zero and the bound was good enough; on quantum data the
+relative entropy of Eq. (5.26) gave a convex problem
+with a gradient of pure expectation values, Hamiltonians were learned
+exactly from their Gibbs states, and the operator content of the
+family set the limit of what could be learned. The free-energy
+principle Eq. (5.30), the thermofield double
+Eq. (5.31) and the variational thermalizer
+Eq. (5.33) showed how a gate-based computer supplies the
+thermal states that the whole construction presupposes, with the
+circuits of Chapter 4 and an entropy that is computed
+classically because it is put into the model by hand.</p>
+<p>This chapter ends the sequence of models. Chapter 6
+reserves a place for the third kind of learning of
+Section <em>What machine learning is</em>, reinforcement learning and its quantum
+versions, and Chapter 7 looks back over the five
+models with the reassessment of Section <em>Variational circuits reconsidered</em> in
+mind and sets out where we think the subject is going.</p>
+</section>
+<section id="exercises">
+<h2>Exercises<a class="headerlink" href="#exercises" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Conditional independence and the marginal.</strong>
+Derive Eq. (5.7) from Eq. (5.6) and show
+that the hidden sum in Eq. (5.5) factorizes into the
+product of Eq. (5.8). Then derive
+Eq. (5.9) from Eq. (5.4) by averaging the
+hidden units over <span class="math notranslate nohighlight">\(p(\vec{h}\vert\vec{v})\)</span>, and verify numerically with
+<code class="docutils literal notranslate"><span class="pre">RBM.gradient_exact</span></code> and <code class="docutils literal notranslate"><span class="pre">numerical_gradient</span></code> for
+<span class="math notranslate nohighlight">\(n_v=5\)</span>, <span class="math notranslate nohighlight">\(n_h=3\)</span>.</p></li>
+<li><p><strong>The bias of contrastive divergence.</strong>
+Train the bars-and-stripes RBM with the exact gradient to a divergence
+below <span class="math notranslate nohighlight">\(10^{-2}\)</span>. At the trained parameters, average the CD-<span class="math notranslate nohighlight">\(k\)</span>
+gradient Eq. (5.11) over <span class="math notranslate nohighlight">\(10^4\)</span> independent data sets and
+compare the average with the exact gradient for <span class="math notranslate nohighlight">\(k=1,2,5,10,50\)</span>. Plot
+the norm of the bias against <span class="math notranslate nohighlight">\(k\)</span> and relate its decay to the mixing of
+the Gibbs chain Eq. (5.10), which you can measure by
+the autocorrelation of the visible energy.</p></li>
+<li><p><strong>Persistent CD.</strong>
+Repeat the PCD row of Table 5.1 with learning rates
+<span class="math notranslate nohighlight">\(0.2,0.05,0.02\)</span> and <span class="math notranslate nohighlight">\(50,500,5000\)</span> chains. Which combination beats CD-1,
+and at what cost in Gibbs steps per update? Explain, in terms of how
+fast the chains must track the moving model, why PCD needs a small
+rate.</p></li>
+<li><p><strong>Duhamel’s formula.</strong>
+Prove Eq. (5.18) by writing <span class="math notranslate nohighlight">\(G(s)=e^{-(\beta-s)H}e^{-sH'}\)</span>
+with <span class="math notranslate nohighlight">\(H'=H-\epsilon\Lambda_\mu\)</span> (that is, <span class="math notranslate nohighlight">\(\theta_\mu\to\theta_\mu+\epsilon\)</span>), showing that <span class="math notranslate nohighlight">\(G(\beta)-G(0)=\int_0^\beta G'(s)\,ds\)</span>,
+and taking <span class="math notranslate nohighlight">\(\epsilon\to0\)</span>. Derive the matrix elements
+Eq. (5.19) and show that the diagonal rule is their limit
+as <span class="math notranslate nohighlight">\(e_l\to e_k\)</span>. Then implement the formula with a Taylor expansion of
+the divided difference for <span class="math notranslate nohighlight">\(\vert e_k-e_l\vert&lt;10^{-6}\)</span>, which
+<code class="docutils literal notranslate"><span class="pre">exp_derivative</span></code> does not do, and show on a Hamiltonian with
+a degenerate pair of levels that the plain formula loses accuracy
+while yours does not.</p></li>
+<li><p><strong>The clamped-state bound.</strong>
+Prove Eq. (5.22) from the Golden–Thompson inequality and
+show that the bound is an equality when all transverse fields vanish.
+Show from Eq. (5.25) that
+<span class="math notranslate nohighlight">\(\partial\widetilde{\mathcal{L}}/\partial\Gamma_i=\beta\langle X_i\rangle_\rho\)</span>
+for a visible qubit, and that <span class="math notranslate nohighlight">\(\langle X_i\rangle_\rho\)</span> has the sign of
+<span class="math notranslate nohighlight">\(\Gamma_i\)</span> to first order in <span class="math notranslate nohighlight">\(\Gamma_i\)</span>. Then train the XOR model of
+Section <em>Boltzmann machines on classical data</em> with the bound gradient and with the
+visible transverse fields held fixed at <span class="math notranslate nohighlight">\(\Gamma_0=\Gamma_1=1\)</span>, as Amin
+and coworkers do, and compare the divergence and the visible state
+<span class="math notranslate nohighlight">\(\rho_v\)</span> with those of the free model.</p></li>
+<li><p><strong>Parity on more bits.</strong>
+Train the restricted QBM with the exact gradient on the even-parity
+distribution of <span class="math notranslate nohighlight">\(n_v=3\)</span> bits with <span class="math notranslate nohighlight">\(n_h=1,2,3\)</span> hidden qubits, and the
+classical RBM with the same sizes. How many hidden units does each need
+to reach a divergence below <span class="math notranslate nohighlight">\(10^{-2}\)</span>? Do the transverse fields stay at
+zero? Keep the models at <span class="math notranslate nohighlight">\(n_v+n_h\le7\)</span> qubits.</p></li>
+<li><p><strong>Hamiltonian learning with shot noise.</strong>
+Replace the target expectation values of the listing in
+Section <em>Learning quantum states</em> by estimates from <span class="math notranslate nohighlight">\(N_s\)</span> measurements of each
+Pauli string (sample the eigenvalue <span class="math notranslate nohighlight">\(\pm1\)</span> with the probability
+<span class="math notranslate nohighlight">\((1\pm\langle\Lambda_\mu\rangle_{\rho_t})/2\)</span>), for <span class="math notranslate nohighlight">\(N_s=10^2,10^3,10^4\)</span>.
+How does the error in the learned couplings scale with <span class="math notranslate nohighlight">\(S\)</span>? Use the
+convexity of the loss to explain why the noise in the <em>model</em>
+expectation values, which you may also add, is less harmful than the
+noise in the target ones.</p></li>
+<li><p><strong>The thermalizer at low temperature.</strong>
+Run <code class="docutils literal notranslate"><span class="pre">vqt.py</span></code> for <span class="math notranslate nohighlight">\(\beta=10\)</span> and <span class="math notranslate nohighlight">\(\beta=30\)</span> on the same chain, and
+on the four-qubit chain of <code class="docutils literal notranslate"><span class="pre">chapter4/qfi.py</span></code>, and compare the
+energy <span class="math notranslate nohighlight">\(\mathrm{Tr}[H\rho]\)</span> of the prepared state with the ground-state
+energy found by the natural-gradient VQE of that program. At what <span class="math notranslate nohighlight">\(\beta\)</span> does the latent distribution
+collapse onto one basis state, and how does the entropy term in
+Eq. (5.33) then affect the optimization? Then run
+<span class="math notranslate nohighlight">\(\beta=0.1\)</span> and show that the latent distribution becomes uniform and
+the circuit irrelevant.</p></li>
+<li><p><strong>The thermofield double by circuit.</strong>
+For one qubit with <span class="math notranslate nohighlight">\(H=-hZ\)</span>, show that <span class="math notranslate nohighlight">\(\vert\mathrm{TFD}\rangle\)</span> of
+Eq. (5.31) is produced from <span class="math notranslate nohighlight">\(\vert00\rangle\)</span> by an <span class="math notranslate nohighlight">\(R_y\)</span>
+rotation of the system qubit followed by a CNOT onto the ancilla, and
+find the angle as a function of <span class="math notranslate nohighlight">\(\beta h\)</span>. Generalize to a commuting
+Hamiltonian <span class="math notranslate nohighlight">\(H=-\sum_qh_qZ_q\)</span> on <span class="math notranslate nohighlight">\(n\)</span> qubits. Why does the construction
+fail for <span class="math notranslate nohighlight">\(H=-Z-X/2\)</span>, and what replaces it?</p></li>
+<li><p><strong>Sampling the negative phase.</strong>
+The programs of this chapter compute <span class="math notranslate nohighlight">\(\langle\Lambda_\mu\rangle_\rho\)</span>
+exactly. Replace it, for the fully visible model of
+Section <em>Learning quantum states</em>, by an average over <span class="math notranslate nohighlight">\(M\)</span> samples drawn from
+the diagonal of <span class="math notranslate nohighlight">\(\rho_{\vec{\theta}}\)</span> (for the <span class="math notranslate nohighlight">\(Z\)</span>-type operators) and
+from the diagonal of <span class="math notranslate nohighlight">\(\rho_{\vec{\theta}}\)</span> rotated into the <span class="math notranslate nohighlight">\(X\)</span> basis
+(for the <span class="math notranslate nohighlight">\(X\)</span>-type ones), which is what a device would provide, and
+train with <span class="math notranslate nohighlight">\(M=100\)</span> and <span class="math notranslate nohighlight">\(1000\)</span> samples per step. Compare the
+convergence with Fig. 5.4 and with the shot-noise
+discussion of Exercise 5.7.</p></li>
+</ol>
+</section>
+<section id="programs-for-this-chapter">
+<h2>Programs for this chapter<a class="headerlink" href="#programs-for-this-chapter" title="Link to this heading">#</a></h2>
+<p>Every number and figure in this chapter comes from the programs in
+<code class="docutils literal notranslate"><span class="pre">BookPrograms/allowbreak</span> <span class="pre">chapter5/</span></code> (NumPy and matplotlib
+only), which import <code class="docutils literal notranslate"><span class="pre">common/allowbreak</span> <span class="pre">optimize.py</span></code> (Adam and
+the finite-difference check) and <code class="docutils literal notranslate"><span class="pre">bookplot.py</span></code>, and for the
+thermalizer the class <code class="docutils literal notranslate"><span class="pre">QNN</span></code> of
+<code class="docutils literal notranslate"><span class="pre">chapter4/allowbreak</span> <span class="pre">qnn.py</span></code>; they are imported by the notebook
+<code class="docutils literal notranslate"><span class="pre">Notebooks/allowbreak</span> <span class="pre">chapter5/allowbreak</span> <span class="pre">chapter5.ipynb</span></code>.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">gibbs.py</span></code></strong> Pauli strings, Gibbs states, partial traces, entropies, the free energy Eq. (5.29), the relative entropy, the fidelity, the Duhamel derivative Eq. (5.19) and the thermofield double Eq. (5.31); checks of Eq. (5.30) and Fig. 5.5. 2 s.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">rbm.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">RBM</span></code> of Eqs. (5.6)–(5.9) with block Gibbs sampling, CD-<span class="math notranslate nohighlight">\(k\)</span> Eq. (5.11) and persistent CD; the XOR and bars-and-stripes targets; Table 5.1, Fig. 5.1. 10 s.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">qbm.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">QBM</span></code> of Eqs. (5.13)–(5.15): exact gradient Eq. (5.21), clamped states and the bound gradient Eq. (5.25), the relative entropy Eq. (5.26) and its gradient, Adam training; Table 5.2. 1 s.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">classical_data.py</span></code></strong> The four models of Table 5.3 on XOR and bars and stripes, the transverse-field scan and the visible state: Fig. 5.3. 100 s.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">quantum_data.py</span></code></strong> Hamiltonian learning and the XXZ target: Tables 5.4 and 5.5, Fig. 5.4. 3 s.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">vqt.py</span></code></strong> The class <code class="docutils literal notranslate"><span class="pre">VQT</span></code> of Eqs. (5.32)–(5.33) with product and full latent distributions: Table 5.6, Fig. 5.6. 15 s.</p></li>
+</ul>
+</section>
+<section id="running-the-programs-of-this-chapter">
+<h2>Running the programs of this chapter<a class="headerlink" href="#running-the-programs-of-this-chapter" title="Link to this heading">#</a></h2>
+<p>Each cell below runs one of the programs listed above as a script and shows the figures it writes to <code class="docutils literal notranslate"><span class="pre">BookFigures/</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5/gibbs.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>single qubit H = -Z - X/2, beta = 1.2: Gibbs state Bloch vector (0.3900, 0, 0.7800), |r| = 0.8721, S = 0.2377, F = -1.173121; minimum of F over the Bloch ball on the grid -1.173086
+F(rho) - F(rho_Gibbs) = S(rho || rho_Gibbs)/beta verified
+Duhamel derivative of exp(-H) along X_1: max difference from finite differences 8.6e-11
+thermofield double: norm 1.0000000000, max |Tr_A|TFD&gt;&lt;TFD| - rho| = 1.4e-16, entanglement entropy S_A = 1.7146 = thermal entropy
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure freeenergy written
+</pre></div>
+</div>
+<img alt="../_images/d3cd1276ffa9eed05035070bb31b3ae6647f4aa9a7c819011c50cf23118e2d18.png" src="../_images/d3cd1276ffa9eed05035070bb31b3ae6647f4aa9a7c819011c50cf23118e2d18.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5/rbm.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>exact RBM gradient against finite differences: max |diff| = 3.7e-10
+
+Table 5-cd: KL(target || model) after 3000 gradient steps, lr = 0.5 (PCD: 0.2, 50 chains)
+            target  n_h     exact      CD-1     CD-10       PCD    time
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> XOR (parity, n=2)    2    0.0044    0.0967    0.0228    0.0331    4.7s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  bars and stripes    4    0.0230    0.0823    0.0531    0.4814    4.9s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure rbm written
+</pre></div>
+</div>
+<img alt="../_images/8d307d53275f2cd571ffc25c0782e5395d16d3c2dcfea5b93ed3b4bcc40b7e11.png" src="../_images/8d307d53275f2cd571ffc25c0782e5395d16d3c2dcfea5b93ed3b4bcc40b7e11.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5/qbm.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>RQBM, 2 visible + 2 hidden qubits, random parameters, XOR target
+  term   exact (Duhamel)   finite diff.  bound gradient
+    Z0         -0.060300      -0.060300       -0.061133
+    Z1         -0.141716      -0.141716       -0.143026
+    Z2          0.081718       0.081718        0.083694
+    Z3          0.029148       0.029148        0.029801
+    X0         -0.009442      -0.009442       -0.227435
+    X1          0.005532       0.005532        0.173332
+    X2          0.017987       0.017987        0.019094
+    X3         -0.002691      -0.002691       -0.001743
+  Z0Z2          0.196026       0.196026        0.206809
+  Z0Z3         -0.013928      -0.013928       -0.004916
+  Z1Z2          0.202632       0.202632        0.211565
+  Z1Z3          0.465294       0.465294        0.479711
+no transverse fields: max |exact - bound| = 1.1e-16
+relative-entropy gradient against finite differences: max |diff| = 5.7e-10
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5/classical_data.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Table 5-classical: NLL - entropy of the target = KL(target || model) after training with Adam
+           target  n_v  n_h  steps    lr  RBM (1000 steps)   QBM, no X   QBM exact   QBM bound    time
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>              XOR    2    2    300   0.1            0.0004      0.0003      0.0002      0.0002    2.9s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> bars and stripes    4    3    200  0.05            0.0028      0.0074      0.0082      0.0099   78.6s
+
+XOR, model trained with the exact gradient: transverse fields [ 0.    -0.     0.018  0.   ] (qubits 0-3)
+KL against a common transverse field Gamma: 0.0002 at Gamma = 0, 0.0002 at Gamma = 0.00, 0.1085 at Gamma = 2
+visible state of the trained XOR model: diagonal [4.999e-01 1.000e-04 1.000e-04 4.999e-01], sum of |off-diagonal| elements 0.0000
+bound-trained model: transverse fields [-0.    -0.     0.017 -0.   ], visible diagonal [4.999e-01 1.000e-04 1.000e-04 4.999e-01]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure classical written
+</pre></div>
+</div>
+<img alt="../_images/b008f66968b7f0ff21ca283db6317dc8c887c91f604b68af437822767d6c3829.png" src="../_images/b008f66968b7f0ff21ca283db6317dc8c887c91f604b68af437822767d6c3829.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5/quantum_data.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Table 5-hamlearn: couplings of the target Hamiltonian and of the trained QBM (3 qubits, beta = 1)
+  term    target   learned
+    Z0   -0.5214   -0.5214
+    Z1   -0.1398   -0.1398
+    Z2    1.3310    1.3310
+    X0    0.5273    0.5273
+    X1   -1.3131   -1.3131
+    X2   -0.0042   -0.0042
+  Z0Z1   -0.4988   -0.4988
+  Z1Z2    0.1189    0.1189
+relative entropy 1.1288 -&gt; 0.00e+00, fidelity 1.00000000, max |theta - theta*| = 1.6e-09 (0.2 s)
+
+XXZ-chain target (tilted field, next-nearest-neighbour Z Z), beta = 1.0: three model families, 400 Adam steps
+                 model    P  S(rho_t||rho)   fidelity  diagonal KL
+    Z + ZZ (classical)    5        0.94102   0.539826      0.07516
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>            Z + X + ZZ    8        0.86078   0.571801      0.07575
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  Z + X + ZZ + XX + YY   12        0.02033   0.990646      0.01294
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure quantumdata written
+</pre></div>
+</div>
+<img alt="../_images/f2fc8629e97b400dabe3b22c014b3dd570f5f482ed40e8aad24fcd2b435bab66.png" src="../_images/f2fc8629e97b400dabe3b22c014b3dd570f5f482ed40e8aad24fcd2b435bab66.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">runpy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">runpy</span><span class="o">.</span><span class="n">run_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookPrograms&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5/vqt.py&#39;</span><span class="p">),</span> <span class="n">run_name</span><span class="o">=</span><span class="s1">&#39;__main__&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">png</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;BookFigures&#39;</span> <span class="o">/</span> <span class="s1">&#39;chapter5&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">png</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">t0</span><span class="p">:</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">png</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>free-energy gradient against finite differences: max |diff| = 3.2e-10
+
+Table 5-vqt: variational Gibbs states of the transverse-field Ising chain, n = 3, h = 1 (300 Adam steps, lr 0.05)
+ beta   latent   L    P    F_exact      F_vqt  F - F_exact   fidelity   S_vqt  S_exact   time
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  1.0  product   1    9   -3.94419   -3.68842     2.56e-01   0.857190   0.678    0.995   0.8s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  1.0  product   2   15   -3.94419   -3.85558     8.86e-02   0.954488   0.845    0.995   1.1s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  1.0  product   3   21   -3.94419   -3.86777     7.64e-02   0.967747   0.887    0.995   1.6s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  1.0     full   1   14   -3.94419   -3.75879     1.85e-01   0.911664   0.858    0.995   0.7s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  1.0     full   2   20   -3.94419   -3.88883     5.54e-02   0.976643   0.918    0.995   1.1s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  1.0     full   3   26   -3.94419   -3.91320     3.10e-02   0.986600   0.948    0.995   1.5s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  3.0  product   1    9   -3.51647   -3.46439     5.21e-02   0.947448   0.104    0.245   0.8s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  3.0  product   2   15   -3.51647   -3.47405     4.24e-02   0.955472   0.116    0.245   1.0s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  3.0  product   3   21   -3.51647   -3.48592     3.05e-02   0.971999   0.185    0.245   1.8s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  3.0     full   1   14   -3.51647   -3.48258     3.39e-02   0.958353   0.074    0.245   0.6s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  3.0     full   2   20   -3.51647   -3.50346     1.30e-02   0.990986   0.196    0.245   1.1s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  3.0     full   3   26   -3.51647   -3.50758     8.89e-03   0.995714   0.236    0.245   1.5s
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>figure vqt written
+</pre></div>
+</div>
+<img alt="../_images/120fd04f145350a04e6f482722be8d5327faf7788b1c181940a7f068abe91ab1.png" src="../_images/120fd04f145350a04e6f482722be8d5327faf7788b1c181940a7f068abe91ab1.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./chapter5"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../chapter4/chapter4.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Chapter 4: Quantum Neural Networks</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../chapter6/chapter6.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Chapter 6: Reinforcement Learning and Quantum Reinforcement Learning</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-based-models-and-the-boltzmann-machine">Energy-based models and the Boltzmann machine</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learning-as-the-minimization-of-a-divergence">Learning as the minimization of a divergence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energy-based-models">Energy-based models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-boltzmann-machine-and-its-restricted-form">The Boltzmann machine and its restricted form</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gibbs-sampling-and-contrastive-divergence">Gibbs sampling and contrastive divergence</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-quantum-boltzmann-machine">The quantum Boltzmann machine</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#definition">Definition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-gradient-duhamels-formula">The gradient: Duhamel’s formula</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-clamped-state-bound">The clamped-state bound</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boltzmann-machines-on-classical-data">Boltzmann machines on classical data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learning-quantum-states">Learning quantum states</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preparing-gibbs-states-on-a-quantum-computer">Preparing Gibbs states on a quantum computer</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-free-energy-principle">The free-energy principle</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermofield-double">The thermofield double</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-variational-quantum-thermalizer">The variational quantum thermalizer</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connections">Connections</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-neural-networks-and-quantum-boltzmann-machines">Quantum neural networks and quantum Boltzmann machines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-transverse-field-ising-model-as-a-learning-problem">The transverse-field Ising model as a learning problem</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expressivity-hardware-and-honest-expectations">Expressivity, hardware and honest expectations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-and-perspectives">Summary and perspectives</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exercises">Exercises</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#programs-for-this-chapter">Programs for this chapter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-programs-of-this-chapter">Running the programs of this chapter</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Morten Hjorth-Jensen
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
