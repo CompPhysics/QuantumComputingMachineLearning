@@ -10,7 +10,7 @@ NISQ-era quantum computers.  The schedule is adaptive and the lecture
 plan from the spring 2026 (see below) reflects the choices which can
 be made.
 
-During spring 2-26 we have discussed for example quantum machine learning methods such as
+During the spring semester of 2026 we have discussed for example quantum machine learning methods such as
 quantum neural networks, quantum support vector machines, quantum Boltzmann
 machines and the QAOA algorithm. Fault-tolerant algorithms like
 quantum Fourier transforms, quantum phase estimation and the HHL
